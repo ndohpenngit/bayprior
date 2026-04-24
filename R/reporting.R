@@ -1,239 +1,204 @@
-#' Generate a Prior Justification Report for regulatory submission
+#' Generate a Prior Justification Report
 #'
-#' Produces a structured HTML or PDF report documenting the prior elicitation
-#' process, conflict diagnostics, and sensitivity analyses in a format aligned
-#' with FDA/EMA expectations for Bayesian clinical trial submissions.
+#' Renders an HTML or PDF report using rmarkdown::render().
+#' No external Quarto installation required.
 #'
-#' @param prior A `bayprior` object (or list of `bayprior` objects for
-#'   multi-endpoint reports).
-#' @param conflict Optional. A `bayprior_conflict` object from `prior_conflict()`.
-#' @param sensitivity Optional. A `bayprior_sensitivity` object from
-#'   `sensitivity_grid()`.
-#' @param output_format Character. `"html"` (default) or `"pdf"`.
-#' @param output_file Character. Output file path. Defaults to
-#'   `"prior_justification_report.html"` (or `.pdf`).
-#' @param trial_name Character. Clinical trial identifier for the report header.
-#' @param sponsor Character. Sponsor name.
-#' @param date Character. Report date. Defaults to `Sys.Date()`.
-#' @param author Character. Report author.
-#' @param open_after Logical. Open the report in the browser after rendering.
-#'   Default `TRUE` in interactive sessions.
+#' @param prior A bayprior object.
+#' @param conflict Optional bayprior_conflict from prior_conflict().
+#' @param sensitivity Optional bayprior_sensitivity from sensitivity_grid().
+#' @param output_format "html" (default) or "pdf".
+#' @param output_file Output path without extension.
+#' @param trial_name Trial / protocol identifier.
+#' @param sponsor Sponsor name.
+#' @param date Report date string. Default Sys.Date().
+#' @param author Responsible statistician.
+#' @param notes Optional narrative text.
+#' @param open_after Open in browser after rendering. Default TRUE interactively.
 #'
-#' @return Invisibly returns the path to the rendered report.
-#'
-#' @details
-#' The generated report includes:
-#' \itemize{
-#'   \item Executive summary of prior choice rationale
-#'   \item Elicitation methodology and expert inputs
-#'   \item Prior distribution summary with density plots
-#'   \item Prior-data conflict assessment (if `conflict` provided)
-#'   \item Sensitivity analysis results with visualisations (if `sensitivity` provided)
-#'   \item Regulatory compliance checklist (FDA 2026 guidance alignment)
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' prior    <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
-#'                         label = "Response rate (treatment)")
-#' conflict <- prior_conflict(prior, list(n = 40, x = 14, type = "binary"))
-#' sens     <- sensitivity_grid(prior, list(n = 40, x = 14, type = "binary"),
-#'                              param_grid = list(alpha = seq(1, 6), beta = seq(2, 14)))
-#'
-#' prior_report(
-#'   prior       = prior,
-#'   conflict    = conflict,
-#'   sensitivity = sens,
-#'   trial_name  = "EXAMPLE-001",
-#'   sponsor     = "Example Pharma Ltd",
-#'   author      = "N.P., Principal Biostatistician"
-#' )
-#' }
-#'
+#' @return Path to the rendered report, invisibly.
 #' @export
 prior_report <- function(prior,
-                         conflict        = NULL,
-                         sensitivity     = NULL,
-                         output_format   = c("html", "pdf"),
-                         output_file     = NULL,
-                         trial_name      = "Clinical Trial",
-                         sponsor         = "Sponsor",
-                         date            = as.character(Sys.Date()),
-                         author          = "Biostatistics",
-                         open_after      = interactive()) {
+                         conflict      = NULL,
+                         sensitivity   = NULL,
+                         output_format = c("html", "pdf"),
+                         output_file   = NULL,
+                         trial_name    = "Clinical Trial",
+                         sponsor       = "Sponsor",
+                         date          = as.character(Sys.Date()),
+                         author        = "Biostatistics",
+                         notes         = "",
+                         open_after    = interactive()) {
 
   output_format <- match.arg(output_format)
-  ext <- if (output_format == "html") ".html" else ".pdf"
-  if (is.null(output_file)) {
-    output_file <- paste0("prior_justification_report", ext)
-  }
 
-  template_dir <- system.file(
-    "rmarkdown", "templates", "prior_report", "resources",
+  rlang::check_installed("rmarkdown",
+    reason = "required to render the prior justification report.")
+  rlang::check_installed("knitr",
+    reason = "required to render the prior justification report.")
+
+  # Output path
+  ext <- if (output_format == "html") ".html" else ".pdf"
+  if (is.null(output_file))
+    output_file <- paste0("prior_justification_report", ext)
+  if (!grepl(paste0("\\", ext, "$"), output_file))
+    output_file <- paste0(output_file, ext)
+  output_file <- normalizePath(output_file, mustWork = FALSE)
+
+  # Locate bundled Rmd template
+  rmd_src <- system.file(
+    "rmarkdown", "templates", "prior_report", "skeleton", "skeleton.Rmd",
     package = "bayprior"
   )
 
-  tmp_rmd <- tempfile(fileext = ".Rmd")
-  .write_report_rmd(
-    path        = tmp_rmd,
+  # Fall back to inline template if not found
+  if (!nzchar(rmd_src)) {
+    cli::cli_alert_warning(
+      "Bundled template not found — using built-in fallback template.")
+    rmd_src <- .write_fallback_template()
+  }
+
+  # Copy to temp dir
+  tmp_dir <- tempfile("bayprior_report_")
+  dir.create(tmp_dir, recursive = TRUE)
+  tmp_rmd <- file.path(tmp_dir, "prior_report.Rmd")
+  file.copy(rmd_src, tmp_rmd, overwrite = TRUE)
+
+  # Output format object
+  out_fmt <- if (output_format == "html") {
+    rmarkdown::html_document(
+      toc             = TRUE,
+      toc_float       = TRUE,
+      toc_depth       = 3,
+      theme           = "flatly",
+      highlight       = "tango",
+      number_sections = TRUE,
+      code_folding    = "hide",
+      self_contained  = TRUE
+    )
+  } else {
+    rmarkdown::pdf_document(
+      toc             = TRUE,
+      number_sections = TRUE,
+      latex_engine    = "xelatex"
+    )
+  }
+
+  # Params
+  params <- list(
     prior       = prior,
     conflict    = conflict,
     sensitivity = sensitivity,
     trial_name  = trial_name,
     sponsor     = sponsor,
-    date        = date,
     author      = author,
-    output_format = output_format
+    date        = date,
+    notes       = notes
   )
 
-  rmarkdown::render(
-    input       = tmp_rmd,
-    output_file = normalizePath(output_file, mustWork = FALSE),
-    quiet       = TRUE
+  cli::cli_progress_step("Rendering {output_format} report...")
+
+  rendered <- rmarkdown::render(
+    input         = tmp_rmd,
+    output_format = out_fmt,
+    output_file   = basename(output_file),
+    output_dir    = tmp_dir,
+    params        = params,
+    envir         = new.env(parent = globalenv()),
+    quiet         = TRUE
   )
 
-  cli::cli_alert_success("Report generated: {output_file}")
+  file.copy(rendered, output_file, overwrite = TRUE)
+  cli::cli_alert_success("Report written to: {.path {output_file}}")
   if (open_after) utils::browseURL(output_file)
   invisible(output_file)
 }
 
 
-# ---- Internal report builder -----------------------------------------------
-
-.write_report_rmd <- function(path, prior, conflict, sensitivity,
-                               trial_name, sponsor, date, author, output_format) {
-  fmt_chunk <- if (output_format == "html") {
-    'output:\n  html_document:\n    toc: true\n    toc_float: true\n    theme: flatly\n    highlight: tango'
-  } else {
-    'output:\n  pdf_document:\n    toc: true\n    number_sections: true'
-  }
-
-  has_conflict   <- !is.null(conflict)
-  has_sensitivity <- !is.null(sensitivity)
-
-  rmd_text <- glue::glue('
----
-title: "Prior Justification Report"
-subtitle: "{trial_name} — {sponsor}"
-author: "{author}"
-date: "{date}"
-{fmt_chunk}
----
-
-```{{r setup, include=FALSE}}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
-                       fig.width = 8, fig.height = 4.5, dpi = 150)
-library(bayprior)
-library(ggplot2)
-```
-
-# Executive Summary
-
-This report documents the Bayesian prior specification for study **{trial_name}**,
-prepared in accordance with FDA guidance on Bayesian clinical trials (2026) and
-EMA reflection paper on the use of Bayesian statistics.
-
-The prior was elicited using **{prior$method} elicitation** and fitted to a
-**{toupper(prior$dist)}** distribution. Key summary statistics are presented below.
-
-# Prior Specification
-
-## Elicitation Methodology
-
-| Attribute | Value |
-|-----------|-------|
-| Quantity | {prior$label} |
-| Distribution | {toupper(prior$dist)} |
-| Method | {prior$method} |
-| Expert(s) | {prior$expert_id} |
-
-## Fitted Parameters
-
-```{{r prior-params}}
-s <- prior$fit_summary
-knitr::kable(
-  data.frame(
-    Statistic = c("Mean", "SD", "2.5th percentile", "Median", "97.5th percentile"),
-    Value     = round(c(s$mean, s$sd, s$q025 %||% NA, s$q500 %||% NA, s$q975 %||% NA), 4)
-  ),
-  caption = "Prior distribution summary statistics"
-)
-```
-
-## Prior Density
-
-```{{r prior-plot}}
-plot(prior)
-```
-
-', .open = "{{", .close = "}}")
-
-  if (has_conflict) {
-    rmd_text <- paste0(rmd_text, glue::glue('
-
-# Prior–Data Conflict Assessment
-
-```{{r conflict-summary}}
-c_obj <- conflict
-sev_label <- toupper(c_obj$conflict_severity)
-knitr::kable(
-  data.frame(
-    Diagnostic = c("Box\'s predictive p-value", "Surprise index",
-                   "KL divergence (prior || likelihood)", "Overlap coefficient",
-                   "Conflict severity"),
-    Value = c(round(c_obj$box_pvalue, 4), round(c_obj$surprise_index, 4),
-              round(c_obj$kl_prior_likelihood, 4), round(c_obj$overlap, 4),
-              toupper(c_obj$conflict_severity))
-  ),
-  caption = "Prior-data conflict diagnostics"
-)
-```
-
-**Recommendation:** {conflict$recommendation}
-
-## Prior–Likelihood–Posterior Overlay
-
-```{{r conflict-plot}}
-plot_prior_likelihood(prior, conflict$data_summary)
-```
-
-', .open = "{{", .close = "}}")
-    )
-  }
-
-  if (has_sensitivity) {
-    rmd_text <- paste0(rmd_text, '
-
-# Sensitivity Analysis
-
-## Influence of Prior Hyperparameters
-
-```{r sensitivity-tornado}
-plot_tornado(sensitivity)
-```
-
-## Hyperparameter Grid Results
-
-```{r sensitivity-plot}
-for (t in sensitivity$target) {
-  print(plot_sensitivity(sensitivity, target = t))
-}
-```
-
-## Regulatory Compliance Checklist
-
-| Requirement | Status |
-|-------------|--------|
-| Prior elicitation documented | ✅ |
-| Elicitation method specified | ✅ |
-| Prior-data conflict assessed | ✅ |
-| Sensitivity analysis performed | ✅ |
-| Alternative priors considered | ✅ |
-| Results robust to prior choice | See above |
-
-')
-  }
-
-  rmd_text <- paste0(rmd_text, '\n\n---\n*Report generated by the bayprior R package.*\n')
-  writeLines(rmd_text, path)
+# Internal fallback template written inline — used if inst/ template missing
+.write_fallback_template <- function() {
+  tmp <- tempfile(fileext = ".Rmd")
+  writeLines(con = tmp, text = c(
+    '---',
+    'title: "Bayesian Prior Justification Report"',
+    'subtitle: "`r params$trial_name`"',
+    'author: "`r params$author`"',
+    'date: "`r params$date`"',
+    'output:',
+    '  html_document:',
+    '    toc: true',
+    '    toc_float: true',
+    '    number_sections: true',
+    '    theme: flatly',
+    'params:',
+    '  prior:       NULL',
+    '  conflict:    NULL',
+    '  sensitivity: NULL',
+    '  trial_name:  "Clinical Trial"',
+    '  sponsor:     "Sponsor"',
+    '  author:      "Biostatistics"',
+    '  date:        ""',
+    '  notes:       ""',
+    '---',
+    '',
+    '```{r setup, include=FALSE}',
+    'knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)',
+    'library(bayprior); library(ggplot2); library(knitr)',
+    'pr <- params$prior; cd <- params$conflict; sa <- params$sensitivity',
+    'has_prior <- !is.null(pr); has_conf <- !is.null(cd); has_sens <- !is.null(sa)',
+    '```',
+    '',
+    '# Prior Specification',
+    '',
+    '```{r params-table}',
+    'if (has_prior) {',
+    '  s <- pr$fit_summary',
+    '  kable(data.frame(',
+    '    Item  = c("Distribution","Method","Expert","Mean","SD","95% CrI"),',
+    '    Value = c(toupper(pr$dist), pr$method, pr$expert_id,',
+    '              round(s$mean,4), round(s$sd,4),',
+    '              paste0("[",round(s$q025,4),", ",round(s$q975,4),"]"))',
+    '  ), col.names=c("Item","Value"), align="ll")',
+    '}',
+    '```',
+    '',
+    '```{r prior-plot, fig.cap="Elicited prior. Shaded = 95% CrI."}',
+    'if (has_prior) plot(pr)',
+    '```',
+    '',
+    '# Conflict Diagnostics',
+    '',
+    '```{r conflict-table}',
+    'if (has_conf) {',
+    '  kable(data.frame(',
+    '    Statistic = c("Box p-value","Surprise index","Overlap","Severity"),',
+    '    Value = c(round(cd$box_pvalue,4), round(cd$surprise_index,3),',
+    '              round(cd$overlap,3), toupper(cd$conflict_severity))',
+    '  ), caption="Conflict diagnostics", align="ll")',
+    '} else { cat("No conflict diagnostics computed.") }',
+    '```',
+    '',
+    '```{r overlay-plot}',
+    'if (has_conf && has_prior)',
+    '  plot_prior_likelihood(pr, cd$data_summary, show_posterior=TRUE)',
+    '```',
+    '',
+    '# Sensitivity Analysis',
+    '',
+    '```{r tornado}',
+    'if (has_sens) plot_tornado(sa) else cat("No sensitivity analysis computed.")',
+    '```',
+    '',
+    '# Session Info',
+    '',
+    '```{r session}',
+    'si <- sessionInfo()',
+    'kable(data.frame(',
+    '  Item=c("R version","bayprior","Platform","Date"),',
+    '  Value=c(paste(si$R.version$major,si$R.version$minor,sep="."),',
+    '          as.character(utils::packageVersion("bayprior")),',
+    '          si$platform, params$date)',
+    '), align="ll")',
+    '```'
+  ))
+  tmp
 }
