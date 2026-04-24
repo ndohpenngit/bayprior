@@ -1,0 +1,340 @@
+---
+title: "Bayesian Prior Justification Report"
+subtitle: "{{< meta params.trial_name >}}"
+author: "{{< meta params.author >}}"
+date: today
+date-format: "D MMMM YYYY"
+
+params:
+  prior:       null
+  conflict:    null
+  sensitivity: null
+  trial_name:  "Clinical Trial"
+  sponsor:     "Sponsor"
+  author:      "Biostatistics"
+  notes:       ""
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-float: true
+    number-sections: true
+    theme: flatly
+    highlight-style: tango
+    code-fold: true
+    embed-resources: true          # single self-contained HTML file
+    fig-width: 8
+    fig-height: 4.5
+  pdf:
+    toc: true
+    number-sections: true
+    latex-engine: xelatex
+    fig-width: 7
+    fig-height: 4
+
+execute:
+  echo: false
+  warning: false
+  message: false
+
+knitr:
+  opts_chunk:
+    dpi: 150
+---
+
+```{r setup}
+library(bayprior)
+library(ggplot2)
+library(knitr)
+
+# Convenience accessors
+pr   <- params$prior
+cd   <- params$conflict
+sa   <- params$sensitivity
+has_prior <- !is.null(pr)
+has_conf  <- !is.null(cd)
+has_sens  <- !is.null(sa)
+```
+
+---
+
+## Executive Summary
+
+This report documents the Bayesian prior specification for study
+**`r params$trial_name`**, prepared by **`r params$author`**
+(`r params$sponsor`) and dated `r format(Sys.Date(), "%d %B %Y")`.
+
+```{r exec-table}
+if (has_prior) {
+  s <- pr$fit_summary
+  kable(
+    data.frame(
+      Item = c("Distribution family", "Elicitation method",
+               "Expert / source", "Prior mean", "Prior SD",
+               "95% Credible interval"),
+      Value = c(
+        toupper(pr$dist), pr$method, pr$expert_id,
+        round(s$mean, 4), round(s$sd, 4),
+        paste0("[", round(s$q025, 4), ",  ", round(s$q975, 4), "]")
+      )
+    ),
+    col.names = c("Item", "Value"), align = "ll",
+    caption = "Prior specification summary"
+  )
+}
+```
+
+`r if (nzchar(params$notes %||% "")) paste0("::: {.callout-note}\n**Statistician's notes:** ", params$notes, "\n:::")`
+
+---
+
+## Trial Information
+
+```{r trial-info}
+kable(
+  data.frame(
+    Field = c("Trial / Protocol", "Sponsor", "Statistician", "Report date"),
+    Value = c(params$trial_name, params$sponsor,
+              params$author, format(Sys.Date(), "%d %B %Y"))
+  ),
+  col.names = c("Field", "Value"), align = "ll"
+)
+```
+
+---
+
+## Prior Specification
+
+### Elicitation Methodology
+
+```{r elicitation-method}
+if (has_prior) {
+  kable(
+    data.frame(
+      Attribute = c("Quantity", "Distribution", "Method", "Expert / Source"),
+      Value     = c(pr$label, toupper(pr$dist), pr$method, pr$expert_id)
+    ),
+    col.names = c("Attribute", "Value"), align = "ll"
+  )
+}
+```
+
+### Fitted Parameters
+
+```{r fitted-params}
+if (has_prior) {
+  kable(
+    data.frame(
+      Parameter = names(pr$params),
+      Value     = round(unlist(pr$params), 6)
+    ),
+    caption = "Fitted hyperparameters", align = "lr"
+  )
+}
+```
+
+### Prior Summary Statistics
+
+```{r prior-summary}
+if (has_prior) {
+  s <- pr$fit_summary
+  kable(
+    data.frame(
+      Statistic = c("Mean", "Standard deviation",
+                    "2.5th percentile", "Median", "97.5th percentile"),
+      Value     = round(c(s$mean, s$sd, s$q025, s$q500, s$q975), 5)
+    ),
+    caption = "Prior distribution summary statistics", align = "lr"
+  )
+}
+```
+
+### Prior Density {#sec-density}
+
+```{r prior-density}
+#| fig-cap: "Elicited prior distribution. Shaded region = 95% credible interval; dashed line = prior mean."
+if (has_prior) plot(pr)
+```
+
+---
+
+## Prior–Data Conflict Assessment
+
+```{r conflict-check}
+#| results: asis
+if (!has_conf) {
+  cat("::: {.callout-warning}\n",
+      "No prior–data conflict diagnostics were computed for this report.\n",
+      ":::\n")
+}
+```
+
+```{r conflict-table}
+#| eval: !expr has_conf
+kable(
+  data.frame(
+    Diagnostic = c(
+      "Box's prior predictive p-value",
+      "Surprise index (standardised distance)",
+      "KL divergence (prior || likelihood)",
+      "Bhattacharyya overlap coefficient",
+      "Conflict severity"
+    ),
+    Value = c(
+      round(cd$box_pvalue, 4),
+      round(cd$surprise_index, 4),
+      round(cd$kl_prior_likelihood, 4),
+      round(cd$overlap, 4),
+      toupper(cd$conflict_severity)
+    ),
+    Interpretation = c(
+      ifelse(cd$conflict_flag,
+             paste0("Conflict detected (p < alpha = ", cd$alpha, ")"),
+             "No conflict detected"),
+      ifelse(cd$surprise_index > 3, "High surprise (> 3 SD)",
+             ifelse(cd$surprise_index > 2, "Moderate surprise", "Within expected range")),
+      ifelse(cd$kl_prior_likelihood > 1, "Large divergence", "Acceptable divergence"),
+      ifelse(cd$overlap < 0.3, "Low overlap — concern",
+             ifelse(cd$overlap < 0.6, "Moderate overlap", "Good overlap")),
+      toupper(cd$conflict_severity)
+    )
+  ),
+  caption = "Prior–data conflict diagnostics", align = "llr"
+)
+```
+
+```{r conflict-callout}
+#| results: asis
+#| eval: !expr has_conf
+sev   <- cd$conflict_severity
+ctype <- switch(sev, none = "tip", mild = "warning", severe = "important", "caution")
+cat(paste0("::: {.callout-", ctype, "}\n",
+           "**Recommendation:** ", cd$recommendation, "\n",
+           ":::\n"))
+```
+
+### Prior – Likelihood – Posterior Overlay
+
+```{r overlay-plot}
+#| fig-cap: "Overlay of prior density, scaled likelihood, and resulting posterior."
+#| eval: !expr (!has_conf || !has_prior)
+if (has_conf && has_prior) {
+  plot_prior_likelihood(pr, cd$data_summary, show_posterior = TRUE)
+}
+```
+
+---
+
+## Sensitivity Analysis
+
+```{r sensitivity-check}
+#| results: asis
+if (!has_sens) {
+  cat("::: {.callout-warning}\n",
+      "No sensitivity analysis was conducted for this report.\n",
+      ":::\n")
+}
+```
+
+### Influence of Prior Hyperparameters
+
+```{r sensitivity-influence}
+#| eval: !expr has_sens
+kable(
+  data.frame(
+    Target    = names(sa$influence_scores),
+    Range     = round(sa$influence_scores, 5),
+    Sensitive = ifelse(sa$influence_scores > 0.05, "Yes", "No")
+  ),
+  caption = "Posterior sensitivity to prior hyperparameters",
+  align   = "lrr"
+)
+```
+
+### Tornado Plot
+
+```{r tornado}
+#| fig-cap: "Range of each posterior quantity across the hyperparameter grid. Wider bars = greater prior influence."
+#| eval: !expr has_sens
+plot_tornado(sa)
+```
+
+### Hyperparameter Influence Heatmap
+
+```{r heatmap}
+#| fig-cap: "Posterior mean across the two-dimensional hyperparameter grid."
+#| eval: !expr has_sens
+if (has_sens) plot_sensitivity(sa, target = sa$target[1])
+```
+
+---
+
+## Regulatory Compliance Checklist
+
+```{r compliance}
+kable(
+  data.frame(
+    Requirement = c(
+      "Prior elicitation method documented",
+      "Distribution family and parameters specified",
+      "Expert / source of prior identified",
+      "Prior density plot provided",
+      "Prior–data conflict assessed",
+      "Conflict diagnostic statistics reported",
+      "Sensitivity analysis performed",
+      "Sensitivity visualisations provided",
+      "Alternative priors considered",
+      "Regulatory report generated"
+    ),
+    Status = c(
+      ifelse(has_prior, "✅ Complete", "❌ Missing"),
+      ifelse(has_prior, "✅ Complete", "❌ Missing"),
+      ifelse(has_prior, "✅ Complete", "❌ Missing"),
+      ifelse(has_prior, "✅ Complete", "❌ Missing"),
+      ifelse(has_conf,  "✅ Complete", "⚠️  Not run"),
+      ifelse(has_conf,  "✅ Complete", "⚠️  Not run"),
+      ifelse(has_sens,  "✅ Complete", "⚠️  Not run"),
+      ifelse(has_sens,  "✅ Complete", "⚠️  Not run"),
+      ifelse(has_sens,  "✅ See above", "⚠️  Not run"),
+      "✅ Complete"
+    )
+  ),
+  align = "ll",
+  caption = "FDA/EMA regulatory compliance checklist (FDA Guidance 2026)"
+)
+```
+
+::: {.callout-note}
+This checklist maps to requirements in the FDA Draft Guidance on Bayesian
+Statistical Methods (2026) and the EMA Reflection Paper on the Use of
+Bayesian Statistics in the Evaluation of Medicinal Products.
+:::
+
+---
+
+## Appendix: Session Information
+
+```{r session-info}
+si <- sessionInfo()
+kable(
+  data.frame(
+    Item  = c("R version", "bayprior version", "Quarto version", "Platform", "Date"),
+    Value = c(
+      paste(si$R.version$major, si$R.version$minor, sep = "."),
+      as.character(utils::packageVersion("bayprior")),
+      as.character(quarto::quarto_version()),
+      si$platform,
+      format(Sys.Date(), "%d %B %Y")
+    )
+  ),
+  align = "ll"
+)
+```
+
+---
+
+*Report generated by the **bayprior** R package using `prior_report()`.
+Methods follow O'Hagan et al. (2006), Box (1980), Schmidli et al. (2014),
+Ibrahim & Chen (2000), and the FDA Draft Guidance on Bayesian Methods in
+Clinical Trials (2026).*

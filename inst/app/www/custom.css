@@ -1,0 +1,86 @@
+/* ============================================================
+   bayprior — Custom shinydashboard styles
+   ============================================================ */
+
+:root {
+  --blue-dark:  #1a2744;
+  --blue-mid:   #185FA5;
+  --green:      #1D9E75;
+  --green-dark: #0F6E56;
+  --grey-light: #F2F4F7;
+  --grey-med:   #D0D5DD;
+}
+
+/* Header */
+.main-header .logo,
+.main-header .navbar { background-color: var(--blue-dark) !important; }
+.main-header .logo   { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+
+/* Sidebar */
+.main-sidebar { background-color: #1e2d50 !important; }
+.sidebar-menu > li > a { font-size: 13px; color: #c8d8f0 !important; border-left: 3px solid transparent; transition: all 0.15s; }
+.sidebar-menu > li.active > a,
+.sidebar-menu > li > a:hover { background-color: rgba(29,158,117,0.18) !important; border-left-color: var(--green) !important; color: #5DCAA5 !important; }
+.sidebar-menu .treeview-menu > li > a { font-size: 12px; color: #8faecf !important; padding: 7px 5px 7px 30px; }
+.sidebar-menu .treeview-menu > li > a:hover { color: #A8CFED !important; }
+
+/* Content */
+.content-wrapper { background-color: #f0f2f5 !important; }
+
+/* Boxes */
+.box { border-radius: 6px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important; border-top: none !important; }
+.box-header { border-radius: 6px 6px 0 0; padding: 10px 15px; font-size: 13px; font-weight: 600; }
+.box.box-primary > .box-header { background-color: var(--blue-dark) !important; color: #fff; }
+.box.box-info    > .box-header { background-color: var(--blue-mid)  !important; color: #fff; }
+.box.box-success > .box-header { background-color: var(--green)     !important; color: #fff; }
+.box.box-warning > .box-header { background-color: #BA7517          !important; color: #fff; }
+.box-body { padding: 12px 15px; }
+.box-header .btn-box-tool { color: rgba(255,255,255,0.7) !important; }
+
+/* Value & info boxes */
+.small-box { border-radius: 6px !important; }
+.small-box .inner h3 { font-size: 26px; font-weight: 700; }
+.small-box .inner p  { font-size: 12px; }
+.info-box { border-radius: 6px !important; min-height: 60px; }
+.info-box-icon { border-radius: 6px 0 0 6px !important; font-size: 28px; width: 60px; line-height: 60px; }
+
+/* Forms */
+label, .control-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 3px; }
+.form-control { font-size: 12px; border-radius: 4px; border-color: var(--grey-med); height: 32px; padding: 4px 8px; }
+.form-control:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 2px rgba(24,95,165,0.15); }
+
+/* Buttons */
+.btn-primary { background-color: var(--green) !important; border-color: var(--green) !important; }
+.btn-primary:hover { background-color: var(--green-dark) !important; border-color: var(--green-dark) !important; }
+.btn-block { margin-bottom: 4px; }
+
+/* Alerts */
+.alert { font-size: 12px; border-radius: 5px; padding: 8px 12px; }
+.alert-success { border-left: 4px solid var(--green); }
+.alert-warning { border-left: 4px solid #BA7517; }
+.alert-danger  { border-left: 4px solid #c0392b; }
+
+/* DT tables */
+table.dataTable { font-size: 12px !important; }
+table.dataTable thead th { background-color: var(--blue-dark) !important; color: #fff !important; font-weight: 600; padding: 8px 10px !important; }
+table.dataTable tbody tr:nth-child(even) { background-color: var(--grey-light); }
+table.dataTable tbody tr:hover { background-color: #dce8f5 !important; }
+
+/* Slider */
+.irs-bar, .irs-bar-edge { background: var(--green) !important; border-color: var(--green) !important; }
+.irs-single { background: var(--blue-mid) !important; }
+
+/* Plotly */
+.js-plotly-plot .plotly { background: transparent !important; }
+
+/* Spinner */
+.shiny-spinner-output-container { min-height: 120px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #b0bec5; border-radius: 3px; }
+
+/* Sidebar status box */
+.sidebar .small-box { margin: 0 10px; border-radius: 4px !important; }
+.sidebar .small-box .inner h3 { font-size: 16px; }
+.sidebar .small-box .inner p  { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

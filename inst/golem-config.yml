@@ -1,0 +1,8 @@
+default:
+  golem_name: bayprior
+  golem_version: 0.1.0
+  app_prod: false
+production:
+  golem_name: bayprior
+  golem_version: 0.1.0
+  app_prod: true

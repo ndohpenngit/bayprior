@@ -1,0 +1,49 @@
+Package: bayprior
+Title: Bayesian Prior Elicitation, Conflict Diagnostics and Sensitivity Analysis for Clinical Trials
+Version: 0.1.0
+Authors@R:
+    person("N.", "P.", email = "author@example.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0000-0000-0000"))
+Description: A toolkit for constructing, validating, and justifying Bayesian
+    priors in clinical trial settings. Implements SHELF-style expert elicitation
+    (quantile matching, roulette method, moment matching), linear and logarithmic
+    expert pooling, prior-data conflict diagnostics (Box p-value, surprise index,
+    Mahalanobis check), sensitivity analyses with tornado and influence plots,
+    sceptical/robust/power priors, and automated HTML/PDF regulatory reports
+    aligned with FDA/EMA expectations. Includes a fully modular Shiny application
+    built with golem and shinydashboard.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1.0)
+Imports:
+    golem (>= 0.4.1),
+    shiny (>= 1.7.4),
+    shinydashboard (>= 0.7.2),
+    shinyWidgets (>= 0.7.6),
+    shinycssloaders (>= 1.0.0),
+    plotly (>= 4.10.1),
+    ggplot2 (>= 3.4.0),
+    dplyr (>= 1.1.0),
+    purrr (>= 1.0.0),
+    rlang (>= 1.1.0),
+    glue (>= 1.6.2),
+    cli (>= 3.6.0),
+    rmarkdown (>= 2.20),
+    knitr (>= 1.40),
+    config (>= 0.3.1),
+    htmltools (>= 0.5.4),
+    DT (>= 0.27)
+Suggests:
+    testthat (>= 3.0.0),
+    shinytest2,
+    withr,
+    covr,
+    vdiffr,
+    patchwork
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/authorname/bayprior
+BugReports: https://github.com/authorname/bayprior/issues

@@ -1,0 +1,6 @@
+name: Prior Justification Report
+description: >
+  Generates a structured HTML or PDF prior justification report for
+  Bayesian clinical trial submissions, aligned with FDA (2026) and
+  EMA guidance on the documentation of Bayesian prior choices.
+create_dir: false
