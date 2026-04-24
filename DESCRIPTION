@@ -28,7 +28,7 @@ Imports:
     ggplot2 (>= 3.4.0),
     dplyr (>= 1.1.0),
     purrr (>= 1.0.0),
-    rlang (>= 1.1.0),
+    rlang (>= 1.2.0),
     glue (>= 1.6.2),
     cli (>= 3.6.0),
     rmarkdown (>= 2.20),

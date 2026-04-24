@@ -1,0 +1,67 @@
+
+<div style="display:flex; flex-direction:column; align-items:center; gap:1.5rem; padding:2rem 0;">
+
+  <svg id="hex" width="200" height="231" viewBox="0 0 200 231" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bggrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#1a237e"/>
+        <stop offset="100%" stop-color="#0d47a1"/>
+      </linearGradient>
+    </defs>
+    <!-- Hex outline -->
+    <polygon points="100,5 191,55 191,155 100,205 9,155 9,55" fill="url(#bggrad)" stroke="#42a5f5" stroke-width="4"/>
+    <!-- Inner hex ring -->
+    <polygon points="100,18 179,63 179,148 100,193 21,148 21,63" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+
+    <!-- Bell curve -->
+    <path d="M 38,148 Q 55,148 65,120 Q 75,92 100,82 Q 125,92 135,120 Q 145,148 162,148" fill="none" stroke="#90caf9" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Baseline -->
+    <line x1="35" y1="148" x2="165" y2="148" stroke="#42a5f5" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <!-- Prior shading under curve -->
+    <path d="M 38,148 Q 55,148 65,120 Q 75,92 100,82 Q 125,92 135,120 Q 145,148 162,148 Z" fill="#1565c0" fill-opacity="0.35"/>
+    <!-- Mean line -->
+    <line x1="100" y1="84" x2="100" y2="148" stroke="#42a5f5" stroke-width="1.2" stroke-dasharray="3,3"/>
+
+    <!-- Text -->
+    <text x="100" y="55" text-anchor="middle" fill="#e3f2fd" font-size="15" font-weight="700" font-family="'Courier New', monospace" letter-spacing="2">bayprior</text>
+    <text x="100" y="178" text-anchor="middle" fill="#90caf9" font-size="9.5" font-family="'Courier New', monospace" letter-spacing="1">PRIOR ELICITATION</text>
+  </svg>
+
+  <div style="width:100%; max-width:560px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <span style="font-size:13px; color:var(--color-text-secondary);">SVG source</span>
+      <button onclick="
+        const code = document.getElementById('svgcode').textContent;
+        navigator.clipboard.writeText(code);
+        this.textContent='Copied!';
+        setTimeout(()=>this.textContent='Copy',1500);
+      " style="font-size:12px; padding:4px 12px;">Copy</button>
+    </div>
+    <pre id="svgcode" style="background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:8px; padding:1rem; font-size:11px; font-family:monospace; overflow-x:auto; white-space:pre; line-height:1.6; color:var(--color-text-primary); margin:0;">&lt;svg width="200" height="231" viewBox="0 0 200 231" xmlns="http://www.w3.org/2000/svg"&gt;
+  &lt;defs&gt;
+    &lt;linearGradient id="bggrad" x1="0" y1="0" x2="1" y2="1"&gt;
+      &lt;stop offset="0%" stop-color="#1a237e"/&gt;
+      &lt;stop offset="100%" stop-color="#0d47a1"/&gt;
+    &lt;/linearGradient&gt;
+  &lt;/defs&gt;
+  &lt;polygon points="100,5 191,55 191,155 100,205 9,155 9,55"
+    fill="url(#bggrad)" stroke="#42a5f5" stroke-width="4"/&gt;
+  &lt;polygon points="100,18 179,63 179,148 100,193 21,148 21,63"
+    fill="none" stroke="#1565c0" stroke-width="1.5"/&gt;
+  &lt;path d="M 38,148 Q 55,148 65,120 Q 75,92 100,82 Q 125,92 135,120 Q 145,148 162,148"
+    fill="none" stroke="#90caf9" stroke-width="2.5" stroke-linecap="round"/&gt;
+  &lt;line x1="35" y1="148" x2="165" y2="148"
+    stroke="#42a5f5" stroke-width="1.5" stroke-dasharray="4,3"/&gt;
+  &lt;path d="M 38,148 Q 55,148 65,120 Q 75,92 100,82 Q 125,92 135,120 Q 145,148 162,148 Z"
+    fill="#1565c0" fill-opacity="0.35"/&gt;
+  &lt;line x1="100" y1="84" x2="100" y2="148"
+    stroke="#42a5f5" stroke-width="1.2" stroke-dasharray="3,3"/&gt;
+  &lt;text x="100" y="55" text-anchor="middle" fill="#e3f2fd"
+    font-size="15" font-weight="700" font-family="'Courier New', monospace"
+    letter-spacing="2"&gt;bayprior&lt;/text&gt;
+  &lt;text x="100" y="178" text-anchor="middle" fill="#90caf9"
+    font-size="9.5" font-family="'Courier New', monospace"
+    letter-spacing="1"&gt;PRIOR ELICITATION&lt;/text&gt;
+&lt;/svg&gt;</pre>
+  </div>
+</div>

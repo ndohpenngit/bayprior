@@ -4,7 +4,7 @@
     bayprior: Bayesian Prior Elicitation for Clinical Trials
     <br>
     <a href="https://www.r-project.org/">
-      <img src="https://img.shields.io/badge/R-%3E=4.1.0-blue?logo=r&logoColor=white" alt="R version"/>
+      <img src="https://img.shields.io/badge/R-%3E=4.4.2-blue?logo=r&logoColor=white" alt="R version"/>
     </a>
     <a href="https://shiny.posit.co/">
       <img src="https://img.shields.io/badge/Built%20with-Shiny-009999?logo=rstudio&logoColor=white" alt="Shiny"/>
@@ -210,7 +210,7 @@ run_app()
 @Manual{bayprior2025,
   title  = {bayprior: Bayesian Prior Elicitation, Conflict Diagnostics and
              Sensitivity Analysis for Clinical Trials},
-  author = {N. P.},
+  author = {Ndoh Penn},
   year   = {2025},
   note   = {R package version 0.1.0},
   url    = {https://github.com/ndohpenngit/bayprior}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/reporting.R
 \name{prior_report}
 \alias{prior_report}
-\title{Generate a Prior Justification Report for regulatory submission}
+\title{Generate a Prior Justification Report}
 \usage{
 prior_report(
   prior,
@@ -14,69 +14,37 @@ prior_report(
   sponsor = "Sponsor",
   date = as.character(Sys.Date()),
   author = "Biostatistics",
+  notes = "",
   open_after = interactive()
 )
 }
 \arguments{
-\item{prior}{A \code{bayprior} object (or list of \code{bayprior} objects for
-multi-endpoint reports).}
+\item{prior}{A bayprior object.}
 
-\item{conflict}{Optional. A \code{bayprior_conflict} object from \code{prior_conflict()}.}
+\item{conflict}{Optional bayprior_conflict from prior_conflict().}
 
-\item{sensitivity}{Optional. A \code{bayprior_sensitivity} object from
-\code{sensitivity_grid()}.}
+\item{sensitivity}{Optional bayprior_sensitivity from sensitivity_grid().}
 
-\item{output_format}{Character. \code{"html"} (default) or \code{"pdf"}.}
+\item{output_format}{"html" (default) or "pdf".}
 
-\item{output_file}{Character. Output file path. Defaults to
-\code{"prior_justification_report.html"} (or \code{.pdf}).}
+\item{output_file}{Output path without extension.}
 
-\item{trial_name}{Character. Clinical trial identifier for the report header.}
+\item{trial_name}{Trial / protocol identifier.}
 
-\item{sponsor}{Character. Sponsor name.}
+\item{sponsor}{Sponsor name.}
 
-\item{date}{Character. Report date. Defaults to \code{Sys.Date()}.}
+\item{date}{Report date string. Default Sys.Date().}
 
-\item{author}{Character. Report author.}
+\item{author}{Responsible statistician.}
 
-\item{open_after}{Logical. Open the report in the browser after rendering.
-Default \code{TRUE} in interactive sessions.}
+\item{notes}{Optional narrative text.}
+
+\item{open_after}{Open in browser after rendering. Default TRUE interactively.}
 }
 \value{
-Invisibly returns the path to the rendered report.
+Path to the rendered report, invisibly.
 }
 \description{
-Produces a structured HTML or PDF report documenting the prior elicitation
-process, conflict diagnostics, and sensitivity analyses in a format aligned
-with FDA/EMA expectations for Bayesian clinical trial submissions.
-}
-\details{
-The generated report includes:
-\itemize{
-\item Executive summary of prior choice rationale
-\item Elicitation methodology and expert inputs
-\item Prior distribution summary with density plots
-\item Prior-data conflict assessment (if \code{conflict} provided)
-\item Sensitivity analysis results with visualisations (if \code{sensitivity} provided)
-\item Regulatory compliance checklist (FDA 2026 guidance alignment)
-}
-}
-\examples{
-\dontrun{
-prior    <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
-                        label = "Response rate (treatment)")
-conflict <- prior_conflict(prior, list(n = 40, x = 14, type = "binary"))
-sens     <- sensitivity_grid(prior, list(n = 40, x = 14, type = "binary"),
-                             param_grid = list(alpha = seq(1, 6), beta = seq(2, 14)))
-
-prior_report(
-  prior       = prior,
-  conflict    = conflict,
-  sensitivity = sens,
-  trial_name  = "EXAMPLE-001",
-  sponsor     = "Example Pharma Ltd",
-  author      = "N.P., Principal Biostatistician"
-)
-}
-
+Renders an HTML or PDF report using rmarkdown::render().
+No external Quarto installation required.
 }
