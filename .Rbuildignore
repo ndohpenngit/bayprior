@@ -1,2 +1,4 @@
+^renv$
+^renv\.lock$
 ^bayprior\.Rproj$
 ^\.Rproj\.user$
