@@ -17,7 +17,7 @@ conflict_mahalanobis(
 \item{prior_means}{Numeric vector. Prior means for each parameter.}
 
 \item{prior_cov}{Numeric matrix. Prior covariance matrix
-(p × p, positive definite).}
+(p x p, positive definite).}
 
 \item{obs_means}{Numeric vector. Observed data means (same length as
 \code{prior_means}).}

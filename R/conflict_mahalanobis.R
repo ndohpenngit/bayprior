@@ -13,7 +13,7 @@
 #'
 #' @param prior_means Numeric vector. Prior means for each parameter.
 #' @param prior_cov   Numeric matrix. Prior covariance matrix
-#'   (p × p, positive definite).
+#'   (p x p, positive definite).
 #' @param obs_means   Numeric vector. Observed data means (same length as
 #'   `prior_means`).
 #' @param obs_cov     Numeric matrix. Observed covariance matrix of the
@@ -57,7 +57,7 @@ conflict_mahalanobis <- function(prior_means,
     rlang::abort("`prior_means` and `obs_means` must have the same length.")
   }
   if (!all(dim(prior_cov) == p) || !all(dim(obs_cov) == p)) {
-    rlang::abort("Covariance matrices must be p × p where p = length(prior_means).")
+    rlang::abort("Covariance matrices must be p x p where p = length(prior_means).")
   }
   if (is.null(labels)) labels <- paste0("param_", seq_len(p))
 
@@ -141,7 +141,7 @@ print.bayprior_conflict_mv <- function(x, ...) {
 #' @param data_summary Named list as for `prior_conflict()`.
 #' @param param_grid  Named list of numeric vectors (1 or 2 parameters).
 #' @param cri_level   Numeric in (0, 1). Credible level. Default `0.95`.
-#' @param threshold   Numeric. Efficacy threshold for `Pr(θ > threshold)`.
+#' @param threshold   Numeric. Efficacy threshold for `Pr(theta > threshold)`.
 #'   Default `NULL` (skips probability computation).
 #'
 #' @return A `bayprior_sensitivity` object (same class as `sensitivity_grid`)

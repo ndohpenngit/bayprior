@@ -267,3 +267,51 @@ plot.bayprior <- function(x, ...) {
     ) +
     ggplot2::theme_minimal(base_size = 13)
 }
+
+
+#' Plot method for bayprior_conflict objects
+#'
+#' @param x A `bayprior_conflict` object from [prior_conflict()].
+#' @param ... Additional arguments (currently unused).
+#' @return A ggplot2 object (invisibly).
+#' @export
+plot.bayprior_conflict <- function(x, ...) {
+  # Reconstruct grid from prior support
+  grid <- seq(
+    max(0, x$prior_mean - 5 * x$prior_sd),
+    min(1, x$prior_mean + 5 * x$prior_sd),
+    length.out = 500
+  )
+
+  # Prior density (Beta)
+  p   <- x$prior$params
+  pri <- stats::dbeta(grid, p$alpha, p$beta)
+
+  # Approximate likelihood as Normal on observed mean
+  lik <- stats::dnorm(grid, mean = x$obs_mean, sd = x$obs_se)
+  lik <- lik / max(lik) * max(pri)   # scale to same height as prior
+
+  df <- data.frame(
+    theta   = rep(grid, 2),
+    density = c(pri, lik),
+    curve   = rep(c("Prior", "Likelihood"), each = length(grid))
+  )
+
+  severity <- toupper(x$conflict_severity)
+  col_map  <- c("Prior" = "steelblue", "Likelihood" = "firebrick")
+
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = theta, y = density,
+                                         colour = curve)) +
+    ggplot2::geom_line(linewidth = 0.9) +
+    ggplot2::scale_colour_manual(values = col_map) +
+    ggplot2::labs(
+      title    = paste0("Prior-Data Conflict: ", x$prior$label),
+      subtitle = paste0("Box p = ", round(x$box_pvalue, 3),
+                        " | Severity: ", severity),
+      x = "theta", y = "Density", colour = NULL
+    ) +
+    ggplot2::theme_minimal()
+
+  print(p)
+  invisible(p)
+}

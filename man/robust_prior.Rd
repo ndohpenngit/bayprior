@@ -19,7 +19,7 @@ component (e.g. an elicited or historical prior).}
 (diffuse) component. Default \code{0.20} (80\% informative, 20\% vague).}
 
 \item{vague_sd}{Numeric. SD of the vague Normal component (on the
-natural scale). If \code{NULL}, defaults to 10× the informative prior's SD.}
+natural scale). If \code{NULL}, defaults to 10x the informative prior's SD.}
 
 \item{label}{Character. Label for the robust prior.}
 }
@@ -43,5 +43,5 @@ plot(robust)
 \references{
 Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in
 clinical trials with historical control information.
-\emph{Biometrics}, 70, 1023–1032.
+\emph{Biometrics}, 70, 1023-1032.
 }

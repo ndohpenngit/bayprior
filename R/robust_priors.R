@@ -2,7 +2,7 @@
 #'
 #' Generates a sceptical prior that places most mass at or near the null
 #' value of the treatment effect, representing a conservative stance for
-#' regulatory submissions. Implements the Spiegelhalter–Freedman sceptical
+#' regulatory submissions. Implements the Spiegelhalter-Freedman sceptical
 #' prior approach and the FDA-recommended "enthusiastic vs sceptical" prior
 #' sensitivity pair.
 #'
@@ -23,13 +23,13 @@
 #' \itemize{
 #'   \item `weak`:     SD = standard deviation of a "vague" half-normal
 #'   \item `moderate`: SD chosen so that a 2-SD departure from null has ~5%
-#'     prior probability — roughly equivalent to a p < 0.05 sceptic
-#'   \item `strong`:   SD = half of `moderate` — very concentrated at null
+#'     prior probability - roughly equivalent to a p < 0.05 sceptic
+#'   \item `strong`:   SD = half of `moderate` - very concentrated at null
 #' }
 #'
 #' @references
 #' Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994).
-#' Bayesian approaches to randomized trials. *JRSS-A*, 157, 357–416.
+#' Bayesian approaches to randomized trials. *JRSS-A*, 157, 357-416.
 #'
 #' @examples
 #' sc <- sceptical_prior(null_value = 0, family = "normal",
@@ -92,7 +92,7 @@ sceptical_prior <- function(null_value = 0,
 #' @param vague_weight Numeric in (0, 1). Weight assigned to the vague
 #'   (diffuse) component. Default `0.20` (80% informative, 20% vague).
 #' @param vague_sd    Numeric. SD of the vague Normal component (on the
-#'   natural scale). If `NULL`, defaults to 10× the informative prior's SD.
+#'   natural scale). If `NULL`, defaults to 10x the informative prior's SD.
 #' @param label       Character. Label for the robust prior.
 #'
 #' @return A `bayprior` object with `dist = "mixture"` and
@@ -101,7 +101,7 @@ sceptical_prior <- function(null_value = 0,
 #' @references
 #' Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in
 #' clinical trials with historical control information.
-#' *Biometrics*, 70, 1023–1032.
+#' *Biometrics*, 70, 1023-1032.
 #'
 #' @examples
 #' informative <- elicit_normal(mean = 0.30, sd = 0.10,
@@ -188,10 +188,10 @@ robust_prior <- function(informative,
 #'
 #' @references
 #' Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for
-#' regression models. *Statistical Science*, 15, 46–60.
+#' regression models. *Statistical Science*, 15, 46-60.
 #'
 #' Gravestock, I. & Held, L. (2017). Adaptive power priors with empirical
-#' Bayes for clinical trials. *Pharmaceutical Statistics*, 16, 349–360.
+#' Bayes for clinical trials. *Pharmaceutical Statistics*, 16, 349-360.
 #'
 #' @examples
 #' base  <- elicit_beta(mean = 0.5, sd = 0.2, method = "moments",
@@ -320,7 +320,7 @@ plot.bayprior_power_prior <- function(x, ...) {
     ggplot2::geom_vline(xintercept = delta_opt,
                         linetype = "dotted", colour = "#1D9E75") +
     ggplot2::labs(title = "Bayes Factor vs power prior weight",
-                  x = paste0("delta (", "\u03b4", ")"), y = "Bayes Factor") +
+                  x = "delta", y = "Bayes Factor") +
     ggplot2::theme_minimal(base_size = 12)
 
   p2 <- ggplot2::ggplot(res, ggplot2::aes(x = delta)) +
@@ -331,7 +331,7 @@ plot.bayprior_power_prior <- function(x, ...) {
     ggplot2::geom_vline(xintercept = delta_opt,
                         linetype = "dotted", colour = "#1D9E75") +
     ggplot2::labs(title = "Box p-value (conflict) vs power prior weight",
-                  x = "delta (δ)", y = "Box p-value") +
+                  x = "delta", y = "Box p-value") +
     ggplot2::theme_minimal(base_size = 12)
 
   # Stack with patchwork if available, otherwise return list

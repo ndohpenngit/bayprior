@@ -74,8 +74,8 @@ plot(calib)
 }
 \references{
 Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for
-regression models. \emph{Statistical Science}, 15, 46–60.
+regression models. \emph{Statistical Science}, 15, 46-60.
 
 Gravestock, I. & Held, L. (2017). Adaptive power priors with empirical
-Bayes for clinical trials. \emph{Pharmaceutical Statistics}, 16, 349–360.
+Bayes for clinical trials. \emph{Pharmaceutical Statistics}, 16, 349-360.
 }

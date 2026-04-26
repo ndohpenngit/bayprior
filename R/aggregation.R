@@ -119,8 +119,15 @@ aggregate_experts <- function(priors,
 
 # ---- Internal helpers -------------------------------------------------------
 
-#' Pairwise Bhattacharyya coefficients between Beta distributions
-#' Extended numerically for other families.
+#' Pairwise Bhattacharyya Coefficients
+#'
+#' Computes pairwise Bhattacharyya coefficients between a list of prior
+#' distributions. Analytical for Beta-Beta pairs; numerical otherwise.
+#'
+#' @param priors A named list of `bayprior` objects to compare pairwise.
+#'
+#' @return A symmetric matrix of Bhattacharyya coefficients (values in \[0, 1\]).
+#' @keywords internal
 .pairwise_bhattacharyya <- function(priors) {
   k   <- length(priors)
   nms <- names(priors)

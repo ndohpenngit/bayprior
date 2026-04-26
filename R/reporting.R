@@ -53,7 +53,7 @@ prior_report <- function(prior,
   # Fall back to inline template if not found
   if (!nzchar(rmd_src)) {
     cli::cli_alert_warning(
-      "Bundled template not found — using built-in fallback template.")
+      "Bundled template not found - using built-in fallback template.")
     rmd_src <- .write_fallback_template()
   }
 
@@ -114,7 +114,7 @@ prior_report <- function(prior,
 }
 
 
-# Internal fallback template written inline — used if inst/ template missing
+# Internal fallback template written inline - used if inst/ template missing
 .write_fallback_template <- function() {
   tmp <- tempfile(fileext = ".Rmd")
   writeLines(con = tmp, text = c(

@@ -38,7 +38,7 @@ mod_conflict_ui <- function(id) {
       uiOutput(ns("conflict_alert")),
       shinydashboard::box(
         width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("chart-area"), " Prior – Likelihood – Posterior overlay"),
+        title = tagList(icon("chart-area"), " Prior - Likelihood - Posterior overlay"),
         shinycssloaders::withSpinner(
           plotly::plotlyOutput(ns("overlay_plot"), height = "300px"),
           color = "#1D9E75"
@@ -84,16 +84,16 @@ mod_conflict_server <- function(id, shared, active_prior) {
     })
 
     output$vb_boxp <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) round(res()$box_pvalue, 4) else "—"
+      val <- if (!is.null(res())) round(res()$box_pvalue, 4) else "-"
       col <- if (!is.null(res()) && res()$conflict_flag) "red" else "green"
       shinydashboard::valueBox(val, "Box p-value", icon = icon("vial"), color = col)
     })
     output$vb_surprise <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) round(res()$surprise_index, 3) else "—"
+      val <- if (!is.null(res())) round(res()$surprise_index, 3) else "-"
       shinydashboard::valueBox(val, "Surprise index", icon = icon("bolt"), color = "yellow")
     })
     output$vb_overlap <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) round(res()$overlap, 3) else "—"
+      val <- if (!is.null(res())) round(res()$overlap, 3) else "-"
       shinydashboard::valueBox(val, "Overlap coeff.", icon = icon("circle-half-stroke"), color = "blue")
     })
 
@@ -132,23 +132,23 @@ mod_mahal_ui <- function(id) {
       tags$br(), tags$br(),
       tags$b("Prior specification"),
       fluidRow(
-        column(6, numericInput(ns("pm1"), "Mean — ep.1", 0.35, step = 0.01)),
-        column(6, numericInput(ns("pm2"), "Mean — ep.2", 0.60, step = 0.01))
+        column(6, numericInput(ns("pm1"), "Mean - ep.1", 0.35, step = 0.01)),
+        column(6, numericInput(ns("pm2"), "Mean - ep.2", 0.60, step = 0.01))
       ),
       fluidRow(
-        column(6, numericInput(ns("pv1"), "Var — ep.1", 0.01,  step = 0.001)),
-        column(6, numericInput(ns("pv2"), "Var — ep.2", 0.015, step = 0.001))
+        column(6, numericInput(ns("pv1"), "Var - ep.1", 0.01,  step = 0.001)),
+        column(6, numericInput(ns("pv2"), "Var - ep.2", 0.015, step = 0.001))
       ),
       numericInput(ns("pcov"), "Covariance (off-diag)", 0.003, step = 0.001),
       tags$hr(),
       tags$b("Observed data"),
       fluidRow(
-        column(6, numericInput(ns("om1"), "Mean — ep.1", 0.55, step = 0.01)),
-        column(6, numericInput(ns("om2"), "Mean — ep.2", 0.58, step = 0.01))
+        column(6, numericInput(ns("om1"), "Mean - ep.1", 0.55, step = 0.01)),
+        column(6, numericInput(ns("om2"), "Mean - ep.2", 0.58, step = 0.01))
       ),
       fluidRow(
-        column(6, numericInput(ns("ov1"), "Var/n — ep.1", 0.0002, step = 0.00005)),
-        column(6, numericInput(ns("ov2"), "Var/n — ep.2", 0.0002, step = 0.00005))
+        column(6, numericInput(ns("ov1"), "Var/n - ep.1", 0.0002, step = 0.00005)),
+        column(6, numericInput(ns("ov2"), "Var/n - ep.2", 0.0002, step = 0.00005))
       ),
       numericInput(ns("ocov"), "Covariance/n", 0.00004, step = 0.000005),
       tags$hr(),
@@ -195,16 +195,16 @@ mod_mahal_server <- function(id) {
     })
 
     output$vb_D <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) round(res()$mahal_distance, 3) else "—"
+      val <- if (!is.null(res())) round(res()$mahal_distance, 3) else "-"
       shinydashboard::valueBox(val, "Mahalanobis D", icon = icon("ruler"), color = "blue")
     })
     output$vb_pval <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) round(res()$pvalue, 4) else "—"
+      val <- if (!is.null(res())) round(res()$pvalue, 4) else "-"
       col <- if (!is.null(res()) && res()$conflict_flag) "red" else "green"
       shinydashboard::valueBox(val, "Chi-sq p-value", icon = icon("chart-pie"), color = col)
     })
     output$vb_flag <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) if (res()$conflict_flag) "CONFLICT" else "OK" else "—"
+      val <- if (!is.null(res())) if (res()$conflict_flag) "CONFLICT" else "OK" else "-"
       col <- if (!is.null(res()) && res()$conflict_flag) "red" else "green"
       shinydashboard::valueBox(val, "Status", icon = icon("flag"), color = col)
     })

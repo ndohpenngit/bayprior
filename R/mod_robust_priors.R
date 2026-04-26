@@ -67,18 +67,18 @@ mod_sceptical_server <- function(id, shared) {
     })
 
     output$vb_mean <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "—"
+      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "-"
       shinydashboard::valueBox(val, "Prior mean", icon = icon("dot-circle"), color = "blue")
     })
     output$vb_sd <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "—"
+      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "-"
       shinydashboard::valueBox(val, "Prior SD", icon = icon("arrows-left-right"), color = "green")
     })
     output$vb_cri <- shinydashboard::renderValueBox({
       val <- if (!is.null(fitted())) {
         s <- fitted()$fit_summary
         glue::glue("[{round(s$q025,3)}, {round(s$q975,3)}]")
-      } else "—"
+      } else "-"
       shinydashboard::valueBox(val, "95% CrI", icon = icon("ruler-horizontal"), color = "purple")
     })
 
@@ -174,17 +174,17 @@ mod_robust_server <- function(id, shared, active_prior) {
     })
 
     output$vb_mean <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "—"
+      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "-"
       shinydashboard::valueBox(val, "Mixture mean", icon = icon("dot-circle"), color = "blue")
     })
     output$vb_sd <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "—"
+      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "-"
       shinydashboard::valueBox(val, "Mixture SD", icon = icon("arrows-left-right"), color = "green")
     })
     output$vb_wts <- shinydashboard::renderValueBox({
       val <- if (!is.null(fitted()))
         glue::glue("{round((1-fitted()$vague_weight)*100)}% / {round(fitted()$vague_weight*100)}%")
-      else "—"
+      else "-"
       shinydashboard::valueBox(val, "Info / Vague %", icon = icon("percent"), color = "orange")
     })
 
@@ -327,15 +327,15 @@ mod_power_server <- function(id, shared, active_prior) {
     })
 
     output$vb_delta <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) res()$delta_opt else "—"
+      val <- if (!is.null(res())) res()$delta_opt else "-"
       shinydashboard::valueBox(val, "Optimal delta", icon = icon("sliders"), color = "blue")
     })
     output$vb_mean <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) round(res()$power_prior$fit_summary$mean, 3) else "—"
+      val <- if (!is.null(res())) round(res()$power_prior$fit_summary$mean, 3) else "-"
       shinydashboard::valueBox(val, "Power prior mean", icon = icon("dot-circle"), color = "green")
     })
     output$vb_sd <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) round(res()$power_prior$fit_summary$sd, 3) else "—"
+      val <- if (!is.null(res())) round(res()$power_prior$fit_summary$sd, 3) else "-"
       shinydashboard::valueBox(val, "Power prior SD", icon = icon("arrows-left-right"), color = "purple")
     })
 

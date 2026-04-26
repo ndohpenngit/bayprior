@@ -90,7 +90,7 @@ mod_report_server <- function(id, shared, active_prior) {
       content = function(file) {
         p <- active_prior()
         if (is.null(p)) {
-          showNotification("No prior available — cannot generate report.", type = "error")
+          showNotification("No prior available - cannot generate report.", type = "error")
           return(NULL)
         }
         withProgress(message = "Rendering report...", value = 0.5, {

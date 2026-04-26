@@ -21,7 +21,7 @@ sensitivity_cri(
 
 \item{cri_level}{Numeric in (0, 1). Credible level. Default \code{0.95}.}
 
-\item{threshold}{Numeric. Efficacy threshold for \code{Pr(θ > threshold)}.
+\item{threshold}{Numeric. Efficacy threshold for \code{Pr(theta > threshold)}.
 Default \code{NULL} (skips probability computation).}
 }
 \value{

@@ -32,7 +32,7 @@ A \code{bayprior} object tagged with \code{prior_type = "sceptical"}.
 \description{
 Generates a sceptical prior that places most mass at or near the null
 value of the treatment effect, representing a conservative stance for
-regulatory submissions. Implements the Spiegelhalter–Freedman sceptical
+regulatory submissions. Implements the Spiegelhalter-Freedman sceptical
 prior approach and the FDA-recommended "enthusiastic vs sceptical" prior
 sensitivity pair.
 }
@@ -42,8 +42,8 @@ SD calibrated to the \code{strength} argument:
 \itemize{
 \item \code{weak}:     SD = standard deviation of a "vague" half-normal
 \item \code{moderate}: SD chosen so that a 2-SD departure from null has ~5\%
-prior probability — roughly equivalent to a p < 0.05 sceptic
-\item \code{strong}:   SD = half of \code{moderate} — very concentrated at null
+prior probability - roughly equivalent to a p < 0.05 sceptic
+\item \code{strong}:   SD = half of \code{moderate} - very concentrated at null
 }
 }
 \examples{
@@ -55,5 +55,5 @@ plot(sc)
 }
 \references{
 Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994).
-Bayesian approaches to randomized trials. \emph{JRSS-A}, 157, 357–416.
+Bayesian approaches to randomized trials. \emph{JRSS-A}, 157, 357-416.
 }

@@ -2,12 +2,18 @@
 % Please edit documentation in R/aggregation.R
 \name{.pairwise_bhattacharyya}
 \alias{.pairwise_bhattacharyya}
-\title{Pairwise Bhattacharyya coefficients between Beta distributions
-Extended numerically for other families.}
+\title{Pairwise Bhattacharyya Coefficients}
 \usage{
 .pairwise_bhattacharyya(priors)
 }
-\description{
-Pairwise Bhattacharyya coefficients between Beta distributions
-Extended numerically for other families.
+\arguments{
+\item{priors}{A named list of \code{bayprior} objects to compare pairwise.}
 }
+\value{
+A symmetric matrix of Bhattacharyya coefficients (values in [0, 1]).
+}
+\description{
+Computes pairwise Bhattacharyya coefficients between a list of prior
+distributions. Analytical for Beta-Beta pairs; numerical otherwise.
+}
+\keyword{internal}

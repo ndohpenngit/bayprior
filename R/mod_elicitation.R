@@ -152,18 +152,18 @@ mod_elicitation_server <- function(id, shared) {
     })
 
     output$vb_mean <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "—"
+      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "-"
       shinydashboard::valueBox(val, "Prior mean", icon = icon("dot-circle"), color = "blue")
     })
     output$vb_sd <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "—"
+      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "-"
       shinydashboard::valueBox(val, "Prior SD", icon = icon("arrows-left-right"), color = "green")
     })
     output$vb_cri <- shinydashboard::renderValueBox({
       val <- if (!is.null(fitted())) {
         s <- fitted()$fit_summary
         glue::glue("[{round(s$q025,3)}, {round(s$q975,3)}]")
-      } else "—"
+      } else "-"
       shinydashboard::valueBox(val, "95% CrI", icon = icon("ruler-horizontal"), color = "purple")
     })
 
