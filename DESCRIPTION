@@ -12,7 +12,7 @@ Description: A toolkit for constructing, validating, and justifying Bayesian
     sceptical/robust/power priors, and automated HTML/PDF regulatory reports
     aligned with FDA/EMA expectations. Includes a fully modular Shiny application
     built with golem and shinydashboard.
-License: GPL (>= 3)
+License: GPL-3 | file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -32,12 +32,12 @@ Imports:
     glue (>= 1.6.2),
     cli (>= 3.6.0),
     rmarkdown (>= 2.20),
-    knitr (>= 1.40),
     config (>= 0.3.1),
-    htmltools (>= 0.5.4),
     DT (>= 0.27)
 Suggests:
     testthat (>= 3.0.0),
+    knitr (>= 1.40),
+    htmltools (>= 0.5.4),
     shinytest2,
     withr,
     covr,

@@ -320,7 +320,7 @@ plot.bayprior_power_prior <- function(x, ...) {
     ggplot2::geom_vline(xintercept = delta_opt,
                         linetype = "dotted", colour = "#1D9E75") +
     ggplot2::labs(title = "Bayes Factor vs power prior weight",
-                  x = "delta (δ)", y = "Bayes Factor") +
+                  x = paste0("delta (", "\u03b4", ")"), y = "Bayes Factor") +
     ggplot2::theme_minimal(base_size = 12)
 
   p2 <- ggplot2::ggplot(res, ggplot2::aes(x = delta)) +
