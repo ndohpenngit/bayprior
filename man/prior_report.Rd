@@ -8,13 +8,17 @@ prior_report(
   prior,
   conflict = NULL,
   sensitivity = NULL,
-  output_format = c("html", "pdf"),
+  output_format = c("html", "pdf", "docx"),
   output_file = NULL,
   trial_name = "Clinical Trial",
   sponsor = "Sponsor",
   date = as.character(Sys.Date()),
   author = "Biostatistics",
   notes = "",
+  prior_plot = NULL,
+  overlay_plot = NULL,
+  tornado_plot = NULL,
+  heatmap_plot = NULL,
   open_after = interactive()
 )
 }
@@ -25,7 +29,7 @@ prior_report(
 
 \item{sensitivity}{Optional bayprior_sensitivity from sensitivity_grid().}
 
-\item{output_format}{"html" (default) or "pdf".}
+\item{output_format}{"html" (default), "pdf", or "docx".}
 
 \item{output_file}{Output path without extension.}
 
@@ -39,12 +43,20 @@ prior_report(
 
 \item{notes}{Optional narrative text.}
 
-\item{open_after}{Open in browser after rendering. Default TRUE interactively.}
+\item{prior_plot}{Optional pre-captured ggplot from plot(prior).}
+
+\item{overlay_plot}{Optional pre-captured ggplot from plot_prior_likelihood().}
+
+\item{tornado_plot}{Optional pre-captured ggplot from plot_tornado().}
+
+\item{heatmap_plot}{Optional pre-captured ggplot from plot_sensitivity().}
+
+\item{open_after}{Open after rendering. Default TRUE interactively.}
 }
 \value{
 Path to the rendered report, invisibly.
 }
 \description{
-Renders an HTML or PDF report using rmarkdown::render().
+Renders an HTML, PDF, or Word (.docx) report using rmarkdown::render().
 No external Quarto installation required.
 }

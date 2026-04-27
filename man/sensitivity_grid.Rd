@@ -15,27 +15,21 @@ sensitivity_grid(
 \arguments{
 \item{prior}{A \code{bayprior} object (the reference prior).}
 
-\item{data_summary}{Named list as for \code{prior_conflict()}.}
+\item{data_summary}{Named list as for \code{\link{prior_conflict}}.}
 
 \item{param_grid}{Named list of numeric vectors, one per hyperparameter
 to vary. Names must match hyperparameter names in \code{prior$params}.
 Example: \code{list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1))}.}
 
 \item{target}{Character vector. Which posterior quantities to compute.
-Any of \code{"posterior_mean"}, \code{"posterior_sd"}, \code{"prob_efficacy"}.}
+Any of \code{"posterior_mean"}, \code{"posterior_sd"},
+\code{"prob_efficacy"}.}
 
-\item{threshold}{Numeric. Efficacy threshold used in \code{Pr(θ > threshold)}.
-Default \code{0.30}.}
+\item{threshold}{Numeric. Efficacy threshold used in
+\code{Pr(theta > threshold)}. Default \code{0.30}.}
 }
 \value{
-An object of class \code{bayprior_sensitivity} with components:
-\describe{
-\item{\code{grid}}{Data frame with columns for each parameter and each target.}
-\item{\code{param_grid}}{Input grid specification.}
-\item{\code{target}}{Target quantity names.}
-\item{\code{reference_row}}{Index of the row corresponding to the reference prior.}
-\item{\code{influence_scores}}{Named vector of influence scores (range of each target).}
-}
+An object of class \code{bayprior_sensitivity}.
 }
 \description{
 Evaluates how posterior inferences change as prior hyperparameters vary

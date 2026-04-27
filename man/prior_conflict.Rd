@@ -27,9 +27,11 @@ An object of class \code{bayprior_conflict} containing:
 \item{\code{surprise_index}}{Standardised distance between prior mean
 and observed data.}
 \item{\code{kl_prior_likelihood}}{KL divergence from prior to likelihood.}
-\item{\code{overlap}}{Bhattacharyya overlap coefficient in [0, 1].}
-\item{\code{conflict_severity}}{One of \code{"none"}, \code{"mild"}, \code{"severe"}.}
-\item{\code{conflict_flag}}{Logical; \code{TRUE} if \code{box_pvalue < alpha}.}
+\item{\code{overlap}}{Bhattacharyya overlap coefficient in \link{0, 1}.}
+\item{\code{conflict_severity}}{One of \code{"none"}, \code{"mild"},
+\code{"severe"}.}
+\item{\code{conflict_flag}}{Logical; \code{TRUE} if
+\code{box_pvalue < alpha}.}
 \item{\code{recommendation}}{Plain-language guidance string.}
 \item{\code{data_summary}}{The data summary passed in.}
 \item{\code{prior}}{The input prior.}
@@ -47,10 +49,10 @@ prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
                      label = "Response rate")
 cd <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
 print(cd)
-plot(cd)
 
 }
 \references{
 Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling
-and robustness. \emph{Journal of the Royal Statistical Society A}, 143, 383–430.
+and robustness. \emph{Journal of the Royal Statistical Society A}, 143,
+383-430.
 }
