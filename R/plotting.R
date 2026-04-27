@@ -49,11 +49,7 @@ plot_prior_likelihood <- function(prior,
 
   if (show_posterior) {
     post   <- .conjugate_update(prior, data_summary)
-    post_d <- if (post$dist == "beta") {
-      stats::dbeta(grid, post$params$alpha, post$params$beta)
-    } else {
-      stats::dnorm(grid, post$params$mu, post$params$sigma)
-    }
+    post_d <- .eval_density_vec(post, grid)
     df <- rbind(df, data.frame(
       theta   = grid,
       density = post_d,
