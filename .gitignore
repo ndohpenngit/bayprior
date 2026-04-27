@@ -1,1 +1,21 @@
-.Rproj.user
+# R specific
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# R CMD check
+/*.Rcheck/
+*.tar.gz
+
+# renv
+renv/library/
+renv/staging/
+
+# Shiny / golem
+rsconnect/
+
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
