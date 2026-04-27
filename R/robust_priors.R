@@ -347,11 +347,16 @@ plot.bayprior_power_prior <- function(x, ...) {
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
 .power_prior_update <- function(base_prior, hist_data, delta) {
-  # Fractional updating: multiply historical sufficient statistics by delta
+  # Fractional updating: incorporate historical data weighted by delta in (0,1].
   type <- hist_data$type %||% "binary"
   n    <- hist_data$n
   x    <- hist_data$x
 
+  if (delta <= 0 || delta > 1) {
+    rlang::abort(glue::glue("`delta` must be in (0, 1]; got {delta}."))
+  }
+
+  # ── Beta / binary ────────────────────────────────────────────────────────────
   if (base_prior$dist == "beta" && type == "binary") {
     a_new <- base_prior$params$alpha + delta * x
     b_new <- base_prior$params$beta  + delta * (n - x)
@@ -360,9 +365,10 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
+  # ── Normal ───────────────────────────────────────────────────────────────────
   if (base_prior$dist == "normal") {
-    obs_mean <- x
-    obs_se   <- (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
+    obs_mean  <- x
+    obs_se    <- (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
     prior_var <- base_prior$params$sigma^2
     lik_var   <- obs_se^2
     post_var  <- 1 / (1 / prior_var + 1 / lik_var)
@@ -373,10 +379,119 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
+  # ── Gamma / continuous ───────────────────────────────────────────────────────
+  # Fractional sufficient statistics: scale both the event total and
+  # the exposure by delta to achieve the desired down-weighting.
+  if (base_prior$dist == "gamma" && type == "continuous") {
+    x_sum     <- hist_data$x_sum %||% (x * n)   # prefer explicit total
+    shape_new <- base_prior$params$shape + delta * x_sum
+    rate_new  <- base_prior$params$rate  + delta * n
+    return(.make_bayprior("gamma", list(shape = shape_new, rate = rate_new),
+                          "power_prior", base_prior$expert_id,
+                          base_prior$label, list(delta = delta)))
+  }
+
+  # ── Log-normal ───────────────────────────────────────────────────────────────
+  # Normal conjugate update applied on the log scale.
+  # Set hist_data$log_scale = TRUE if x and sd are already on the log scale.
+  if (base_prior$dist == "lognormal") {
+    log_obs_mean <- if (isTRUE(hist_data$log_scale)) x else log(x)
+    raw_sd       <- hist_data$sd %||% base_prior$fit_summary$sd
+    log_obs_se   <- (if (isTRUE(hist_data$log_scale)) raw_sd
+                     else raw_sd / x) / sqrt(n * delta)
+    prior_var  <- base_prior$params$sdlog^2
+    lik_var    <- log_obs_se^2
+    post_var   <- 1 / (1 / prior_var + 1 / lik_var)
+    post_mean  <- post_var * (base_prior$params$meanlog / prior_var +
+                                log_obs_mean / lik_var)
+    return(.make_bayprior("lognormal",
+                          list(meanlog = post_mean, sdlog = sqrt(post_var)),
+                          "power_prior", base_prior$expert_id,
+                          base_prior$label, list(delta = delta)))
+  }
+
+  # ── Mixture ──────────────────────────────────────────────────────────────────
+  # Update each component independently with the same delta, then re-weight
+  # by the component marginal likelihoods under the fractional historical data.
+  # This is consistent with the mixture conjugate update in conflict_sensitivity.R.
+  if (base_prior$dist == "mixture") {
+    components <- base_prior$components
+    weights    <- base_prior$weights
+
+    # Update each component; NULL marks failures
+    updated <- lapply(components, function(comp) {
+      tryCatch(
+        .power_prior_update(comp, hist_data, delta),
+        error = function(e) NULL
+      )
+    })
+
+    keep <- !vapply(updated, is.null, logical(1))
+    if (!any(keep)) {
+      rlang::abort(glue::glue(
+        "Power prior update failed for all mixture components ",
+        "(dist = 'mixture', type = '{type}', delta = {delta}). ",
+        "Check that at least one component supports the data type '{type}'."
+      ))
+    }
+    updated <- updated[keep]
+    weights <- weights[keep]
+
+    # Effective SE for fractional historical data (used for re-weighting)
+    obs_mean_h <- if (type == "binary") x / n else x
+    obs_se_h   <- if (type == "binary") {
+      sqrt(obs_mean_h * (1 - obs_mean_h) / (n * delta))
+    } else {
+      (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
+    }
+    obs_se_h <- max(obs_se_h, 1e-8)  # guard against zero SE
+
+    log_marg <- vapply(components[keep], function(comp) {
+      stats::dnorm(obs_mean_h,
+                   mean = comp$fit_summary$mean,
+                   sd   = sqrt(comp$fit_summary$sd^2 + obs_se_h^2),
+                   log  = TRUE)
+    }, numeric(1))
+
+    log_wts     <- log(weights) + log_marg
+    new_weights <- exp(log_wts - max(log_wts))
+    new_weights <- new_weights / sum(new_weights)
+
+    # Updated mixture summary via law of total expectation/variance
+    post_means <- vapply(updated, function(p) p$fit_summary$mean, numeric(1))
+    post_sds   <- vapply(updated, function(p) p$fit_summary$sd,   numeric(1))
+    mix_mean   <- sum(new_weights * post_means)
+    mix_sd     <- sqrt(sum(new_weights * (post_sds^2 + (post_means - mix_mean)^2)))
+
+    return(structure(
+      list(
+        dist        = "mixture",
+        params      = list(weights = new_weights),
+        components  = updated,
+        weights     = new_weights,
+        method      = "power_prior",
+        expert_id   = base_prior$expert_id,
+        label       = base_prior$label,
+        input       = list(delta = delta),
+        fit_summary = list(
+          mean = mix_mean,
+          sd   = mix_sd,
+          q025 = mix_mean - 1.96 * mix_sd,
+          q500 = mix_mean,
+          q975 = mix_mean + 1.96 * mix_sd
+        )
+      ),
+      class = "bayprior"
+    ))
+  }
+
+  # ── Unsupported combination ───────────────────────────────────────────────────
   rlang::abort(glue::glue(
-    "Power prior update not implemented for dist = '{base_prior$dist}' + type = '{type}'."
+    "Power prior update not implemented for dist = '{base_prior$dist}' + ",
+    "type = '{type}'."
   ))
 }
+
 
 .marginal_bf <- function(power_prior, base_prior, current_data) {
   # Log marginal likelihood ratio (normal approximation)
@@ -389,6 +504,9 @@ plot.bayprior_power_prior <- function(x, ...) {
   } else {
     (current_data$sd %||% power_prior$fit_summary$sd) / sqrt(n)
   }
+
+  # Guard zero SE
+  obs_se <- max(obs_se, 1e-8)
 
   # Log marginal = log N(obs_mean; prior_mean, sqrt(prior_sd^2 + obs_se^2))
   .log_pred <- function(pr) {
