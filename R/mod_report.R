@@ -25,8 +25,10 @@ mod_report_ui <- function(id) {
         title = tagList(icon("file-export"), " Generate"),
         shinyWidgets::radioGroupButtons(
           ns("fmt"), "Output format",
-          choices = c("HTML" = "html", "PDF" = "pdf"),
-          justified = TRUE, status = "primary"),
+          # docx added alongside html and pdf
+          choices  = c("HTML" = "html", "PDF" = "pdf", "Word (.docx)" = "docx"),
+          justified = TRUE, status = "primary"
+        ),
         tags$br(),
         downloadButton(ns("dl_report"), "Download Prior Justification Report",
                        class = "btn-success btn-block btn-lg"),
@@ -47,7 +49,7 @@ mod_report_server <- function(id, shared, active_prior) {
   moduleServer(id, function(input, output, session) {
 
     output$session_summary <- renderUI({
-      p    <- active_prior()
+      p <- active_prior()
       items <- list(
         .status_item(!is.null(p),
           if (!is.null(p)) glue::glue("Prior: {p$label} ({toupper(p$dist)})")
@@ -65,7 +67,7 @@ mod_report_server <- function(id, shared, active_prior) {
     })
 
     output$contents_checklist <- renderUI({
-      p    <- active_prior()
+      p <- active_prior()
       has_p <- !is.null(p)
       has_c <- !is.null(shared$conflict)
       has_s <- !is.null(shared$sensitivity)
@@ -84,13 +86,19 @@ mod_report_server <- function(id, shared, active_prior) {
 
     output$dl_report <- downloadHandler(
       filename = function() {
-        stem <- gsub("[^A-Za-z0-9_-]", "_", input$trial_name %||% "bayprior")
-        paste0("prior_justification_", stem, "_", Sys.Date(), ".", input$fmt)
+        fmt  <- if (is.null(input$fmt) || !nzchar(input$fmt)) "html" else input$fmt
+        stem <- gsub("[^A-Za-z0-9_-]", "_",
+                     if (!is.null(input$trial_name) && nzchar(input$trial_name))
+                       input$trial_name else "bayprior")
+        ext  <- switch(fmt, html = ".html", pdf = ".pdf", docx = ".docx", ".html")
+        paste0("prior_justification_", stem, "_", Sys.Date(), ext)
       },
       content = function(file) {
-        p <- active_prior()
+        fmt <- if (is.null(input$fmt) || !nzchar(input$fmt)) "html" else input$fmt
+        p   <- active_prior()
         if (is.null(p)) {
-          showNotification("No prior available - cannot generate report.", type = "error")
+          showNotification("No prior available - cannot generate report.",
+                           type = "error")
           return(NULL)
         }
         withProgress(message = "Rendering report...", value = 0.5, {
@@ -98,13 +106,17 @@ mod_report_server <- function(id, shared, active_prior) {
             prior         = p,
             conflict      = shared$conflict,
             sensitivity   = shared$sensitivity,
-            output_format = input$fmt,
+            output_format = fmt,
             output_file   = tools::file_path_sans_ext(file),
-            trial_name    = input$trial_name,
-            sponsor       = input$sponsor,
-            author        = input$statistician,
-            date          = as.character(input$report_date),
-            open_after    = FALSE)
+            trial_name    = if (!is.null(input$trial_name)) input$trial_name else "",
+            sponsor       = if (!is.null(input$sponsor))    input$sponsor    else "",
+            author        = if (!is.null(input$statistician)) input$statistician else "",
+            date          = as.character(
+                              if (!is.null(input$report_date)) input$report_date
+                              else Sys.Date()),
+            notes         = if (!is.null(input$notes)) input$notes else "",
+            open_after    = FALSE
+          )
           setProgress(1)
         })
       }
@@ -114,9 +126,12 @@ mod_report_server <- function(id, shared, active_prior) {
       filename = function() paste0("bayprior_session_", Sys.Date(), ".RData"),
       content  = function(file) {
         session_data <- list(
-          current_prior = shared$current_prior, expert_pool = shared$expert_pool,
-          consensus = shared$consensus, conflict = shared$conflict,
-          sensitivity = shared$sensitivity)
+          current_prior = shared$current_prior,
+          expert_pool   = shared$expert_pool,
+          consensus     = shared$consensus,
+          conflict      = shared$conflict,
+          sensitivity   = shared$sensitivity
+        )
         save(session_data, file = file)
       }
     )
@@ -125,13 +140,13 @@ mod_report_server <- function(id, shared, active_prior) {
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 .status_item <- function(ok, text) {
-  ico <- if (ok) tags$span(style="color:#1D9E75;", icon("check-circle"))
-         else    tags$span(style="color:#aaa;",    icon("dash-circle"))
+  ico <- if (ok) tags$span(style = "color:#1D9E75;", icon("check-circle"))
+         else    tags$span(style = "color:#aaa;",    icon("dash-circle"))
   tags$li(ico, " ", text, style = "margin-bottom:3px;")
 }
 
 .check_item <- function(ok, text) {
-  ico <- if (ok) tags$span(style="color:#1D9E75;", icon("check-square"))
-         else    tags$span(style="color:#aaa;",    icon("square"))
+  ico <- if (ok) tags$span(style = "color:#1D9E75;", icon("check-square"))
+         else    tags$span(style = "color:#aaa;",    icon("square"))
   tags$li(ico, " ", text, style = "margin-bottom:3px;")
 }
