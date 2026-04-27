@@ -25,7 +25,6 @@ mod_report_ui <- function(id) {
         title = tagList(icon("file-export"), " Generate"),
         shinyWidgets::radioGroupButtons(
           ns("fmt"), "Output format",
-          # docx added alongside html and pdf
           choices  = c("HTML" = "html", "PDF" = "pdf", "Word (.docx)" = "docx"),
           justified = TRUE, status = "primary"
         ),
@@ -101,6 +100,31 @@ mod_report_server <- function(id, shared, active_prior) {
                            type = "error")
           return(NULL)
         }
+
+        # Capture ggplot objects from the current session so the report shows
+        # exactly what the analyst configured, not a generic re-render.
+        # Plotly widgets (renderPlotly) are NOT captured — the Rmd falls back
+        # to calling the ggplot-returning variant of each plot function.
+        prior_plot <- tryCatch(plot(p), error = function(e) NULL)
+
+        overlay_plot <- if (!is.null(shared$conflict))
+          tryCatch(
+            plot_prior_likelihood(p, shared$conflict$data_summary,
+                                  show_posterior = TRUE),
+            error = function(e) NULL)
+        else NULL
+
+        tornado_plot <- if (!is.null(shared$sensitivity))
+          tryCatch(plot_tornado(shared$sensitivity), error = function(e) NULL)
+        else NULL
+
+        heatmap_plot <- if (!is.null(shared$sensitivity))
+          tryCatch(
+            plot_sensitivity(shared$sensitivity,
+                             target = shared$sensitivity$target[[1L]]),
+            error = function(e) NULL)
+        else NULL
+
         withProgress(message = "Rendering report...", value = 0.5, {
           prior_report(
             prior         = p,
@@ -115,6 +139,10 @@ mod_report_server <- function(id, shared, active_prior) {
                               if (!is.null(input$report_date)) input$report_date
                               else Sys.Date()),
             notes         = if (!is.null(input$notes)) input$notes else "",
+            prior_plot    = prior_plot,
+            overlay_plot  = overlay_plot,
+            tornado_plot  = tornado_plot,
+            heatmap_plot  = heatmap_plot,
             open_after    = FALSE
           )
           setProgress(1)
