@@ -27,7 +27,7 @@ An object of class \code{bayprior_conflict} containing:
 \item{\code{surprise_index}}{Standardised distance between prior mean
 and observed data.}
 \item{\code{kl_prior_likelihood}}{KL divergence from prior to likelihood.}
-\item{\code{overlap}}{Bhattacharyya overlap coefficient in \link{0, 1}.}
+\item{\code{overlap}}{Bhattacharyya overlap coefficient in [0, 1].}
 \item{\code{conflict_severity}}{One of \code{"none"}, \code{"mild"},
 \code{"severe"}.}
 \item{\code{conflict_flag}}{Logical; \code{TRUE} if
