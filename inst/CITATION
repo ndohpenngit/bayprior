@@ -2,7 +2,7 @@ bibentry(
   bibtype = "Manual",
   title   = "bayprior: Bayesian Prior Elicitation, Conflict Diagnostics and Sensitivity Analysis for Clinical Trials",
   author  = person("Ndoh", "Penn"),
-  year    = "2026"
+  year    = "2026",
   note    = "R package version 0.1.0", # to be updated with each release
   url     = "https://github.com/ndohpenngit/bayprior",
   key     = "bayprior2026"
