@@ -6,7 +6,8 @@
 # Do NOT export any function from this file.
 
 # ── %||% null-coalescing operator ─────────────────────────────────────────────
-`%||%` <- function(a, b) if (!is.null(a)) a else b
+#' @importFrom rlang `%||%`
+`%||%` <- rlang::`%||%`
 
 
 # ── .prior_summary_lognormal ──────────────────────────────────────────────────
@@ -86,8 +87,26 @@
 
   } else if (prior$dist == "mixture") {
     summaries <- lapply(prior$components, function(p) p$fit_summary)
-    lo <- min(sapply(summaries, function(s) s$q025 %||% (s$mean - 4 * s$sd)), na.rm = TRUE)
-    hi <- max(sapply(summaries, function(s) s$q975 %||% (s$mean + 4 * s$sd)), na.rm = TRUE)
+
+    lo_vals <- sapply(summaries, function(s) s$q025 %||% (s$mean - 4 * s$sd))
+    hi_vals <- sapply(summaries, function(s) s$q975 %||% (s$mean + 4 * s$sd))
+
+    # FIX: Filter to finite values before calling min/max. When all components
+    # have NULL or NA summaries, sapply() returns an all-NA vector and
+    # min/max emit "no non-missing arguments; returning Inf/-Inf".
+    lo_vals <- lo_vals[is.finite(lo_vals)]
+    hi_vals <- hi_vals[is.finite(hi_vals)]
+
+    if (length(lo_vals) == 0 || length(hi_vals) == 0) {
+      rlang::abort(paste0(
+        "Cannot determine density range for mixture prior: all component ",
+        "fit_summary values are NULL or NA. Ensure every mixture component ",
+        "has a valid fit_summary with mean and sd."
+      ))
+    }
+
+    lo <- min(lo_vals)
+    hi <- max(hi_vals)
 
   } else {
     s  <- prior$fit_summary
@@ -95,7 +114,13 @@
     hi <- s$q975 %||% (s$mean + 4 * s$sd)
   }
 
-  lo <- max(lo, 1e-6)
-  x  <- seq(lo, hi, length.out = n_grid)
+  # FIX: Only clamp lo to 1e-6 for distributions with non-negative support.
+  # Clamping Normal priors silently drops the left tail and produces misleading
+  # density plots for negative-valued parameters (e.g. log odds ratios).
+  if (prior$dist %in% c("beta", "gamma", "lognormal")) {
+    lo <- max(lo, 1e-6)
+  }
+
+  x <- seq(lo, hi, length.out = n_grid)
   list(x = x, y = .eval_density_vec(prior, x))
 }
