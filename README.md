@@ -31,34 +31,48 @@
 
 ## 🧭 Overview
 
-**bayprior** is an advanced interactive **R package and Shiny application** designed for Biostatisticians and Clinical Researchers to implement **Bayesian Prior Elicitation, Conflict Diagnostics, and Sensitivity Analysis** for clinical trials.
+**bayprior** is an advanced interactive **R package and Shiny application**
+designed for biostatisticians and clinical researchers to implement
+**Bayesian Prior Elicitation, Conflict Diagnostics, and Sensitivity Analysis**
+for clinical trials.
 
-The package addresses the upstream problem that existing Bayesian trial packages (`trialr`, `RBesT`, `hdbayes`) largely ignore: *how do you construct, validate, and justify your prior to a regulator?* The FDA's 2026 draft guidance on Bayesian methods makes this a live, urgent need — with no unified R tool previously addressing it.
+The package addresses the upstream problem that existing Bayesian trial
+packages (`trialr`, `RBesT`, `hdbayes`) largely ignore: *how do you construct,
+validate, and justify your prior to a regulator?* The FDA's 2026 draft guidance
+on Bayesian methods makes this a live, urgent need — with no unified R tool
+previously addressing it.
 
-This toolkit enables users to:
+**bayprior** enables users to:
 
-- **Elicit structured priors:** Implement SHELF-style quantile matching, moment matching, and the interactive roulette method across Beta, Normal, Gamma, and Log-Normal families.
-- **Aggregate expert opinions:** Pool beliefs from multiple experts via linear or logarithmic opinion pooling with pairwise Bhattacharyya agreement diagnostics.
-- **Diagnose prior-data conflict:** Compute Box's p-value, surprise index, Bhattacharyya overlap, and multivariate Mahalanobis distance.
-- **Quantify sensitivity:** Evaluate how posterior conclusions shift across hyperparameter grids via tornado and influence heatmap plots.
-- **Build robust priors:** Construct sceptical, robust mixture, and calibrated power priors for regulatory sensitivity analyses.
-- **Generate regulatory reports:** Produce structured HTML/PDF prior justification reports aligned with FDA/EMA submission expectations.
+- **Elicit structured priors** — SHELF-style quantile matching, moment matching,
+  and the interactive roulette method across Beta, Normal, Gamma, and Log-Normal
+  families.
+- **Aggregate expert opinions** — Linear or logarithmic pooling of multiple
+  expert priors with pairwise Bhattacharyya agreement diagnostics.
+- **Diagnose prior-data conflict** — Box's p-value, surprise index,
+  Bhattacharyya overlap, and multivariate Mahalanobis distance.
+- **Quantify sensitivity** — Posterior conclusions evaluated across
+  hyperparameter grids via tornado plots and influence heatmaps.
+- **Build robust priors** — Sceptical, robust mixture, and calibrated power
+  priors for regulatory sensitivity analyses.
+- **Generate regulatory reports** — Self-contained HTML, PDF, or Word (.docx)
+  prior justification reports aligned with FDA/EMA submission expectations.
 
 ---
 
-## 🚀 Features & Modules
+## 🚀 Features and Modules
 
 | Module | Detail | Primary Output | Goal |
 |---|---|---|---|
-| **Prior Elicitation** | Quantile matching, moment matching, SHELF roulette for Beta/Normal/Gamma/Log-Normal | Fitted density plot + parameter table | Structured expert prior elicitation |
+| **Prior Elicitation** | Quantile matching, moment matching, SHELF roulette for Beta / Normal / Gamma / Log-Normal | Fitted density plot + parameter table | Structured expert prior elicitation |
 | **Expert Pooling** | Linear and logarithmic opinion pooling across multiple experts | Consensus density overlay + Bhattacharyya matrix | Aggregate multi-expert beliefs |
-| **Conflict Diagnostics** | Box p-value, surprise index, KL divergence, overlap coefficient | Prior–Likelihood–Posterior overlay | Detect prior misspecification |
-| **Mahalanobis Check** | Two-endpoint multivariate conflict test | Chi-sq p-value + per-parameter z-scores | Two-endpoint trials |
-| **Sensitivity Analysis** | Hyperparameter grid over posterior mean, SD, CrI, Pr(efficacy) | Tornado plot + influence heatmap | Demonstrate robustness to regulators |
+| **Conflict Diagnostics** | Box p-value, surprise index, KL divergence, Bhattacharyya overlap | Prior–Likelihood–Posterior overlay | Detect prior misspecification |
+| **Mahalanobis Check** | Two-endpoint multivariate conflict test | Chi-sq p-value + per-parameter z-scores | Co-primary endpoint trials |
+| **Sensitivity Analysis** | Hyperparameter grid over posterior mean, SD, CrI width, Pr(efficacy) | Tornado plot + influence heatmap | Demonstrate robustness to regulators |
 | **Sceptical Prior** | Spiegelhalter–Freedman centred-at-null prior | Prior density + summary statistics | Conservative regulatory sensitivity |
 | **Robust Mixture** | Schmidli et al. MAP robust mixture prior | Robust vs informative density overlay | Protection against misspecification |
-| **Power Prior** | Ibrahim–Chen calibrated borrowing weight via Bayes Factor | Calibration curves + optimal δ | Principled historical data borrowing |
-| **Export Report** | HTML/PDF prior justification document | Regulatory-ready report | FDA/EMA submission documentation |
+| **Power Prior** | Ibrahim–Chen calibrated borrowing weight via Bayes Factor; supports Beta, Normal, Gamma, Log-Normal, and Mixture priors | Calibration curves + optimal δ | Principled historical data borrowing |
+| **Export Report** | HTML / PDF / Word (.docx) prior justification document | Regulatory-ready self-contained report | FDA/EMA submission documentation |
 
 ---
 
@@ -66,26 +80,65 @@ This toolkit enables users to:
 
 ### 🧠 Prior Elicitation
 
-The package implements three structured elicitation approaches. **Quantile matching** fits a parametric distribution to expert-specified probability–value pairs using numerical optimisation. **Moment matching** derives parameters analytically from an expert-supplied mean and standard deviation. The **SHELF roulette method** (Oakley & O'Hagan, 2010) presents the expert with a histogram grid where they allocate chips across bins; the resulting distribution is fitted to the chip allocation in real time.
+Three structured elicitation approaches are implemented.
+**Quantile matching** fits a parametric distribution to expert-specified
+probability–value pairs via numerical optimisation.
+**Moment matching** derives hyperparameters analytically from an expert-supplied
+mean and SD.
+The **SHELF roulette method** (Oakley & O'Hagan, 2010) lets the expert allocate
+chips across histogram bins, fitting a parametric family to the chip allocation
+in real time.
 
-All methods support four distribution families:
+All three methods support four distribution families:
 
-- **Beta** — response rates, proportions, probabilities ∈ (0, 1)
-- **Normal** — unbounded continuous quantities (e.g. mean differences)
-- **Gamma** — positive quantities (e.g. rates, variances)
-- **Log-Normal** — ratios and positive skewed quantities (e.g. hazard ratios)
+| Family | Support | Typical use |
+|---|---|---|
+| **Beta** | (0, 1) | Response rates, proportions |
+| **Normal** | (−∞, ∞) | Mean differences, log odds ratios |
+| **Gamma** | (0, ∞) | Event rates, variances, survival times |
+| **Log-Normal** | (0, ∞) | Hazard ratios, PK parameters |
 
 ### ⚖️ Prior-Data Conflict Diagnostics
 
-Conflict detection follows Box (1980). The **prior predictive p-value** tests whether the observed data is plausible under the prior predictive distribution. The **surprise index** measures standardised distance between the prior mean and observed data. The **Bhattacharyya overlap coefficient** quantifies distributional overlap between the prior and the (normalised) likelihood. For two-endpoint trials, a **Mahalanobis distance** provides an omnibus multivariate conflict statistic with a chi-squared reference distribution.
+Conflict detection follows Box (1980). The **prior predictive p-value** tests
+whether the observed data is plausible under the prior predictive distribution.
+The **surprise index** measures standardised distance between the prior mean and
+the observed data. The **Bhattacharyya overlap coefficient** quantifies
+distributional overlap between the prior and the normalised likelihood.
+For two-endpoint trials, a **Mahalanobis distance** provides an omnibus
+multivariate conflict statistic with a known chi-squared reference distribution.
+
+All diagnostics work transparently with mixture priors via a Normal
+approximation based on the mixture's `fit_summary`.
 
 ### 🔄 Sensitivity Analysis
 
-The sensitivity module evaluates how key posterior quantities — posterior mean, posterior SD, CrI width, and Pr(θ > θ₀) — change as prior hyperparameters vary over a user-specified grid. Results are visualised as **tornado plots** (bar width = range of influence, ordered from most to least sensitive) and **influence heatmaps** (two-dimensional colour-coded grid). The reference prior is marked on all plots.
+The sensitivity module evaluates how key posterior quantities — posterior mean,
+SD, credible interval width, and Pr(θ > θ₀) — change as prior hyperparameters
+vary over a user-specified grid. The Shiny UI passes generic slider names
+(`param1`, `param2`) which are remapped automatically to the prior's actual
+hyperparameter names.
+
+Results are visualised as **tornado plots** (bar width = range of influence,
+ordered from most to least sensitive) and **influence heatmaps**
+(two-dimensional colour-coded grid with the reference prior marked).
+
+A dedicated `sensitivity_cri()` function tracks credible interval width
+specifically — a key quantity for regulatory submissions.
 
 ### 🛡️ Robust and Power Priors
 
-The **robust mixture prior** (Schmidli et al., 2014) mixes the informative elicited prior with a vague component, protecting against prior-data conflict. The **sceptical prior** (Spiegelhalter & Freedman, 1994) is centred at the null value of the treatment effect and calibrated to weak, moderate, or strong scepticism. The **power prior** (Ibrahim & Chen, 2000) down-weights historical data by a factor δ ∈ (0, 1) calibrated to achieve a target Bayes Factor.
+The **robust mixture prior** (Schmidli et al., 2014) mixes the informative
+elicited prior with a vague Normal component, protecting against prior-data
+conflict while preserving the main prior's information.
+
+The **sceptical prior** (Spiegelhalter & Freedman, 1994) is centred at the
+null value of the treatment effect and calibrated to weak, moderate, or strong
+scepticism. For Beta family priors, the null value must be in (0, 1).
+
+The **power prior** (Ibrahim & Chen, 2000) down-weights historical data by
+δ ∈ (0, 1], calibrated to achieve a target Bayes Factor. Conjugate updating
+is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors.
 
 ---
 
@@ -93,34 +146,42 @@ The **robust mixture prior** (Schmidli et al., 2014) mixes the informative elici
 
 ### 🔹 Prior Elicitation Panel
 
-Users configure and fit their prior here:
-
-- **Distribution family:** Select Beta, Normal, Gamma, or Log-Normal
-- **Elicitation method:** Toggle between quantile matching, moment matching, or the interactive roulette chip grid
-- **Real-time density preview:** Prior density updates instantly as parameters are adjusted
-- **Expert pool:** Add multiple fitted priors to a pool for consensus aggregation
-- **Value boxes:** Prior mean, SD, and 95% CrI displayed at a glance
+- **Distribution family:** Beta, Normal, Gamma, or Log-Normal
+- **Elicitation method:** Quantile matching, moment matching, or roulette
+- **Real-time density preview:** Prior density updates as parameters change
+- **Expert pool:** Accumulate multiple fitted priors for consensus aggregation
+- **Value boxes:** Prior mean, SD, and 95% CrI at a glance
 
 ### 🔹 Conflict Diagnostics Panel
 
-- **Data entry:** Binary (events/n) or continuous (mean, SD, n) observed data
-- **Diagnostic statistics:** Box p-value, surprise index, and overlap coefficient displayed as value boxes with colour-coded severity (green = no conflict, red = severe)
-- **Overlay plot:** Interactive Prior–Likelihood–Posterior density overlay via Plotly
-- **Plain-language recommendation:** Automatic severity classification (`none` / `mild` / `severe`) with actionable guidance
+- **Data entry:** Binary (events / n) or continuous (mean, SD, n)
+- **Diagnostic statistics:** Box p-value, surprise index, and overlap with
+  colour-coded severity (green = none, amber = mild, red = severe)
+- **Overlay plot:** Interactive Prior–Likelihood–Posterior density overlay
+- **Recommendation:** Automatic severity classification with actionable guidance
 
 ### 🔹 Sensitivity Analysis Panel
 
-- **Hyperparameter grid:** User-defined ranges for each prior parameter with adjustable grid resolution
-- **Target outcomes:** Select any combination of posterior mean, SD, CrI width, and Pr(efficacy)
+- **Hyperparameter grid:** User-defined ranges and grid resolution via sliders
+- **Target outcomes:** Posterior mean, SD, CrI width, and Pr(efficacy)
 - **Tornado plot:** Influence ordered from largest to smallest
-- **Influence heatmap:** Two-dimensional colour map across the full parameter grid
+- **Influence heatmap:** Two-dimensional colour map across the parameter grid
+
+### 🔹 Robust Priors Panel
+
+- **Robust mixture:** Vague weight slider; density overlay of informative vs
+  robust prior
+- **Sceptical prior:** Family and strength selection
+- **Power prior:** Historical and current data entry; calibration curve
+  displaying Bayes Factor and Box p-value vs δ
 
 ### 🔹 Report Export Panel
 
-- **Trial metadata:** Protocol number, indication, sponsor, statistician, date
-- **Contents checklist:** Live status indicators showing which sections are complete
-- **Output format:** HTML (self-contained) or PDF
-- **Download:** Single click renders and downloads the report via `rmarkdown::render()`
+- **Trial metadata:** Protocol number, indication, sponsor, statistician, date,
+  and free-text rationale
+- **Contents checklist:** Live indicators showing which sections are complete
+- **Output format:** HTML (self-contained), PDF (xelatex), or Word (.docx)
+- **Download:** Single click renders and downloads via `rmarkdown::render()`
 
 ---
 
@@ -134,7 +195,8 @@ devtools::install_github("ndohpenngit/bayprior")
 
 ### Reproducible environment (renv)
 
-This project uses [renv](https://rstudio.github.io/renv/) for reproducible package management. After cloning:
+This project uses [renv](https://rstudio.github.io/renv/) for reproducible
+package management. After cloning:
 
 ```r
 renv::restore()   # installs exact package versions from renv.lock
@@ -147,7 +209,7 @@ renv::restore()   # installs exact package versions from renv.lock
 ```r
 library(bayprior)
 
-# 1. Fit a Beta prior via moment matching
+# ── 1. Elicit a Beta prior ────────────────────────────────────────────────────
 prior <- elicit_beta(
   mean      = 0.35,
   sd        = 0.10,
@@ -157,61 +219,151 @@ prior <- elicit_beta(
 )
 plot(prior)
 
-# 2. Pool two experts
-e1  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
-e2  <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
+# ── 2. Pool two expert priors ─────────────────────────────────────────────────
+e1  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1",
+                   label = "Response rate")
+e2  <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2",
+                   label = "Response rate")
 agg <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.6, 0.4))
+plot(agg)
 
-# 3. Check for prior-data conflict
+# ── 3. Diagnose prior-data conflict ───────────────────────────────────────────
 cd <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
 print(cd)
+plot_prior_likelihood(prior, list(type = "binary", x = 18, n = 40),
+                      show_posterior = TRUE)
 
-# 4. Sensitivity analysis
+# ── 4. Sensitivity analysis ───────────────────────────────────────────────────
 sa <- sensitivity_grid(
   prior,
   data_summary = list(type = "binary", x = 18, n = 40),
-  param_grid   = list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1))
+  param_grid   = list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1)),
+  target       = c("posterior_mean", "prob_efficacy"),
+  threshold    = 0.30
 )
 plot_tornado(sa)
+plot_sensitivity(sa, target = "posterior_mean")
 
-# 5. Build a robust prior
-rob <- robust_prior(prior, vague_weight = 0.20)
+# ── 5. Credible interval sensitivity ─────────────────────────────────────────
+cri_sa <- sensitivity_cri(
+  prior,
+  data_summary = list(type = "binary", x = 18, n = 40),
+  param_grid   = list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1)),
+  cri_level    = 0.95
+)
+plot_sensitivity(cri_sa, target = "cri_width")
 
-# 6. Generate regulatory report
-prior_report(
-  prior       = prior,
-  conflict    = cd,
-  sensitivity = sa,
-  trial_name  = "TRIAL-001",
-  sponsor     = "Example Pharma Ltd",
-  author      = "N.P., Principal Biostatistician"
+# ── 6. Robust and sceptical priors ────────────────────────────────────────────
+rob  <- robust_prior(prior, vague_weight = 0.20)
+scep <- sceptical_prior(null_value = 0.20, family = "beta", strength = "moderate",
+                        label = "Response rate (sceptical)")
+
+# ── 7. Power prior (calibrated historical borrowing) ─────────────────────────
+calib <- calibrate_power_prior(
+  historical_data = list(type = "binary", x = 12, n = 40),
+  current_data    = list(type = "binary", x = 18, n = 50),
+  base_prior      = elicit_beta(mean = 0.5, sd = 0.2, method = "moments",
+                                label = "Response rate"),
+  target_bf       = 3
+)
+plot(calib)
+
+# ── 8. Multivariate conflict (co-primary endpoints) ───────────────────────────
+conflict_mahalanobis(
+  prior_means = c(0.35, 0.60),
+  prior_cov   = matrix(c(0.01, 0.003, 0.003, 0.015), 2, 2),
+  obs_means   = c(0.55, 0.58),
+  obs_cov     = matrix(c(0.008, 0.002, 0.002, 0.010), 2, 2) / 50,
+  labels      = c("Response rate", "OS rate")
 )
 
-# 7. Launch the full Shiny app
+# ── 9. Generate regulatory report ─────────────────────────────────────────────
+prior_report(
+  prior         = prior,
+  conflict      = cd,
+  sensitivity   = sa,
+  output_format = "html",      # or "pdf" or "docx"
+  trial_name    = "TRIAL-001",
+  sponsor       = "Example Pharma Ltd",
+  author        = "N. Penn, Principal Biostatistician",
+  notes         = "Prior based on Phase 2 data and two external expert elicitations."
+)
+
+# ── 10. Launch the full Shiny app ─────────────────────────────────────────────
 run_app()
 ```
+
+---
+
+## 📖 Vignette
+
+A full worked vignette covering the end-to-end analysis workflow is included:
+
+```r
+vignette("bayprior-introduction", package = "bayprior")
+```
+
+---
+
+## 🗂️ Package Structure
+
+```
+bayprior/
+├── R/
+│   ├── elicitation.R          # elicit_beta(), elicit_normal(), elicit_gamma(),
+│   │                          # elicit_lognormal(), elicit_roulette(), elicit_mixture()
+│   ├── aggregation.R          # aggregate_experts()
+│   ├── conflict_sensitivity.R # prior_conflict(), sensitivity_grid(),
+│   │                          # sensitivity_cri(), conjugate helpers
+│   ├── mahal.R                # conflict_mahalanobis()
+│   ├── plotting.R             # plot.bayprior(), plot_prior_likelihood(),
+│   │                          # plot_sensitivity(), plot_tornado()
+│   ├── robust_priors.R        # robust_prior(), sceptical_prior(),
+│   │                          # calibrate_power_prior()
+│   ├── prior_report.R         # prior_report()
+│   ├── globals.R              # utils::globalVariables() declarations
+│   ├── zzz_patches.R          # %||%, .make_bayprior(), .density_grid(),
+│   │                          # .eval_density_vec()
+│   └── mod_*.R                # Shiny modules (golem framework)
+├── inst/
+│   └── rmarkdown/templates/prior_report/skeleton/
+│       ├── skeleton.Rmd            # bundled report template
+│       └── bayprior_reference.docx # optional Word style reference
+├── vignettes/
+│   └── bayprior-introduction.Rmd
+└── man/                       # auto-generated by devtools::document()
+```
+
 ---
 
 ## 📚 References
 
-- O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts' Probabilities*. Wiley.
-- Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling and robustness. *JRSS-A*, 143, 383–430.
-- Oakley, J. E. & O'Hagan, A. (2010). *SHELF: the Sheffield Elicitation Framework*. University of Sheffield.
-- Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in clinical trials with historical control information. *Biometrics*, 70, 1023–1032.
-- Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for regression models. *Statistical Science*, 15, 46–60.
-- Spiegelhalter, D. J. & Freedman, L. S. (1994). Bayesian approaches to clinical trials. *JRSS-A*, 157, 357–416.
-- FDA (2026). *Draft Guidance: Bayesian Statistical Methods for Drug and Biological Products*.
+- O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts'
+  Probabilities*. Wiley.
+- Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling
+  and robustness. *JRSS-A*, 143, 383–430.
+- Oakley, J. E. & O'Hagan, A. (2010). *SHELF: the Sheffield Elicitation
+  Framework*. University of Sheffield.
+- Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in
+  clinical trials with historical control information. *Biometrics*, 70,
+  1023–1032.
+- Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for regression
+  models. *Statistical Science*, 15, 46–60.
+- Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994). Bayesian
+  approaches to randomized trials. *JRSS-A*, 157, 357–416.
+- FDA (2026). *Draft Guidance: Bayesian Statistical Methods for Drug and
+  Biological Products*.
 
 ---
 
 ## 📝 Citation
 
 ```bibtex
-@Manual{bayprior2025,
+@Manual{bayprior2026,
   title  = {bayprior: Bayesian Prior Elicitation, Conflict Diagnostics and
              Sensitivity Analysis for Clinical Trials},
   author = {Ndoh Penn},
-  year   = {2025},
+  year   = {2026},
   note   = {R package version 0.1.0},
   url    = {https://github.com/ndohpenngit/bayprior}
 }
