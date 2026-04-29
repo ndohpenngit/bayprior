@@ -8,6 +8,7 @@
 #'
 #' @param null_value Numeric. The null treatment effect (e.g. 0 for a mean
 #'   difference, 1 for a hazard ratio, 0.5 for a response-rate difference).
+#'   For `family = "beta"`, must be strictly in (0, 1).
 #' @param family     Character. Distribution family. One of `"normal"`,
 #'   `"beta"`, `"lognormal"`.
 #' @param strength   Character. How concentrated the prior is around the null:
@@ -21,15 +22,16 @@
 #' For a Normal family, the sceptical prior is centred at `null_value` with
 #' SD calibrated to the `strength` argument:
 #' \itemize{
-#'   \item `weak`:     SD = standard deviation of a "vague" half-normal
-#'   \item `moderate`: SD chosen so that a 2-SD departure from null has ~5%
-#'     prior probability - roughly equivalent to a p < 0.05 sceptic
-#'   \item `strong`:   SD = half of `moderate` - very concentrated at null
+#'   \item `weak`:     SD = 1.0 (vague half-normal)
+#'   \item `moderate`: SD = 0.5 (2-SD departure from null has ~5% prior probability)
+#'   \item `strong`:   SD = 0.25 (very concentrated at null)
 #' }
+#'
+#' For `family = "beta"`, `null_value` must be in (0, 1).
 #'
 #' @references
 #' Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994).
-#' Bayesian approaches to randomized trials. *JRSS-A*, 157, 357-416.
+#' Bayesian approaches to randomized trials. \emph{JRSS-A}, 157, 357-416.
 #'
 #' @examples
 #' sc <- sceptical_prior(null_value = 0, family = "normal",
@@ -37,6 +39,12 @@
 #' print(sc)
 #' plot(sc)
 #'
+#' # Beta sceptical prior centred at a null response rate
+#' sc_b <- sceptical_prior(null_value = 0.20, family = "beta",
+#'                         strength = "moderate", label = "Response rate")
+#' plot(sc_b)
+#'
+#' @importFrom rlang abort
 #' @export
 sceptical_prior <- function(null_value = 0,
                              family     = c("normal", "beta", "lognormal"),
@@ -47,27 +55,41 @@ sceptical_prior <- function(null_value = 0,
   family   <- match.arg(family)
   strength <- match.arg(strength)
 
+  # FIX: validate null_value for Beta family up front rather than letting
+  # elicit_beta() produce a cryptic "mean must be in (0,1)" error when the
+  # user passes null_value = 0 (e.g. a mean difference) with family = "beta".
+  if (family == "beta") {
+    if (!is.numeric(null_value) || null_value <= 0 || null_value >= 1) {
+      rlang::abort(paste0(
+        "`null_value` must be strictly in (0, 1) for family = 'beta'. ",
+        "Received: ", null_value, ". ",
+        "Example: use null_value = 0.20 to centre the sceptical prior at a ",
+        "20% null response rate."
+      ))
+    }
+  }
+
   if (family == "normal") {
     sd_map <- c(weak = 1.0, moderate = 0.5, strong = 0.25)
     sd_val <- sd_map[strength]
-    prior  <- elicit_normal(mean = null_value, sd = sd_val,
-                            method = "moments",
+    prior  <- elicit_normal(mean      = null_value,
+                            sd        = sd_val,
+                            method    = "moments",
                             expert_id = expert_id,
                             label     = label)
 
   } else if (family == "lognormal") {
-    # Sceptical about any benefit: centre log-HR at 0 (HR = 1)
     sd_map <- c(weak = 0.5, moderate = 0.25, strong = 0.125)
-    prior  <- elicit_lognormal(mean = exp(null_value),
-                               sd   = exp(null_value) * sd_map[strength],
+    prior  <- elicit_lognormal(mean      = exp(null_value),
+                               sd        = exp(null_value) * sd_map[strength],
                                method    = "moments",
                                expert_id = expert_id,
                                label     = label)
 
-  } else {  # beta
-    # Centre at null_value with small SD
+  } else {  # beta — null_value already validated above
     sd_map <- c(weak = 0.15, moderate = 0.08, strong = 0.04)
-    prior  <- elicit_beta(mean = null_value, sd = sd_map[strength],
+    prior  <- elicit_beta(mean      = null_value,
+                          sd        = sd_map[strength],
                           method    = "moments",
                           expert_id = expert_id,
                           label     = label)
@@ -101,7 +123,7 @@ sceptical_prior <- function(null_value = 0,
 #' @references
 #' Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in
 #' clinical trials with historical control information.
-#' *Biometrics*, 70, 1023-1032.
+#' \emph{Biometrics}, 70, 1023-1032.
 #'
 #' @examples
 #' informative <- elicit_normal(mean = 0.30, sd = 0.10,
@@ -109,6 +131,7 @@ sceptical_prior <- function(null_value = 0,
 #' robust      <- robust_prior(informative, vague_weight = 0.20)
 #' plot(robust)
 #'
+#' @importFrom rlang abort
 #' @export
 robust_prior <- function(informative,
                           vague_weight = 0.20,
@@ -122,10 +145,10 @@ robust_prior <- function(informative,
     rlang::abort("`vague_weight` must be strictly between 0 and 1.")
   }
 
-  # Vague component: Normal centred at informative prior mean, very wide
   inf_mean <- informative$fit_summary$mean
   inf_sd   <- informative$fit_summary$sd
-  vague_sd <- vague_sd %||% (10 * inf_sd)
+  # Use base-R null check rather than %||% to avoid any import dependency here
+  if (is.null(vague_sd)) vague_sd <- 10 * inf_sd
 
   vague <- elicit_normal(
     mean      = inf_mean,
@@ -140,9 +163,9 @@ robust_prior <- function(informative,
     weights    = c(1 - vague_weight, vague_weight),
     label      = label
   )
-  result$prior_type    <- "robust"
-  result$vague_weight  <- vague_weight
-  result$informative   <- informative
+  result$prior_type   <- "robust"
+  result$vague_weight <- vague_weight
+  result$informative  <- informative
   result
 }
 
@@ -150,48 +173,24 @@ robust_prior <- function(informative,
 #' Calibrate power prior weight via Bayes Factor
 #'
 #' Selects the power prior weight \eqn{\delta \in (0,1)} that down-weights
-#' historical data before incorporating it into the current analysis. The
-#' weight is calibrated by finding the \eqn{\delta} that achieves a target
-#' Bayes Factor (or equivalently a target prior-data compatibility) between
-#' the historical-data-based prior and the current likelihood.
+#' historical data before incorporating it into the current analysis.
 #'
-#' This addresses the **hdbayes gap** identified in the proposal: a
-#' principled, calibrated approach to power prior weight selection.
+#' @param historical_data Named list: `type`, `x`, `n`, optionally `sd`.
+#' @param current_data Named list (same structure as `historical_data`).
+#' @param base_prior A `bayprior` object (usually a vague prior).
+#' @param target_bf Numeric. Target Bayes Factor. Default `3`.
+#' @param delta_grid Numeric vector of \eqn{\delta} values. Default
+#'   `seq(0.05, 1.0, by = 0.05)`.
+#' @param method Character. `"bayes_factor"` (default) or `"compatibility"`.
 #'
-#' @param historical_data Named list describing historical data:
-#'   \describe{
-#'     \item{`type`}{`"binary"` or `"continuous"`.}
-#'     \item{`x`}{Events (binary) or mean (continuous).}
-#'     \item{`n`}{Historical sample size.}
-#'     \item{`sd`}{SD (continuous only).}
-#'   }
-#' @param current_data Named list describing current data (same structure).
-#' @param base_prior  A `bayprior` object representing the prior before
-#'   incorporating historical data (usually a vague prior).
-#' @param target_bf   Numeric. Target Bayes Factor (historical vs current
-#'   model fit). A value of 1 gives equal weight; < 1 discounts historical.
-#'   Default `3` (moderate evidence in favour of including historical data).
-#' @param delta_grid  Numeric vector. Grid of \eqn{\delta} values to search.
-#'   Default `seq(0.05, 1.0, by = 0.05)`.
-#' @param method      Character. `"bayes_factor"` (default) or
-#'   `"compatibility"` (uses Box p-value to calibrate compatibility).
-#'
-#' @return A list of class `bayprior_power_prior` with:
-#'   \describe{
-#'     \item{`delta_opt`}{Optimal weight.}
-#'     \item{`delta_grid`}{Full grid of deltas.}
-#'     \item{`bf_grid`}{Bayes Factors at each delta.}
-#'     \item{`compatibility_grid`}{Box p-values at each delta.}
-#'     \item{`power_prior`}{The resulting `bayprior` at `delta_opt`.}
-#'     \item{`target_bf`}{The target BF supplied.}
-#'   }
+#' @return A list of class `bayprior_power_prior`.
 #'
 #' @references
 #' Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for
-#' regression models. *Statistical Science*, 15, 46-60.
+#' regression models. \emph{Statistical Science}, 15, 46-60.
 #'
 #' Gravestock, I. & Held, L. (2017). Adaptive power priors with empirical
-#' Bayes for clinical trials. *Pharmaceutical Statistics*, 16, 349-360.
+#' Bayes for clinical trials. \emph{Pharmaceutical Statistics}, 16, 349-360.
 #'
 #' @examples
 #' base  <- elicit_beta(mean = 0.5, sd = 0.2, method = "moments",
@@ -205,13 +204,15 @@ robust_prior <- function(informative,
 #' print(calib)
 #' plot(calib)
 #'
+#' @importFrom rlang abort
 #' @export
 calibrate_power_prior <- function(historical_data,
                                    current_data,
                                    base_prior,
-                                   target_bf   = 3,
-                                   delta_grid  = seq(0.05, 1.0, by = 0.05),
-                                   method      = c("bayes_factor", "compatibility")) {
+                                   target_bf  = 3,
+                                   delta_grid = seq(0.05, 1.0, by = 0.05),
+                                   method     = c("bayes_factor",
+                                                  "compatibility")) {
 
   method <- match.arg(method)
 
@@ -221,48 +222,41 @@ calibrate_power_prior <- function(historical_data,
 
   results <- purrr::map_dfr(delta_grid, function(delta) {
 
-    # Build power prior: update base prior with fractional historical data
     pp <- .power_prior_update(base_prior, historical_data, delta)
 
-    # Evaluate compatibility with current data
     cd <- tryCatch(
       prior_conflict(pp, current_data, alpha = 0.10),
       error = function(e) NULL
     )
 
-    # Bayes factor: ratio of marginal likelihoods under pp vs base_prior
     bf <- tryCatch(
       .marginal_bf(pp, base_prior, current_data),
       error = function(e) NA_real_
     )
 
     data.frame(
-      delta         = delta,
-      box_pvalue    = if (!is.null(cd)) cd$box_pvalue    else NA_real_,
-      overlap       = if (!is.null(cd)) cd$overlap        else NA_real_,
-      surprise      = if (!is.null(cd)) cd$surprise_index else NA_real_,
-      bayes_factor  = bf
+      delta        = delta,
+      box_pvalue   = if (!is.null(cd)) cd$box_pvalue    else NA_real_,
+      overlap      = if (!is.null(cd)) cd$overlap        else NA_real_,
+      surprise     = if (!is.null(cd)) cd$surprise_index else NA_real_,
+      bayes_factor = bf
     )
   })
 
-  # Find optimal delta
   if (method == "bayes_factor") {
-    # Largest delta whose BF >= target_bf (most historical info while still
-    # compatible with current data)
     eligible  <- results$delta[!is.na(results$bayes_factor) &
                                  results$bayes_factor >= target_bf]
     delta_opt <- if (length(eligible) > 0) max(eligible) else min(delta_grid)
   } else {
-    # Largest delta whose Box p-value >= 0.05 (no conflict)
     eligible  <- results$delta[!is.na(results$box_pvalue) &
                                  results$box_pvalue >= 0.05]
     delta_opt <- if (length(eligible) > 0) max(eligible) else min(delta_grid)
   }
 
-  # Build the calibrated power prior
-  power_prior <- .power_prior_update(base_prior, historical_data, delta_opt)
-  power_prior$prior_type  <- "power_prior"
-  power_prior$delta       <- delta_opt
+  power_prior            <- .power_prior_update(base_prior, historical_data,
+                                                delta_opt)
+  power_prior$prior_type <- "power_prior"
+  power_prior$delta      <- delta_opt
 
   cli::cli_alert_success(
     "Optimal power prior weight: delta = {delta_opt} (method = {method})."
@@ -293,8 +287,8 @@ calibrate_power_prior <- function(historical_data,
 print.bayprior_power_prior <- function(x, ...) {
   cli::cli_h1("Power Prior Calibration")
   cli::cli_ul()
-  cli::cli_li("Method      : {x$method}")
-  cli::cli_li("Target BF   : {x$target_bf}")
+  cli::cli_li("Method       : {x$method}")
+  cli::cli_li("Target BF    : {x$target_bf}")
   cli::cli_li("Optimal delta: {x$delta_opt}")
   cli::cli_li("Power prior mean: {round(x$power_prior$fit_summary$mean, 4)}")
   cli::cli_li("Power prior SD  : {round(x$power_prior$fit_summary$sd,   4)}")
@@ -306,10 +300,15 @@ print.bayprior_power_prior <- function(x, ...) {
 #'
 #' @param x A `bayprior_power_prior` object.
 #' @param ... Ignored.
-#' @return A `ggplot` object.
+#' @return A `ggplot` object, or a list of two ggplots if patchwork is not
+#'   installed.
 #' @export
 plot.bayprior_power_prior <- function(x, ...) {
-  res <- x$results
+  # Local NULL bindings silence R CMD CHECK notes for bare aes() column names.
+  # These are also declared in R/globals.R via utils::globalVariables().
+  delta <- bayes_factor <- box_pvalue <- NULL
+
+  res       <- x$results
   delta_opt <- x$delta_opt
 
   p1 <- ggplot2::ggplot(res, ggplot2::aes(x = delta)) +
@@ -319,8 +318,12 @@ plot.bayprior_power_prior <- function(x, ...) {
                         linetype = "dashed", colour = "#D85A30") +
     ggplot2::geom_vline(xintercept = delta_opt,
                         linetype = "dotted", colour = "#1D9E75") +
-    ggplot2::labs(title = "Bayes Factor vs power prior weight",
-                  x = "delta", y = "Bayes Factor") +
+    ggplot2::labs(
+      title    = "Bayes Factor vs power prior weight",
+      subtitle = paste0("Dashed = target BF (", x$target_bf,
+                        "); dotted = optimal \u03b4 (", delta_opt, ")"),
+      x = expression(delta), y = "Bayes Factor"
+    ) +
     ggplot2::theme_minimal(base_size = 12)
 
   p2 <- ggplot2::ggplot(res, ggplot2::aes(x = delta)) +
@@ -330,15 +333,21 @@ plot.bayprior_power_prior <- function(x, ...) {
                         linetype = "dashed", colour = "#888780") +
     ggplot2::geom_vline(xintercept = delta_opt,
                         linetype = "dotted", colour = "#1D9E75") +
-    ggplot2::labs(title = "Box p-value (conflict) vs power prior weight",
-                  x = "delta", y = "Box p-value") +
+    ggplot2::labs(
+      title    = "Box p-value (conflict) vs power prior weight",
+      subtitle = "Dashed grey = \u03b1 = 0.05",
+      x = expression(delta), y = "Box p-value"
+    ) +
     ggplot2::theme_minimal(base_size = 12)
 
-  # Stack with patchwork if available, otherwise return list
+  # FIX: patchwork is in Suggests (not Imports) so must be guarded.
+  # Use patchwork::wrap_plots() rather than the `/` operator so the call is
+  # explicit and won't generate a CMD CHECK note.
   if (requireNamespace("patchwork", quietly = TRUE)) {
-    p1 / p2
+    patchwork::wrap_plots(p1, p2, ncol = 1)
   } else {
-    print(p1); print(p2)
+    print(p1)
+    print(p2)
     invisible(list(bf_plot = p1, pvalue_plot = p2))
   }
 }
@@ -347,7 +356,6 @@ plot.bayprior_power_prior <- function(x, ...) {
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
 .power_prior_update <- function(base_prior, hist_data, delta) {
-  # Fractional updating: incorporate historical data weighted by delta in (0,1].
   type <- hist_data$type %||% "binary"
   n    <- hist_data$n
   x    <- hist_data$x
@@ -372,7 +380,8 @@ plot.bayprior_power_prior <- function(x, ...) {
     prior_var <- base_prior$params$sigma^2
     lik_var   <- obs_se^2
     post_var  <- 1 / (1 / prior_var + 1 / lik_var)
-    post_mean <- post_var * (base_prior$params$mu / prior_var + obs_mean / lik_var)
+    post_mean <- post_var * (base_prior$params$mu / prior_var +
+                               obs_mean / lik_var)
     return(.make_bayprior("normal",
                           list(mu = post_mean, sigma = sqrt(post_var)),
                           "power_prior", base_prior$expert_id,
@@ -380,10 +389,8 @@ plot.bayprior_power_prior <- function(x, ...) {
   }
 
   # ── Gamma / continuous ───────────────────────────────────────────────────────
-  # Fractional sufficient statistics: scale both the event total and
-  # the exposure by delta to achieve the desired down-weighting.
   if (base_prior$dist == "gamma" && type == "continuous") {
-    x_sum     <- hist_data$x_sum %||% (x * n)   # prefer explicit total
+    x_sum     <- hist_data$x_sum %||% (x * n)
     shape_new <- base_prior$params$shape + delta * x_sum
     rate_new  <- base_prior$params$rate  + delta * n
     return(.make_bayprior("gamma", list(shape = shape_new, rate = rate_new),
@@ -392,8 +399,6 @@ plot.bayprior_power_prior <- function(x, ...) {
   }
 
   # ── Log-normal ───────────────────────────────────────────────────────────────
-  # Normal conjugate update applied on the log scale.
-  # Set hist_data$log_scale = TRUE if x and sd are already on the log scale.
   if (base_prior$dist == "lognormal") {
     log_obs_mean <- if (isTRUE(hist_data$log_scale)) x else log(x)
     raw_sd       <- hist_data$sd %||% base_prior$fit_summary$sd
@@ -411,19 +416,13 @@ plot.bayprior_power_prior <- function(x, ...) {
   }
 
   # ── Mixture ──────────────────────────────────────────────────────────────────
-  # Update each component independently with the same delta, then re-weight
-  # by the component marginal likelihoods under the fractional historical data.
-  # This is consistent with the mixture conjugate update in conflict_sensitivity.R.
   if (base_prior$dist == "mixture") {
     components <- base_prior$components
     weights    <- base_prior$weights
 
-    # Update each component; NULL marks failures
     updated <- lapply(components, function(comp) {
-      tryCatch(
-        .power_prior_update(comp, hist_data, delta),
-        error = function(e) NULL
-      )
+      tryCatch(.power_prior_update(comp, hist_data, delta),
+               error = function(e) NULL)
     })
 
     keep <- !vapply(updated, is.null, logical(1))
@@ -431,20 +430,19 @@ plot.bayprior_power_prior <- function(x, ...) {
       rlang::abort(glue::glue(
         "Power prior update failed for all mixture components ",
         "(dist = 'mixture', type = '{type}', delta = {delta}). ",
-        "Check that at least one component supports the data type '{type}'."
+        "Check that at least one component supports data type '{type}'."
       ))
     }
     updated <- updated[keep]
     weights <- weights[keep]
 
-    # Effective SE for fractional historical data (used for re-weighting)
     obs_mean_h <- if (type == "binary") x / n else x
     obs_se_h   <- if (type == "binary") {
       sqrt(obs_mean_h * (1 - obs_mean_h) / (n * delta))
     } else {
       (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
     }
-    obs_se_h <- max(obs_se_h, 1e-8)  # guard against zero SE
+    obs_se_h <- max(obs_se_h, 1e-8)
 
     log_marg <- vapply(components[keep], function(comp) {
       stats::dnorm(obs_mean_h,
@@ -457,11 +455,11 @@ plot.bayprior_power_prior <- function(x, ...) {
     new_weights <- exp(log_wts - max(log_wts))
     new_weights <- new_weights / sum(new_weights)
 
-    # Updated mixture summary via law of total expectation/variance
     post_means <- vapply(updated, function(p) p$fit_summary$mean, numeric(1))
     post_sds   <- vapply(updated, function(p) p$fit_summary$sd,   numeric(1))
     mix_mean   <- sum(new_weights * post_means)
-    mix_sd     <- sqrt(sum(new_weights * (post_sds^2 + (post_means - mix_mean)^2)))
+    mix_sd     <- sqrt(sum(new_weights *
+                           (post_sds^2 + (post_means - mix_mean)^2)))
 
     return(structure(
       list(
@@ -485,7 +483,6 @@ plot.bayprior_power_prior <- function(x, ...) {
     ))
   }
 
-  # ── Unsupported combination ───────────────────────────────────────────────────
   rlang::abort(glue::glue(
     "Power prior update not implemented for dist = '{base_prior$dist}' + ",
     "type = '{type}'."
@@ -494,7 +491,6 @@ plot.bayprior_power_prior <- function(x, ...) {
 
 
 .marginal_bf <- function(power_prior, base_prior, current_data) {
-  # Log marginal likelihood ratio (normal approximation)
   type     <- current_data$type %||% "binary"
   n        <- current_data$n
   x        <- current_data$x
@@ -504,15 +500,13 @@ plot.bayprior_power_prior <- function(x, ...) {
   } else {
     (current_data$sd %||% power_prior$fit_summary$sd) / sqrt(n)
   }
-
-  # Guard zero SE
   obs_se <- max(obs_se, 1e-8)
 
-  # Log marginal = log N(obs_mean; prior_mean, sqrt(prior_sd^2 + obs_se^2))
   .log_pred <- function(pr) {
-    pm <- pr$fit_summary$mean
-    ps <- pr$fit_summary$sd
-    stats::dnorm(obs_mean, pm, sqrt(ps^2 + obs_se^2), log = TRUE)
+    stats::dnorm(obs_mean,
+                 mean = pr$fit_summary$mean,
+                 sd   = sqrt(pr$fit_summary$sd^2 + obs_se^2),
+                 log  = TRUE)
   }
 
   exp(.log_pred(power_prior) - .log_pred(base_prior))
