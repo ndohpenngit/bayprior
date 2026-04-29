@@ -26,10 +26,10 @@ mod_welcome_ui <- function(id) {
           " Tornado and influence heatmap plots across hyperparameter grids,
             including CrI width and Pr(efficacy) tracking."),
         tags$li(tags$strong("Robust Priors:"),
-          " Build sceptical (Spiegelhalter-Freedman), robust mixture
+          " Build sceptical (Spiegelhalter-Freedman),   robust mixture
             (Schmidli et al.), or calibrated power priors (Ibrahim & Chen)."),
         tags$li(tags$strong("Export Report:"),
-          " Generate HTML/PDF prior justification reports for regulatory
+          " Generate HTML, PDF or Word (.docx) prior justification reports for regulatory
             submission (FDA/EMA aligned).")
       ),
       tags$hr(),
@@ -53,7 +53,7 @@ mod_welcome_ui <- function(id) {
         "Conflict diagnostics", "4", subtitle = "Box p . Surprise . Overlap . Mahalanobis",
         icon = icon("vial"), color = "orange", fill = TRUE, width = 12),
       shinydashboard::infoBox(
-        "Report formats", "2", subtitle = "HTML and PDF",
+        "Report formats", "2", subtitle = "HTML, PDF and Word (.docx)",
         icon = icon("file"), color = "red", fill = TRUE, width = 12)
     )
   )
