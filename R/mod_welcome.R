@@ -7,7 +7,7 @@ mod_welcome_ui <- function(id) {
       title = tagList(icon("house"), " Welcome to bayprior"),
       tags$p(class = "lead",
         "A structured toolkit for Bayesian prior elicitation, conflict
-         diagnostics, and sensitivity analysis - aligned with FDA (2026)
+         diagnostics, and sensitivity analysis — aligned with FDA (2026)
          and EMA guidance on Bayesian clinical trial methods."
       ),
       tags$hr(),
@@ -26,11 +26,11 @@ mod_welcome_ui <- function(id) {
           " Tornado and influence heatmap plots across hyperparameter grids,
             including CrI width and Pr(efficacy) tracking."),
         tags$li(tags$strong("Robust Priors:"),
-          " Build sceptical (Spiegelhalter-Freedman),   robust mixture
+          " Build sceptical (Spiegelhalter-Freedman), robust mixture
             (Schmidli et al.), or calibrated power priors (Ibrahim & Chen)."),
         tags$li(tags$strong("Export Report:"),
-          " Generate HTML, PDF or Word (.docx) prior justification reports for regulatory
-            submission (FDA/EMA aligned).")
+          " Generate HTML, PDF, or Word (.docx) prior justification reports
+            for regulatory submission (FDA/EMA aligned).")
       ),
       tags$hr(),
       tags$h6("Key references"),
@@ -44,16 +44,21 @@ mod_welcome_ui <- function(id) {
     ),
     column(4,
       shinydashboard::infoBox(
-        "Distributions", "4", subtitle = "Beta . Normal . Gamma . Log-Normal",
+        "Distributions", "4",
+        subtitle = "Beta . Normal . Gamma . Log-Normal",
         icon = icon("shapes"), color = "blue", fill = TRUE, width = 12),
       shinydashboard::infoBox(
-        "Elicitation methods", "3", subtitle = "Quantile . Moment . Roulette",
+        "Elicitation methods", "3",
+        subtitle = "Quantile . Moment . Roulette",
         icon = icon("sliders"), color = "green", fill = TRUE, width = 12),
       shinydashboard::infoBox(
-        "Conflict diagnostics", "4", subtitle = "Box p . Surprise . Overlap . Mahalanobis",
+        "Conflict diagnostics", "4",
+        subtitle = "Box p . Surprise . Overlap . Mahalanobis",
         icon = icon("vial"), color = "orange", fill = TRUE, width = 12),
+      # FIX: was "2" — docx was added as a third format
       shinydashboard::infoBox(
-        "Report formats", "2", subtitle = "HTML, PDF and Word (.docx)",
+        "Report formats", "3",
+        subtitle = "HTML . PDF . Word (.docx)",
         icon = icon("file"), color = "red", fill = TRUE, width = 12)
     )
   )

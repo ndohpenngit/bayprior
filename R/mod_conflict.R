@@ -10,8 +10,8 @@ mod_conflict_ui <- function(id) {
       uiOutput(ns("prior_banner")),
       tags$hr(),
       selectInput(ns("data_type"), "Data type",
-        choices = c("Binary (events / n)" = "binary",
-                    "Continuous (mean, SD, n)" = "continuous")),
+        choices = c("Binary (events / n)"      = "binary",
+                    "Continuous (mean, SD, n)"  = "continuous")),
       conditionalPanel(
         condition = sprintf("input['%s'] === 'binary'", ns("data_type")),
         numericInput(ns("bin_x"), "Events (x)", 14, 0),
@@ -31,14 +31,15 @@ mod_conflict_ui <- function(id) {
     ),
     column(8,
       fluidRow(
-        shinydashboard::valueBoxOutput(ns("vb_boxp"),    width = 4),
+        shinydashboard::valueBoxOutput(ns("vb_boxp"),     width = 4),
         shinydashboard::valueBoxOutput(ns("vb_surprise"), width = 4),
         shinydashboard::valueBoxOutput(ns("vb_overlap"),  width = 4)
       ),
       uiOutput(ns("conflict_alert")),
       shinydashboard::box(
         width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("chart-area"), " Prior - Likelihood - Posterior overlay"),
+        title = tagList(icon("chart-area"),
+                        " Prior - Likelihood - Posterior overlay"),
         shinycssloaders::withSpinner(
           plotly::plotlyOutput(ns("overlay_plot"), height = "300px"),
           color = "#1D9E75"
@@ -78,40 +79,58 @@ mod_conflict_server <- function(id, shared, active_prior) {
       r <- tryCatch(
         prior_conflict(p, data_sum(), alpha = input$alpha),
         error = function(e) {
-          showNotification(paste("Error:", conditionMessage(e)), type = "error"); NULL
+          showNotification(paste("Error:", conditionMessage(e)),
+                           type = "error")
+          NULL
         })
-      res(r); shared$conflict <- r
+      res(r)
+      shared$conflict <- r
     })
 
     output$vb_boxp <- shinydashboard::renderValueBox({
       val <- if (!is.null(res())) round(res()$box_pvalue, 4) else "-"
       col <- if (!is.null(res()) && res()$conflict_flag) "red" else "green"
-      shinydashboard::valueBox(val, "Box p-value", icon = icon("vial"), color = col)
+      shinydashboard::valueBox(val, "Box p-value",
+                               icon = icon("vial"), color = col)
     })
     output$vb_surprise <- shinydashboard::renderValueBox({
       val <- if (!is.null(res())) round(res()$surprise_index, 3) else "-"
-      shinydashboard::valueBox(val, "Surprise index", icon = icon("bolt"), color = "yellow")
+      shinydashboard::valueBox(val, "Surprise index",
+                               icon = icon("bolt"), color = "yellow")
     })
     output$vb_overlap <- shinydashboard::renderValueBox({
       val <- if (!is.null(res())) round(res()$overlap, 3) else "-"
-      shinydashboard::valueBox(val, "Overlap coeff.", icon = icon("circle-half-stroke"), color = "blue")
+      shinydashboard::valueBox(val, "Overlap coeff.",
+                               icon = icon("circle-half-stroke"), color = "blue")
     })
 
     output$conflict_alert <- renderUI({
       req(res())
       cls <- if (res()$conflict_flag) "alert-danger" else "alert-success"
-      ico <- if (res()$conflict_flag) icon("triangle-exclamation") else icon("circle-check")
+      ico <- if (res()$conflict_flag) icon("triangle-exclamation")
+             else icon("circle-check")
       tags$div(class = paste("alert", cls), style = "margin:10px 0;",
                ico, " ",
-               tags$strong(glue::glue("Severity: {toupper(res()$conflict_severity)}. ")),
+               tags$strong(
+                 glue::glue("Severity: {toupper(res()$conflict_severity)}. ")),
                res()$recommendation)
     })
 
     output$overlay_plot <- plotly::renderPlotly({
       req(res(), active_prior())
-      gp <- plot_prior_likelihood(active_prior(), data_sum(), show_posterior = TRUE)
+      # Suppress the expected mixture-family density warning so it does not
+      # surface as a Shiny warning banner when the active prior is a mixture.
+      gp <- withCallingHandlers(
+        plot_prior_likelihood(active_prior(), data_sum(), show_posterior = TRUE),
+        warning = function(w) {
+          if (grepl("different distribution families", conditionMessage(w),
+                    fixed = TRUE))
+            invokeRestart("muffleWarning")
+        }
+      )
       plotly::ggplotly(gp) |>
-        plotly::layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+        plotly::layout(paper_bgcolor = "rgba(0,0,0,0)",
+                       plot_bgcolor  = "rgba(0,0,0,0)")
     })
   })
 }
@@ -136,8 +155,8 @@ mod_mahal_ui <- function(id) {
         column(6, numericInput(ns("pm2"), "Mean - ep.2", 0.60, step = 0.01))
       ),
       fluidRow(
-        column(6, numericInput(ns("pv1"), "Var - ep.1", 0.01,  step = 0.001)),
-        column(6, numericInput(ns("pv2"), "Var - ep.2", 0.015, step = 0.001))
+        column(6, numericInput(ns("pv1"), "Var - ep.1",  0.010,  step = 0.001)),
+        column(6, numericInput(ns("pv2"), "Var - ep.2",  0.015,  step = 0.001))
       ),
       numericInput(ns("pcov"), "Covariance (off-diag)", 0.003, step = 0.001),
       tags$hr(),
@@ -147,8 +166,8 @@ mod_mahal_ui <- function(id) {
         column(6, numericInput(ns("om2"), "Mean - ep.2", 0.58, step = 0.01))
       ),
       fluidRow(
-        column(6, numericInput(ns("ov1"), "Var/n - ep.1", 0.0002, step = 0.00005)),
-        column(6, numericInput(ns("ov2"), "Var/n - ep.2", 0.0002, step = 0.00005))
+        column(6, numericInput(ns("ov1"), "Var/n - ep.1", 0.0002,  step = 0.00005)),
+        column(6, numericInput(ns("ov2"), "Var/n - ep.2", 0.0002,  step = 0.00005))
       ),
       numericInput(ns("ocov"), "Covariance/n", 0.00004, step = 0.000005),
       tags$hr(),
@@ -186,41 +205,52 @@ mod_mahal_server <- function(id) {
       om   <- c(input$om1, input$om2)
       ocov <- matrix(c(input$ov1, input$ocov, input$ocov, input$ov2), 2, 2)
       r    <- tryCatch(
-        conflict_mahalanobis(pm, pcov, om, ocov, alpha = input$alpha,
+        conflict_mahalanobis(pm, pcov, om, ocov,
+                             alpha  = input$alpha,
                              labels = c(input$lbl1, input$lbl2)),
         error = function(e) {
-          showNotification(paste("Error:", conditionMessage(e)), type = "error"); NULL
+          showNotification(paste("Error:", conditionMessage(e)),
+                           type = "error")
+          NULL
         })
       res(r)
     })
 
     output$vb_D <- shinydashboard::renderValueBox({
       val <- if (!is.null(res())) round(res()$mahal_distance, 3) else "-"
-      shinydashboard::valueBox(val, "Mahalanobis D", icon = icon("ruler"), color = "blue")
+      shinydashboard::valueBox(val, "Mahalanobis D",
+                               icon = icon("ruler"), color = "blue")
     })
     output$vb_pval <- shinydashboard::renderValueBox({
       val <- if (!is.null(res())) round(res()$pvalue, 4) else "-"
       col <- if (!is.null(res()) && res()$conflict_flag) "red" else "green"
-      shinydashboard::valueBox(val, "Chi-sq p-value", icon = icon("chart-pie"), color = col)
+      shinydashboard::valueBox(val, "Chi-sq p-value",
+                               icon = icon("chart-pie"), color = col)
     })
     output$vb_flag <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) if (res()$conflict_flag) "CONFLICT" else "OK" else "-"
+      val <- if (!is.null(res())) if (res()$conflict_flag) "CONFLICT" else "OK"
+             else "-"
       col <- if (!is.null(res()) && res()$conflict_flag) "red" else "green"
-      shinydashboard::valueBox(val, "Status", icon = icon("flag"), color = col)
+      shinydashboard::valueBox(val, "Status",
+                               icon = icon("flag"), color = col)
     })
 
     output$z_tbl <- DT::renderDataTable({
       req(res())
-      df <- data.frame(Endpoint = res()$labels,
-                       `Marginal z` = round(res()$marginal_z, 3),
-                       check.names = FALSE)
-      DT::datatable(df, rownames = FALSE, options = list(dom = "t"), class = "compact stripe")
+      df <- data.frame(
+        Endpoint   = res()$labels,
+        `Marginal z` = round(res()$marginal_z, 3),
+        check.names = FALSE
+      )
+      DT::datatable(df, rownames = FALSE,
+                    options = list(dom = "t"), class = "compact stripe")
     })
 
     output$mv_alert <- renderUI({
       req(res())
       cls <- if (res()$conflict_flag) "alert-danger" else "alert-success"
-      ico <- if (res()$conflict_flag) icon("triangle-exclamation") else icon("check")
+      ico <- if (res()$conflict_flag) icon("triangle-exclamation")
+             else icon("check")
       tags$div(class = paste("alert", cls), style = "margin:10px 0;",
                ico, " ", res()$interpretation)
     })
