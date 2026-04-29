@@ -7,7 +7,7 @@
 #' surprise index, Mahalanobis check), sensitivity analyses with tornado and
 #' influence plots, sceptical/robust/power priors, and automated HTML/PDF
 #' regulatory reports aligned with FDA/EMA expectations. Includes a fully
-#' modular Shiny application built with golem and shinydashboard.
+#' modular Shiny application.
 #'
 #' @section Main workflow:
 #' \enumerate{
