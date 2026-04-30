@@ -7,7 +7,7 @@ mod_welcome_ui <- function(id) {
       title = tagList(icon("house"), " Welcome to bayprior"),
       tags$p(class = "lead",
         "A structured toolkit for Bayesian prior elicitation, conflict
-         diagnostics, and sensitivity analysis — aligned with FDA (2026)
+         diagnostics, and sensitivity analysis \u2014 aligned with FDA (2026)
          and EMA guidance on Bayesian clinical trial methods."
       ),
       tags$hr(),
@@ -55,7 +55,7 @@ mod_welcome_ui <- function(id) {
         "Conflict diagnostics", "4",
         subtitle = "Box p . Surprise . Overlap . Mahalanobis",
         icon = icon("vial"), color = "orange", fill = TRUE, width = 12),
-      # FIX: was "2" — docx was added as a third format
+      # FIX: was "2" \u2014 docx was added as a third format
       shinydashboard::infoBox(
         "Report formats", "3",
         subtitle = "HTML . PDF . Word (.docx)",

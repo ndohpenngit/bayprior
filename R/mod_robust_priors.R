@@ -16,7 +16,6 @@ mod_sceptical_ui <- function(id) {
         choices = c("Normal"    = "normal",
                     "Beta"      = "beta",
                     "Log-Normal"= "lognormal")),
-      # FIX: null_value input with sensible defaults per family.
       # Beta requires null_value in (0, 1); Normal/Log-Normal use 0.
       # The observeEvent below updates min/max/value when family changes
       # so users can never accidentally submit 0 for a Beta prior.
@@ -177,9 +176,9 @@ mod_robust_ui <- function(id) {
       uiOutput(ns("prior_banner")),
       tags$hr(),
       sliderInput(ns("vague_weight"), "Vague component weight",
-                  0.05, 0.50, 0.20, 0.05),
-      numericInput(ns("vague_sd_mult"), "Vague SD = informative SD \u00d7",
-                   10, 2, 50, 1),
+                  value = 0.05, min = 0.50, max = 0.20, step = 0.05),
+      numericInput(ns("vague_sd_mult"), "Vague SD = informative SD x",
+                  value = 10, min = 2, max = 50, step = 1),
       textInput(ns("label"), "Label", "Robust mixture prior"),
       tags$hr(),
       actionButton(ns("fit_btn"), "Build robust prior",

@@ -321,8 +321,8 @@ plot.bayprior_power_prior <- function(x, ...) {
     ggplot2::labs(
       title    = "Bayes Factor vs power prior weight",
       subtitle = paste0("Dashed = target BF (", x$target_bf,
-                        "); dotted = optimal \u03b4 (", delta_opt, ")"),
-      x = expression(delta), y = "Bayes Factor"
+                        "); dotted = optimal delta (", delta_opt, ")"),
+      x = "delta", y = "Bayes Factor"
     ) +
     ggplot2::theme_minimal(base_size = 12)
 
@@ -335,8 +335,8 @@ plot.bayprior_power_prior <- function(x, ...) {
                         linetype = "dotted", colour = "#1D9E75") +
     ggplot2::labs(
       title    = "Box p-value (conflict) vs power prior weight",
-      subtitle = "Dashed grey = \u03b1 = 0.05",
-      x = expression(delta), y = "Box p-value"
+      subtitle = "Dashed grey = alpha = 0.05",
+      x = "delta", y = "Box p-value"
     ) +
     ggplot2::theme_minimal(base_size = 12)
 

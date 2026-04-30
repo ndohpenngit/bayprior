@@ -1,6 +1,6 @@
 # R/globals.R
-# Suppress R CMD CHECK notes for Shiny functions and ggplot2 variables
-# that are used but not explicitly imported at the top level.
+# Suppress R CMD CHECK notes for Shiny functions and ggplot2 aes() variables
+# that are used but not explicitly imported at the top level of each file.
 
 # ── Shiny globals ─────────────────────────────────────────────────────────────
 #' @importFrom shiny NS tagList tags icon fluidRow column uiOutput
@@ -11,6 +11,7 @@
 #' @importFrom shiny reactiveVal reactiveValues req isolate
 #' @importFrom shiny showNotification withProgress setProgress
 #' @importFrom shiny downloadHandler addResourcePath
+#' @importFrom shiny updateNumericInput updateSliderInput
 NULL
 
 # ── Stats / base globals ──────────────────────────────────────────────────────
@@ -18,9 +19,9 @@ NULL
 #' @importFrom graphics curve
 NULL
 
-# ── ggplot2 / dplyr tidy-eval variables ──────────────────────────────────────
-# These are column names used inside aes() or .data[[]] that R CMD CHECK
-# cannot resolve statically. Declaring them here silences the notes.
+# ── ggplot2 / tidy-eval aes() column names ───────────────────────────────────
+# These are bare column names used inside aes() that R CMD CHECK cannot
+# resolve statically. Declaring them here silences the NOTEs.
 utils::globalVariables(c(
   # plot.bayprior / plot_prior_likelihood
   "theta", "density",
