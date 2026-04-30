@@ -14,7 +14,8 @@ sceptical_prior(
 }
 \arguments{
 \item{null_value}{Numeric. The null treatment effect (e.g. 0 for a mean
-difference, 1 for a hazard ratio, 0.5 for a response-rate difference).}
+difference, 1 for a hazard ratio, 0.5 for a response-rate difference).
+For \code{family = "beta"}, must be strictly in (0, 1).}
 
 \item{family}{Character. Distribution family. One of \code{"normal"},
 \code{"beta"}, \code{"lognormal"}.}
@@ -40,17 +41,23 @@ sensitivity pair.
 For a Normal family, the sceptical prior is centred at \code{null_value} with
 SD calibrated to the \code{strength} argument:
 \itemize{
-\item \code{weak}:     SD = standard deviation of a "vague" half-normal
-\item \code{moderate}: SD chosen so that a 2-SD departure from null has ~5\%
-prior probability - roughly equivalent to a p < 0.05 sceptic
-\item \code{strong}:   SD = half of \code{moderate} - very concentrated at null
+\item \code{weak}:     SD = 1.0 (vague half-normal)
+\item \code{moderate}: SD = 0.5 (2-SD departure from null has ~5\% prior probability)
+\item \code{strong}:   SD = 0.25 (very concentrated at null)
 }
+
+For \code{family = "beta"}, \code{null_value} must be in (0, 1).
 }
 \examples{
 sc <- sceptical_prior(null_value = 0, family = "normal",
                       strength = "moderate", label = "Mean difference")
 print(sc)
 plot(sc)
+
+# Beta sceptical prior centred at a null response rate
+sc_b <- sceptical_prior(null_value = 0.20, family = "beta",
+                        strength = "moderate", label = "Response rate")
+plot(sc_b)
 
 }
 \references{

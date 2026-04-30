@@ -14,50 +14,25 @@ calibrate_power_prior(
 )
 }
 \arguments{
-\item{historical_data}{Named list describing historical data:
-\describe{
-\item{\code{type}}{\code{"binary"} or \code{"continuous"}.}
-\item{\code{x}}{Events (binary) or mean (continuous).}
-\item{\code{n}}{Historical sample size.}
-\item{\code{sd}}{SD (continuous only).}
-}}
+\item{historical_data}{Named list: \code{type}, \code{x}, \code{n}, optionally \code{sd}.}
 
-\item{current_data}{Named list describing current data (same structure).}
+\item{current_data}{Named list (same structure as \code{historical_data}).}
 
-\item{base_prior}{A \code{bayprior} object representing the prior before
-incorporating historical data (usually a vague prior).}
+\item{base_prior}{A \code{bayprior} object (usually a vague prior).}
 
-\item{target_bf}{Numeric. Target Bayes Factor (historical vs current
-model fit). A value of 1 gives equal weight; < 1 discounts historical.
-Default \code{3} (moderate evidence in favour of including historical data).}
+\item{target_bf}{Numeric. Target Bayes Factor. Default \code{3}.}
 
-\item{delta_grid}{Numeric vector. Grid of \eqn{\delta} values to search.
-Default \code{seq(0.05, 1.0, by = 0.05)}.}
+\item{delta_grid}{Numeric vector of \eqn{\delta} values. Default
+\code{seq(0.05, 1.0, by = 0.05)}.}
 
-\item{method}{Character. \code{"bayes_factor"} (default) or
-\code{"compatibility"} (uses Box p-value to calibrate compatibility).}
+\item{method}{Character. \code{"bayes_factor"} (default) or \code{"compatibility"}.}
 }
 \value{
-A list of class \code{bayprior_power_prior} with:
-\describe{
-\item{\code{delta_opt}}{Optimal weight.}
-\item{\code{delta_grid}}{Full grid of deltas.}
-\item{\code{bf_grid}}{Bayes Factors at each delta.}
-\item{\code{compatibility_grid}}{Box p-values at each delta.}
-\item{\code{power_prior}}{The resulting \code{bayprior} at \code{delta_opt}.}
-\item{\code{target_bf}}{The target BF supplied.}
-}
+A list of class \code{bayprior_power_prior}.
 }
 \description{
 Selects the power prior weight \eqn{\delta \in (0,1)} that down-weights
-historical data before incorporating it into the current analysis. The
-weight is calibrated by finding the \eqn{\delta} that achieves a target
-Bayes Factor (or equivalently a target prior-data compatibility) between
-the historical-data-based prior and the current likelihood.
-}
-\details{
-This addresses the \strong{hdbayes gap} identified in the proposal: a
-principled, calibrated approach to power prior weight selection.
+historical data before incorporating it into the current analysis.
 }
 \examples{
 base  <- elicit_beta(mean = 0.5, sd = 0.2, method = "moments",
