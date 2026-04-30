@@ -1,0 +1,545 @@
+---
+title: "Bayesian Prior Justification Report"
+subtitle: "`r params$trial_name`"
+author: "`r params$author`"
+date: "`r params$date`"
+
+params:
+  rds_path:    ""
+  trial_name:  "Clinical Trial"
+  sponsor:     "Sponsor"
+  author:      "Biostatistics"
+  date:        ""
+  notes:       ""
+
+format:
+  html:
+    toc: true
+    toc-float: true
+    toc-depth: 3
+    number-sections: true
+    theme: flatly
+    highlight-style: tango
+    code-fold: true
+    embed-resources: true
+    fig-width: 8
+    fig-height: 4.5
+  pdf:
+    toc: true
+    number-sections: true
+    latex-engine: xelatex
+    fig-width: 7
+    fig-height: 4
+  docx:
+    toc: true
+    toc-depth: 3
+    fig-width: 6.5
+    fig-height: 4
+    fig-cap-location: bottom
+
+execute:
+  echo: false
+  warning: false
+  message: false
+
+knitr:
+  opts_chunk:
+    dpi: 150
+---
+
+```{r setup}
+if (!requireNamespace("bayprior", quietly = TRUE)) {
+  stop(paste0(
+    "The 'bayprior' package is not installed in the R library used by Quarto.\n",
+    "Run devtools::install() in your R console, then try downloading the report again."
+  ))
+}
+library(bayprior)
+library(ggplot2)
+library(knitr)
+
+# ── Load R objects from RDS ───────────────────────────────────────────────────
+# All complex R objects (bayprior, ggplot2) are passed via an .rds file rather
+# than execute_params, which serializes to YAML and cannot handle S3 objects.
+if (nzchar(params$rds_path) && file.exists(params$rds_path)) {
+  .session <- readRDS(params$rds_path)
+} else {
+  .session <- list(prior=NULL, conflict=NULL, sensitivity=NULL,
+                   prior_plot=NULL, overlay_plot=NULL,
+                   tornado_plot=NULL, heatmap_plot=NULL)
+}
+
+pr  <- .session$prior
+cd  <- .session$conflict
+sa  <- .session$sensitivity
+has_prior <- !is.null(pr)
+has_conf  <- !is.null(cd)
+has_sens  <- !is.null(sa)
+
+pp_prior_plot   <- .session$prior_plot
+pp_overlay_plot <- .session$overlay_plot
+pp_tornado_plot <- .session$tornado_plot
+pp_heatmap_plot <- .session$heatmap_plot
+
+# ── Safe helpers ──────────────────────────────────────────────────────────────
+# Self-contained: no dependency on %||% or rlang, which are absent from
+# quarto::quarto_render()'s fresh environment when called from a Shiny app.
+
+.null_or <- function(x, default) {
+  if (is.null(x) || length(x) == 0L) default else x
+}
+
+.safe_round <- function(x, digits = 4) {
+  x <- suppressWarnings(as.numeric(x))
+  round(x, digits)
+}
+
+.safe_chr <- function(x, fallback = "\u2014") {
+  if (is.null(x) || length(x) == 0L || (length(x) == 1L && is.na(x)))
+    return(fallback)
+  as.character(x[[1L]])
+}
+
+.fs <- function(s, nm) {
+  v <- s[[nm]]
+  if (is.null(v) || length(v) == 0L) NA_real_
+  else suppressWarnings(as.numeric(v[[1L]]))
+}
+
+# CrI with fallback for mixture priors that lack q025/q975.
+# Mixture priors store only mean and sd; approximate with mean ± 1.96 * sd.
+.cri <- function(s) {
+  lo <- .fs(s, "q025"); hi <- .fs(s, "q975")
+  mn <- .fs(s, "mean"); sd_v <- .fs(s, "sd")
+  if (is.na(lo)) lo <- mn - 1.96 * sd_v
+  if (is.na(hi)) hi <- mn + 1.96 * sd_v
+  paste0("[", .safe_round(lo, 4), ",  ", .safe_round(hi, 4), "]")
+}
+
+# For mixture priors, pull method/expert from the dominant component so
+# these fields never display as "—" in tables.
+.prior_method <- function(p) {
+  if (!identical(p$dist, "mixture")) return(.safe_chr(p$method))
+  dom <- p$components[[which.max(p$weights)]]
+  paste0(.safe_chr(dom$method), " (pooled)")
+}
+
+.prior_expert <- function(p) {
+  if (!identical(p$dist, "mixture")) return(.safe_chr(p$expert_id))
+  nms <- vapply(p$components,
+                function(x) .safe_chr(x$expert_id), character(1L))
+  paste(unique(nms[nms != "\u2014"]), collapse = ", ")
+}
+
+.params_df <- function(prior_obj) {
+  p <- prior_obj$params
+  if (is.null(p) || length(p) == 0L)
+    return(data.frame(Parameter = character(0L), Value = character(0L),
+                      stringsAsFactors = FALSE))
+  if (identical(prior_obj$dist, "mixture")) {
+    w <- prior_obj$weights
+    if (is.null(w)) w <- p$weights
+    if (is.null(w)) w <- numeric(0L)
+    return(data.frame(
+      Parameter        = paste0("weight[", seq_along(w), "]"),
+      Value            = as.character(round(w, 6L)),
+      stringsAsFactors = FALSE
+    ))
+  }
+  vals <- tryCatch(unlist(p), error = function(e) NULL)
+  if (is.null(vals) || !is.numeric(vals))
+    return(data.frame(Parameter = character(0L), Value = character(0L),
+                      stringsAsFactors = FALSE))
+  data.frame(
+    Parameter        = names(vals),
+    Value            = as.character(.safe_round(vals, 6L)),
+    stringsAsFactors = FALSE
+  )
+}
+
+# Suppresses the expected mixture-family density warning inside plot calls.
+.safe_plot <- function(expr_fn, msg = "Plot could not be rendered") {
+  withCallingHandlers(
+    tryCatch(expr_fn(), error = function(e) cat(msg, ":", conditionMessage(e), "\n")),
+    warning = function(w) {
+      if (grepl("different distribution families", conditionMessage(w), fixed = TRUE))
+        invokeRestart("muffleWarning")
+    }
+  )
+}
+```
+
+---
+
+## Executive Summary
+
+This report documents the Bayesian prior specification for study
+**`r params$trial_name`**, prepared by **`r params$author`**
+(`r params$sponsor`) and dated `r format(Sys.Date(), "%d %B %Y")`.
+
+```{r exec-table}
+if (has_prior) {
+  s <- pr$fit_summary
+  df_exec <- data.frame(
+    Item = c("Distribution family", "Elicitation method",
+             "Expert / source", "Prior mean", "Prior SD",
+             "95% Credible interval"),
+    Value = c(
+      toupper(.safe_chr(pr$dist)),
+      .prior_method(pr),
+      .prior_expert(pr),
+      as.character(.safe_round(.fs(s, "mean"), 4)),
+      as.character(.safe_round(.fs(s, "sd"),   4)),
+      .cri(s)
+    ),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_exec) <- NULL
+  kable(df_exec, col.names = c("Item", "Value"), align = "ll",
+        caption = "Prior specification summary", row.names = FALSE)
+}
+```
+
+```{r notes-block}
+#| results: asis
+note_text <- .null_or(params$notes, "")
+if (nzchar(note_text)) {
+  cat("::: {.callout-note}\n")
+  cat(paste0("**Statistician\u2019s notes:** ", note_text, "\n"))
+  cat(":::\n")
+}
+```
+
+---
+
+## Trial Information
+
+```{r trial-info}
+df_trial <- data.frame(
+  Field = c("Trial / Protocol", "Sponsor", "Statistician", "Report date"),
+  Value = c(
+    .safe_chr(params$trial_name),
+    .safe_chr(params$sponsor),
+    .safe_chr(params$author),
+    format(Sys.Date(), "%d %B %Y")
+  ),
+  stringsAsFactors = FALSE
+)
+rownames(df_trial) <- NULL
+kable(df_trial, col.names = c("Field", "Value"), align = "ll",
+      row.names = FALSE)
+```
+
+---
+
+## Prior Specification
+
+### Elicitation Methodology
+
+```{r elicitation-method}
+if (has_prior) {
+  df_elic <- data.frame(
+    Attribute = c("Quantity", "Distribution", "Method", "Expert / Source"),
+    Value     = c(
+      .safe_chr(pr$label),
+      toupper(.safe_chr(pr$dist)),
+      .prior_method(pr),
+      .prior_expert(pr)
+    ),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_elic) <- NULL
+  kable(df_elic, col.names = c("Attribute", "Value"), align = "ll",
+        row.names = FALSE)
+}
+```
+
+### Fitted Parameters
+
+```{r fitted-params}
+if (has_prior) {
+  df <- .params_df(pr)
+  rownames(df) <- NULL
+  if (nrow(df) > 0L) {
+    kable(df, col.names = c("Parameter", "Value"),
+          caption = "Fitted hyperparameters", align = "lr",
+          row.names = FALSE)
+  } else {
+    cat("Hyperparameters not available for this prior type.\n")
+  }
+}
+```
+
+### Prior Summary Statistics
+
+```{r prior-summary}
+if (has_prior) {
+  s    <- pr$fit_summary
+  mn   <- .fs(s, "mean"); sd_v <- .fs(s, "sd")
+  lo   <- .fs(s, "q025"); if (is.na(lo)) lo <- mn - 1.96 * sd_v
+  md   <- .fs(s, "q500"); if (is.na(md)) md <- mn
+  hi   <- .fs(s, "q975"); if (is.na(hi)) hi <- mn + 1.96 * sd_v
+  df_sum <- data.frame(
+    Statistic = c("Mean", "Standard deviation",
+                  "2.5th percentile", "Median", "97.5th percentile"),
+    Value     = as.character(.safe_round(c(mn, sd_v, lo, md, hi), 5)),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_sum) <- NULL
+  kable(df_sum, caption = "Prior distribution summary statistics",
+        align = "lr", row.names = FALSE)
+}
+```
+
+### Prior Density
+
+```{r prior-density}
+#| fig-cap: "Elicited prior distribution. Shaded region = 95% credible interval; dashed line = prior mean."
+if (has_prior) {
+  if (!is.null(pp_prior_plot) && inherits(pp_prior_plot, "gg")) {
+    print(pp_prior_plot)
+  } else {
+    .safe_plot(function() plot(pr), "Prior density plot could not be rendered")
+  }
+}
+```
+
+---
+
+## Prior-Data Conflict Assessment
+
+```{r conflict-check}
+#| results: asis
+if (!has_conf) {
+  cat("::: {.callout-warning}\n")
+  cat("No prior-data conflict diagnostics were computed for this report.\n")
+  cat(":::\n")
+}
+```
+
+```{r conflict-table}
+if (has_conf) {
+  df_conf <- data.frame(
+    Diagnostic = c(
+      "Box's prior predictive p-value",
+      "Surprise index (standardised distance)",
+      "KL divergence (prior || likelihood)",
+      "Bhattacharyya overlap coefficient",
+      "Conflict severity"
+    ),
+    Value = c(
+      as.character(.safe_round(cd$box_pvalue,          4)),
+      as.character(.safe_round(cd$surprise_index,      4)),
+      as.character(.safe_round(cd$kl_prior_likelihood, 4)),
+      as.character(.safe_round(cd$overlap,             4)),
+      toupper(.safe_chr(cd$conflict_severity))
+    ),
+    Interpretation = c(
+      ifelse(isTRUE(cd$conflict_flag),
+             paste0("Conflict detected (p < alpha = ", cd$alpha, ")"),
+             "No conflict detected"),
+      {
+        si <- suppressWarnings(as.numeric(cd$surprise_index))
+        if (is.na(si)) "Could not compute"
+        else if (si > 3) "High surprise (> 3 SD)"
+        else if (si > 2) "Moderate surprise"
+        else "Within expected range"
+      },
+      {
+        kl <- suppressWarnings(as.numeric(cd$kl_prior_likelihood))
+        if (is.na(kl)) "Could not compute"
+        else if (kl > 1) "Large divergence"
+        else "Acceptable divergence"
+      },
+      {
+        ov <- suppressWarnings(as.numeric(cd$overlap))
+        if (is.na(ov)) "Could not compute"
+        else if (ov < 0.3) "Low overlap \u2014 concern"
+        else if (ov < 0.6) "Moderate overlap"
+        else "Good overlap"
+      },
+      toupper(.safe_chr(cd$conflict_severity))
+    ),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_conf) <- NULL
+  kable(df_conf, caption = "Prior-data conflict diagnostics",
+        align = "llr", row.names = FALSE)
+}
+```
+
+```{r conflict-recommendation}
+#| results: asis
+if (has_conf) {
+  sev  <- .safe_chr(cd$conflict_severity, fallback = "none")
+  type <- switch(sev,
+    none   = "tip",
+    mild   = "warning",
+    severe = "important",
+    "note"
+  )
+  cat(paste0("::: {.callout-", type, "}\n"))
+  cat(.safe_chr(cd$recommendation), "\n")
+  cat(":::\n")
+}
+```
+
+### Prior - Likelihood - Posterior Overlay
+
+```{r overlay-plot}
+#| fig-cap: "Overlay of prior density, scaled likelihood, and resulting posterior."
+if (has_conf && has_prior) {
+  if (!is.null(pp_overlay_plot) && inherits(pp_overlay_plot, "gg")) {
+    print(pp_overlay_plot)
+  } else {
+    .safe_plot(
+      function() plot_prior_likelihood(pr, cd$data_summary, show_posterior = TRUE),
+      "Overlay plot could not be rendered"
+    )
+  }
+}
+```
+
+---
+
+## Sensitivity Analysis
+
+```{r sensitivity-check}
+#| results: asis
+if (!has_sens) {
+  cat("::: {.callout-warning}\n")
+  cat("No sensitivity analysis was conducted for this report.\n")
+  cat(":::\n")
+}
+```
+
+### Influence of Prior Hyperparameters
+
+```{r sensitivity-influence}
+if (has_sens) {
+  sc  <- sa$influence_scores
+  nms <- names(sc)
+  if (is.null(nms) || length(nms) == 0L)
+    nms <- paste0("target_", seq_along(sc))
+  df_sens <- data.frame(
+    Target    = nms,
+    Range     = as.character(.safe_round(sc, 5)),
+    Sensitive = ifelse(is.na(sc) | sc > 0.05, "Yes", "No"),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_sens) <- NULL
+  kable(df_sens,
+        caption = "Posterior sensitivity to prior hyperparameters",
+        align = "lrr", row.names = FALSE)
+}
+```
+
+### Tornado Plot
+
+```{r tornado}
+#| fig-cap: "Range of each posterior quantity across the hyperparameter grid. Wider bars = greater prior influence."
+if (has_sens) {
+  if (!is.null(pp_tornado_plot) && inherits(pp_tornado_plot, "gg")) {
+    print(pp_tornado_plot)
+  } else {
+    .safe_plot(function() plot_tornado(sa), "Tornado plot could not be rendered")
+  }
+}
+```
+
+### Hyperparameter Influence Heatmap
+
+```{r heatmap}
+#| fig-cap: "Posterior mean across the two-dimensional hyperparameter grid."
+if (has_sens) {
+  if (!is.null(pp_heatmap_plot) && inherits(pp_heatmap_plot, "gg")) {
+    print(pp_heatmap_plot)
+  } else {
+    .safe_plot(
+      function() plot_sensitivity(sa, target = sa$target[[1L]]),
+      "Heatmap could not be rendered"
+    )
+  }
+}
+```
+
+---
+
+## Regulatory Compliance Checklist
+
+```{r compliance}
+df_comp <- data.frame(
+  Requirement = c(
+    "Prior elicitation method documented",
+    "Distribution family and parameters specified",
+    "Expert / source of prior identified",
+    "Prior density plot provided",
+    "Prior-data conflict assessed",
+    "Conflict diagnostic statistics reported",
+    "Sensitivity analysis performed",
+    "Sensitivity visualisations provided",
+    "Alternative priors considered",
+    "Regulatory report generated"
+  ),
+  Status = c(
+    ifelse(has_prior, "Complete",  "Missing"),
+    ifelse(has_prior, "Complete",  "Missing"),
+    ifelse(has_prior, "Complete",  "Missing"),
+    ifelse(has_prior, "Complete",  "Missing"),
+    ifelse(has_conf,  "Complete",  "Not run"),
+    ifelse(has_conf,  "Complete",  "Not run"),
+    ifelse(has_sens,  "Complete",  "Not run"),
+    ifelse(has_sens,  "Complete",  "Not run"),
+    ifelse(has_sens,  "See above", "Not run"),
+    "Complete"
+  ),
+  stringsAsFactors = FALSE
+)
+rownames(df_comp) <- NULL
+kable(df_comp, align = "ll",
+      caption = "FDA/EMA regulatory compliance checklist",
+      row.names = FALSE)
+```
+
+::: {.callout-note}
+This checklist maps to requirements in the FDA Draft Guidance on Bayesian
+Statistical Methods (2026) and the EMA Reflection Paper on the Use of
+Bayesian Statistics in the Evaluation of Medicinal Products.
+:::
+
+---
+
+## Appendix: Session Information
+
+```{r session-info}
+si <- sessionInfo()
+df_sess <- data.frame(
+  Item  = c("R version",
+            "bayprior version",
+            "quarto R package",
+            "Quarto CLI version",
+            "Platform",
+            "Date"),
+  Value = c(
+    paste(si$R.version$major, si$R.version$minor, sep = "."),
+    tryCatch(as.character(utils::packageVersion("bayprior")),
+             error = function(e) "unknown"),
+    tryCatch(as.character(utils::packageVersion("quarto")),
+             error = function(e) "unknown"),
+    tryCatch(as.character(quarto::quarto_version()),
+             error = function(e) "not found — check Quarto CLI installation"),
+    si$platform,
+    format(Sys.Date(), "%d %B %Y")
+  ),
+  stringsAsFactors = FALSE
+)
+rownames(df_sess) <- NULL
+kable(df_sess, align = "ll", row.names = FALSE)
+```
+
+---
+
+*Report generated by the **bayprior** R package using `prior_report()`.
+Methods follow O'Hagan et al. (2006), Box (1980), Schmidli et al. (2014),
+Ibrahim & Chen (2000), and the FDA Draft Guidance on Bayesian Methods in
+Clinical Trials (2026).*
