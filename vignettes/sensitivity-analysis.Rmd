@@ -1,0 +1,266 @@
+---
+title: "Sensitivity Analysis"
+author: "bayprior package"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Sensitivity Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.width  = 6,
+  fig.height = 3.8,
+  out.width  = "95%",
+  dpi        = 120,
+  warning    = FALSE,
+  message    = FALSE
+)
+library(bayprior)
+```
+
+# Why Sensitivity Analysis Is Required
+
+Regulatory guidelines — including the FDA Draft Guidance on Bayesian
+Statistical Methods (2026) and ICH E9(R1) — require demonstrating that trial
+conclusions are robust to plausible variations in prior specification. A
+sensitivity analysis answers the question: *How much do posterior conclusions
+change if the prior hyperparameters are varied across their plausible range?*
+
+**bayprior** provides two dedicated sensitivity functions:
+
+- `sensitivity_grid()` — evaluates posterior mean, SD, and efficacy probability
+- `sensitivity_cri()` — focuses specifically on credible interval width
+
+---
+
+# Setup
+
+```{r setup-prior}
+prior <- elicit_beta(
+  mean   = 0.30,
+  sd     = 0.10,
+  method = "moments",
+  label  = "Response rate"
+)
+
+data_obs <- list(type = "binary", x = 14, n = 40)
+```
+
+---
+
+# `sensitivity_grid()`
+
+## Basic Usage
+
+Evaluates how posterior quantities change as hyperparameters vary over a
+Cartesian grid. The `param_grid` names must match the prior's hyperparameter
+names (`alpha` and `beta` for a Beta prior):
+
+```{r sensitivity-basic, cache = TRUE}
+sa <- sensitivity_grid(
+  prior        = prior,
+  data_summary = data_obs,
+  param_grid   = list(alpha = seq(1, 8, 1), beta = seq(2, 20, 2)),
+  target       = c("posterior_mean", "prob_efficacy"),
+  threshold    = 0.30
+)
+```
+
+The result is a `bayprior_sensitivity` object:
+
+```{r sensitivity-str}
+names(sa)
+sa$influence_scores
+```
+
+**Influence scores** are the range of each target quantity across the full
+hyperparameter grid — the primary regulatory summary statistic.
+
+## Tornado Plot
+
+Ranks posterior quantities from most to least sensitive. Bar width equals the
+influence score. The blue dot marks the reference prior (closest grid point to
+the elicited hyperparameters):
+
+```{r tornado, fig.height = 3}
+plot_tornado(sa)
+```
+
+## Influence Heatmap
+
+Shows how the posterior mean changes across the two-dimensional hyperparameter
+grid. Useful for identifying which region of the prior space drives sensitivity:
+
+```{r heatmap-mean, fig.height = 4}
+plot_sensitivity(sa, target = "posterior_mean")
+```
+
+```{r heatmap-efficacy, fig.height = 4}
+plot_sensitivity(sa, target = "prob_efficacy")
+```
+
+The orange diamond marks the reference prior. A well-specified prior should sit
+in a region of low colour gradient — indicating that small hyperparameter
+perturbations produce little change in posterior conclusions.
+
+---
+
+# `sensitivity_cri()`
+
+Tracks the width and bounds of the posterior credible interval (CrI) — a key
+quantity for regulatory submissions because it directly addresses whether the
+CrI for the treatment effect remains favourable across plausible prior
+specifications:
+
+```{r cri-sensitivity, cache = TRUE}
+cri_sa <- sensitivity_cri(
+  prior        = prior,
+  data_summary = data_obs,
+  param_grid   = list(alpha = seq(1, 8, 1), beta = seq(2, 20, 2)),
+  cri_level    = 0.95,
+  threshold    = 0.30
+)
+```
+
+```{r cri-width, fig.height = 4}
+plot_sensitivity(cri_sa, target = "cri_width")
+```
+
+```{r cri-lower, fig.height = 4}
+plot_sensitivity(cri_sa, target = "cri_lower")
+```
+
+The `cri_sa$influence_scores` gives the range of each CrI quantity:
+
+```{r cri-scores}
+round(cri_sa$influence_scores, 4)
+```
+
+---
+
+# Interpreting Influence Scores
+
+```{r interpretation-table}
+library(knitr)
+kable(data.frame(
+  Score     = c("< 0.02", "0.02 - 0.05", "0.05 - 0.10", "> 0.10"),
+  Posterior = c("Negligible sensitivity",
+                "Low sensitivity — prior well-specified",
+                "Moderate sensitivity — consider reporting",
+                "High sensitivity — investigate further"),
+  check.names = FALSE
+), align = "ll")
+```
+
+A posterior mean influence score of 0.03 means the posterior mean shifts by at
+most 3 percentage points across the entire plausible hyperparameter range — a
+regulatory-defensible result for most oncology trials.
+
+---
+
+# Sensitivity for Other Prior Families
+
+## Normal Prior
+
+For a continuous endpoint with a Normal prior:
+
+```{r normal-sensitivity, cache = TRUE}
+prior_norm <- elicit_normal(
+  mean   = 0.0,
+  sd     = 0.3,
+  method = "moments",
+  label  = "Log odds ratio"
+)
+
+sa_norm <- sensitivity_grid(
+  prior        = prior_norm,
+  data_summary = list(type = "continuous", x = 0.4, sd = 0.3, n = 60),
+  param_grid   = list(mu = seq(-0.5, 0.5, 0.25), sigma = seq(0.1, 0.6, 0.1)),
+  target       = c("posterior_mean", "posterior_sd")
+)
+plot_tornado(sa_norm)
+```
+
+## Mixture Prior
+
+For mixture priors, `sensitivity_grid()` internally uses the dominant component
+for the hyperparameter grid — avoiding the complexity of gridding over mixture
+weights:
+
+```{r mixture-sensitivity, cache = TRUE}
+e1 <- elicit_beta(mean = 0.25, sd = 0.08, method = "moments",
+                  expert_id = "E1", label = "Response rate")
+e2 <- elicit_beta(mean = 0.40, sd = 0.10, method = "moments",
+                  expert_id = "E2", label = "Response rate")
+mix <- aggregate_experts(
+  priors  = list(E1 = e1, E2 = e2),
+  weights = c(0.6, 0.4)
+)
+
+sa_mix <- sensitivity_grid(
+  prior        = mix,
+  data_summary = data_obs,
+  param_grid   = list(alpha = seq(1, 8, 1), beta = seq(2, 20, 2)),
+  target       = c("posterior_mean", "prob_efficacy"),
+  threshold    = 0.30
+)
+plot_tornado(sa_mix)
+```
+
+---
+
+# The Reference Row
+
+The reference row is the grid point closest (in Euclidean distance) to the
+elicited prior's hyperparameters. It serves as the anchor for interpreting the
+heatmap and influence scores:
+
+```{r reference}
+# Which grid row is the reference?
+sa$reference_row
+
+# What are its parameter values?
+sa$grid[sa$reference_row, c("alpha", "beta")]
+```
+
+---
+
+# Regulatory Reporting of Sensitivity
+
+The standard regulatory narrative structure is:
+
+1. **State the reference prior** — hyperparameters and elicitation method
+2. **Define the sensitivity range** — how far hyperparameters were varied and why
+3. **Report influence scores** — for each target quantity
+4. **State the conclusion** — whether trial conclusions hold across the range
+
+Example text:
+
+> "Sensitivity of the posterior response rate estimate to prior
+> hyperparameter specification was assessed by varying $\alpha$ from 1 to 8
+> and $\beta$ from 2 to 20. The posterior mean influence score was
+> `r round(sa$influence_scores["posterior_mean"], 3)`, indicating that the
+> posterior mean shifts by at most
+> `r round(sa$influence_scores["posterior_mean"] * 100, 1)`
+> percentage points across the full sensitivity range. Trial conclusions
+> are robust to the choice of prior hyperparameters within the pre-specified
+> plausible range."
+
+---
+
+# References
+
+FDA (2026). *Draft Guidance: Bayesian Statistical Methods for Drug and
+Biological Products*.
+
+ICH E9(R1) (2019). *Statistical Principles for Clinical Trials: Addendum on
+Estimands and Sensitivity Analysis*.

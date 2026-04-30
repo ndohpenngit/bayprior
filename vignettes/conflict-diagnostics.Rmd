@@ -1,0 +1,292 @@
+---
+title: "Prior-Data Conflict Diagnostics"
+author: "bayprior package"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Prior-Data Conflict Diagnostics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.width  = 6,
+  fig.height = 3.8,
+  out.width  = "95%",
+  dpi        = 120,
+  warning    = FALSE,
+  message    = FALSE
+)
+library(bayprior)
+```
+
+# Why Conflict Diagnostics Matter
+
+Before updating a prior with trial data it is essential to check whether the
+two are compatible. Substantial prior-data conflict indicates one of three
+things: the prior was mis-specified, the data are anomalous, or the model is
+wrong. Regulators increasingly require evidence that conflict was assessed and
+addressed.
+
+**bayprior** provides four complementary univariate diagnostics and one
+multivariate diagnostic, following Box (1980) and related work.
+
+---
+
+# Univariate Conflict: `prior_conflict()`
+
+## Setting Up
+
+```{r setup-prior}
+prior <- elicit_beta(
+  mean   = 0.30,
+  sd     = 0.10,
+  method = "moments",
+  label  = "Response rate"
+)
+```
+
+## No-Conflict Case
+
+When prior and data are compatible:
+
+```{r no-conflict}
+cd_none <- prior_conflict(
+  prior        = prior,
+  data_summary = list(type = "binary", x = 13, n = 40),
+  alpha        = 0.05
+)
+print(cd_none)
+```
+
+## Mild Conflict Case
+
+When the observed data is somewhat surprising given the prior:
+
+```{r mild-conflict}
+cd_mild <- prior_conflict(
+  prior        = prior,
+  data_summary = list(type = "binary", x = 20, n = 40),
+  alpha        = 0.05
+)
+print(cd_mild)
+```
+
+## Severe Conflict Case
+
+When prior and data are strongly incompatible:
+
+```{r severe-conflict}
+cd_severe <- prior_conflict(
+  prior        = prior,
+  data_summary = list(type = "binary", x = 35, n = 40),
+  alpha        = 0.05
+)
+print(cd_severe)
+```
+
+---
+
+# The Four Diagnostics Explained
+
+## 1. Box's Prior Predictive P-value
+
+Proposed by Box (1980). Tests whether the observed data $y$ is plausible under
+the prior predictive distribution $p(y) = \int p(y|\theta) \pi(\theta) d\theta$:
+
+$$p_{\text{Box}} = P(|T(Y)| \geq |T(y_{\text{obs}})|)$$
+
+where $T$ is a discrepancy measure. bayprior uses a Normal approximation:
+
+$$z = \frac{\hat{\theta} - \mu_\pi}{\sqrt{\sigma_\pi^2 + \text{SE}^2}}, \quad
+p_{\text{Box}} = 2\Phi(-|z|)$$
+
+**Interpretation:** $p < 0.05$ flags conflict at the 5% level.
+
+## 2. Surprise Index
+
+The standardised distance between the prior mean and the observed data:
+
+$$S = \left|\frac{\hat{\theta} - \mu_\pi}{\sqrt{\sigma_\pi^2 + \text{SE}^2}}\right|$$
+
+**Interpretation:** $S > 2$ is moderate surprise; $S > 3$ is high surprise
+(equivalent to a 3-sigma departure).
+
+## 3. KL Divergence
+
+The Kullback-Leibler divergence from the prior to the (normalised) likelihood,
+approximated under normality:
+
+$$\text{KL}(P \| Q) = \log\frac{\sigma_Q}{\sigma_P} +
+\frac{\sigma_P^2 + (\mu_P - \mu_Q)^2}{2\sigma_Q^2} - \frac{1}{2}$$
+
+**Interpretation:** Values > 1 indicate large information distance.
+
+## 4. Bhattacharyya Overlap Coefficient
+
+Quantifies distributional overlap between prior and likelihood:
+
+$$\text{BC} = \exp\!\left(-\frac{1}{4}\log\frac{\sigma_P^2/\sigma_Q^2 +
+\sigma_Q^2/\sigma_P^2 + 2}{4} - \frac{(\mu_P - \mu_Q)^2}{4(\sigma_P^2 + \sigma_Q^2)}\right)$$
+
+**Interpretation:** 1 = identical distributions; 0 = no overlap. Values < 0.3
+are concerning.
+
+## Summary of Thresholds
+
+```{r thresholds-table}
+library(knitr)
+kable(data.frame(
+  Diagnostic       = c("Box p-value", "Surprise index",
+                       "KL divergence", "Bhattacharyya overlap"),
+  `No conflict`    = c(">= 0.05", "< 2", "< 0.5", "> 0.6"),
+  `Mild conflict`  = c("0.01 - 0.05", "2 - 3", "0.5 - 1", "0.3 - 0.6"),
+  `Severe conflict`= c("< 0.01", "> 3", "> 1", "< 0.3"),
+  check.names      = FALSE
+), align = "lrrr")
+```
+
+---
+
+# Prior-Likelihood-Posterior Overlay
+
+The canonical visualisation for conflict assessment:
+
+```{r overlay-none, fig.cap="No conflict: prior and likelihood overlap substantially."}
+plot_prior_likelihood(
+  prior,
+  data_summary   = list(type = "binary", x = 13, n = 40),
+  show_posterior = TRUE
+)
+```
+
+```{r overlay-severe, fig.cap="Severe conflict: prior (blue) and likelihood (orange) are widely separated."}
+plot_prior_likelihood(
+  prior,
+  data_summary   = list(type = "binary", x = 35, n = 40),
+  show_posterior = TRUE
+)
+```
+
+When conflict is severe, the posterior (green) is pulled far from the prior,
+and the prior has little influence on the conclusions.
+
+---
+
+# Continuous Endpoint Conflict
+
+`prior_conflict()` handles continuous outcomes via the `type = "continuous"`
+argument:
+
+```{r continuous-conflict}
+prior_norm <- elicit_normal(
+  mean   = 0.0,
+  sd     = 0.3,
+  method = "moments",
+  label  = "Log odds ratio"
+)
+
+cd_cont <- prior_conflict(
+  prior        = prior_norm,
+  data_summary = list(type = "continuous", x = 0.65, sd = 0.25, n = 80),
+  alpha        = 0.05
+)
+print(cd_cont)
+```
+
+---
+
+# Mixture Prior Conflict
+
+Conflict diagnostics work transparently with mixture priors, using the mixture's
+`fit_summary` (mean and SD) for the Normal approximation:
+
+```{r mixture-conflict}
+e1 <- elicit_beta(mean = 0.25, sd = 0.08, method = "moments",
+                  expert_id = "E1", label = "Response rate")
+e2 <- elicit_beta(mean = 0.40, sd = 0.10, method = "moments",
+                  expert_id = "E2", label = "Response rate")
+
+mix <- aggregate_experts(
+  priors  = list(E1 = e1, E2 = e2),
+  weights = c(0.5, 0.5)
+)
+
+cd_mix <- prior_conflict(
+  prior        = mix,
+  data_summary = list(type = "binary", x = 28, n = 50)
+)
+print(cd_mix)
+```
+
+---
+
+# Multivariate Conflict: `conflict_mahalanobis()`
+
+For trials with co-primary endpoints, the univariate diagnostics do not capture
+the joint distribution. The Mahalanobis distance generalises Box's approach:
+
+$$D^2 = (\hat{\boldsymbol{\theta}} - \boldsymbol{\mu}_\pi)^T
+(\boldsymbol{\Sigma}_\pi + \boldsymbol{\Sigma}_{\text{lik}})^{-1}
+(\hat{\boldsymbol{\theta}} - \boldsymbol{\mu}_\pi) \sim \chi^2_p$$
+
+under compatibility, where $p$ is the number of endpoints.
+
+```{r mahal}
+mv <- conflict_mahalanobis(
+  prior_means = c(0.35, 0.60),
+  prior_cov   = matrix(c(0.010, 0.003, 0.003, 0.015), 2, 2),
+  obs_means   = c(0.55, 0.58),
+  obs_cov     = matrix(c(0.008, 0.002, 0.002, 0.010), 2, 2) / 50,
+  labels      = c("Response rate", "OS rate"),
+  alpha       = 0.05
+)
+print(mv)
+```
+
+The `marginal_z` scores identify which endpoint drives any detected conflict —
+essential for guiding re-elicitation decisions.
+
+---
+
+# Conflict Severity Classification
+
+bayprior automatically classifies severity and generates a plain-language
+recommendation:
+
+```{r severity}
+cat(cd_none$recommendation, "\n\n")
+cat(cd_mild$recommendation, "\n\n")
+cat(cd_severe$recommendation, "\n")
+```
+
+---
+
+# Regulatory Guidance
+
+The FDA Draft Guidance on Bayesian Statistical Methods (2026) requires:
+
+1. A pre-specified conflict checking procedure
+2. Clear documentation of what action will be taken in each severity case
+3. A sensitivity analysis demonstrating robustness to alternative priors
+
+bayprior's conflict diagnostics directly support points 1 and 2. See the
+**Sensitivity Analysis** vignette for point 3.
+
+---
+
+# References
+
+Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling and
+robustness. *Journal of the Royal Statistical Society A*, 143, 383–430.
+
+Spiegelhalter, D. J., Freedman, L. S., & Parmar, M. K. B. (1994). Bayesian
+approaches to randomized trials. *Journal of the Royal Statistical Society A*,
+157, 357–416.

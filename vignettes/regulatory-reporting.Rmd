@@ -1,0 +1,273 @@
+---
+title: "Regulatory Reporting"
+author: "bayprior package"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Regulatory Reporting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.width  = 6,
+  fig.height = 3.8,
+  out.width  = "95%",
+  dpi        = 120,
+  warning    = FALSE,
+  message    = FALSE
+)
+library(bayprior)
+```
+
+# Regulatory Context
+
+The FDA Draft Guidance on Bayesian Statistical Methods for Drug and Biological
+Products (2026) and the EMA Reflection Paper on Bayesian Statistics both
+require that Bayesian prior distributions used in confirmatory clinical trials
+be:
+
+1. **Explicitly specified** — family, hyperparameters, and elicitation method
+2. **Justified** — documented basis (expert opinion, historical data, or both)
+3. **Conflict-checked** — evidence that prior and data are compatible
+4. **Sensitivity-tested** — conclusions hold under plausible alternative priors
+5. **Pre-specified** — agreed with regulators before unblinding
+
+`prior_report()` generates a self-contained document addressing all five
+requirements.
+
+---
+
+# The Prior Justification Report
+
+## What It Contains
+
+A bayprior report includes:
+
+- **Executive summary** — one-page overview for non-statistical reviewers
+- **Trial information** — protocol number, sponsor, statistician, date
+- **Prior specification** — distribution, hyperparameters, summary statistics,
+  density plot, and elicitation method
+- **Conflict diagnostics** — Box p-value, surprise index, KL divergence,
+  Bhattacharyya overlap, severity classification, and recommendation
+- **Prior-likelihood-posterior overlay** — the canonical visual for conflict
+- **Sensitivity analysis** — tornado plot and influence heatmap
+- **Regulatory compliance checklist** — maps to FDA/EMA requirements
+- **Session information** — R version, bayprior version, Quarto CLI version
+
+## Output Formats
+
+Three formats are supported:
+
+| Format | Use case |
+|---|---|
+| HTML | Internal review, version-controlled documentation |
+| PDF | Regulatory submission appendix |
+| Word (.docx) | Co-authoring and track-changes review |
+
+---
+
+# Generating a Report
+
+```{r eval = FALSE}
+# 1. Elicit the prior
+prior <- elicit_beta(
+  mean      = 0.30,
+  sd        = 0.10,
+  method    = "moments",
+  expert_id = "Expert_1",
+  label     = "Objective response rate"
+)
+
+# 2. Run conflict diagnostics
+cd <- prior_conflict(
+  prior        = prior,
+  data_summary = list(type = "binary", x = 18, n = 40),
+  alpha        = 0.05
+)
+
+# 3. Run sensitivity analysis
+sa <- sensitivity_grid(
+  prior        = prior,
+  data_summary = list(type = "binary", x = 14, n = 40),
+  param_grid   = list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1)),
+  target       = c("posterior_mean", "prob_efficacy"),
+  threshold    = 0.30
+)
+
+# 4. Generate the report
+prior_report(
+  prior         = prior,
+  conflict      = cd,
+  sensitivity   = sa,
+  output_format = "pdf",
+  trial_name    = "TRIAL-001",
+  sponsor       = "BioPharma Ltd",
+  author        = "J. Smith, Principal Biostatistician",
+  notes         = paste0(
+    "Prior elicited from two independent oncologists (Expert_1, Expert_2) ",
+    "using the SHELF structured elicitation protocol. Experts were blinded ",
+    "to interim data at the time of elicitation. Prior was pre-specified in ",
+    "the Statistical Analysis Plan dated 2025-09-01."
+  )
+)
+```
+
+---
+
+# The Notes Field
+
+The `notes` argument is the statistician's narrative — the most important
+section for regulatory reviewers because it provides the scientific rationale
+that no automated output can supply. It should address:
+
+**1. Basis for the prior**
+
+```
+"Prior elicited from three independent clinical experts in non-small cell
+lung cancer using SHELF quantile matching (O'Hagan et al., 2006). Experts
+were asked to specify the 10th, 50th, and 90th percentiles of the ORR
+distribution based on knowledge of similar agents in this indication."
+```
+
+**2. Expert independence and blinding**
+
+```
+"All experts were blinded to any interim results at the time of elicitation.
+No expert had a financial interest in the trial outcome."
+```
+
+**3. Pre-specification**
+
+```
+"The prior distribution and elicitation protocol were pre-specified in the
+Bayesian Statistical Analysis Plan (BSAP), version 2.1, submitted to FDA
+on 2025-09-01 as part of the IND amendment."
+```
+
+**4. Conflict action plan**
+
+```
+"In the event of mild conflict (Box p-value 0.01-0.05), a sensitivity
+analysis using the robust mixture prior (vague weight 0.30) will be added.
+In the event of severe conflict (Box p-value < 0.01), the primary analysis
+will be repeated using the sceptical prior as a co-primary analysis."
+```
+
+---
+
+# The FDA/EMA Compliance Checklist
+
+The report automatically generates a compliance checklist that maps each
+section to specific regulatory requirements:
+
+```{r checklist-demo}
+library(knitr)
+kable(data.frame(
+  Requirement = c(
+    "Prior elicitation method documented",
+    "Distribution family and parameters specified",
+    "Expert / source of prior identified",
+    "Prior density plot provided",
+    "Prior-data conflict assessed",
+    "Conflict diagnostic statistics reported",
+    "Sensitivity analysis performed",
+    "Sensitivity visualisations provided",
+    "Alternative priors considered",
+    "Regulatory report generated"
+  ),
+  `FDA Guidance Section` = c(
+    "Section IV.B", "Section IV.B", "Section IV.B",
+    "Section IV.B", "Section IV.C", "Section IV.C",
+    "Section IV.D", "Section IV.D", "Section IV.D",
+    "Section IV.E"
+  ),
+  check.names = FALSE
+), align = "ll")
+```
+
+---
+
+# Session Reproducibility
+
+The Session Information section of every report records the full computational
+environment:
+
+| Item | Purpose |
+|---|---|
+| R version | Core language version |
+| bayprior version | Package version — pin this in your SAP |
+| quarto R package | Report rendering R interface |
+| Quarto CLI version | Actual rendering engine version |
+| Platform | Operating system and architecture |
+| Date | Date of report generation |
+
+For fully reproducible regulatory submissions, pin the bayprior version in
+your `renv.lock` file and archive the complete `renv` snapshot alongside the
+submission documents.
+
+---
+
+# Working with the Shiny App
+
+The `run_app()` function launches the full interactive Shiny interface. Every
+analysis conducted in the app — elicitation, pooling, conflict diagnostics,
+and sensitivity — is preserved in the session state and flows directly into
+the report when the Download button is clicked.
+
+Figures in the report reflect exactly what the analyst saw in the app at the
+time of download. The app captures ggplot objects from each panel at the
+moment the Download button is pressed, so the report is a faithful snapshot
+of the specific analysis session.
+
+```{r eval = FALSE}
+# Launch the interactive app
+run_app()
+```
+
+The app workflow mirrors the six-step analytical workflow:
+
+```
+Welcome → Prior Elicitation → Expert Pooling → Conflict Diagnostics →
+Sensitivity Analysis → Robust Priors → Export Report
+```
+
+---
+
+# Pre-Submission Checklist
+
+Before submitting a bayprior report to a regulatory agency:
+
+- [ ] Prior was pre-specified in the Statistical Analysis Plan
+- [ ] Expert elicitation was conducted blind to interim data
+- [ ] Expert identities and conflicts of interest are documented
+- [ ] Conflict action plan is pre-specified (what happens at each severity)
+- [ ] Sensitivity range was agreed with regulators a priori
+- [ ] At least one alternative prior is reported (robust or sceptical)
+- [ ] bayprior version is pinned in the renv.lock
+- [ ] Report generated from installed package (not `load_all()`)
+- [ ] PDF and HTML versions both generated and cross-checked
+- [ ] Notes field contains full scientific rationale
+
+---
+
+# References
+
+FDA (2026). *Draft Guidance for Industry: Bayesian Statistical Methods for
+Drug and Biological Products*.
+
+EMA (2023). *Reflection Paper on the Use of Bayesian Statistics in the
+Evaluation of Medicinal Products*.
+
+O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts'
+Probabilities*. Wiley.
+
+Spiegelhalter, D. J. & Freedman, L. S. (1994). Bayesian approaches to
+clinical trials. *JRSS-A*, 157, 357–416.
