@@ -69,7 +69,22 @@
 }
 
 
-# ── .density_grid ─────────────────────────────────────────────────────────────
+# ── .apply_plotly_theme ───────────────────────────────────────────────────────
+# Sets a WHITE background explicitly.
+# In dark mode, CSS filter: invert(1) hue-rotate(180deg) on .js-plotly-plot
+# turns white → black and preserves data colours via hue-rotate.
+# In light mode, white background looks correct as-is (no filter applied).
+.apply_plotly_theme <- function(p, layout_args = NULL) {
+  p$x$layout$paper_bgcolor <- "#ffffff"
+  p$x$layout$plot_bgcolor  <- "#ffffff"
+  if (is.list(p$x$layout$shapes)) {
+    p$x$layout$shapes <- lapply(p$x$layout$shapes, function(s) {
+      if (identical(s$type, "rect")) s$fillcolor <- "#ffffff"
+      s
+    })
+  }
+  p
+}
 # Returns list(x, y) of grid points and density values for plotting.
 .density_grid <- function(prior, n_grid = 500) {
 

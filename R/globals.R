@@ -3,7 +3,7 @@
 # that are used but not explicitly imported at the top level of each file.
 
 # ── Shiny globals ─────────────────────────────────────────────────────────────
-#' @importFrom shiny NS tagList tags icon fluidRow column uiOutput
+#' @importFrom shiny NS tagList tags icon fluidRow column uiOutput HTML
 #' @importFrom shiny textInput textAreaInput dateInput numericInput
 #' @importFrom shiny selectInput sliderInput checkboxGroupInput
 #' @importFrom shiny actionButton downloadButton conditionalPanel

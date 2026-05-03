@@ -13,14 +13,10 @@ mod_sceptical_ui <- function(id) {
          sensitivity analysis companion."),
       tags$br(), tags$br(),
       selectInput(ns("family"), "Distribution family",
-        choices = c("Normal"    = "normal",
-                    "Beta"      = "beta",
-                    "Log-Normal"= "lognormal")),
-      # Beta requires null_value in (0, 1); Normal/Log-Normal use 0.
-      # The observeEvent below updates min/max/value when family changes
-      # so users can never accidentally submit 0 for a Beta prior.
-      numericInput(ns("null_val"), "Null value",
-                   value = 0, step = 0.05),
+        choices = c("Normal"     = "normal",
+                    "Beta"       = "beta",
+                    "Log-Normal" = "lognormal")),
+      numericInput(ns("null_val"), "Null value", value = 0, step = 0.05),
       uiOutput(ns("null_val_hint")),
       selectInput(ns("strength"), "Scepticism strength",
         choices  = c("Weak"     = "weak",
@@ -34,19 +30,7 @@ mod_sceptical_ui <- function(id) {
       uiOutput(ns("fit_msg"))
     ),
     column(8,
-      fluidRow(
-        shinydashboard::valueBoxOutput(ns("vb_mean"), width = 4),
-        shinydashboard::valueBoxOutput(ns("vb_sd"),   width = 4),
-        shinydashboard::valueBoxOutput(ns("vb_cri"),  width = 4)
-      ),
-      shinydashboard::box(
-        width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("chart-line"), " Sceptical prior density"),
-        shinycssloaders::withSpinner(
-          plotly::plotlyOutput(ns("prior_plot"), height = "280px"),
-          color = "#1D9E75"
-        )
-      )
+      uiOutput(ns("results_or_placeholder"))
     )
   )
 }
@@ -56,9 +40,6 @@ mod_sceptical_server <- function(id, shared) {
   moduleServer(id, function(input, output, session) {
     fitted <- reactiveVal(NULL)
 
-    # FIX: When the user switches family, update the null_value input to a
-    # valid default and meaningful bounds. Beta requires (0, 1); Normal and
-    # Log-Normal accept 0 (null treatment effect).
     observeEvent(input$family, {
       if (input$family == "beta") {
         updateNumericInput(session, "null_val",
@@ -75,38 +56,30 @@ mod_sceptical_server <- function(id, shared) {
       }
     }, ignoreInit = TRUE)
 
-    # Hint text shown below the null_val input explaining valid range
     output$null_val_hint <- renderUI({
-      hint <- switch(input$family,
+      switch(input$family,
         beta      = tags$small(class = "text-muted",
-                      "Beta family: null value must be strictly in (0, 1), ",
+                      "Beta: null value must be strictly in (0, 1),",
                       "e.g. 0.20 for a 20% null response rate."),
         lognormal = tags$small(class = "text-muted",
-                      "Log-Normal: enter on the log scale. ",
-                      "Use 0 to centre at HR = 1 (no treatment effect)."),
+                      "Log-Normal: log scale. Use 0 to centre at HR = 1."),
         NULL
       )
-      hint
     })
 
     observeEvent(input$fit_btn, {
-      # Client-side guard: catch the Beta null_value error before it reaches
-      # sceptical_prior() so the notification is always shown in the UI.
       if (input$family == "beta" &&
-          (is.na(input$null_val) || input$null_val <= 0 || input$null_val >= 1)) {
+          (is.na(input$null_val) ||
+           input$null_val <= 0 || input$null_val >= 1)) {
         showNotification(
-          "For Beta family, null value must be strictly between 0 and 1. ",
-          "Example: 0.20 for a 20% null response rate.",
-          type = "error", duration = 8
-        )
+          paste0("For Beta family, null value must be strictly between 0 and 1. ",
+                 "Example: 0.20 for a 20% null response rate."),
+          type = "error", duration = 8)
         return()
       }
-
       pr <- tryCatch(
-        sceptical_prior(null_value = input$null_val,
-                        family     = input$family,
-                        strength   = input$strength,
-                        label      = input$label),
+        sceptical_prior(null_value = input$null_val, family = input$family,
+                        strength = input$strength, label = input$label),
         error = function(e) {
           showNotification(paste("Error:", conditionMessage(e)),
                            type = "error", duration = 8)
@@ -127,33 +100,52 @@ mod_sceptical_server <- function(id, shared) {
                           "sd = {round(p$fit_summary$sd, 3)}"))
     })
 
-    output$vb_mean <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "-"
-      shinydashboard::valueBox(val, "Prior mean",
-                               icon = icon("dot-circle"), color = "blue")
-    })
-    output$vb_sd <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "-"
-      shinydashboard::valueBox(val, "Prior SD",
-                               icon = icon("arrows-left-right"), color = "green")
-    })
-    output$vb_cri <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) {
-        s <- fitted()$fit_summary
-        q025 <- s$q025 %||% (s$mean - 1.96 * s$sd)
-        q975 <- s$q975 %||% (s$mean + 1.96 * s$sd)
-        glue::glue("[{round(q025, 3)}, {round(q975, 3)}]")
-      } else "-"
-      shinydashboard::valueBox(val, "95% CrI",
-                               icon = icon("ruler-horizontal"), color = "purple")
+    # ── Placeholder before fit, results after ───────────────────────────────
+    output$results_or_placeholder <- renderUI({
+      if (is.null(fitted())) {
+        return(tags$div(
+          class = "text-center",
+          style = paste0("padding:60px 20px; color:#aaa;",
+                         "border:2px dashed #ddd; border-radius:8px;",
+                         "margin-top:10px;"),
+          icon("scale-balanced", style = "font-size:48px; margin-bottom:16px;"),
+          tags$h4("No sceptical prior built yet", style = "color:#bbb;"),
+          tags$p("Configure settings and click",
+                 tags$b("Build sceptical prior"), "to see results.")
+        ))
+      }
+      p  <- fitted()
+      s  <- p$fit_summary
+      ns <- session$ns
+      q025 <- s$q025 %||% (s$mean - 1.96 * s$sd)
+      q975 <- s$q975 %||% (s$mean + 1.96 * s$sd)
+
+      tagList(
+        fluidRow(
+          shinydashboard::valueBox(
+            round(s$mean, 3), "Prior mean",
+            icon = icon("dot-circle"), color = "blue", width = 4),
+          shinydashboard::valueBox(
+            round(s$sd, 3), "Prior SD",
+            icon = icon("arrows-left-right"), color = "green", width = 4),
+          shinydashboard::valueBox(
+            glue::glue("[{round(q025,3)}, {round(q975,3)}]"), "95% CrI",
+            icon = icon("ruler-horizontal"), color = "purple", width = 4)
+        ),
+        shinydashboard::box(
+          width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("chart-line"), " Sceptical prior density"),
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("prior_plot"), height = "280px"),
+            color = "#1D9E75"
+          )
+        )
+      )
     })
 
     output$prior_plot <- plotly::renderPlotly({
       req(fitted())
-      gp <- plot(fitted())
-      plotly::ggplotly(gp) |>
-        plotly::layout(paper_bgcolor = "rgba(0,0,0,0)",
-                       plot_bgcolor  = "rgba(0,0,0,0)")
+      plotly::ggplotly(plot(fitted())) |> .apply_plotly_theme()
     })
   })
 }
@@ -175,10 +167,11 @@ mod_robust_ui <- function(id) {
       tags$br(), tags$br(),
       uiOutput(ns("prior_banner")),
       tags$hr(),
+      # FIX: original had min/max/value in wrong order (value=0.05, min=0.50)
       sliderInput(ns("vague_weight"), "Vague component weight",
-                  value = 0.05, min = 0.50, max = 0.20, step = 0.05),
+                  min = 0.05, max = 0.50, value = 0.20, step = 0.05),
       numericInput(ns("vague_sd_mult"), "Vague SD = informative SD x",
-                  value = 10, min = 2, max = 50, step = 1),
+                   value = 10, min = 2, max = 50, step = 1),
       textInput(ns("label"), "Label", "Robust mixture prior"),
       tags$hr(),
       actionButton(ns("fit_btn"), "Build robust prior",
@@ -186,19 +179,7 @@ mod_robust_ui <- function(id) {
       uiOutput(ns("fit_msg"))
     ),
     column(8,
-      fluidRow(
-        shinydashboard::valueBoxOutput(ns("vb_mean"), width = 4),
-        shinydashboard::valueBoxOutput(ns("vb_sd"),   width = 4),
-        shinydashboard::valueBoxOutput(ns("vb_wts"),  width = 4)
-      ),
-      shinydashboard::box(
-        width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("chart-line"), " Robust vs informative density"),
-        shinycssloaders::withSpinner(
-          plotly::plotlyOutput(ns("prior_plot"), height = "280px"),
-          color = "#1D9E75"
-        )
-      )
+      uiOutput(ns("results_or_placeholder"))
     )
   )
 }
@@ -227,7 +208,8 @@ mod_robust_server <- function(id, shared, active_prior) {
                      vague_sd = vsd, label = input$label),
         error = function(e) {
           showNotification(paste("Error:", conditionMessage(e)),
-                           type = "error"); NULL
+                           type = "error")
+          NULL
         })
       fitted(pr)
       if (!is.null(pr)) shared$current_prior <- pr
@@ -243,45 +225,63 @@ mod_robust_server <- function(id, shared, active_prior) {
                           "{round(p$vague_weight * 100)}% vague"))
     })
 
-    output$vb_mean <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "-"
-      shinydashboard::valueBox(val, "Mixture mean",
-                               icon = icon("dot-circle"), color = "blue")
-    })
-    output$vb_sd <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "-"
-      shinydashboard::valueBox(val, "Mixture SD",
-                               icon = icon("arrows-left-right"), color = "green")
-    })
-    output$vb_wts <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted()))
-        glue::glue("{round((1 - fitted()$vague_weight) * 100)}% / ",
-                   "{round(fitted()$vague_weight * 100)}%")
-      else "-"
-      shinydashboard::valueBox(val, "Info / Vague %",
-                               icon = icon("percent"), color = "orange")
+    # ── Placeholder before fit, results after ───────────────────────────────
+    output$results_or_placeholder <- renderUI({
+      if (is.null(fitted())) {
+        return(tags$div(
+          class = "text-center",
+          style = paste0("padding:60px 20px; color:#aaa;",
+                         "border:2px dashed #ddd; border-radius:8px;",
+                         "margin-top:10px;"),
+          icon("layer-group", style = "font-size:48px; margin-bottom:16px;"),
+          tags$h4("No robust prior built yet", style = "color:#bbb;"),
+          tags$p("Fit a prior in the Elicitation tab, then click",
+                 tags$b("Build robust prior."))
+        ))
+      }
+      p  <- fitted()
+      ns <- session$ns
+
+      tagList(
+        fluidRow(
+          shinydashboard::valueBox(
+            round(p$fit_summary$mean, 3), "Mixture mean",
+            icon = icon("dot-circle"), color = "blue", width = 4),
+          shinydashboard::valueBox(
+            round(p$fit_summary$sd, 3), "Mixture SD",
+            icon = icon("arrows-left-right"), color = "green", width = 4),
+          shinydashboard::valueBox(
+            glue::glue("{round((1-p$vague_weight)*100)}% / ",
+                       "{round(p$vague_weight*100)}%"), "Info / Vague %",
+            icon = icon("percent"), color = "orange", width = 4)
+        ),
+        shinydashboard::box(
+          width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("chart-line"), " Robust vs informative density"),
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("prior_plot"), height = "280px"),
+            color = "#1D9E75"
+          )
+        )
+      )
     })
 
     output$prior_plot <- plotly::renderPlotly({
       req(fitted())
-      inf <- active_prior()
+      inf   <- active_prior()
       x     <- .density_grid(fitted())$x
       y_mix <- .eval_density_vec(fitted(), x)
-
-      fig <- plotly::plot_ly() |>
+      fig   <- plotly::plot_ly() |>
         plotly::add_lines(x = x, y = y_mix, name = "Robust mixture",
                           line = list(color = "#1D9E75", width = 2.5))
       if (!is.null(inf)) {
         y_inf <- .eval_density_vec(inf, x)
-        fig   <- plotly::add_lines(fig, x = x, y = y_inf,
-                                   name = "Informative",
+        fig   <- plotly::add_lines(fig, x = x, y = y_inf, name = "Informative",
                                    line = list(color = "#185FA5", width = 1.5,
                                                dash = "dot"))
       }
-      plotly::layout(fig,
-        legend       = list(orientation = "h"),
-        paper_bgcolor = "rgba(0,0,0,0)",
-        plot_bgcolor  = "rgba(0,0,0,0)")
+      plotly::layout(fig, legend = list(orientation = "h")) |>
+        .apply_plotly_theme()
     })
   })
 }
@@ -344,19 +344,7 @@ mod_power_ui <- function(id) {
       uiOutput(ns("fit_msg"))
     ),
     column(8,
-      fluidRow(
-        shinydashboard::valueBoxOutput(ns("vb_delta"), width = 4),
-        shinydashboard::valueBoxOutput(ns("vb_mean"),  width = 4),
-        shinydashboard::valueBoxOutput(ns("vb_sd"),    width = 4)
-      ),
-      shinydashboard::box(
-        width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("chart-line"), " Calibration curves"),
-        shinycssloaders::withSpinner(
-          plotly::plotlyOutput(ns("calib_plot"), height = "280px"),
-          color = "#1D9E75"
-        )
-      )
+      uiOutput(ns("results_or_placeholder"))
     )
   )
 }
@@ -378,7 +366,7 @@ mod_power_server <- function(id, shared, active_prior) {
     })
 
     observeEvent(input$run_btn, {
-      base <- active_prior(); req(base)
+      base   <- active_prior(); req(base)
       hist_d <- if (input$data_type == "binary")
         list(type = "binary",     x = input$hx,    n = input$hn)
       else
@@ -389,14 +377,14 @@ mod_power_server <- function(id, shared, active_prior) {
       else
         list(type = "continuous", x = input$cmean, sd = input$csd,
              n = input$cn_c)
-
       r <- tryCatch(
         calibrate_power_prior(hist_d, curr_d, base,
                               target_bf = input$target_bf,
                               method    = input$method),
         error = function(e) {
           showNotification(paste("Error:", conditionMessage(e)),
-                           type = "error"); NULL
+                           type = "error")
+          NULL
         })
       res(r)
       if (!is.null(r)) shared$current_prior <- r$power_prior
@@ -404,55 +392,73 @@ mod_power_server <- function(id, shared, active_prior) {
 
     output$fit_msg <- renderUI({
       req(res())
-      r <- res()
       tags$div(class = "alert alert-success",
                style = "margin-top:8px; padding:6px; font-size:12px;",
                icon("check"), " ",
-               glue::glue("Optimal delta = {r$delta_opt}"))
+               glue::glue("Optimal delta = {res()$delta_opt}"))
     })
 
-    output$vb_delta <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res())) res()$delta_opt else "-"
-      shinydashboard::valueBox(val, "Optimal delta",
-                               icon = icon("sliders"), color = "blue")
-    })
-    output$vb_mean <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res()))
-        round(res()$power_prior$fit_summary$mean, 3) else "-"
-      shinydashboard::valueBox(val, "Power prior mean",
-                               icon = icon("dot-circle"), color = "green")
-    })
-    output$vb_sd <- shinydashboard::renderValueBox({
-      val <- if (!is.null(res()))
-        round(res()$power_prior$fit_summary$sd, 3) else "-"
-      shinydashboard::valueBox(val, "Power prior SD",
-                               icon = icon("arrows-left-right"), color = "purple")
+    # ── Placeholder before calibration, results after ────────────────────────
+    output$results_or_placeholder <- renderUI({
+      if (is.null(res())) {
+        return(tags$div(
+          class = "text-center",
+          style = paste0("padding:60px 20px; color:#aaa;",
+                         "border:2px dashed #ddd; border-radius:8px;",
+                         "margin-top:10px;"),
+          icon("bolt", style = "font-size:48px; margin-bottom:16px;"),
+          tags$h4("Not calibrated yet", style = "color:#bbb;"),
+          tags$p("Enter historical and current data, then click",
+                 tags$b("Calibrate"), "to see results.")
+        ))
+      }
+
+      r  <- res()
+      ns <- session$ns
+
+      tagList(
+        fluidRow(
+          shinydashboard::valueBox(
+            r$delta_opt, "Optimal delta",
+            icon = icon("sliders"), color = "blue", width = 4),
+          shinydashboard::valueBox(
+            round(r$power_prior$fit_summary$mean, 3), "Power prior mean",
+            icon = icon("dot-circle"), color = "green", width = 4),
+          shinydashboard::valueBox(
+            round(r$power_prior$fit_summary$sd, 3), "Power prior SD",
+            icon = icon("arrows-left-right"), color = "purple", width = 4)
+        ),
+        shinydashboard::box(
+          width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("chart-line"), " Calibration curves"),
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("calib_plot"), height = "280px"),
+            color = "#1D9E75"
+          )
+        )
+      )
     })
 
     output$calib_plot <- plotly::renderPlotly({
       req(res())
-      r     <- res()
-      df    <- r$results
-      d_opt <- r$delta_opt
+      r      <- res()
+      df     <- r$results
+      d_opt  <- r$delta_opt
       bf_max <- max(df$bayes_factor, na.rm = TRUE)
-
       plotly::plot_ly(df, x = ~delta) |>
         plotly::add_lines(y = ~bayes_factor, name = "Bayes Factor",
                           line = list(color = "#185FA5", width = 2)) |>
         plotly::add_lines(y = ~box_pvalue * bf_max, name = "Box p (scaled)",
                           line = list(color = "#D85A30", width = 2,
                                       dash = "dot")) |>
-        plotly::add_segments(x = d_opt, xend = d_opt,
-                             y = 0,     yend = bf_max,
+        plotly::add_segments(x = d_opt, xend = d_opt, y = 0, yend = bf_max,
                              line = list(color = "#1D9E75", dash = "dash",
                                          width = 1.5),
-                             name = "Optimal \u03b4") |>
+                             name = "Optimal delta") |>
         plotly::layout(
-          xaxis        = list(title = "delta (\u03b4)"),
-          yaxis        = list(title = "Bayes Factor"),
-          legend       = list(orientation = "h"),
-          paper_bgcolor = "rgba(0,0,0,0)",
-          plot_bgcolor  = "rgba(0,0,0,0)")
+          xaxis = list(title = "delta"),
+          yaxis = list(title = "Bayes Factor")) |>
+        .apply_plotly_theme()
     })
   })
 }

@@ -8,7 +8,8 @@ mod_pooling_ui <- function(id) {
       uiOutput(ns("pool_banner")),
       tags$hr(),
       selectInput(ns("method"), "Pooling method",
-        choices = c("Linear (mixture)" = "linear", "Logarithmic" = "logarithmic")),
+        choices = c("Linear (mixture)" = "linear",
+                    "Logarithmic"      = "logarithmic")),
       sliderInput(ns("disagree_thresh"), "Disagreement alert threshold",
                   0.1, 0.9, 0.5, 0.05),
       tags$h5("Expert weights"),
@@ -19,19 +20,7 @@ mod_pooling_ui <- function(id) {
       uiOutput(ns("pool_msg"))
     ),
     column(8,
-      shinydashboard::box(
-        width = 12, status = "warning", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("table"), " Pairwise Bhattacharyya agreement"),
-        DT::dataTableOutput(ns("bc_tbl"))
-      ),
-      shinydashboard::box(
-        width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("chart-line"), " Individual vs consensus priors"),
-        shinycssloaders::withSpinner(
-          plotly::plotlyOutput(ns("consensus_plot"), height = "320px"),
-          color = "#1D9E75"
-        )
-      )
+      uiOutput(ns("results_or_placeholder"))
     )
   )
 }
@@ -49,7 +38,8 @@ mod_pooling_server <- function(id, shared, active_prior) {
       else "Add >= 2 experts from the Elicitation tab first."
       tags$div(class = paste("alert", cls),
                style = "font-size:12px; padding:6px;",
-               if (n >= 2) icon("check") else icon("exclamation-triangle"), " ", msg)
+               if (n >= 2) icon("check") else icon("exclamation-triangle"),
+               " ", msg)
     })
 
     output$weight_sliders <- renderUI({
@@ -65,13 +55,17 @@ mod_pooling_server <- function(id, shared, active_prior) {
       pool <- shared$expert_pool
       req(length(pool) >= 2)
       k   <- length(pool)
-      wts <- vapply(seq_len(k), function(i) input[[paste0("w_",i)]] %||% (1/k), numeric(1))
+      wts <- vapply(seq_len(k),
+                    function(i) input[[paste0("w_", i)]] %||% (1/k),
+                    numeric(1))
       wts <- wts / sum(wts)
       res <- tryCatch(
         aggregate_experts(pool, weights = wts, method = input$method,
                           disagreement_threshold = input$disagree_thresh),
         error = function(e) {
-          showNotification(paste("Pooling error:", conditionMessage(e)), type = "error"); NULL
+          showNotification(paste("Pooling error:", conditionMessage(e)),
+                           type = "error")
+          NULL
         })
       shared$consensus <- res
     })
@@ -83,15 +77,49 @@ mod_pooling_server <- function(id, shared, active_prior) {
                style = "margin-top:8px; font-size:12px; padding:6px;",
                icon("check"), " ",
                glue::glue("Consensus ({con$aggregation$method}): ",
-                          "mean = {round(con$fit_summary$mean,3)}, ",
-                          "SD = {round(con$fit_summary$sd,3)}"))
+                          "mean = {round(con$fit_summary$mean, 3)}, ",
+                          "SD = {round(con$fit_summary$sd, 3)}"))
+    })
+
+    # ── Placeholder before pooling, results after ────────────────────────────
+    output$results_or_placeholder <- renderUI({
+      if (is.null(shared$consensus)) {
+        return(tags$div(
+          class = "text-center",
+          style = paste0("padding:60px 20px; color:#aaa;",
+                         "border:2px dashed #ddd; border-radius:8px;",
+                         "margin-top:10px;"),
+          icon("users", style = "font-size:48px; margin-bottom:16px;"),
+          tags$h4("No consensus computed yet", style = "color:#bbb;"),
+          tags$p("Add >= 2 experts from the Elicitation tab, set weights,",
+                 "then click", tags$b("Compute Consensus Prior."))
+        ))
+      }
+
+      tagList(
+        shinydashboard::box(
+          width = 12, status = "warning", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("table"), " Pairwise Bhattacharyya agreement"),
+          DT::dataTableOutput(ns("bc_tbl"))
+        ),
+        shinydashboard::box(
+          width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("chart-line"), " Individual vs consensus priors"),
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("consensus_plot"), height = "320px"),
+            color = "#1D9E75"
+          )
+        )
+      )
     })
 
     output$bc_tbl <- DT::renderDataTable({
       req(shared$consensus)
       bc <- as.data.frame(round(shared$consensus$aggregation$disagreement, 3))
       DT::datatable(cbind(Expert = rownames(bc), bc),
-                    rownames = FALSE, options = list(dom = "t"), class = "compact stripe")
+                    rownames = FALSE,
+                    options  = list(dom = "t"),
+                    class    = "compact stripe")
     })
 
     output$consensus_plot <- plotly::renderPlotly({
@@ -114,9 +142,9 @@ mod_pooling_server <- function(id, shared, active_prior) {
       fig <- plotly::add_lines(fig, x = x_seq, y = y_mix, name = "Consensus",
                                line = list(color = "#1D9E75", width = 3))
       plotly::layout(fig,
-        xaxis = list(title = "theta"), yaxis = list(title = "Density"),
-        legend = list(orientation = "h"),
-        paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+        xaxis = list(title = "theta"),
+        yaxis = list(title = "Density")) |>
+        .apply_plotly_theme()
     })
   })
 }

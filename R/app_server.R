@@ -7,7 +7,7 @@
 #' @noRd
 app_server <- function(input, output, session) {
 
-  # ── Shared state ──────────────────────────────────────────────────────
+  # ── Shared state ──────────────────────────────────────────────────────────
   shared <- reactiveValues(
     current_prior = NULL,   # most recently fitted bayprior
     expert_pool   = list(), # named list of baypriors (one per expert)
@@ -21,22 +21,52 @@ app_server <- function(input, output, session) {
     shared$consensus %||% shared$current_prior
   })
 
-  # ── Sidebar status ────────────────────────────────────────────────────
-  output$sidebar_status <- shinydashboard::renderValueBox({
+  # ── Sidebar prior badge ───────────────────────────────────────────────────
+  # Rendered into uiOutput("sidebar_prior_badge") in app_ui.R sidebar footer.
+  output$sidebar_prior_badge <- renderUI({
     p <- active_prior()
     if (is.null(p)) {
-      shinydashboard::valueBox(
-        "None", "No prior fitted",
-        icon = icon("circle-xmark"), color = "red", width = 12)
+      tags$div(
+        style = paste0(
+          "margin:6px 8px; padding:8px 10px; border-radius:6px;",
+          "background:#c0392b; color:#fff; font-size:11px;"
+        ),
+        tags$div(
+          style = "font-weight:700; font-size:12px; letter-spacing:0.5px;",
+          icon("circle-xmark"), " NONE"
+        ),
+        tags$div(
+          style = "opacity:0.85; margin-top:2px;",
+          "No prior fitted"
+        )
+      )
     } else {
-      shinydashboard::valueBox(
-        toupper(p$dist),
-        glue::glue("mean = {round(p$fit_summary$mean, 3)}"),
-        icon = icon("circle-check"), color = "green", width = 12)
+      tags$div(
+        style = paste0(
+          "margin:6px 8px; padding:8px 10px; border-radius:6px;",
+          "background:#1D9E75; color:#fff; font-size:11px;",
+          "box-shadow: 0 2px 6px rgba(0,0,0,0.25);"
+        ),
+        tags$div(
+          style = "font-weight:700; font-size:13px; letter-spacing:0.5px;",
+          icon("circle-check"), " ", toupper(p$dist)
+        ),
+        tags$div(
+          style = "opacity:0.9; margin-top:3px;",
+          glue::glue("mean = {round(p$fit_summary$mean, 3)}")
+        ),
+        tags$div(
+          style = paste0(
+            "opacity:0.75; margin-top:2px; font-size:10px;",
+            "white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+          ),
+          p$label
+        )
+      )
     }
   })
 
-  # ── Module servers ────────────────────────────────────────────────────
+  # ── Module servers ────────────────────────────────────────────────────────
   mod_welcome_server("welcome")
   mod_elicitation_server("elicitation", shared = shared)
   mod_roulette_server("roulette",       shared = shared)

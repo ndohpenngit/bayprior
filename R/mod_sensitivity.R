@@ -11,7 +11,8 @@ mod_sensitivity_ui <- function(id) {
       uiOutput(ns("param2_ui")),
       sliderInput(ns("grid_size"), "Grid points per axis", 5, 50, 20, 5),
       tags$hr(),
-      numericInput(ns("threshold"), "Efficacy threshold (theta_0)", 0.30, step = 0.01),
+      numericInput(ns("threshold"), "Efficacy threshold (theta_0)",
+                   0.30, step = 0.01),
       checkboxGroupInput(ns("targets"), "Compute for:",
         choices  = c("Posterior mean"        = "posterior_mean",
                      "Posterior SD"          = "posterior_sd",
@@ -23,23 +24,7 @@ mod_sensitivity_ui <- function(id) {
                    icon = icon("play"), class = "btn-primary btn-block")
     ),
     column(8,
-      shinydashboard::box(
-        width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("bar-chart-steps"), " Tornado plot"),
-        shinycssloaders::withSpinner(
-          plotly::plotlyOutput(ns("tornado_plot"), height = "220px"),
-          color = "#1D9E75"
-        )
-      ),
-      shinydashboard::box(
-        width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("map"), " Influence heatmap"),
-        uiOutput(ns("outcome_picker")),
-        shinycssloaders::withSpinner(
-          plotly::plotlyOutput(ns("influence_plot"), height = "300px"),
-          color = "#1D9E75"
-        )
-      )
+      uiOutput(ns("results_or_placeholder"))
     )
   )
 }
@@ -49,9 +34,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # ── Helper: suppress the expected "different distribution families" warning
-    # from mixture prior density computations so it never surfaces as a Shiny
-    # orange warning banner.
+    # Suppress mixture density warning
     .suppress_mix <- function(expr) {
       withCallingHandlers(expr, warning = function(w) {
         if (grepl("different distribution families", conditionMessage(w),
@@ -67,23 +50,16 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         glue::glue("{p$label} ({toupper(p$dist)})")
       tags$div(class = paste("alert", cls),
                style = "font-size:12px; padding:6px;",
-               if (is.null(p)) icon("exclamation-triangle") else icon("check"), " ", msg)
+               if (is.null(p)) icon("exclamation-triangle") else icon("check"),
+               " ", msg)
     })
 
-    # ── Reactive: resolve actual hyperparameter names from the active prior.
-    # For mixture priors, use the dominant component's params. This ensures the
-    # slider labels and param_grid names always match working_prior$params inside
-    # sensitivity_grid(), avoiding positional remap messages.
     pnames <- reactive({
       p <- active_prior()
       if (is.null(p)) return(list(p1 = "param1", p2 = "param2"))
-
       working <- if (p$dist == "mixture") {
         p$components[[which.max(p$weights)]]
-      } else {
-        p
-      }
-
+      } else p
       nms <- names(working$params)
       list(
         p1   = if (length(nms) >= 1) nms[[1]] else "param1",
@@ -93,7 +69,6 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
     })
 
     output$param1_ui <- renderUI({
-      p  <- active_prior()
       nm <- pnames()$p1
       v  <- pnames()$vals[[nm]] %||% 1
       sliderInput(ns("p1_range"), glue::glue("Range for {nm}"),
@@ -102,7 +77,6 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
     })
 
     output$param2_ui <- renderUI({
-      p  <- active_prior()
       nm <- pnames()$p2
       v  <- pnames()$vals[[nm]] %||% 1
       sliderInput(ns("p2_range"), glue::glue("Range for {nm}"),
@@ -110,12 +84,8 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         c(round(v * 0.5, 2), round(v * 2, 2)), round(v * 0.05, 3))
     })
 
-    # ── Reset sliders when the prior's distribution family changes so the
-    # ranges remain meaningful (e.g., switching from Beta [0,1] to Normal
-    # where mu can be negative).
     observeEvent(active_prior()$dist, {
-      p <- active_prior()
-      req(!is.null(p))
+      p <- active_prior(); req(!is.null(p))
       nm <- pnames()
       v1 <- nm$vals[[nm$p1]] %||% 1
       v2 <- nm$vals[[nm$p2]] %||% 1
@@ -138,9 +108,6 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         list(type = "continuous", x = p$fit_summary$mean,
              sd = p$fit_summary$sd, n = 50L)
       nm <- pnames()
-
-      # Build param_grid with names matching working_prior$params — this
-      # avoids the positional remap path in sensitivity_grid() entirely.
       pg <- setNames(
         list(
           seq(input$p1_range[1], input$p1_range[2], length.out = input$grid_size),
@@ -148,9 +115,6 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         ),
         c(nm$p1, nm$p2)
       )
-
-      # Suppress the positional remap message — it is expected behaviour when
-      # the prior changes mid-session and slider labels lag one render behind.
       res <- withCallingHandlers(
         tryCatch(
           sensitivity_grid(p, data_sum, pg,
@@ -169,20 +133,57 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       shared$sensitivity <- res
     })
 
+    # ── Main output: placeholder before run, plots after ────────────────────
+    output$results_or_placeholder <- renderUI({
+      if (is.null(shared$sensitivity)) {
+        return(
+          tags$div(
+            class = "text-center",
+            style = paste0("padding: 60px 20px; color: #aaa;",
+                           "border: 2px dashed #ddd; border-radius: 8px;",
+                           "margin-top: 10px;"),
+            icon("chart-bar", style = "font-size: 48px; margin-bottom: 16px;"),
+            tags$h4("No sensitivity analysis run yet", style = "color: #bbb;"),
+            tags$p("Configure the grid settings and click",
+                   tags$b("Run Sensitivity Analysis"), "to see results.")
+          )
+        )
+      }
+
+      tagList(
+        shinydashboard::box(
+          width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("bar-chart-steps"), " Tornado plot"),
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("tornado_plot"), height = "220px"),
+            color = "#1D9E75"
+          )
+        ),
+        shinydashboard::box(
+          width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("map"), " Influence heatmap"),
+          uiOutput(ns("outcome_picker")),
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("influence_plot"), height = "300px"),
+            color = "#1D9E75"
+          )
+        )
+      )
+    })
+
     output$outcome_picker <- renderUI({
       req(shared$sensitivity)
       shinyWidgets::radioGroupButtons(
-        ns("outcome"), NULL, choices = shared$sensitivity$target,
-        selected = shared$sensitivity$target[1], justified = TRUE, status = "info")
+        ns("outcome"), NULL,
+        choices  = shared$sensitivity$target,
+        selected = shared$sensitivity$target[1],
+        justified = TRUE, status = "info")
     })
 
     output$tornado_plot <- plotly::renderPlotly({
       req(shared$sensitivity)
-      # Suppress mixture density warning — expected for mixed-family components
       gp <- .suppress_mix(plot_tornado(shared$sensitivity))
-      plotly::ggplotly(gp) |>
-        plotly::layout(paper_bgcolor = "rgba(0,0,0,0)",
-                       plot_bgcolor  = "rgba(0,0,0,0)")
+      plotly::ggplotly(gp) |> .apply_plotly_theme()
     })
 
     output$influence_plot <- plotly::renderPlotly({
@@ -190,9 +191,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       gp <- .suppress_mix(
         plot_sensitivity(shared$sensitivity, target = input$outcome)
       )
-      plotly::ggplotly(gp) |>
-        plotly::layout(paper_bgcolor = "rgba(0,0,0,0)",
-                       plot_bgcolor  = "rgba(0,0,0,0)")
+      plotly::ggplotly(gp) |> .apply_plotly_theme()
     })
   })
 }

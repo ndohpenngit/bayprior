@@ -2,7 +2,6 @@
 mod_roulette_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
-
     shinydashboard::box(
       width = 4, status = "primary", solidHeader = TRUE,
       title = tagList(icon("th"), " Roulette Setup"),
@@ -11,20 +10,20 @@ mod_roulette_ui <- function(id) {
          range. The distribution is fitted to the chip histogram in real time.
          Based on the SHELF roulette methodology (Oakley & O'Hagan, 2010)."),
       tags$br(), tags$br(),
-
       textInput(ns("expert_id"), "Expert ID", value = "Expert_1"),
       textInput(ns("label"), "Quantity label", value = "Response rate"),
       selectInput(ns("family"), "Distribution to fit",
-        choices = c("Beta"="beta","Normal"="normal","Gamma"="gamma","Log-Normal"="lognormal")),
+        choices = c("Beta"      = "beta",
+                    "Normal"    = "normal",
+                    "Gamma"     = "gamma",
+                    "Log-Normal"= "lognormal")),
       tags$hr(),
-
       fluidRow(
         column(6, numericInput(ns("range_min"), "Range min", 0.0, step = 0.05)),
         column(6, numericInput(ns("range_max"), "Range max", 1.0, step = 0.05))
       ),
       numericInput(ns("n_bins"), "Number of bins", 10, min = 4, max = 20),
       tags$hr(),
-
       actionButton(ns("reset_btn"), "Reset chips",
                    icon = icon("rotate-left"), class = "btn-warning btn-block"),
       tags$br(),
@@ -35,7 +34,6 @@ mod_roulette_ui <- function(id) {
                    icon = icon("plus"), class = "btn-primary btn-block"),
       uiOutput(ns("fit_msg"))
     ),
-
     column(8,
       shinydashboard::box(
         width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
@@ -76,7 +74,8 @@ mod_roulette_server <- function(id, shared) {
 
     breaks <- reactive({
       req(input$range_min, input$range_max, input$n_bins)
-      seq(input$range_min, input$range_max, length.out = as.integer(input$n_bins) + 1L)
+      seq(input$range_min, input$range_max,
+          length.out = as.integer(input$n_bins) + 1L)
     })
 
     output$chip_ui <- renderUI({
@@ -84,7 +83,6 @@ mod_roulette_server <- function(id, shared) {
       n    <- length(brks) - 1L
       cv   <- chips()
       if (length(cv) != n) cv <- rep(0L, n)
-
       fluidRow(
         lapply(seq_len(n), function(i) {
           lbl <- glue::glue("[{round(brks[i],2)},\n{round(brks[i+1],2)})")
@@ -93,11 +91,14 @@ mod_roulette_server <- function(id, shared) {
             tags$div(style = "text-align:center; margin-bottom:6px;",
               tags$small(lbl, style = "font-size:10px; display:block;"),
               actionButton(ns(paste0("p_", i)), "+",
-                           class = "btn-xs btn-success", style = "padding:1px 5px;"),
+                           class = "btn-xs btn-success",
+                           style = "padding:1px 5px;"),
               tags$span(cv[i], id = ns(paste0("cnt_", i)),
-                        style = "display:inline-block; width:22px; font-weight:700; text-align:center;"),
+                        style = paste0("display:inline-block; width:22px;",
+                                       "font-weight:700; text-align:center;")),
               actionButton(ns(paste0("m_", i)), "-",
-                           class = "btn-xs btn-danger", style = "padding:1px 5px;")
+                           class = "btn-xs btn-danger",
+                           style = "padding:1px 5px;")
             )
           )
         })
@@ -127,12 +128,14 @@ mod_roulette_server <- function(id, shared) {
 
       fig <- plotly::plot_ly() |>
         plotly::add_bars(x = mids, y = cv, name = "Chips",
-          marker = list(color = "#A8CFED", line = list(color = "#185FA5", width = 1)))
+          marker = list(color = "#A8CFED",
+                        line  = list(color = "#185FA5", width = 1)))
 
       if (sum(cv) >= 2L) {
         pr <- tryCatch(
-          elicit_roulette(cv, brks, family = input$family,
-                          expert_id = input$expert_id, label = input$label),
+          elicit_roulette(cv, brks, family    = input$family,
+                          expert_id = input$expert_id,
+                          label     = input$label),
           error = function(e) NULL)
         if (!is.null(pr)) {
           dg <- .density_grid(pr)
@@ -144,9 +147,9 @@ mod_roulette_server <- function(id, shared) {
         }
       }
       plotly::layout(fig,
-        xaxis = list(title = input$label), yaxis = list(title = "Chips"),
-        legend = list(orientation = "h"),
-        paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+        xaxis = list(title = input$label),
+        yaxis = list(title = "Chips")) |>
+        .apply_plotly_theme()
     })
 
     fitted <- reactiveVal(NULL)
@@ -154,23 +157,29 @@ mod_roulette_server <- function(id, shared) {
     observeEvent(input$fit_btn, {
       brks <- breaks(); cv <- chips()
       if (sum(cv) < 2L) {
-        showNotification("Place at least 2 chips before fitting.", type = "warning")
+        showNotification("Place at least 2 chips before fitting.",
+                         type = "warning")
         return()
       }
       pr <- tryCatch(
-        elicit_roulette(cv, brks, family = input$family,
-                        expert_id = input$expert_id, label = input$label),
+        elicit_roulette(cv, brks, family    = input$family,
+                        expert_id = input$expert_id,
+                        label     = input$label),
         error = function(e) {
-          showNotification(paste("Error:", conditionMessage(e)), type = "error"); NULL
+          showNotification(paste("Error:", conditionMessage(e)),
+                           type = "error")
+          NULL
         })
-      fitted(pr); shared$current_prior <- pr
+      fitted(pr)
+      shared$current_prior <- pr
     })
 
     observeEvent(input$add_btn, {
       req(fitted())
       shared$expert_pool[[input$expert_id]] <- fitted()
       showNotification(
-        glue::glue("'{input$expert_id}' added ({length(shared$expert_pool)} in pool)."),
+        glue::glue("'{input$expert_id}' added ",
+                   "({length(shared$expert_pool)} in pool)."),
         type = "message")
     })
 
@@ -180,15 +189,19 @@ mod_roulette_server <- function(id, shared) {
       tags$div(class = "alert alert-success",
                style = "margin-top:8px; padding:6px; font-size:12px;",
                icon("check"), " ",
-               glue::glue("{toupper(p$dist)}: mean={round(p$fit_summary$mean,3)}, sd={round(p$fit_summary$sd,3)}"))
+               glue::glue("{toupper(p$dist)}: ",
+                          "mean={round(p$fit_summary$mean,3)}, ",
+                          "sd={round(p$fit_summary$sd,3)}"))
     })
 
     output$params_tbl <- DT::renderDataTable({
-      req(fitted()); s <- fitted()$fit_summary
+      req(fitted())
+      s  <- fitted()$fit_summary
       df <- data.frame(
-        Statistic = c("Mean","SD","2.5th pctile","Median","97.5th pctile"),
+        Statistic = c("Mean", "SD", "2.5th pctile", "Median", "97.5th pctile"),
         Value     = round(c(s$mean, s$sd, s$q025, s$q500, s$q975), 5))
-      DT::datatable(df, rownames = FALSE, options = list(dom = "t"), class = "compact stripe")
+      DT::datatable(df, rownames = FALSE,
+                    options = list(dom = "t"), class = "compact stripe")
     })
   })
 }

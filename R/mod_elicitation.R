@@ -3,7 +3,7 @@ mod_elicitation_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
 
-    # ── Left: inputs ────────────────────────────────────────────────────
+    # ── Left: inputs ─────────────────────────────────────────────────────────
     shinydashboard::box(
       width = 4, status = "primary", solidHeader = TRUE,
       title = tagList(icon("pencil"), " Expert Input"),
@@ -14,17 +14,17 @@ mod_elicitation_ui <- function(id) {
 
       selectInput(ns("family"), "Distribution family",
         choices = c(
-          "Beta (proportions)"      = "beta",
-          "Normal (unbounded)"      = "normal",
-          "Gamma (positive)"        = "gamma",
-          "Log-Normal (ratios)"     = "lognormal"
+          "Beta (proportions)"  = "beta",
+          "Normal (unbounded)"  = "normal",
+          "Gamma (positive)"    = "gamma",
+          "Log-Normal (ratios)" = "lognormal"
         )
       ),
 
       shinyWidgets::radioGroupButtons(
         ns("method"), "Elicitation method",
-        choices   = c("Quantile" = "quantile", "Moments" = "moments"),
-        selected  = "quantile", justified = TRUE, status = "primary"
+        choices  = c("Quantile" = "quantile", "Moments" = "moments"),
+        selected = "quantile", justified = TRUE, status = "primary"
       ),
       tags$hr(),
 
@@ -55,8 +55,9 @@ mod_elicitation_ui <- function(id) {
       # Moment inputs
       conditionalPanel(
         condition = sprintf("input['%s'] === 'moments'", ns("method")),
-        numericInput(ns("mom_mean"), "Prior mean", value = 0.35, step = 0.01),
-        numericInput(ns("mom_sd"),   "Prior SD",   value = 0.10, step = 0.01, min = 0.001)
+        numericInput(ns("mom_mean"), "Prior mean",  value = 0.35, step = 0.01),
+        numericInput(ns("mom_sd"),   "Prior SD",    value = 0.10, step = 0.01,
+                     min = 0.001)
       ),
       tags$hr(),
 
@@ -68,26 +69,9 @@ mod_elicitation_ui <- function(id) {
       uiOutput(ns("fit_msg"))
     ),
 
-    # ── Right: outputs ──────────────────────────────────────────────────
+    # ── Right: outputs ────────────────────────────────────────────────────────
     column(8,
-      fluidRow(
-        shinydashboard::valueBoxOutput(ns("vb_mean"),  width = 4),
-        shinydashboard::valueBoxOutput(ns("vb_sd"),    width = 4),
-        shinydashboard::valueBoxOutput(ns("vb_cri"),   width = 4)
-      ),
-      shinydashboard::box(
-        width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("chart-line"), " Fitted prior density"),
-        shinycssloaders::withSpinner(
-          plotly::plotlyOutput(ns("prior_plot"), height = "300px"),
-          color = "#1D9E75"
-        )
-      ),
-      shinydashboard::box(
-        width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-        title = tagList(icon("table"), " Parameter summary"),
-        DT::dataTableOutput(ns("params_tbl"))
-      )
+      uiOutput(ns("results_or_placeholder"))
     )
   )
 }
@@ -105,28 +89,41 @@ mod_elicitation_server <- function(id, shared) {
                          as.character(c(input$q1p, input$q2p, input$q3p) / 100))
           switch(input$family,
             beta      = elicit_beta(quantiles = qs, method = "quantile",
-                                    expert_id = input$expert_id, label = input$label),
+                                    expert_id = input$expert_id,
+                                    label     = input$label),
             normal    = elicit_normal(quantiles = qs, method = "quantile",
-                                      expert_id = input$expert_id, label = input$label),
+                                      expert_id = input$expert_id,
+                                      label     = input$label),
             gamma     = elicit_gamma(quantiles = qs, method = "quantile",
-                                     expert_id = input$expert_id, label = input$label),
+                                     expert_id = input$expert_id,
+                                     label     = input$label),
             lognormal = elicit_lognormal(quantiles = qs, method = "quantile",
-                                         expert_id = input$expert_id, label = input$label)
+                                         expert_id = input$expert_id,
+                                         label     = input$label)
           )
         } else {
           switch(input$family,
             beta      = elicit_beta(mean = input$mom_mean, sd = input$mom_sd,
-                                    method = "moments", expert_id = input$expert_id, label = input$label),
+                                    method    = "moments",
+                                    expert_id = input$expert_id,
+                                    label     = input$label),
             normal    = elicit_normal(mean = input$mom_mean, sd = input$mom_sd,
-                                      method = "moments", expert_id = input$expert_id, label = input$label),
+                                      method    = "moments",
+                                      expert_id = input$expert_id,
+                                      label     = input$label),
             gamma     = elicit_gamma(mean = input$mom_mean, sd = input$mom_sd,
-                                     method = "moments", expert_id = input$expert_id, label = input$label),
+                                     method    = "moments",
+                                     expert_id = input$expert_id,
+                                     label     = input$label),
             lognormal = elicit_lognormal(mean = input$mom_mean, sd = input$mom_sd,
-                                         method = "moments", expert_id = input$expert_id, label = input$label)
+                                         method    = "moments",
+                                         expert_id = input$expert_id,
+                                         label     = input$label)
           )
         }
       }, error = function(e) {
-        showNotification(paste("Fitting error:", conditionMessage(e)), type = "error", duration = 8)
+        showNotification(paste("Fitting error:", conditionMessage(e)),
+                         type = "error", duration = 8)
         NULL
       })
       fitted(pr)
@@ -137,7 +134,8 @@ mod_elicitation_server <- function(id, shared) {
       req(fitted())
       shared$expert_pool[[input$expert_id]] <- fitted()
       showNotification(
-        glue::glue("'{input$expert_id}' added ({length(shared$expert_pool)} in pool)."),
+        glue::glue("'{input$expert_id}' added ",
+                   "({length(shared$expert_pool)} in pool)."),
         type = "message")
     })
 
@@ -147,41 +145,82 @@ mod_elicitation_server <- function(id, shared) {
       tags$div(class = "alert alert-success",
                style = "margin-top:8px; padding:6px; font-size:12px;",
                icon("check"), " ",
-               glue::glue("Fitted {toupper(p$dist)}: mean={round(p$fit_summary$mean,3)}, ",
-                          "SD={round(p$fit_summary$sd,3)}"))
+               glue::glue("Fitted {toupper(p$dist)}: ",
+                          "mean={round(p$fit_summary$mean, 3)}, ",
+                          "SD={round(p$fit_summary$sd, 3)}"))
     })
 
-    output$vb_mean <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$mean, 3) else "-"
-      shinydashboard::valueBox(val, "Prior mean", icon = icon("dot-circle"), color = "blue")
-    })
-    output$vb_sd <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) round(fitted()$fit_summary$sd, 3) else "-"
-      shinydashboard::valueBox(val, "Prior SD", icon = icon("arrows-left-right"), color = "green")
-    })
-    output$vb_cri <- shinydashboard::renderValueBox({
-      val <- if (!is.null(fitted())) {
-        s <- fitted()$fit_summary
-        glue::glue("[{round(s$q025,3)}, {round(s$q975,3)}]")
-      } else "-"
-      shinydashboard::valueBox(val, "95% CrI", icon = icon("ruler-horizontal"), color = "purple")
+    # ── Placeholder before fit, full results after ───────────────────────────
+    output$results_or_placeholder <- renderUI({
+      if (is.null(fitted())) {
+        return(tags$div(
+          class = "text-center",
+          style = paste0("padding:60px 20px; color:#aaa;",
+                         "border:2px dashed #ddd; border-radius:8px;",
+                         "margin-top:10px;"),
+          icon("chart-line", style = "font-size:48px; margin-bottom:16px;"),
+          tags$h4("No prior fitted yet", style = "color:#bbb;"),
+          tags$p("Configure the inputs and click",
+                 tags$b("Fit Prior"), "to see results.")
+        ))
+      }
+
+      p  <- fitted()
+      s  <- p$fit_summary
+      ns <- session$ns
+
+      tagList(
+        fluidRow(
+          shinydashboard::valueBox(
+            round(s$mean, 3), "Prior mean",
+            icon = icon("dot-circle"), color = "blue", width = 4),
+          shinydashboard::valueBox(
+            round(s$sd, 3), "Prior SD",
+            icon = icon("arrows-left-right"), color = "green", width = 4),
+          shinydashboard::valueBox(
+            glue::glue("[{round(s$q025 %||% (s$mean - 1.96*s$sd), 3)}, ",
+                       "{round(s$q975 %||% (s$mean + 1.96*s$sd), 3)}]"),
+            "95% CrI",
+            icon = icon("ruler-horizontal"), color = "purple", width = 4)
+        ),
+        shinydashboard::box(
+          width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("chart-line"), " Fitted prior density"),
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("prior_plot"), height = "300px"),
+            color = "#1D9E75"
+          )
+        ),
+        shinydashboard::box(
+          width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
+          title = tagList(icon("table"), " Parameter summary"),
+          DT::dataTableOutput(ns("params_tbl"))
+        )
+      )
     })
 
     output$prior_plot <- plotly::renderPlotly({
       req(fitted())
-      gp <- plot(fitted())
-      plotly::ggplotly(gp) |>
-        plotly::layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+      # Force white gg backgrounds before ggplotly() conversion.
+      # plot.bayprior() may set a coloured background internally; this
+      # overrides it so the CSS filter invert(1) produces black, not lavender.
+      gp <- plot(fitted()) +
+        ggplot2::theme(
+          plot.background  = ggplot2::element_rect(fill = "white", colour = NA),
+          panel.background = ggplot2::element_rect(fill = "white", colour = NA)
+        )
+      plotly::ggplotly(gp) |> .apply_plotly_theme()
     })
 
     output$params_tbl <- DT::renderDataTable({
       req(fitted())
       s  <- fitted()$fit_summary
       df <- data.frame(
-        Statistic = c("Mean","SD","2.5th pctile","Median","97.5th pctile"),
+        Statistic = c("Mean", "SD", "2.5th pctile", "Median", "97.5th pctile"),
         Value     = round(c(s$mean, s$sd, s$q025, s$q500, s$q975), 5)
       )
-      DT::datatable(df, rownames = FALSE, options = list(dom = "t"), class = "compact stripe")
+      DT::datatable(df, rownames = FALSE,
+                    options = list(dom = "t"), class = "compact stripe")
     })
   })
 }

@@ -30,13 +30,15 @@ mod_conflict_ui <- function(id) {
                    icon = icon("stethoscope"), class = "btn-primary btn-block")
     ),
     column(8,
+      # Placeholder shown before analysis is run
       uiOutput(ns("results_or_placeholder"))
     )
   )
 }
 
 #' @noRd
-mod_conflict_server <- function(id, shared, active_prior) {
+mod_conflict_server <- function(id, shared, active_prior,
+                                plotly_layout = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
 
     output$prior_banner <- renderUI({
@@ -72,45 +74,57 @@ mod_conflict_server <- function(id, shared, active_prior) {
       shared$conflict <- r
     })
 
-    # ── Placeholder before run, full results after ───────────────────────────
+    # ── Single uiOutput: placeholder before run, full results after ──────────
     output$results_or_placeholder <- renderUI({
       if (is.null(res())) {
-        return(tags$div(
-          class = "text-center",
-          style = paste0("padding:60px 20px; color:#aaa;",
-                         "border:2px dashed #ddd; border-radius:8px;",
-                         "margin-top:10px;"),
-          icon("vial", style = "font-size:48px; margin-bottom:16px;"),
-          tags$h4("No diagnostics run yet", style = "color:#bbb;"),
-          tags$p("Enter observed data and click",
-                 tags$b("Run Diagnostics"), "to see results.")
-        ))
+        # Placeholder — shown before "Run Diagnostics" is clicked
+        return(
+          tags$div(
+            class = "text-center",
+            style = paste0("padding: 60px 20px; color: #aaa;",
+                           "border: 2px dashed #ddd; border-radius: 8px;",
+                           "margin-top: 10px;"),
+            icon("vial", style = "font-size: 48px; margin-bottom: 16px;"),
+            tags$h4("No diagnostics run yet", style = "color: #bbb;"),
+            tags$p("Enter observed data and click",
+                   tags$b("Run Diagnostics"), "to see results.")
+          )
+        )
       }
 
-      r  <- res()
+      r <- res()
       ns <- session$ns
 
       tagList(
+        # Value boxes
         fluidRow(
           shinydashboard::valueBox(
             round(r$box_pvalue, 4), "Box p-value",
             icon  = icon("vial"),
-            color = if (r$conflict_flag) "red" else "green", width = 4),
+            color = if (r$conflict_flag) "red" else "green",
+            width = 4
+          ),
           shinydashboard::valueBox(
             round(r$surprise_index, 3), "Surprise index",
-            icon  = icon("bolt"), color = "yellow", width = 4),
+            icon  = icon("bolt"), color = "yellow", width = 4
+          ),
           shinydashboard::valueBox(
             round(r$overlap, 3), "Overlap coeff.",
-            icon  = icon("circle-half-stroke"), color = "blue", width = 4)
+            icon  = icon("circle-half-stroke"), color = "blue", width = 4
+          )
         ),
+        # Alert
         tags$div(
           class = if (r$conflict_flag) "alert alert-danger" else "alert alert-success",
           style = "margin:10px 0;",
-          if (r$conflict_flag) icon("triangle-exclamation") else icon("circle-check"),
+          if (r$conflict_flag) icon("triangle-exclamation")
+          else icon("circle-check"),
           " ",
-          tags$strong(glue::glue("Severity: {toupper(r$conflict_severity)}. ")),
+          tags$strong(
+            glue::glue("Severity: {toupper(r$conflict_severity)}. ")),
           r$recommendation
         ),
+        # Overlay plot box
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
           title = tagList(icon("chart-area"),
@@ -133,7 +147,7 @@ mod_conflict_server <- function(id, shared, active_prior) {
             invokeRestart("muffleWarning")
         }
       )
-      plotly::ggplotly(gp) |> .apply_plotly_theme()
+      plotly::ggplotly(gp) |> .apply_plotly_theme(plotly_layout())
     })
   })
 }
@@ -210,19 +224,21 @@ mod_mahal_server <- function(id) {
 
     output$results_or_placeholder <- renderUI({
       if (is.null(res())) {
-        return(tags$div(
-          class = "text-center",
-          style = paste0("padding:60px 20px; color:#aaa;",
-                         "border:2px dashed #ddd; border-radius:8px;",
-                         "margin-top:10px;"),
-          icon("border-all", style = "font-size:48px; margin-bottom:16px;"),
-          tags$h4("No check run yet", style = "color:#bbb;"),
-          tags$p("Enter prior and observed data, then click",
-                 tags$b("Run Mahalanobis Check"), "to see results.")
-        ))
+        return(
+          tags$div(
+            class = "text-center",
+            style = paste0("padding: 60px 20px; color: #aaa;",
+                           "border: 2px dashed #ddd; border-radius: 8px;",
+                           "margin-top: 10px;"),
+            icon("border-all", style = "font-size: 48px; margin-bottom: 16px;"),
+            tags$h4("No check run yet", style = "color: #bbb;"),
+            tags$p("Enter prior and observed data, then click",
+                   tags$b("Run Mahalanobis Check"), "to see results.")
+          )
+        )
       }
 
-      r   <- res()
+      r <- res()
       col <- if (r$conflict_flag) "red" else "green"
 
       tagList(

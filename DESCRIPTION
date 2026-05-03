@@ -32,7 +32,8 @@ Imports:
     cli (>= 3.6.0),
     quarto (>= 1.5.0),
     config (>= 0.3.1),
-    DT (>= 0.27)
+    DT (>= 0.27),
+    shinyjs (>= 2.1.0)
 Suggests:
     testthat (>= 3.0.0),
     knitr (>= 1.40),
@@ -42,6 +43,7 @@ Suggests:
     withr,
     covr,
     vdiffr,
+    htmlwidgets,
     patchwork
 VignetteBuilder: knitr
 SystemRequirements: Quarto CLI (>= 1.5, https://quarto.org)
