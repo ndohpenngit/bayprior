@@ -24,12 +24,15 @@
     <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental">
       <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle"/>
     </a>
+    <a href="https://quarto.org">
+      <img src="https://img.shields.io/badge/Reports-Quarto-blue?logo=quarto&logoColor=white" alt="Quarto"/>
+    </a>
   </h1>
 </p>
 
 ---
 
-## 🧭 Overview
+## Overview
 
 **bayprior** is an advanced interactive **R package and Shiny application**
 designed for biostatisticians and clinical researchers to implement
@@ -56,11 +59,12 @@ previously addressing it.
 - **Build robust priors** — Sceptical, robust mixture, and calibrated power
   priors for regulatory sensitivity analyses.
 - **Generate regulatory reports** — Self-contained HTML, PDF, or Word (.docx)
-  prior justification reports aligned with FDA/EMA submission expectations.
+  prior justification reports aligned with FDA/EMA submission expectations,
+  rendered via Quarto.
 
 ---
 
-## 🚀 Features and Modules
+## Features and Modules
 
 | Module | Detail | Primary Output | Goal |
 |---|---|---|---|
@@ -72,13 +76,13 @@ previously addressing it.
 | **Sceptical Prior** | Spiegelhalter–Freedman centred-at-null prior | Prior density + summary statistics | Conservative regulatory sensitivity |
 | **Robust Mixture** | Schmidli et al. MAP robust mixture prior | Robust vs informative density overlay | Protection against misspecification |
 | **Power Prior** | Ibrahim–Chen calibrated borrowing weight via Bayes Factor; supports Beta, Normal, Gamma, Log-Normal, and Mixture priors | Calibration curves + optimal δ | Principled historical data borrowing |
-| **Export Report** | HTML / PDF / Word (.docx) prior justification document | Regulatory-ready self-contained report | FDA/EMA submission documentation |
+| **Export Report** | HTML / PDF / Word (.docx) prior justification document rendered via Quarto | Regulatory-ready self-contained report | FDA/EMA submission documentation |
 
 ---
 
-## 🔬 Core Methodology
+## Core Methodology
 
-### 🧠 Prior Elicitation
+### Prior Elicitation
 
 Three structured elicitation approaches are implemented.
 **Quantile matching** fits a parametric distribution to expert-specified
@@ -98,7 +102,7 @@ All three methods support four distribution families:
 | **Gamma** | (0, ∞) | Event rates, variances, survival times |
 | **Log-Normal** | (0, ∞) | Hazard ratios, PK parameters |
 
-### ⚖️ Prior-Data Conflict Diagnostics
+### Prior-Data Conflict Diagnostics
 
 Conflict detection follows Box (1980). The **prior predictive p-value** tests
 whether the observed data is plausible under the prior predictive distribution.
@@ -111,22 +115,17 @@ multivariate conflict statistic with a known chi-squared reference distribution.
 All diagnostics work transparently with mixture priors via a Normal
 approximation based on the mixture's `fit_summary`.
 
-### 🔄 Sensitivity Analysis
+### Sensitivity Analysis
 
 The sensitivity module evaluates how key posterior quantities — posterior mean,
 SD, credible interval width, and Pr(θ > θ₀) — change as prior hyperparameters
-vary over a user-specified grid. The Shiny UI passes generic slider names
-(`param1`, `param2`) which are remapped automatically to the prior's actual
-hyperparameter names.
+vary over a user-specified grid. Results are visualised as **tornado plots**
+(bar width = range of influence, ordered from most to least sensitive) and
+**influence heatmaps** (two-dimensional colour-coded grid with the reference
+prior marked). A dedicated `sensitivity_cri()` function tracks credible
+interval width specifically — a key regulatory quantity.
 
-Results are visualised as **tornado plots** (bar width = range of influence,
-ordered from most to least sensitive) and **influence heatmaps**
-(two-dimensional colour-coded grid with the reference prior marked).
-
-A dedicated `sensitivity_cri()` function tracks credible interval width
-specifically — a key quantity for regulatory submissions.
-
-### 🛡️ Robust and Power Priors
+### Robust and Power Priors
 
 The **robust mixture prior** (Schmidli et al., 2014) mixes the informative
 elicited prior with a vague Normal component, protecting against prior-data
@@ -142,17 +141,22 @@ is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors.
 
 ---
 
-## 🖥️ User Interface
+## User Interface
 
-### 🔹 Prior Elicitation Panel
+The Shiny app includes a **dark / light mode toggle** in the header, with theme
+preference persisted across sessions via browser localStorage. All analysis
+panels show a placeholder before an analysis is run, replacing empty boxes with
+a clear call to action.
+
+### Prior Elicitation Panel
 
 - **Distribution family:** Beta, Normal, Gamma, or Log-Normal
 - **Elicitation method:** Quantile matching, moment matching, or roulette
-- **Real-time density preview:** Prior density updates as parameters change
+- **Real-time density preview:** Prior density rendered after fitting
 - **Expert pool:** Accumulate multiple fitted priors for consensus aggregation
 - **Value boxes:** Prior mean, SD, and 95% CrI at a glance
 
-### 🔹 Conflict Diagnostics Panel
+### Conflict Diagnostics Panel
 
 - **Data entry:** Binary (events / n) or continuous (mean, SD, n)
 - **Diagnostic statistics:** Box p-value, surprise index, and overlap with
@@ -160,14 +164,14 @@ is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors.
 - **Overlay plot:** Interactive Prior–Likelihood–Posterior density overlay
 - **Recommendation:** Automatic severity classification with actionable guidance
 
-### 🔹 Sensitivity Analysis Panel
+### Sensitivity Analysis Panel
 
 - **Hyperparameter grid:** User-defined ranges and grid resolution via sliders
 - **Target outcomes:** Posterior mean, SD, CrI width, and Pr(efficacy)
 - **Tornado plot:** Influence ordered from largest to smallest
 - **Influence heatmap:** Two-dimensional colour map across the parameter grid
 
-### 🔹 Robust Priors Panel
+### Robust Priors Panel
 
 - **Robust mixture:** Vague weight slider; density overlay of informative vs
   robust prior
@@ -175,23 +179,37 @@ is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors.
 - **Power prior:** Historical and current data entry; calibration curve
   displaying Bayes Factor and Box p-value vs δ
 
-### 🔹 Report Export Panel
+### Report Export Panel
 
 - **Trial metadata:** Protocol number, indication, sponsor, statistician, date,
-  and free-text rationale
+  and free-text scientific rationale
 - **Contents checklist:** Live indicators showing which sections are complete
-- **Output format:** HTML (self-contained), PDF (xelatex), or Word (.docx)
-- **Download:** Single click renders and downloads via `rmarkdown::render()`
+- **Output format:** HTML (self-contained), PDF (xelatex via Quarto), or Word (.docx)
+- **Download:** Single click renders and downloads the complete report
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```r
 # Development version from GitHub
 # install.packages("devtools")
-devtools::install_github("ndohpenngit/bayprior")
+devtools::install_github("ndohpenngit/bayprior", build_vignettes = TRUE)
 ```
+
+> **System requirements:** PDF report generation requires
+> [Quarto CLI](https://quarto.org/docs/get-started/) and a LaTeX installation.
+> HTML and Word reports work without either.
+>
+> ```r
+> # Install TinyTeX (recommended LaTeX distribution)
+> install.packages("tinytex")
+> tinytex::install_tinytex()
+> ```
+
+> **Note:** After installation, use `devtools::install()` (not `devtools::load_all()`)
+> before rendering reports — Quarto spawns a fresh R session that requires the
+> package to be properly installed.
 
 ### Reproducible environment (renv)
 
@@ -204,7 +222,7 @@ renv::restore()   # installs exact package versions from renv.lock
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ```r
 library(bayprior)
@@ -220,23 +238,23 @@ prior <- elicit_beta(
 plot(prior)
 
 # ── 2. Pool two expert priors ─────────────────────────────────────────────────
-e1  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1",
-                   label = "Response rate")
-e2  <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2",
-                   label = "Response rate")
+e1  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
+                   expert_id = "E1", label = "Response rate")
+e2  <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments",
+                   expert_id = "E2", label = "Response rate")
 agg <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.6, 0.4))
 plot(agg)
 
 # ── 3. Diagnose prior-data conflict ───────────────────────────────────────────
-cd <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
+data_obs <- list(type = "binary", x = 18, n = 40)
+cd <- prior_conflict(prior, data_obs)
 print(cd)
-plot_prior_likelihood(prior, list(type = "binary", x = 18, n = 40),
-                      show_posterior = TRUE)
+plot_prior_likelihood(prior, data_obs, show_posterior = TRUE)
 
 # ── 4. Sensitivity analysis ───────────────────────────────────────────────────
 sa <- sensitivity_grid(
   prior,
-  data_summary = list(type = "binary", x = 18, n = 40),
+  data_summary = data_obs,
   param_grid   = list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1)),
   target       = c("posterior_mean", "prob_efficacy"),
   threshold    = 0.30
@@ -247,7 +265,7 @@ plot_sensitivity(sa, target = "posterior_mean")
 # ── 5. Credible interval sensitivity ─────────────────────────────────────────
 cri_sa <- sensitivity_cri(
   prior,
-  data_summary = list(type = "binary", x = 18, n = 40),
+  data_summary = data_obs,
   param_grid   = list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1)),
   cri_level    = 0.95
 )
@@ -255,8 +273,9 @@ plot_sensitivity(cri_sa, target = "cri_width")
 
 # ── 6. Robust and sceptical priors ────────────────────────────────────────────
 rob  <- robust_prior(prior, vague_weight = 0.20)
-scep <- sceptical_prior(null_value = 0.20, family = "beta", strength = "moderate",
-                        label = "Response rate (sceptical)")
+scep <- sceptical_prior(null_value = 0.20, family = "beta",
+                        strength   = "moderate",
+                        label      = "Response rate (sceptical)")
 
 # ── 7. Power prior (calibrated historical borrowing) ─────────────────────────
 calib <- calibrate_power_prior(
@@ -278,15 +297,20 @@ conflict_mahalanobis(
 )
 
 # ── 9. Generate regulatory report ─────────────────────────────────────────────
+# Requires devtools::install() — not just devtools::load_all()
 prior_report(
   prior         = prior,
   conflict      = cd,
   sensitivity   = sa,
-  output_format = "html",      # or "pdf" or "docx"
+  output_format = "html",          # or "pdf" or "docx"
+  output_file   = "prior_report",
   trial_name    = "TRIAL-001",
   sponsor       = "Example Pharma Ltd",
   author        = "N. Penn, Principal Biostatistician",
-  notes         = "Prior based on Phase 2 data and two external expert elicitations."
+  notes         = paste0(
+    "Prior based on Phase 2 data and two external expert elicitations. ",
+    "Pre-specified in the Bayesian SAP version 2.1."
+  )
 )
 
 # ── 10. Launch the full Shiny app ─────────────────────────────────────────────
@@ -295,48 +319,35 @@ run_app()
 
 ---
 
-## 📖 Vignette
+## Vignettes
 
-A full worked vignette covering the end-to-end analysis workflow is included:
+Six vignettes cover the full analytical workflow:
 
 ```r
+# Browse all vignettes
+browseVignettes("bayprior")
+
+# Or open individually
 vignette("bayprior-introduction", package = "bayprior")
+vignette("prior-elicitation",     package = "bayprior")
+vignette("conflict-diagnostics",  package = "bayprior")
+vignette("sensitivity-analysis",  package = "bayprior")
+vignette("robust-priors",         package = "bayprior")
+vignette("regulatory-reporting",  package = "bayprior")
 ```
+
+| Vignette | Covers |
+|---|---|
+| `bayprior-introduction` | Full end-to-end workflow overview |
+| `prior-elicitation` | All four families and three elicitation methods in depth |
+| `conflict-diagnostics` | Univariate and multivariate conflict detection |
+| `sensitivity-analysis` | Grid sensitivity, tornado plots, CrI tracking |
+| `robust-priors` | Robust mixture, sceptical, and power priors |
+| `regulatory-reporting` | Report generation, FDA/EMA compliance checklist |
 
 ---
 
-## 🗂️ Package Structure
-
-```
-bayprior/
-├── R/
-│   ├── elicitation.R          # elicit_beta(), elicit_normal(), elicit_gamma(),
-│   │                          # elicit_lognormal(), elicit_roulette(), elicit_mixture()
-│   ├── aggregation.R          # aggregate_experts()
-│   ├── conflict_sensitivity.R # prior_conflict(), sensitivity_grid(),
-│   │                          # sensitivity_cri(), conjugate helpers
-│   ├── mahal.R                # conflict_mahalanobis()
-│   ├── plotting.R             # plot.bayprior(), plot_prior_likelihood(),
-│   │                          # plot_sensitivity(), plot_tornado()
-│   ├── robust_priors.R        # robust_prior(), sceptical_prior(),
-│   │                          # calibrate_power_prior()
-│   ├── prior_report.R         # prior_report()
-│   ├── globals.R              # utils::globalVariables() declarations
-│   ├── zzz_patches.R          # %||%, .make_bayprior(), .density_grid(),
-│   │                          # .eval_density_vec()
-│   └── mod_*.R                # Shiny modules (golem framework)
-├── inst/
-│   └── rmarkdown/templates/prior_report/skeleton/
-│       ├── skeleton.Rmd            # bundled report template
-│       └── bayprior_reference.docx # optional Word style reference
-├── vignettes/
-│   └── bayprior-introduction.Rmd
-└── man/                       # auto-generated by devtools::document()
-```
-
----
-
-## 📚 References
+## References
 
 - O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts'
   Probabilities*. Wiley.
@@ -356,7 +367,7 @@ bayprior/
 
 ---
 
-## 📝 Citation
+## Citation
 
 ```bibtex
 @Manual{bayprior2026,
@@ -371,6 +382,6 @@ bayprior/
 
 ---
 
-## ⚖️ License
+## License
 
 GPL (>= 3) — see [LICENSE](LICENSE) for details.
