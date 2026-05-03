@@ -70,8 +70,14 @@ table.dataTable tbody tr:hover { background-color: #dce8f5 !important; }
 .irs-bar, .irs-bar-edge { background: var(--green) !important; border-color: var(--green) !important; }
 .irs-single { background: var(--blue-mid) !important; }
 
-/* Plotly */
-.js-plotly-plot .plotly { background: transparent !important; }
+/* ── Plotly ──────────────────────────────────────────────────────────────────
+   IMPORTANT: Do NOT set background: transparent here with !important.
+   Plotly sets SVG backgrounds via inline style="fill: rgb(255,255,255)" which
+   CSS cannot override. Setting transparent here just makes the white SVG rect
+   show through, which is invisible in dark mode.
+   The R-side plotly_layout reactive + .apply_plotly_theme() handle this.     */
+.js-plotly-plot .plotly { background: transparent; }
+.plotly-graph-div        { background: transparent; }
 
 /* Spinner */
 .shiny-spinner-output-container { min-height: 120px; }

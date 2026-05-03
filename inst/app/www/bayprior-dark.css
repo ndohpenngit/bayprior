@@ -1,0 +1,297 @@
+/* ============================================================
+   bayprior dark mode stylesheet
+   Applied to <body> when class "dark-mode" is toggled
+   ============================================================ */
+
+body.dark-mode {
+  background-color: #1a1a2e !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-mode .js-plotly-plot {
+  background-color: #ffffff !important;
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ── Sidebar ───────────────────────────────────────────────── */
+body.dark-mode .main-sidebar,
+body.dark-mode .left-side {
+  background-color: #16213e !important;
+}
+
+body.dark-mode .sidebar-menu > li > a {
+  color: #b0b8c9 !important;
+  border-left: 3px solid transparent;
+}
+
+body.dark-mode .sidebar-menu > li.active > a,
+body.dark-mode .sidebar-menu > li > a:hover {
+  background-color: #0f3460 !important;
+  color: #ffffff !important;
+  border-left-color: #1D9E75 !important;
+}
+
+body.dark-mode .sidebar-menu > li > a .fa,
+body.dark-mode .sidebar-menu > li > a .glyphicon {
+  color: #1D9E75 !important;
+}
+
+body.dark-mode .sidebar-menu .treeview-menu {
+  background-color: #0d1b2a !important;
+}
+
+/* ── Header / navbar ───────────────────────────────────────── */
+body.dark-mode .main-header .navbar,
+body.dark-mode .main-header .logo {
+  background-color: #0f3460 !important;
+  border-bottom: 2px solid #1D9E75 !important;
+}
+
+body.dark-mode .main-header .navbar .nav > li > a {
+  color: #e0e0e0 !important;
+}
+
+body.dark-mode .main-header .logo {
+  color: #ffffff !important;
+}
+
+/* ── Main content area ─────────────────────────────────────── */
+body.dark-mode .content-wrapper,
+body.dark-mode .right-side {
+  background-color: #1a1a2e !important;
+}
+
+/* ── Boxes ─────────────────────────────────────────────────── */
+body.dark-mode .box {
+  background-color: #16213e !important;
+  border-top-color: #1D9E75 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark-mode .box-header {
+  background-color: #0f3460 !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid #1D9E75 !important;
+}
+
+body.dark-mode .box-header .box-title {
+  color: #ffffff !important;
+}
+
+body.dark-mode .box.box-primary {
+  border-top-color: #185FA5 !important;
+}
+
+body.dark-mode .box.box-primary > .box-header {
+  background-color: #185FA5 !important;
+}
+
+body.dark-mode .box.box-success {
+  border-top-color: #1D9E75 !important;
+}
+
+body.dark-mode .box.box-success > .box-header {
+  background-color: #1D9E75 !important;
+}
+
+body.dark-mode .box.box-info {
+  border-top-color: #0f3460 !important;
+}
+
+body.dark-mode .box.box-info > .box-header {
+  background-color: #0f3460 !important;
+}
+
+body.dark-mode .box.box-warning > .box-header {
+  background-color: #8a6d3b !important;
+}
+
+/* ── Info boxes ────────────────────────────────────────────── */
+body.dark-mode .info-box {
+  background-color: #16213e !important;
+  color: #e0e0e0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark-mode .info-box .info-box-text,
+body.dark-mode .info-box .info-box-number {
+  color: #ffffff !important;
+}
+
+/* ── Value boxes ───────────────────────────────────────────── */
+body.dark-mode .value-box {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Inputs ────────────────────────────────────────────────── */
+body.dark-mode .form-control {
+  background-color: #0d1b2a !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #0f3460 !important;
+}
+
+body.dark-mode .form-control:focus {
+  border-color: #1D9E75 !important;
+  box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.25) !important;
+}
+
+body.dark-mode select.form-control option {
+  background-color: #0d1b2a !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-mode .input-group-addon {
+  background-color: #0f3460 !important;
+  color: #e0e0e0 !important;
+  border-color: #0f3460 !important;
+}
+
+/* ── Sliders ───────────────────────────────────────────────── */
+body.dark-mode .irs-bar,
+body.dark-mode .irs-bar-edge {
+  background-color: #1D9E75 !important;
+  border-color: #1D9E75 !important;
+}
+
+body.dark-mode .irs-from,
+body.dark-mode .irs-to,
+body.dark-mode .irs-single {
+  background-color: #0f3460 !important;
+}
+
+body.dark-mode .irs-line {
+  background-color: #0d1b2a !important;
+  border-color: #0f3460 !important;
+}
+
+/* ── Tables (DT) ───────────────────────────────────────────── */
+body.dark-mode table.dataTable,
+body.dark-mode .dataTables_wrapper {
+  color: #e0e0e0 !important;
+}
+
+body.dark-mode table.dataTable thead th,
+body.dark-mode table.dataTable thead td {
+  background-color: #0f3460 !important;
+  color: #ffffff !important;
+  border-bottom: 2px solid #1D9E75 !important;
+}
+
+body.dark-mode table.dataTable tbody tr {
+  background-color: #16213e !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-mode table.dataTable tbody tr:hover {
+  background-color: #0f3460 !important;
+}
+
+body.dark-mode table.dataTable.stripe tbody tr.odd {
+  background-color: #1a2744 !important;
+}
+
+/* ── Alerts ────────────────────────────────────────────────── */
+body.dark-mode .alert-success {
+  background-color: #1a3d2e !important;
+  border-color: #1D9E75 !important;
+  color: #9fe1cb !important;
+}
+
+body.dark-mode .alert-warning {
+  background-color: #3d2e1a !important;
+  border-color: #D85A30 !important;
+  color: #f0a070 !important;
+}
+
+body.dark-mode .alert-danger {
+  background-color: #3d1a1a !important;
+  border-color: #c0392b !important;
+  color: #e07070 !important;
+}
+
+body.dark-mode .alert-info {
+  background-color: #1a2744 !important;
+  border-color: #185FA5 !important;
+  color: #7eb3e0 !important;
+}
+
+/* ── Buttons ───────────────────────────────────────────────── */
+body.dark-mode .btn-default {
+  background-color: #0f3460 !important;
+  color: #e0e0e0 !important;
+  border-color: #185FA5 !important;
+}
+
+body.dark-mode .btn-default:hover {
+  background-color: #185FA5 !important;
+  color: #ffffff !important;
+}
+
+/* ── Plotly backgrounds ────────────────────────────────────── */
+body.dark-mode .plotly .bg {
+}
+
+body.dark-mode .js-plotly-plot .plotly .main-svg {
+}
+
+/* ── RadioGroupButtons (shinyWidgets) ──────────────────────── */
+body.dark-mode .btn-group > .btn {
+  background-color: #0f3460 !important;
+  color: #e0e0e0 !important;
+  border-color: #185FA5 !important;
+}
+
+body.dark-mode .btn-group > .btn.active,
+body.dark-mode .btn-group > .btn:active {
+  background-color: #185FA5 !important;
+  color: #ffffff !important;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+body.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+  background: #0d1b2a;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: #0f3460;
+  border-radius: 4px;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #185FA5;
+}
+
+/* ── Theme toggle button ───────────────────────────────────── */
+.theme-toggle-btn {
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+  padding: 4px 12px !important;
+  font-size: 12px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  margin-right: 8px;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255,255,255,0.15) !important;
+  border-color: rgba(255,255,255,0.6) !important;
+}
+
+/* ── Transition for smooth theme switching ─────────────────── */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.box, .info-box, .value-box, .form-control, .main-sidebar,
+.content-wrapper, .main-header .navbar, .main-header .logo {
+  transition: background-color 0.3s ease, color 0.3s ease,
+              border-color 0.3s ease, box-shadow 0.3s ease;
+}

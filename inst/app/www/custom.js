@@ -22,14 +22,19 @@ $(document).ready(function () {
   });
 
   /* ── Plotly responsive resize ───────────────────────────────────────────── */
+  // After resize, re-apply dark mode patch if needed since Plotly redraws
+  // reset inline SVG styles back to defaults.
   $(window).on('resize', function () {
     $('.js-plotly-plot').each(function () {
       Plotly.Plots.resize(this);
     });
+    // Re-patch after resize completes (Plotly redraws reset inline styles)
+    if (typeof patchPlotlyDark === 'function') {
+      setTimeout(patchPlotlyDark, 300);
+    }
   });
 
   /* ── Chip counter update helper (roulette module) ───────────────────────── */
-  // Allows server to push chip count updates to span elements
   Shiny.addCustomMessageHandler('update_chip_count', function (msg) {
     $('#' + msg.id).text(msg.value);
   });
