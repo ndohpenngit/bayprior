@@ -27,7 +27,9 @@ format:
   pdf:
     toc: true
     number-sections: true
-    latex-engine: xelatex
+    pdf-engine: xelatex
+    documentclass: article
+    latex-auto-install: false
     fig-width: 7
     fig-height: 4
   docx:
@@ -80,6 +82,33 @@ pp_prior_plot   <- .session$prior_plot
 pp_overlay_plot <- .session$overlay_plot
 pp_tornado_plot <- .session$tornado_plot
 pp_heatmap_plot <- .session$heatmap_plot
+
+# ── Format detection ──────────────────────────────────────────────────────────
+# Callout blocks require tcolorbox in PDF but work in HTML and Word.
+# Use plain blockquotes for PDF, rich callouts for other formats.
+.fmt <- knitr::pandoc_to()
+.is_pdf <- isTRUE(grepl("latex|pdf|beamer", .fmt))
+
+.callout <- function(type, text) {
+  if (.is_pdf) {
+    prefix <- switch(type,
+      note      = "> **Note:**",
+      warning   = "> **Warning:**",
+      important = "> **Important:**",
+      tip       = "> **Tip:**",
+      ">"
+    )
+    cat(paste0(prefix, " ", text, "
+
+"))
+  } else {
+    cat(paste0("::: {.callout-", type, "}
+", text, "
+:::
+
+"))
+  }
+}
 
 # ── Safe helpers ──────────────────────────────────────────────────────────────
 # Self-contained: no dependency on %||% or rlang, which are absent from
@@ -204,9 +233,7 @@ if (has_prior) {
 #| results: asis
 note_text <- .null_or(params$notes, "")
 if (nzchar(note_text)) {
-  cat("::: {.callout-note}\n")
-  cat(paste0("**Statistician\u2019s notes:** ", note_text, "\n"))
-  cat(":::\n")
+  .callout("note", paste0("**Statistician's notes:** ", note_text))
 }
 ```
 
@@ -311,9 +338,7 @@ if (has_prior) {
 ```{r conflict-check}
 #| results: asis
 if (!has_conf) {
-  cat("::: {.callout-warning}\n")
-  cat("No prior-data conflict diagnostics were computed for this report.\n")
-  cat(":::\n")
+  .callout("warning", "No prior-data conflict diagnostics were computed for this report.")
 }
 ```
 
@@ -372,15 +397,11 @@ if (has_conf) {
 #| results: asis
 if (has_conf) {
   sev  <- .safe_chr(cd$conflict_severity, fallback = "none")
-  type <- switch(sev,
-    none   = "tip",
-    mild   = "warning",
-    severe = "important",
-    "note"
+  .callout(
+    switch(.safe_chr(cd$conflict_severity, fallback="none"),
+      none="tip", mild="warning", severe="important", "note"),
+    .safe_chr(cd$recommendation)
   )
-  cat(paste0("::: {.callout-", type, "}\n"))
-  cat(.safe_chr(cd$recommendation), "\n")
-  cat(":::\n")
 }
 ```
 
@@ -407,9 +428,7 @@ if (has_conf && has_prior) {
 ```{r sensitivity-check}
 #| results: asis
 if (!has_sens) {
-  cat("::: {.callout-warning}\n")
-  cat("No sensitivity analysis was conducted for this report.\n")
-  cat(":::\n")
+  .callout("warning", "No sensitivity analysis was conducted for this report.")
 }
 ```
 
@@ -501,11 +520,13 @@ kable(df_comp, align = "ll",
       row.names = FALSE)
 ```
 
-::: {.callout-note}
-This checklist maps to requirements in the FDA Draft Guidance on Bayesian
-Statistical Methods (2026) and the EMA Reflection Paper on the Use of
-Bayesian Statistics in the Evaluation of Medicinal Products.
-:::
+```{r fda-note, results="asis"}
+.callout("note", paste0(
+  "This checklist maps to requirements in the FDA Draft Guidance on Bayesian ",
+  "Statistical Methods (2026) and the EMA Reflection Paper on the Use of ",
+  "Bayesian Statistics in the Evaluation of Medicinal Products."
+))
+```
 
 ---
 
