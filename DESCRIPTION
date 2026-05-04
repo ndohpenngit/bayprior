@@ -3,7 +3,7 @@ Title: Bayesian Prior Elicitation, Conflict Diagnostics and Sensitivity Analysis
 Version: 0.1.0
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0000-0000-0000"))
+           comment = c(ORCID = "0009-0003-9054-465X"))
 Description: A toolkit for constructing, validating, and justifying Bayesian
     priors in clinical trial settings. Implements SHELF-style expert elicitation
     (quantile matching, roulette method, moment matching), linear and logarithmic
@@ -46,6 +46,7 @@ Suggests:
     htmlwidgets,
     patchwork
 VignetteBuilder: knitr
+Config/Needs/vignettes: knitr, rmarkdown
 SystemRequirements: Quarto CLI (>= 1.5, https://quarto.org)
 Config/testthat/edition: 3
 URL: https://github.com/ndohpenngit/bayprior

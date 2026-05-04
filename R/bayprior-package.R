@@ -34,7 +34,7 @@
 #'   \item FDA Draft Guidance: Bayesian Methods in Clinical Trials (2026).
 #' }
 #'
-#' @author Ndoh Penn \email{ndohpenn9@gmail.com}
+#' @author **Maintainer**: Ndoh Penn \email{ndohpenn9@gmail.com}
 #'
 #' @docType package
 #' @name bayprior

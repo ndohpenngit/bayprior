@@ -192,7 +192,11 @@ a clear call to action.
 ## Installation
 
 ```r
-# Development version from GitHub
+# Development version from GitHub:
+# install.packages("pak")
+pak::pak("ndohpenngit/bayprior")
+
+# Or (with vignettes included):
 # install.packages("devtools")
 devtools::install_github("ndohpenngit/bayprior", build_vignettes = TRUE)
 ```
