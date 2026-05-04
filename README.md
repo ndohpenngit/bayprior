@@ -144,9 +144,7 @@ is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors.
 ## User Interface
 
 The Shiny app includes a **dark / light mode toggle** in the header, with theme
-preference persisted across sessions via browser localStorage. All analysis
-panels show a placeholder before an analysis is run, replacing empty boxes with
-a clear call to action.
+preference persisted across sessions via browser localStorage.
 
 ### Prior Elicitation Panel
 
