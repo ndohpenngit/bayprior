@@ -377,9 +377,3 @@ vignette("regulatory-reporting",  package = "bayprior")
   url    = {https://github.com/ndohpenngit/bayprior}
 }
 ```
-
----
-
-## License
-
-GPL (>= 3) — see [LICENSE](LICENSE) for details.
