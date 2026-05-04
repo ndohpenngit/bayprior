@@ -51,12 +51,8 @@ mod_roulette_ui <- function(id) {
         title = tagList(icon("sliders"), " Chip controls"),
         uiOutput(ns("chip_ui"))
       ),
-      shinydashboard::box(
-        width = 12, status = "success", solidHeader = TRUE,
-        collapsible = TRUE, collapsed = TRUE,
-        title = tagList(icon("table"), " Fitted parameters"),
-        DT::dataTableOutput(ns("params_tbl"))
-      )
+      # Fitted parameters box — only rendered after Fit Prior is clicked
+      uiOutput(ns("params_conditional"))
     )
   )
 }
@@ -68,8 +64,10 @@ mod_roulette_server <- function(id, shared) {
 
     chips <- reactiveVal(rep(0L, 10L))
 
+    # Reset chips & clear the fitted prior so params box disappears
     observeEvent(list(input$n_bins, input$reset_btn), {
       chips(rep(0L, as.integer(input$n_bins %||% 10L)))
+      fitted(NULL)
     }, ignoreInit = FALSE)
 
     breaks <- reactive({
@@ -194,14 +192,22 @@ mod_roulette_server <- function(id, shared) {
                           "sd={round(p$fit_summary$sd,3)}"))
     })
 
-    output$params_tbl <- DT::renderDataTable({
+    output$params_conditional <- renderUI({
       req(fitted())
       s  <- fitted()$fit_summary
       df <- data.frame(
         Statistic = c("Mean", "SD", "2.5th pctile", "Median", "97.5th pctile"),
-        Value     = round(c(s$mean, s$sd, s$q025, s$q500, s$q975), 5))
-      DT::datatable(df, rownames = FALSE,
-                    options = list(dom = "t"), class = "compact stripe")
+        Value     = round(c(s$mean, s$sd, s$q025, s$q500, s$q975), 5)
+      )
+      shinydashboard::box(
+        width = 12, status = "success", solidHeader = TRUE,
+        collapsible = TRUE,
+        title = tagList(icon("table"), " Fitted parameters"),
+        DT::renderDataTable(
+          DT::datatable(df, rownames = FALSE,
+                        options = list(dom = "t"), class = "compact stripe")
+        )
+      )
     })
   })
 }
