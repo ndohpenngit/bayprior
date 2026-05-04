@@ -362,18 +362,3 @@ vignette("regulatory-reporting",  package = "bayprior")
   approaches to randomized trials. *JRSS-A*, 157, 357–416.
 - FDA (2026). *Draft Guidance: Bayesian Statistical Methods for Drug and
   Biological Products*.
-
----
-
-## Citation
-
-```bibtex
-@Manual{bayprior2026,
-  title  = {bayprior: Bayesian Prior Elicitation, Conflict Diagnostics and
-             Sensitivity Analysis for Clinical Trials},
-  author = {Ndoh Penn},
-  year   = {2026},
-  note   = {R package version 0.1.0},
-  url    = {https://github.com/ndohpenngit/bayprior}
-}
-```
