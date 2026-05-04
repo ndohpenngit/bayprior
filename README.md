@@ -211,10 +211,6 @@ devtools::install_github("ndohpenngit/bayprior", build_vignettes = TRUE)
 > tinytex::install_tinytex()
 > ```
 
-> **Note:** After installation, use `devtools::install()` (not `devtools::load_all()`)
-> before rendering reports — Quarto spawns a fresh R session that requires the
-> package to be properly installed.
-
 ### Reproducible environment (renv)
 
 This project uses [renv](https://rstudio.github.io/renv/) for reproducible
