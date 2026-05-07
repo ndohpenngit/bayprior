@@ -8,6 +8,9 @@ prior_report(
   prior,
   conflict = NULL,
   sensitivity = NULL,
+  robust_prior = NULL,
+  sceptical_prior = NULL,
+  power_prior = NULL,
   output_format = c("html", "pdf", "docx"),
   output_file = NULL,
   trial_name = "Clinical Trial",
@@ -19,6 +22,9 @@ prior_report(
   overlay_plot = NULL,
   tornado_plot = NULL,
   heatmap_plot = NULL,
+  robust_plot = NULL,
+  sceptical_plot = NULL,
+  power_plot = NULL,
   open_after = interactive()
 )
 }
@@ -28,6 +34,12 @@ prior_report(
 \item{conflict}{Optional bayprior_conflict from prior_conflict().}
 
 \item{sensitivity}{Optional bayprior_sensitivity from sensitivity_grid().}
+
+\item{robust_prior}{Optional output of robust_prior().}
+
+\item{sceptical_prior}{Optional output of sceptical_prior().}
+
+\item{power_prior}{Optional output of calibrate_power_prior().}
 
 \item{output_format}{"html" (default), "pdf", or "docx".}
 
@@ -43,13 +55,11 @@ prior_report(
 
 \item{notes}{Optional narrative text.}
 
-\item{prior_plot}{Optional pre-captured ggplot from plot(prior).}
+\item{robust_plot}{Optional pre-captured ggplot of the robust prior.}
 
-\item{overlay_plot}{Optional pre-captured ggplot from plot_prior_likelihood().}
+\item{sceptical_plot}{Optional pre-captured ggplot of the sceptical prior.}
 
-\item{tornado_plot}{Optional pre-captured ggplot from plot_tornado().}
-
-\item{heatmap_plot}{Optional pre-captured ggplot from plot_sensitivity().}
+\item{power_plot}{Optional pre-captured ggplot of the power prior.}
 
 \item{open_after}{Open after rendering. Default TRUE interactively.}
 }

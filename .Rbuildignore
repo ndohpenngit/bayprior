@@ -4,3 +4,9 @@
 ^\.Rproj\.user$
 ^\.github$
 ^dev$
+^_pkgdown\.yml$
+^README\.Rmd$
+^docs$
+^LICENSE\.md$
+^\.github$
+^vignettes/.*_cache

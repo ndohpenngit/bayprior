@@ -53,5 +53,5 @@ Useful links:
 
 }
 \author{
-Ndoh Penn \email{ndohpenn9@gmail.com}
+\strong{Maintainer}: Ndoh Penn \email{ndohpenn9@gmail.com}
 }
