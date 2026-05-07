@@ -21,3 +21,7 @@ rsconnect/
 Thumbs.db
 
 docs
+
+/.quarto/
+vignettes/*_cache/
+vignettes/*_files/
