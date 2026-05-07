@@ -59,7 +59,10 @@ A bayprior report includes:
   Bhattacharyya overlap, severity classification, and recommendation
 - **Prior-likelihood-posterior overlay** — the canonical visual for conflict
 - **Sensitivity analysis** — tornado plot and influence heatmap
-- **Regulatory compliance checklist** — maps to FDA/EMA requirements
+- **Robust and sensitivity priors** — robust mixture, sceptical, and power prior
+  summaries and plots (included automatically when computed in the session)
+- **Regulatory compliance checklist** — maps to FDA/EMA requirements, including
+  a dedicated row for robust/sceptical prior computation
 - **Session information** — R version, bayprior version, Quarto CLI version
 
 ## Output Formats
@@ -102,15 +105,24 @@ sa <- sensitivity_grid(
   threshold    = 0.30
 )
 
-# 4. Generate the report
+# 4. Build robust and sceptical priors (optional — appear in report if supplied)
+rob  <- robust_prior(prior, vague_weight = 0.20)
+scep <- sceptical_prior(null_value = 0.20, family = "beta", strength = "moderate")
+
+# 5. Generate the report
+# NOTE: requires devtools::install(), not just devtools::load_all()
+# Quarto spawns a fresh R session that needs the installed package.
 prior_report(
-  prior         = prior,
-  conflict      = cd,
-  sensitivity   = sa,
-  output_format = "pdf",
-  trial_name    = "TRIAL-001",
-  sponsor       = "BioPharma Ltd",
-  author        = "J. Smith, Principal Biostatistician",
+  prior           = prior,
+  conflict        = cd,
+  sensitivity     = sa,
+  robust_prior    = rob,      # included in "Robust and Sensitivity Priors" section
+  sceptical_prior = scep,     # ditto
+  output_format   = "pdf",
+  output_file     = "prior_justification_report",
+  trial_name      = "TRIAL-001",
+  sponsor         = "BioPharma Ltd",
+  author          = "J. Smith, Principal Biostatistician",
   notes         = paste0(
     "Prior elicited from two independent oncologists (Expert_1, Expert_2) ",
     "using the SHELF structured elicitation protocol. Experts were blinded ",
@@ -181,13 +193,14 @@ kable(data.frame(
     "Sensitivity analysis performed",
     "Sensitivity visualisations provided",
     "Alternative priors considered",
+    "Robust / sceptical prior computed",
     "Regulatory report generated"
   ),
   `FDA Guidance Section` = c(
     "Section IV.B", "Section IV.B", "Section IV.B",
     "Section IV.B", "Section IV.C", "Section IV.C",
     "Section IV.D", "Section IV.D", "Section IV.D",
-    "Section IV.E"
+    "Section IV.D", "Section IV.E"
   ),
   check.names = FALSE
 ), align = "ll")
@@ -219,20 +232,19 @@ submission documents.
 
 The `run_app()` function launches the full interactive Shiny interface. Every
 analysis conducted in the app — elicitation, pooling, conflict diagnostics,
-and sensitivity — is preserved in the session state and flows directly into
-the report when the Download button is clicked.
+sensitivity, and robust/sceptical/power priors — is preserved in the session
+state and flows directly into the report when the Download button is clicked.
 
 Figures in the report reflect exactly what the analyst saw in the app at the
-time of download. The app captures ggplot objects from each panel at the
-moment the Download button is pressed, so the report is a faithful snapshot
-of the specific analysis session.
+time of download. Specifically:
 
-```{r eval = FALSE}
-# Launch the interactive app
-run_app()
-```
+- The **prior density plot** comes from the fitted prior in the Elicitation panel
+- The **conflict overlay** comes from the Conflict Diagnostics panel
+- The **tornado and heatmap** come from the Sensitivity Analysis panel
+- The **robust, sceptical, and power prior plots** come from the Robust Priors
+  panel — these appear in the report only if those analyses were run in the session
 
-The app workflow mirrors the six-step analytical workflow:
+The app workflow mirrors the analytical steps:
 
 ```
 Welcome → Prior Elicitation → Expert Pooling → Conflict Diagnostics →

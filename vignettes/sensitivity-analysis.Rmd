@@ -38,7 +38,11 @@ change if the prior hyperparameters are varied across their plausible range?*
 **bayprior** provides two dedicated sensitivity functions:
 
 - `sensitivity_grid()` — evaluates posterior mean, SD, and efficacy probability
-- `sensitivity_cri()` — focuses specifically on credible interval width
+- `sensitivity_cri()` — focuses specifically on credible interval width and bounds
+
+Both are available in the Shiny app via the **Sensitivity Analysis** panel, which
+has an "Analysis type" toggle: **Posterior quantities** runs `sensitivity_grid()`;
+**Credible interval** runs `sensitivity_cri()` with a CrI level slider.
 
 ---
 

@@ -352,6 +352,44 @@ kable(data.frame(
 
 ---
 
+# Including Robust Priors in the Regulatory Report
+
+All three robust prior types — robust mixture, sceptical, and power prior —
+are automatically included in the downloaded prior justification report when
+they have been computed in the session. Pass them directly to `prior_report()`:
+
+```{r report-integration, eval = FALSE}
+# After running the analyses above...
+prior_report(
+  prior           = prior,
+  conflict        = cd,
+  sensitivity     = sa,
+  robust_prior    = rob,        # adds "Robust Mixture" section to report
+  sceptical_prior = scep,       # adds "Sceptical Prior" section to report
+  power_prior     = calib,      # adds "Power Prior" section with calibration table
+  output_format   = "html",
+  output_file     = "prior_justification_report",
+  trial_name      = "TRIAL-001",
+  sponsor         = "BioPharma Ltd",
+  author          = "J. Smith, Biostatistician"
+)
+```
+
+Each section in the report includes a parameter summary table and the
+corresponding density or calibration plot. The compliance checklist in the
+report automatically marks "Robust / sceptical prior computed" as Complete
+when any of the three types is supplied.
+
+When using the **Shiny app**, the robust priors flow into the report
+automatically — simply run the analyses in the Robust Priors panel before
+clicking Download Report.
+
+> **Note:** `prior_report()` requires `devtools::install()`, not just
+> `devtools::load_all()`. Quarto spawns a fresh R session that requires the
+> package to be properly installed.
+
+---
+
 # References
 
 Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for regression
