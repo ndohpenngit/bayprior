@@ -49,13 +49,6 @@
     "text": "Vignettes\nSix vignettes cover the full analytical workflow:\n# Browse all vignettes\nbrowseVignettes(\"bayprior\")\n\n# Or open individually\nvignette(\"bayprior-introduction\", package = \"bayprior\")\nvignette(\"prior-elicitation\",     package = \"bayprior\")\nvignette(\"conflict-diagnostics\",  package = \"bayprior\")\nvignette(\"sensitivity-analysis\",  package = \"bayprior\")\nvignette(\"robust-priors\",         package = \"bayprior\")\nvignette(\"regulatory-reporting\",  package = \"bayprior\")\n\n\n\n\n\n\n\nVignette\nCovers\n\n\n\n\nbayprior-introduction\nFull end-to-end workflow overview\n\n\nprior-elicitation\nAll four families and three elicitation methods in depth\n\n\nconflict-diagnostics\nUnivariate and multivariate conflict detection\n\n\nsensitivity-analysis\nGrid sensitivity, tornado plots, CrI tracking\n\n\nrobust-priors\nRobust mixture, sceptical, and power priors\n\n\nregulatory-reporting\nReport generation, FDA/EMA compliance checklist"
   },
   {
-    "objectID": "index.html#documentation",
-    "href": "index.html#documentation",
-    "title": "bayprior",
-    "section": "Documentation",
-    "text": "Documentation\nFull package documentation is available at ndohpenngit.github.io/bayprior, including:\n\nFunction reference with examples for every exported function\nAll vignettes rendered as searchable HTML\nChangelog and release notes"
-  },
-  {
     "objectID": "index.html#references",
     "href": "index.html#references",
     "title": "bayprior",
