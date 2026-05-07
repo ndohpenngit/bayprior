@@ -6,7 +6,13 @@
 ^dev$
 ^_pkgdown\.yml$
 ^README\.Rmd$
-^docs$
 ^LICENSE\.md$
 ^\.github$
 ^vignettes/.*_cache
+^_quarto\.yml$
+^index\.qmd$
+^\.nojekyll$
+^\.quarto$
+^docs$
+^_freeze$
+^_publish\.yml$
