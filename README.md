@@ -27,6 +27,9 @@
     <a href="https://quarto.org">
       <img src="https://img.shields.io/badge/Reports-Quarto-blue?logo=quarto&logoColor=white" alt="Quarto"/>
     </a>
+    <a href="https://ndohpenngit.github.io/bayprior/">
+      <img src="https://img.shields.io/badge/docs-pkgdown-blue?logo=r&logoColor=white" alt="pkgdown site"/>
+    </a>
   </h1>
 </p>
 
@@ -164,8 +167,9 @@ preference persisted across sessions via browser localStorage.
 
 ### Sensitivity Analysis Panel
 
+- **Analysis type toggle:** "Posterior quantities" runs `sensitivity_grid()`; "Credible interval" runs `sensitivity_cri()` with a CrI level slider
 - **Hyperparameter grid:** User-defined ranges and grid resolution via sliders
-- **Target outcomes:** Posterior mean, SD, CrI width, and Pr(efficacy)
+- **Target outcomes:** Posterior mean, SD, CrI width and bounds, and Pr(efficacy)
 - **Tornado plot:** Influence ordered from largest to smallest
 - **Influence heatmap:** Two-dimensional colour map across the parameter grid
 
@@ -297,15 +301,17 @@ conflict_mahalanobis(
 # ── 9. Generate regulatory report ─────────────────────────────────────────────
 # Requires devtools::install() — not just devtools::load_all()
 prior_report(
-  prior         = prior,
-  conflict      = cd,
-  sensitivity   = sa,
-  output_format = "html",          # or "pdf" or "docx"
-  output_file   = "prior_report",
-  trial_name    = "TRIAL-001",
-  sponsor       = "Example Pharma Ltd",
-  author        = "N. Penn, Principal Biostatistician",
-  notes         = paste0(
+  prior           = prior,
+  conflict        = cd,
+  sensitivity     = sa,
+  robust_prior    = rob,           # included in report if supplied
+  sceptical_prior = scep,          # ditto
+  output_format   = "html",        # or "pdf" or "docx"
+  output_file     = "prior_report",
+  trial_name      = "TRIAL-001",
+  sponsor         = "Example Pharma Ltd",
+  author          = "Ndoh Penn, Biostatistician",
+  notes           = paste0(
     "Prior based on Phase 2 data and two external expert elicitations. ",
     "Pre-specified in the Bayesian SAP version 2.1."
   )
@@ -342,6 +348,17 @@ vignette("regulatory-reporting",  package = "bayprior")
 | `sensitivity-analysis` | Grid sensitivity, tornado plots, CrI tracking |
 | `robust-priors` | Robust mixture, sceptical, and power priors |
 | `regulatory-reporting` | Report generation, FDA/EMA compliance checklist |
+
+---
+
+## Documentation
+
+Full package documentation is available at
+**[ndohpenngit.github.io/bayprior](https://ndohpenngit.github.io/bayprior/)**, including:
+
+- Function reference with examples for every exported function
+- All vignettes rendered as searchable HTML
+- Changelog and release notes
 
 ---
 
