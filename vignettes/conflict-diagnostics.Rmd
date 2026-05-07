@@ -1,6 +1,6 @@
 ---
 title: "Prior-Data Conflict Diagnostics"
-author: "bayprior package"
+author: "Ndoh Penn"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:

@@ -355,17 +355,6 @@ vignette("regulatory-reporting",  package = "bayprior")
 
 ---
 
-## Documentation
-
-Full package documentation is available at
-**[ndohpenngit.github.io/bayprior](https://ndohpenngit.github.io/bayprior/)**, including:
-
-- Function reference with examples for every exported function
-- All vignettes rendered as searchable HTML
-- Changelog and release notes
-
----
-
 ## References
 
 - O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts'

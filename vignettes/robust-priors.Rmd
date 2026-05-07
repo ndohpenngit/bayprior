@@ -1,6 +1,6 @@
 ---
 title: "Robust, Sceptical, and Power Priors"
-author: "bayprior package"
+author: "Ndoh Penn"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
