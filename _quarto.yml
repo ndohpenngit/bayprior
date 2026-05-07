@@ -1,0 +1,35 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "bayprior"
+  description: "Bayesian Prior Elicitation for Clinical Trials"
+  repo-url: https://github.com/ndohpenngit/bayprior
+  repo-actions: [issue]
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: vignettes/bayprior-introduction.Rmd
+        text: Get Started
+      - text: Vignettes
+        menu:
+          - href: vignettes/prior-elicitation.Rmd
+            text: Prior Elicitation
+          - href: vignettes/conflict-diagnostics.Rmd
+            text: Conflict Diagnostics
+          - href: vignettes/sensitivity-analysis.Rmd
+            text: Sensitivity Analysis
+          - href: vignettes/robust-priors.Rmd
+            text: Robust Priors
+          - href: vignettes/regulatory-reporting.Rmd
+            text: Regulatory Reporting
+    right:
+      - icon: github
+        href: https://github.com/ndohpenngit/bayprior
+
+format:
+  html:
+    theme: flatly
+    toc: true
