@@ -55,6 +55,14 @@ prior_report(
 
 \item{notes}{Optional narrative text.}
 
+\item{prior_plot}{Optional pre-captured ggplot from \code{plot(prior)}.}
+
+\item{overlay_plot}{Optional pre-captured ggplot from \code{plot_prior_likelihood()}.}
+
+\item{tornado_plot}{Optional pre-captured ggplot from \code{plot_tornado()}.}
+
+\item{heatmap_plot}{Optional pre-captured ggplot from \code{plot_sensitivity()}.}
+
 \item{robust_plot}{Optional pre-captured ggplot of the robust prior.}
 
 \item{sceptical_plot}{Optional pre-captured ggplot of the sceptical prior.}

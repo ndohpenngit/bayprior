@@ -12,6 +12,10 @@
 #' @param date Report date string. Default Sys.Date().
 #' @param author Responsible statistician.
 #' @param notes Optional narrative text.
+#' @param prior_plot    Optional pre-captured ggplot from \code{plot(prior)}.
+#' @param overlay_plot  Optional pre-captured ggplot from \code{plot_prior_likelihood()}.
+#' @param tornado_plot  Optional pre-captured ggplot from \code{plot_tornado()}.
+#' @param heatmap_plot  Optional pre-captured ggplot from \code{plot_sensitivity()}.
 #' @param robust_prior   Optional output of robust_prior().
 #' @param sceptical_prior Optional output of sceptical_prior().
 #' @param power_prior    Optional output of calibrate_power_prior().
