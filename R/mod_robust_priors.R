@@ -86,7 +86,10 @@ mod_sceptical_server <- function(id, shared) {
           NULL
         })
       fitted(pr)
-      if (!is.null(pr)) shared$current_prior <- pr
+      if (!is.null(pr)) {
+        shared$current_prior    <- pr
+        shared$sceptical_prior  <- pr
+      }
     })
 
     output$fit_msg <- renderUI({
@@ -212,7 +215,10 @@ mod_robust_server <- function(id, shared, active_prior) {
           NULL
         })
       fitted(pr)
-      if (!is.null(pr)) shared$current_prior <- pr
+      if (!is.null(pr)) {
+        shared$current_prior  <- pr
+        shared$robust_prior   <- pr
+      }
     })
 
     output$fit_msg <- renderUI({
@@ -387,7 +393,10 @@ mod_power_server <- function(id, shared, active_prior) {
           NULL
         })
       res(r)
-      if (!is.null(r)) shared$current_prior <- r$power_prior
+      if (!is.null(r)) {
+        shared$current_prior <- r$power_prior
+        shared$power_prior   <- r
+      }
     })
 
     output$fit_msg <- renderUI({

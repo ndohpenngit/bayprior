@@ -208,6 +208,88 @@ elicit_gamma <- function(quantiles = NULL,
 }
 
 
+#' Elicit a Log-Normal prior via quantile matching or moment matching
+#'
+#' Fits a Log-Normal distribution to expert-specified quantiles or moments.
+#' Appropriate for positive-valued quantities such as hazard ratios, fold
+#' changes, median survival times, or PK parameters.
+#'
+#' @param quantiles Named numeric vector. Values must be strictly positive.
+#'   E.g. `c("0.05" = 0.5, "0.50" = 2.0, "0.95" = 8.0)`.
+#' @param mean     Optional numeric. Expert-specified mean on the **original**
+#'   (not log) scale for moment matching.
+#' @param sd       Optional numeric. Expert-specified SD on the original scale.
+#' @param method   Character. `"quantile"` (default) or `"moments"`.
+#' @param expert_id Character. Expert identifier.
+#' @param label    Character. Description of the quantity.
+#' @param tol      Numeric. Optimisation tolerance. Default `1e-6`.
+#'
+#' @return An object of class `bayprior` with `dist = "lognormal"` and
+#'   `params` list containing `meanlog` and `sdlog`.
+#'
+#' @examples
+#' # Hazard ratio: expert believes median HR ~ 0.7, 90% CI [0.4, 1.2]
+#' prior <- elicit_lognormal(
+#'   quantiles = c("0.05" = 0.40, "0.50" = 0.70, "0.95" = 1.20),
+#'   label     = "Hazard ratio (treatment vs control)"
+#' )
+#' print(prior)
+#' plot(prior)
+#'
+#' # Moment matching: mean HR = 0.75, SD = 0.25
+#' prior_m <- elicit_lognormal(
+#'   mean = 0.75, sd = 0.25,
+#'   method = "moments",
+#'   label  = "Hazard ratio"
+#' )
+#'
+#' @export
+elicit_lognormal <- function(quantiles  = NULL,
+                              mean       = NULL,
+                              sd         = NULL,
+                              method     = c("quantile", "moments"),
+                              expert_id  = "Expert_1",
+                              label      = "Unknown quantity",
+                              tol        = 1e-6) {
+
+  method <- match.arg(method)
+
+  if (method == "quantile") {
+    if (is.null(quantiles) || length(quantiles) < 2) {
+      rlang::abort("At least 2 quantile specifications required for quantile matching.")
+    }
+    probs <- as.numeric(names(quantiles))
+    vals  <- as.numeric(quantiles)
+    if (any(probs <= 0 | probs >= 1)) rlang::abort("Probabilities must be in (0, 1).")
+    if (any(vals  <= 0))              rlang::abort("All values must be strictly positive for Log-Normal.")
+    if (!all(diff(vals) > 0))        rlang::abort("Quantile values must be strictly increasing.")
+
+    obj_fn <- function(par) {
+      ml <- par[1]; sl <- exp(par[2])
+      sum((stats::qlnorm(probs, ml, sl) - vals)^2)
+    }
+    fit     <- stats::nlminb(c(log(median(vals)), 0), obj_fn,
+                             control = list(rel.tol = tol))
+    meanlog <- fit$par[1]
+    sdlog   <- exp(fit$par[2])
+    input   <- list(quantiles = quantiles)
+
+  } else {
+    if (is.null(mean) || is.null(sd)) {
+      rlang::abort("Both `mean` and `sd` required for moment matching.")
+    }
+    if (mean <= 0 || sd <= 0) rlang::abort("`mean` and `sd` must be positive.")
+    sdlog   <- sqrt(log(1 + (sd / mean)^2))
+    meanlog <- log(mean) - sdlog^2 / 2
+    input   <- list(mean = mean, sd = sd)
+  }
+
+  .make_bayprior("lognormal",
+                 list(meanlog = meanlog, sdlog = sdlog),
+                 method, expert_id, label, input)
+}
+
+
 #' Elicit a mixture prior
 #'
 #' Constructs a finite mixture prior from a list of component `bayprior`

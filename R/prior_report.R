@@ -12,29 +12,37 @@
 #' @param date Report date string. Default Sys.Date().
 #' @param author Responsible statistician.
 #' @param notes Optional narrative text.
-#' @param prior_plot Optional pre-captured ggplot from plot(prior).
-#' @param overlay_plot Optional pre-captured ggplot from plot_prior_likelihood().
-#' @param tornado_plot Optional pre-captured ggplot from plot_tornado().
-#' @param heatmap_plot Optional pre-captured ggplot from plot_sensitivity().
+#' @param robust_prior   Optional output of robust_prior().
+#' @param sceptical_prior Optional output of sceptical_prior().
+#' @param power_prior    Optional output of calibrate_power_prior().
+#' @param robust_plot    Optional pre-captured ggplot of the robust prior.
+#' @param sceptical_plot Optional pre-captured ggplot of the sceptical prior.
+#' @param power_plot     Optional pre-captured ggplot of the power prior.
 #' @param open_after Open after rendering. Default TRUE interactively.
 #'
 #' @return Path to the rendered report, invisibly.
 #' @export
 prior_report <- function(prior,
-                         conflict      = NULL,
-                         sensitivity   = NULL,
-                         output_format = c("html", "pdf", "docx"),
-                         output_file   = NULL,
-                         trial_name    = "Clinical Trial",
-                         sponsor       = "Sponsor",
-                         date          = as.character(Sys.Date()),
-                         author        = "Biostatistics",
-                         notes         = "",
-                         prior_plot    = NULL,
-                         overlay_plot  = NULL,
-                         tornado_plot  = NULL,
-                         heatmap_plot  = NULL,
-                         open_after    = interactive()) {
+                         conflict        = NULL,
+                         sensitivity     = NULL,
+                         robust_prior    = NULL,
+                         sceptical_prior = NULL,
+                         power_prior     = NULL,
+                         output_format   = c("html", "pdf", "docx"),
+                         output_file     = NULL,
+                         trial_name      = "Clinical Trial",
+                         sponsor         = "Sponsor",
+                         date            = as.character(Sys.Date()),
+                         author          = "Biostatistics",
+                         notes           = "",
+                         prior_plot      = NULL,
+                         overlay_plot    = NULL,
+                         tornado_plot    = NULL,
+                         heatmap_plot    = NULL,
+                         robust_plot     = NULL,
+                         sceptical_plot  = NULL,
+                         power_plot      = NULL,
+                         open_after      = interactive()) {
 
   output_format <- match.arg(output_format)
 
@@ -78,13 +86,19 @@ prior_report <- function(prior,
   rds_path <- file.path(tmp_dir, "bayprior_session.rds")
   saveRDS(
     list(
-      prior        = prior,
-      conflict     = conflict,
-      sensitivity  = sensitivity,
-      prior_plot   = prior_plot,
-      overlay_plot = overlay_plot,
-      tornado_plot = tornado_plot,
-      heatmap_plot = heatmap_plot
+      prior           = prior,
+      conflict        = conflict,
+      sensitivity     = sensitivity,
+      prior_plot      = prior_plot,
+      overlay_plot    = overlay_plot,
+      tornado_plot    = tornado_plot,
+      heatmap_plot    = heatmap_plot,
+      robust_prior    = robust_prior,
+      robust_plot     = robust_plot,
+      sceptical_prior = sceptical_prior,
+      sceptical_plot  = sceptical_plot,
+      power_prior     = power_prior,
+      power_plot      = power_plot
     ),
     file = rds_path
   )

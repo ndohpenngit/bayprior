@@ -11,13 +11,30 @@ mod_sensitivity_ui <- function(id) {
       uiOutput(ns("param2_ui")),
       sliderInput(ns("grid_size"), "Grid points per axis", 5, 50, 20, 5),
       tags$hr(),
-      numericInput(ns("threshold"), "Efficacy threshold (theta_0)",
-                   0.30, step = 0.01),
-      checkboxGroupInput(ns("targets"), "Compute for:",
-        choices  = c("Posterior mean"        = "posterior_mean",
-                     "Posterior SD"          = "posterior_sd",
-                     "Pr(theta > threshold)" = "prob_efficacy"),
-        selected = c("posterior_mean", "prob_efficacy")
+      shinyWidgets::radioGroupButtons(
+        ns("analysis_type"), "Analysis type",
+        choices  = c("Posterior quantities" = "grid",
+                     "Credible interval"    = "cri"),
+        selected = "grid", justified = TRUE, status = "primary"
+      ),
+      tags$br(),
+      # Posterior quantity targets — shown for grid analysis
+      conditionalPanel(
+        condition = sprintf("input['%s'] === 'grid'", ns("analysis_type")),
+        numericInput(ns("threshold"), "Efficacy threshold (theta_0)",
+                     0.30, step = 0.01),
+        checkboxGroupInput(ns("targets"), "Compute for:",
+          choices  = c("Posterior mean"        = "posterior_mean",
+                       "Posterior SD"          = "posterior_sd",
+                       "Pr(theta > threshold)" = "prob_efficacy"),
+          selected = c("posterior_mean", "prob_efficacy")
+        )
+      ),
+      # CrI options — shown for CrI analysis
+      conditionalPanel(
+        condition = sprintf("input['%s'] === 'cri'", ns("analysis_type")),
+        sliderInput(ns("cri_level"), "Credible interval level",
+                    0.80, 0.99, 0.95, 0.01)
       ),
       tags$hr(),
       actionButton(ns("run_btn"), "Run Sensitivity Analysis",
@@ -115,11 +132,18 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         ),
         c(nm$p1, nm$p2)
       )
+
+      run_fn <- if (isTRUE(input$analysis_type == "cri")) {
+        function() sensitivity_cri(p, data_sum, pg,
+                                   cri_level = input$cri_level %||% 0.95)
+      } else {
+        function() sensitivity_grid(p, data_sum, pg,
+                                    target    = input$targets,
+                                    threshold = input$threshold)
+      }
+
       res <- withCallingHandlers(
-        tryCatch(
-          sensitivity_grid(p, data_sum, pg,
-                           target    = input$targets,
-                           threshold = input$threshold),
+        tryCatch(run_fn(),
           error = function(e) {
             showNotification(paste("Error:", conditionMessage(e)), type = "error")
             NULL

@@ -206,11 +206,11 @@ sensitivity_grid <- function(prior,
   if (length(valid_names) == 0) {
     # No exact matches — attempt positional remap
     if (length(grid_param_names) == length(prior_param_names)) {
-      rlang::warn(paste0(
-        "param_grid names (", paste(grid_param_names, collapse = ", "), ") ",
-        "do not match prior hyperparameter names (",
-        paste(prior_param_names, collapse = ", "), "). ",
-        "Remapping positionally: ",
+      # Downgraded to a message (not a warning) because this is expected
+      # behaviour when the Shiny UI passes generic names like param1/param2.
+      # rlang::warn() causes a Shiny warning banner; message() does not.
+      message(paste0(
+        "[bayprior] sensitivity_grid: remapping param_grid names positionally: ",
         paste(grid_param_names, "->", prior_param_names, collapse = ", "), "."
       ))
       names(param_grid) <- prior_param_names
@@ -362,7 +362,198 @@ sensitivity_grid <- function(prior,
 }
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+
+#' Credible interval sensitivity over prior hyperparameters
+#'
+#' Evaluates how the posterior credible interval width and bounds change as
+#' prior hyperparameters vary over a specified grid. This is the preferred
+#' function for demonstrating that key regulatory conclusions (e.g., whether
+#' the CrI excludes a null value) are robust to prior choice.
+#'
+#' @param prior        A \code{bayprior} object (the reference prior).
+#' @param data_summary Named list as for \code{\link{prior_conflict}}.
+#' @param param_grid   Named list of numeric vectors, one per hyperparameter.
+#' @param cri_level    Numeric in (0, 1). Credible interval level. Default
+#'   \code{0.95}.
+#' @param threshold    Optional numeric. Computes \code{Pr(theta > threshold)}
+#'   at each grid point if supplied.
+#'
+#' @return An object of class \code{bayprior_sensitivity} whose grid contains
+#'   columns \code{cri_lower}, \code{cri_upper}, and \code{cri_width}, plus
+#'   optionally \code{posterior_mean}, \code{posterior_sd}, and
+#'   \code{prob_efficacy}.
+#'
+#' @examples
+#' prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
+#'                      label = "Response rate")
+#' cri_sa <- sensitivity_cri(
+#'   prior,
+#'   data_summary = list(type = "binary", x = 14, n = 40),
+#'   param_grid   = list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1)),
+#'   cri_level    = 0.95
+#' )
+#' plot_sensitivity(cri_sa, target = "cri_width")
+#'
+#' @importFrom rlang %||% abort
+#' @export
+sensitivity_cri <- function(prior,
+                             data_summary,
+                             param_grid,
+                             cri_level = 0.95,
+                             threshold = NULL) {
+
+  if (!inherits(prior, "bayprior"))
+    rlang::abort("`prior` must be a bayprior object.")
+  if (!is.numeric(cri_level) || cri_level <= 0 || cri_level >= 1)
+    rlang::abort("`cri_level` must be a number strictly between 0 and 1.")
+
+  alpha_lo <- (1 - cri_level) / 2
+  alpha_hi <- 1 - alpha_lo
+
+  # Use dominant component as working prior for mixture priors
+  working_prior <- if (prior$dist == "mixture") {
+    prior$components[[which.max(prior$weights)]]
+  } else {
+    prior
+  }
+
+  # Remap generic param names (e.g. "param1", "param2") to prior param names
+  prior_param_names <- names(working_prior$params)
+  grid_param_names  <- names(param_grid)
+  valid_names       <- intersect(grid_param_names, prior_param_names)
+
+  if (length(valid_names) == 0) {
+    if (length(grid_param_names) == length(prior_param_names)) {
+      message(paste0(
+        "[bayprior] sensitivity_cri: remapping param_grid names positionally: ",
+        paste(grid_param_names, "->", prior_param_names, collapse = ", "), "."
+      ))
+      names(param_grid) <- prior_param_names
+      valid_names       <- prior_param_names
+    } else {
+      rlang::abort(paste0(
+        "Cannot map param_grid to prior hyperparameters. ",
+        "Names don't match and counts differ.\n",
+        "  param_grid: ", paste(grid_param_names, collapse = ", "), "\n",
+        "  Prior params: ", paste(prior_param_names, collapse = ", ")
+      ))
+    }
+  }
+
+  grid_df <- do.call(expand.grid, param_grid)
+
+  # Reference row: closest grid point to working prior's current parameters
+  ref_diffs <- vapply(valid_names, function(nm) {
+    (grid_df[[nm]] - (working_prior$params[[nm]] %||% 0))^2
+  }, numeric(nrow(grid_df)))
+
+  # Always treat as matrix to avoid apply() dimension errors on single-param grids
+  ref_diffs <- matrix(ref_diffs, nrow = nrow(grid_df))
+  ref_row   <- which.min(rowSums(ref_diffs))
+
+  # Evaluate CrI at each grid point using purrr::map_dfr (never apply())
+  target_cols <- c("cri_lower", "cri_upper", "cri_width", "posterior_mean",
+                   "posterior_sd")
+  if (!is.null(threshold)) target_cols <- c(target_cols, "prob_efficacy")
+
+  results <- purrr::map_dfr(seq_len(nrow(grid_df)), function(i) {
+    row    <- grid_df[i, , drop = FALSE]
+    params <- as.list(row)
+
+    tmp_prior <- tryCatch(
+      .make_bayprior(working_prior$dist, params, working_prior$method,
+                     working_prior$expert_id, working_prior$label,
+                     working_prior$input),
+      error = function(e) NULL
+    )
+
+    na_row <- as.data.frame(c(as.list(row),
+                              list(cri_lower     = NA_real_,
+                                   cri_upper     = NA_real_,
+                                   cri_width     = NA_real_,
+                                   posterior_mean = NA_real_,
+                                   posterior_sd   = NA_real_)))
+    if (!is.null(threshold)) na_row$prob_efficacy <- NA_real_
+    if (is.null(tmp_prior)) return(na_row)
+
+    post <- tryCatch(
+      .conjugate_update(tmp_prior, data_summary),
+      error = function(e) NULL
+    )
+    if (is.null(post)) return(na_row)
+
+    s <- post$fit_summary
+    out <- as.data.frame(as.list(row))
+
+    # Compute posterior quantiles for CrI bounds
+    bounds <- tryCatch({
+      if (post$dist == "beta") {
+        c(stats::qbeta(alpha_lo, post$params$alpha, post$params$beta),
+          stats::qbeta(alpha_hi, post$params$alpha, post$params$beta))
+      } else if (post$dist == "normal") {
+        c(stats::qnorm(alpha_lo, post$params$mu, post$params$sigma),
+          stats::qnorm(alpha_hi, post$params$mu, post$params$sigma))
+      } else if (post$dist == "gamma") {
+        c(stats::qgamma(alpha_lo, post$params$shape, post$params$rate),
+          stats::qgamma(alpha_hi, post$params$shape, post$params$rate))
+      } else {
+        # Normal approximation for mixture / other
+        c(stats::qnorm(alpha_lo, s$mean, s$sd),
+          stats::qnorm(alpha_hi, s$mean, s$sd))
+      }
+    }, error = function(e) c(NA_real_, NA_real_))
+
+    out$cri_lower      <- bounds[1]
+    out$cri_upper      <- bounds[2]
+    out$cri_width      <- bounds[2] - bounds[1]
+    out$posterior_mean <- s$mean
+    out$posterior_sd   <- s$sd
+
+    if (!is.null(threshold)) {
+      out$prob_efficacy <- tryCatch({
+        if (post$dist == "beta")
+          stats::pbeta(threshold, post$params$alpha, post$params$beta,
+                       lower.tail = FALSE)
+        else if (post$dist == "normal")
+          stats::pnorm(threshold, post$params$mu, post$params$sigma,
+                       lower.tail = FALSE)
+        else if (post$dist == "gamma")
+          stats::pgamma(threshold, post$params$shape, post$params$rate,
+                        lower.tail = FALSE)
+        else
+          stats::pnorm(threshold, s$mean, s$sd, lower.tail = FALSE)
+      }, error = function(e) NA_real_)
+    }
+
+    out
+  })
+
+  report_targets <- intersect(target_cols, names(results))
+
+  influence <- vapply(report_targets, function(t) {
+    v <- results[[t]]
+    if (is.null(v) || all(is.na(v))) return(0)
+    fin <- v[is.finite(v)]
+    if (length(fin) == 0) return(0)
+    diff(range(fin))
+  }, numeric(1))
+
+  structure(
+    list(
+      grid             = results,
+      param_grid       = param_grid,
+      target           = report_targets,
+      reference_row    = ref_row,
+      influence_scores = influence,
+      cri_level        = cri_level,
+      threshold        = threshold,
+      prior            = prior
+    ),
+    class = "bayprior_sensitivity"
+  )
+}
+
+
 
 # FIX #1: Define %||% explicitly so it is available regardless of whether rlang
 # is attached (it may only be in Imports, not Depends).  Functions in this file

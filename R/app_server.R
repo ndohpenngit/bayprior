@@ -9,11 +9,14 @@ app_server <- function(input, output, session) {
 
   # ── Shared state ──────────────────────────────────────────────────────────
   shared <- reactiveValues(
-    current_prior = NULL,   # most recently fitted bayprior
-    expert_pool   = list(), # named list of baypriors (one per expert)
-    consensus     = NULL,   # output of aggregate_experts()
-    conflict      = NULL,   # output of prior_conflict()
-    sensitivity   = NULL    # output of sensitivity_grid()
+    current_prior  = NULL,   # most recently fitted bayprior
+    expert_pool    = list(), # named list of baypriors (one per expert)
+    consensus      = NULL,   # output of aggregate_experts()
+    conflict       = NULL,   # output of prior_conflict()
+    sensitivity    = NULL,   # output of sensitivity_grid() / sensitivity_cri()
+    robust_prior   = NULL,   # output of robust_prior()
+    sceptical_prior = NULL,  # output of sceptical_prior()
+    power_prior    = NULL    # output of calibrate_power_prior()
   )
 
   # Convenience: resolved prior (consensus preferred, else current)

@@ -25,6 +25,7 @@ mod_report_ui <- function(id) {
         title = tagList(icon("file-export"), " Generate"),
         shinyWidgets::radioGroupButtons(
           ns("fmt"), "Output format",
+          # docx added alongside html and pdf
           choices  = c("HTML" = "html", "PDF" = "pdf", "Word (.docx)" = "docx"),
           justified = TRUE, status = "primary"
         ),
@@ -101,37 +102,47 @@ mod_report_server <- function(id, shared, active_prior) {
           return(NULL)
         }
 
-        # Capture ggplot objects from the current session so the report shows
-        # exactly what the analyst configured, not a generic re-render.
-        # Plotly widgets (renderPlotly) are NOT captured — the Rmd falls back
-        # to calling the ggplot-returning variant of each plot function.
-        prior_plot <- tryCatch(plot(p), error = function(e) NULL)
-
+        # Capture prior and overlay plots
+        prior_plot   <- tryCatch(plot(p), error = function(e) NULL)
         overlay_plot <- if (!is.null(shared$conflict))
           tryCatch(
             plot_prior_likelihood(p, shared$conflict$data_summary,
                                   show_posterior = TRUE),
             error = function(e) NULL)
-        else NULL
-
+          else NULL
+        
+        # Capture sensitivity plots
         tornado_plot <- if (!is.null(shared$sensitivity))
           tryCatch(plot_tornado(shared$sensitivity), error = function(e) NULL)
-        else NULL
-
+          else NULL
         heatmap_plot <- if (!is.null(shared$sensitivity))
           tryCatch(
             plot_sensitivity(shared$sensitivity,
                              target = shared$sensitivity$target[[1L]]),
             error = function(e) NULL)
-        else NULL
+          else NULL
+
+        # Capture robust / sceptical / power prior plots
+        robust_plot   <- if (!is.null(shared$robust_prior))
+          tryCatch(suppressWarnings(plot(shared$robust_prior)),
+                   error = function(e) NULL) else NULL
+        sceptical_plot <- if (!is.null(shared$sceptical_prior))
+          tryCatch(plot(shared$sceptical_prior), error = function(e) NULL)
+          else NULL
+        power_plot    <- if (!is.null(shared$power_prior))
+          tryCatch(plot(shared$power_prior), error = function(e) NULL)
+          else NULL
 
         withProgress(message = "Rendering report...", value = 0.5, {
           prior_report(
-            prior         = p,
-            conflict      = shared$conflict,
-            sensitivity   = shared$sensitivity,
-            output_format = fmt,
-            output_file   = tools::file_path_sans_ext(file),
+            prior           = p,
+            conflict        = shared$conflict,
+            sensitivity     = shared$sensitivity,
+            robust_prior    = shared$robust_prior,
+            sceptical_prior = shared$sceptical_prior,
+            power_prior     = shared$power_prior,
+            output_format   = fmt,
+            output_file     = tools::file_path_sans_ext(file),
             trial_name    = if (!is.null(input$trial_name)) input$trial_name else "",
             sponsor       = if (!is.null(input$sponsor))    input$sponsor    else "",
             author        = if (!is.null(input$statistician)) input$statistician else "",
@@ -143,6 +154,9 @@ mod_report_server <- function(id, shared, active_prior) {
             overlay_plot  = overlay_plot,
             tornado_plot  = tornado_plot,
             heatmap_plot  = heatmap_plot,
+            robust_plot   = robust_plot,
+            sceptical_plot = sceptical_plot,
+            power_plot    = power_plot,
             open_after    = FALSE
           )
           setProgress(1)
