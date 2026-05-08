@@ -13,6 +13,7 @@ execute:
   freeze: auto
 
 website:
+  title: "bayprior"
   description: "Bayesian Prior Elicitation for Clinical Trials"
   favicon: man/figures/logo.png
   repo-url: https://github.com/ndohpenngit/bayprior
