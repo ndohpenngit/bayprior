@@ -1,13 +1,25 @@
+url: https://ndohpenngit.github.io/bayprior/
+
 project:
   type: website
   output-dir: docs
+  render:
+    - "*.qmd"
+    - "vignettes/*.Rmd"
+    - "NEWS.md"
+    - "!inst/**"
+
+execute:
+  freeze: auto
 
 website:
-  title: "bayprior"
   description: "Bayesian Prior Elicitation for Clinical Trials"
+  favicon: man/figures/logo.png
   repo-url: https://github.com/ndohpenngit/bayprior
   repo-actions: [issue]
   navbar:
+    logo: man/figures/logo.png
+    title: "bayprior"
     left:
       - href: index.qmd
         text: Home
@@ -25,6 +37,8 @@ website:
             text: Robust Priors
           - href: vignettes/regulatory-reporting.Rmd
             text: Regulatory Reporting
+      - href: NEWS.md
+        text: Changelog
     right:
       - icon: github
         href: https://github.com/ndohpenngit/bayprior
