@@ -31,6 +31,9 @@ title: bayprior
     <a href="https://quarto.org">
       <img src="https://img.shields.io/badge/Reports-Quarto-blue?logo=quarto&logoColor=white" alt="Quarto"/>
     </a>
+    <a href="https://npenn.shinyapps.io/bayprior/">
+      <img src="https://img.shields.io/badge/Live_App-bayprior-blueviolet?logo=shiny" alt="Live app"/>
+    </a>    
   </h1>
 </p>
 

@@ -148,6 +148,20 @@ prior_report <- function(prior,
     }
   }
 
+  # ── Pass library paths to Quarto subprocess ─────────────────────────────────
+  # On shinyapps.io, Quarto spawns a fresh R process that uses the system
+  # library, not the packrat/renv library where the app's packages live.
+  # Setting R_LIBS propagates the current library paths to the subprocess
+  # so it can find bayprior and all its dependencies.
+  current_libs <- paste(unique(.libPaths()), collapse = .Platform$path.sep)
+  old_r_libs   <- Sys.getenv("R_LIBS", unset = "")
+  combined_libs <- if (nzchar(old_r_libs))
+    paste(current_libs, old_r_libs, sep = .Platform$path.sep)
+  else
+    current_libs
+  Sys.setenv(R_LIBS = combined_libs)
+  on.exit(Sys.setenv(R_LIBS = old_r_libs), add = TRUE)
+
   cli::cli_progress_step("Rendering {output_format} report via Quarto...")
 
   tryCatch(
@@ -159,7 +173,6 @@ prior_report <- function(prior,
       quiet          = TRUE
     ),
     error = function(e) {
-      # Retry with quiet=FALSE to capture the full Quarto error message
       full_err <- tryCatch(
         quarto::quarto_render(
           input          = tmp_qmd,
@@ -183,7 +196,6 @@ prior_report <- function(prior,
     }
   )
 
-  # Locate rendered file and copy to final destination
   rendered_path <- file.path(tmp_dir, basename(output_file))
   if (!file.exists(rendered_path)) {
     candidates <- list.files(tmp_dir,
