@@ -282,14 +282,14 @@
   {
     "objectID": "NEWS.html",
     "href": "NEWS.html",
-    "title": "bayprior 0.1.0",
+    "title": "bayprior 0.1.1",
     "section": "",
     "text": "Quantile matching, moment matching, and SHELF roulette for Beta, Normal, Gamma, and Log-Normal families\nelicit_beta(), elicit_normal(), elicit_gamma(), elicit_lognormal(), elicit_roulette(), elicit_mixture()\n\n\n\n\n\nLinear and logarithmic pooling with Bhattacharyya agreement diagnostics\naggregate_experts()\n\n\n\n\n\nBox p-value, surprise index, KL divergence, Bhattacharyya overlap\nMultivariate Mahalanobis distance for co-primary endpoints\nprior_conflict(), conflict_mahalanobis()\n\n\n\n\n\nPosterior quantity grid (sensitivity_grid()) and credible interval sensitivity (sensitivity_cri()) with tornado plots and influence heatmaps\n\n\n\n\n\nRobust mixture prior (Schmidli et al., 2014): robust_prior()\nSceptical prior (Spiegelhalter & Freedman, 1994): sceptical_prior()\nCalibrated power prior (Ibrahim & Chen, 2000): calibrate_power_prior()\n\n\n\n\n\nHTML, PDF, and Word prior justification reports via Quarto: prior_report()\nFDA/EMA regulatory compliance checklist included in every report\n\n\n\n\n\nFull interactive Shiny application via run_app()"
   },
   {
     "objectID": "NEWS.html#initial-release",
     "href": "NEWS.html#initial-release",
-    "title": "bayprior 0.1.0",
+    "title": "bayprior 0.1.1",
     "section": "",
     "text": "Quantile matching, moment matching, and SHELF roulette for Beta, Normal, Gamma, and Log-Normal families\nelicit_beta(), elicit_normal(), elicit_gamma(), elicit_lognormal(), elicit_roulette(), elicit_mixture()\n\n\n\n\n\nLinear and logarithmic pooling with Bhattacharyya agreement diagnostics\naggregate_experts()\n\n\n\n\n\nBox p-value, surprise index, KL divergence, Bhattacharyya overlap\nMultivariate Mahalanobis distance for co-primary endpoints\nprior_conflict(), conflict_mahalanobis()\n\n\n\n\n\nPosterior quantity grid (sensitivity_grid()) and credible interval sensitivity (sensitivity_cri()) with tornado plots and influence heatmaps\n\n\n\n\n\nRobust mixture prior (Schmidli et al., 2014): robust_prior()\nSceptical prior (Spiegelhalter & Freedman, 1994): sceptical_prior()\nCalibrated power prior (Ibrahim & Chen, 2000): calibrate_power_prior()\n\n\n\n\n\nHTML, PDF, and Word prior justification reports via Quarto: prior_report()\nFDA/EMA regulatory compliance checklist included in every report\n\n\n\n\n\nFull interactive Shiny application via run_app()"
   },
