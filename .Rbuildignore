@@ -20,3 +20,4 @@
 ^app\.R$
 ^rsconnect$
 ^favicon\.png$
+^^cheatsheet$$

@@ -3,10 +3,13 @@ url: https://ndohpenngit.github.io/bayprior/
 project:
   type: website
   output-dir: docs
+  resources:
+    - man/figures/favicon.png
   render:
     - "*.qmd"
     - "vignettes/*.Rmd"
     - "NEWS.md"
+    - "cheatsheet/*.html"
     - "!inst/**"
 
 execute:
@@ -15,11 +18,11 @@ execute:
 website:
   title: "bayprior"
   description: "Bayesian Prior Elicitation for Clinical Trials"
-  favicon: favicon.png
+  favicon: man/figures/favicon.png
   repo-url: https://github.com/ndohpenngit/bayprior
   repo-actions: [issue]
   navbar:
-    logo: favicon.png
+    logo: man/figures/favicon.png
     title: "bayprior"
     left:
       - href: index.qmd
@@ -40,6 +43,8 @@ website:
             text: Regulatory Reporting
       - href: NEWS.md
         text: Changelog
+      - href: cheatsheet/bayprior_cheatsheet.html
+        text: Cheat Sheet
     right:
       - icon: github
         href: https://github.com/ndohpenngit/bayprior

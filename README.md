@@ -27,9 +27,6 @@
     <a href="https://quarto.org">
       <img src="https://img.shields.io/badge/Reports-Quarto-blue?logo=quarto&logoColor=white" alt="Quarto"/>
     </a>
-    <a href="https://ndohpenngit.github.io/bayprior/">
-      <img src="https://img.shields.io/badge/docs-pkgdown-blue?logo=r&logoColor=white" alt="pkgdown site"/>
-    </a>
   </h1>
 </p>
 

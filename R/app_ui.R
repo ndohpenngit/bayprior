@@ -26,9 +26,9 @@ app_ui <- function(request) {
             )
           ),
           tags$span(
+            style = "font-size:20px; letter-spacing:0.5px; display:inline-flex; align-items:baseline;",
             tags$b("bay"),
-            tags$span("prior", style = "font-weight:300;"),
-            style = "font-size:20px; letter-spacing:0.5px;"
+            tags$span("prior", style = "font-weight:300;")
           )
         ),
 

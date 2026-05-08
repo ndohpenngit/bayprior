@@ -12,15 +12,12 @@
 renv/library/
 renv/staging/
 
-# Shiny / golem
+# Misc
 rsconnect/
-
-# macOS
 .DS_Store
-# Windows
 Thumbs.db
-
 docs
 /.quarto/
 vignettes/*_cache/
 vignettes/*_files/
+cheatsheet/
