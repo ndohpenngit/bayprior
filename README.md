@@ -24,8 +24,8 @@
     <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental">
       <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle"/>
     </a>
-    <a href="https://npenn.shinyapps.io/bayprior/"> 
-      <img src="https://img.shields.io/badge/Live%20App-bayprior-blueviolet?logo=shiny" alt="Live app"/> 
+    <a href="https://npenn.shinyapps.io/bayprior/">
+      <img src="https://img.shields.io/badge/Live%20App-bayprior-blueviolet?logo=shiny" alt="Live app"/>
     </a>
   </h1>
 </p>
