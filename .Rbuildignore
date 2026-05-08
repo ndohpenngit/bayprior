@@ -19,3 +19,4 @@
 ^_publish\.yml$
 ^app\.R$
 ^rsconnect$
+^favicon\.png$
