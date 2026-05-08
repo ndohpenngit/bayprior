@@ -1,39 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ndohpenngit.github.io/bayprior/index.html</loc>
-    <lastmod>2026-05-08T12:47:56.641Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndohpenngit.github.io/bayprior/vignettes/conflict-diagnostics.html</loc>
-    <lastmod>2026-05-08T12:47:56.649Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndohpenngit.github.io/bayprior/vignettes/prior-elicitation.html</loc>
-    <lastmod>2026-05-08T12:47:56.649Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndohpenngit.github.io/bayprior/vignettes/bayprior-introduction.html</loc>
-    <lastmod>2026-05-08T12:47:56.648Z</lastmod>
-  </url>
-  <url>
     <loc>https://ndohpenngit.github.io/bayprior/NEWS.html</loc>
-    <lastmod>2026-05-08T12:47:56.640Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndohpenngit.github.io/bayprior/inst/quarto/templates/prior_report/prior_report.html</loc>
-    <lastmod>2026-05-08T12:47:56.643Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndohpenngit.github.io/bayprior/vignettes/regulatory-reporting.html</loc>
-    <lastmod>2026-05-08T12:47:56.649Z</lastmod>
+    <lastmod>2026-05-08T13:30:17.063Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/robust-priors.html</loc>
-    <lastmod>2026-05-08T12:47:56.649Z</lastmod>
+    <lastmod>2026-05-08T13:30:17.073Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndohpenngit.github.io/bayprior/vignettes/prior-elicitation.html</loc>
+    <lastmod>2026-05-08T13:30:17.073Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndohpenngit.github.io/bayprior/vignettes/bayprior-introduction.html</loc>
+    <lastmod>2026-05-08T13:30:17.071Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndohpenngit.github.io/bayprior/index.html</loc>
+    <lastmod>2026-05-08T13:30:17.064Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndohpenngit.github.io/bayprior/vignettes/conflict-diagnostics.html</loc>
+    <lastmod>2026-05-08T13:30:17.073Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndohpenngit.github.io/bayprior/vignettes/regulatory-reporting.html</loc>
+    <lastmod>2026-05-08T13:30:17.073Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/sensitivity-analysis.html</loc>
-    <lastmod>2026-05-08T12:47:56.649Z</lastmod>
+    <lastmod>2026-05-08T13:30:17.073Z</lastmod>
   </url>
 </urlset>
