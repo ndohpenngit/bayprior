@@ -33,7 +33,8 @@ Imports:
     quarto (>= 1.5.0),
     config (>= 0.3.1),
     DT (>= 0.27),
-    shinyjs (>= 2.1.0)
+    shinyjs (>= 2.1.0),
+    pkgload
 Suggests:
     testthat (>= 3.0.0),
     knitr (>= 1.40),
