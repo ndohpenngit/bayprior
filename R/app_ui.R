@@ -10,7 +10,7 @@ app_ui <- function(request) {
 
       title = "Bayesian Prior Justification",
 
-      # ── Header ──────────────────────────────────────────────────────────────
+      # -- Header --------------------------------------------------------------
       shinydashboard::dashboardHeader(
         title = tagList(
           tags$img(
@@ -47,7 +47,7 @@ app_ui <- function(request) {
         )
       ),
 
-      # ── Sidebar ─────────────────────────────────────────────────────────────
+      # -- Sidebar -------------------------------------------------------------
       shinydashboard::dashboardSidebar(
         shinydashboard::sidebarMenu(
           id = "sidebar_menu",
@@ -123,7 +123,7 @@ app_ui <- function(request) {
         )
       ),
 
-      # ── Body ─────────────────────────────────────────────────────────────────
+      # -- Body -----------------------------------------------------------------
       shinydashboard::dashboardBody(
 
         # Theme toggle JS
@@ -172,9 +172,9 @@ app_ui <- function(request) {
               }
             }
 
-            // ── Theme restore ──────────────────────────────────────────────
+            // -- Theme restore ----------------------------------------------
             // Step 1: Apply body class IMMEDIATELY as script parses.
-            // DOMContentLoaded is too late — AdminLTE re-renders the body
+            // DOMContentLoaded is too late -- AdminLTE re-renders the body
             // after it fires, stripping any class added there.
             (function() {
               if (localStorage.getItem('bayprior_theme') === 'dark')
@@ -197,11 +197,11 @@ app_ui <- function(request) {
         ),
         shinyjs::useShinyjs(),
 
-        # Inline dark mode Plotly fix — invert filter at compositor level
+        # Inline dark mode Plotly fix -- invert filter at compositor level
         # This overrides Plotly's inline SVG styles which CSS selectors cannot touch
         tags$style(HTML("
           /* White background on the container div so the CSS filter has
-             a solid surface to invert — transparent SVG fill bleeds the
+             a solid surface to invert -- transparent SVG fill bleeds the
              dark box colour through, which inverts to lavender.
              White inverted = black = correct dark background. */
           body.dark-mode .js-plotly-plot {
