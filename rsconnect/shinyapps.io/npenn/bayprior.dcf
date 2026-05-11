@@ -1,0 +1,10 @@
+name: bayprior
+title:
+username: npenn
+account: npenn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17325608
+bundleId: 11977724
+url: https://npenn.shinyapps.io/bayprior/
+version: 1
