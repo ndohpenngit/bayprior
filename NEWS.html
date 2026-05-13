@@ -2,13 +2,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
 <title>news – bayprior</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -37,10 +40,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-f7919f14b89ae9a431cba0b331f0b52b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -80,7 +83,8 @@ ul.task-list li input[type="checkbox"] {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./man/figures/favicon.png" alt="" class="navbar-logo">
+    <img src="./man/figures/favicon.png" alt="" class="navbar-logo light-content">
+    <img src="./man/figures/favicon.png" alt="" class="navbar-logo dark-content">
     </a>
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">bayprior</span>
@@ -158,7 +162,12 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#bayprior-0.1.1" id="toc-bayprior-0.1.1" class="nav-link active" data-scroll-target="#bayprior-0.1.1">bayprior 0.1.1</a>
+  <li><a href="#bayprior-0.1.2" id="toc-bayprior-0.1.2" class="nav-link active" data-scroll-target="#bayprior-0.1.2">bayprior 0.1.2</a>
+  <ul class="collapse">
+  <li><a href="#bug-fixes" id="toc-bug-fixes" class="nav-link" data-scroll-target="#bug-fixes">Bug fixes</a></li>
+  <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
+  </ul></li>
+  <li><a href="#bayprior-0.1.1" id="toc-bayprior-0.1.1" class="nav-link" data-scroll-target="#bayprior-0.1.1">bayprior 0.1.1</a>
   <ul class="collapse">
   <li><a href="#initial-release" id="toc-initial-release" class="nav-link" data-scroll-target="#initial-release">Initial release</a>
   <ul class="collapse">
@@ -168,7 +177,8 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#sensitivity-analysis" id="toc-sensitivity-analysis" class="nav-link" data-scroll-target="#sensitivity-analysis">Sensitivity Analysis</a></li>
   <li><a href="#robust-priors" id="toc-robust-priors" class="nav-link" data-scroll-target="#robust-priors">Robust Priors</a></li>
   <li><a href="#reporting" id="toc-reporting" class="nav-link" data-scroll-target="#reporting">Reporting</a></li>
-  <li><a href="#shiny-app" id="toc-shiny-app" class="nav-link" data-scroll-target="#shiny-app">Shiny App</a></li>
+  <li><a href="#documentation" id="toc-documentation" class="nav-link" data-scroll-target="#documentation">Documentation</a></li>
+  <li><a href="#app" id="toc-app" class="nav-link" data-scroll-target="#app">App</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -180,6 +190,27 @@ ul.task-list li input[type="checkbox"] {
 
 
 
+<section id="bayprior-0.1.2" class="level1">
+<h1>bayprior 0.1.2</h1>
+<section id="bug-fixes" class="level2">
+<h2 class="anchored" data-anchor-id="bug-fixes">Bug fixes</h2>
+<ul>
+<li><p>Fixed <code>prior_report()</code> failing on remote platforms (shinyapps.io, Posit Connect) due to Quarto spawning a subprocess that could not find the <code>bayprior</code> package. The report now uses a two-step approach: <code>knitr::knit()</code> executes all R code in the current session, then <code>quarto::quarto_render(execute = FALSE)</code> handles formatting via pandoc only. No R subprocess is spawned in the second step (#1).</p></li>
+<li><p>Fixed <code>mod_sensitivity</code>: sensitivity analysis no longer requires conflict diagnostics to have been run first. The module now has its own data entry UI (data type, events/n for binary; mean/SD/n for continuous) that auto-selects the correct type based on the prior family (Beta → binary, others → continuous). Previously the fallback always used <code>type = "continuous"</code>, causing conjugate updating to fail for Beta priors and returning NA for all grid evaluations.</p></li>
+<li><p>Fixed “Using data from Conflict Diagnostics” label appearing even when no conflict diagnostics had been run. The label is now generated inside <code>renderUI</code> conditionally on <code>shared$conflict</code>.</p></li>
+<li><p>Fixed non-ASCII characters (<code>─</code>, <code>—</code>) in <code>R/app_ui.R</code> causing an R CMD check WARNING. All box-drawing and em-dash characters replaced with ASCII equivalents.</p></li>
+<li><p>Fixed <code>prior_report()</code> missing <code>@param</code> documentation for <code>prior_plot</code>, <code>overlay_plot</code>, <code>tornado_plot</code>, and <code>heatmap_plot</code>, causing an R CMD check WARNING about undocumented arguments.</p></li>
+</ul>
+</section>
+<section id="new-features" class="level2">
+<h2 class="anchored" data-anchor-id="new-features">New features</h2>
+<ul>
+<li><p>Added <code>robust_prior</code>, <code>sceptical_prior</code>, <code>power_prior</code>, <code>robust_plot</code>, <code>sceptical_plot</code>, and <code>power_plot</code> arguments to <code>prior_report()</code>. When supplied, robust and sensitivity priors appear as a dedicated section in the report with parameter tables and density plots. The compliance checklist row “Robust / sceptical prior computed” is automatically marked Complete.</p></li>
+<li><p>Added bayprior hex logo to the Shiny app header and browser favicon. Logo is served from <code>inst/app/www/favicon.png</code>.</p></li>
+</ul>
+<hr>
+</section>
+</section>
 <section id="bayprior-0.1.1" class="level1">
 <h1>bayprior 0.1.1</h1>
 <section id="initial-release" class="level2">
@@ -209,7 +240,8 @@ ul.task-list li input[type="checkbox"] {
 <section id="sensitivity-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="sensitivity-analysis">Sensitivity Analysis</h3>
 <ul>
-<li>Posterior quantity grid (<code>sensitivity_grid()</code>) and credible interval sensitivity (<code>sensitivity_cri()</code>) with tornado plots and influence heatmaps</li>
+<li>Posterior quantity grid and credible interval sensitivity with tornado plots and influence heatmaps</li>
+<li><code>sensitivity_grid()</code>, <code>sensitivity_cri()</code></li>
 </ul>
 </section>
 <section id="robust-priors" class="level3">
@@ -224,13 +256,23 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="reporting">Reporting</h3>
 <ul>
 <li>HTML, PDF, and Word prior justification reports via Quarto: <code>prior_report()</code></li>
-<li>FDA/EMA regulatory compliance checklist included in every report</li>
+<li>FDA/EMA regulatory compliance checklist</li>
 </ul>
 </section>
-<section id="shiny-app" class="level3">
-<h3 class="anchored" data-anchor-id="shiny-app">Shiny App</h3>
+<section id="documentation" class="level3">
+<h3 class="anchored" data-anchor-id="documentation">Documentation</h3>
 <ul>
-<li>Full interactive Shiny application via <code>run_app()</code></li>
+<li><p>Added Quarto GitHub Pages documentation site at <code>https://ndohpenngit.github.io/bayprior/</code> with six rendered vignettes, a Changelog page, and a Cheat Sheet. Site auto-rebuilds on every push to <code>main</code> via GitHub Actions.</p></li>
+<li><p>Updated all six vignettes to document new <code>prior_report()</code> arguments, the sensitivity analysis CrI toggle, and the robust priors report integration.</p></li>
+<li><p>Updated <code>README.md</code> with live app badge, and Documentation section linking to the GitHub Pages site.</p></li>
+</ul>
+</section>
+<section id="app" class="level3">
+<h3 class="anchored" data-anchor-id="app">App</h3>
+<ul>
+<li>Full interactive Shiny application: <code>run_app()</code></li>
+<li>Dark/light mode toggle with localStorage persistence</li>
+<li>bayprior hex logo in header and browser tab</li>
 </ul>
 
 
@@ -290,13 +332,14 @@ ul.task-list li input[type="checkbox"] {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
