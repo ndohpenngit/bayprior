@@ -2,16 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.7.32">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
 <title>bayprior</title>
 <style>
-/* Default styles provided by pandoc.
-** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -75,10 +72,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-f7919f14b89ae9a431cba0b331f0b52b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -118,8 +115,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./man/figures/favicon.png" alt="" class="navbar-logo light-content">
-    <img src="./man/figures/favicon.png" alt="" class="navbar-logo dark-content">
+    <img src="./man/figures/favicon.png" alt="" class="navbar-logo">
     </a>
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">bayprior</span>
@@ -453,29 +449,29 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 </section>
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">Installation</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development version from GitHub:</span></span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development version from GitHub:</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("pak")</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">"ndohpenngit/bayprior"</span>)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Or (with vignettes included):</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("devtools")</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"ndohpenngit/bayprior"</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"ndohpenngit/bayprior"</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <blockquote class="blockquote">
 <p><strong>System requirements:</strong> PDF report generation requires <a href="https://quarto.org/docs/get-started/">Quarto CLI</a> and a LaTeX installation. HTML and Word reports work without either.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install TinyTeX (recommended LaTeX distribution)</span></span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install TinyTeX (recommended LaTeX distribution)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"tinytex"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>tinytex<span class="sc">::</span><span class="fu">install_tinytex</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>tinytex<span class="sc">::</span><span class="fu">install_tinytex</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </blockquote>
 <section id="reproducible-environment-renv" class="level3">
 <h3 class="anchored" data-anchor-id="reproducible-environment-renv">Reproducible environment (renv)</h3>
 <p>This project uses <a href="https://rstudio.github.io/renv/">renv</a> for reproducible package management. After cloning:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">restore</span>()   <span class="co"># installs exact package versions from renv.lock</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">restore</span>()   <span class="co"># installs exact package versions from renv.lock</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <hr>
 </section>
 </section>
 <section id="quick-start" class="level2">
 <h2 class="anchored" data-anchor-id="quick-start">Quick Start</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bayprior)</span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bayprior)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 1. Elicit a Beta prior ────────────────────────────────────────────────────</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>prior <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
@@ -566,13 +562,13 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 <span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 10. Launch the full Shiny app ─────────────────────────────────────────────</span></span>
-<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a><span class="fu">run_app</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a><span class="fu">run_app</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <hr>
 </section>
 <section id="vignettes" class="level2">
 <h2 class="anchored" data-anchor-id="vignettes">Vignettes</h2>
 <p>Six vignettes cover the full analytical workflow:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Browse all vignettes</span></span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Browse all vignettes</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">browseVignettes</span>(<span class="st">"bayprior"</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or open individually</span></span>
@@ -581,7 +577,7 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"conflict-diagnostics"</span>,  <span class="at">package =</span> <span class="st">"bayprior"</span>)</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"sensitivity-analysis"</span>,  <span class="at">package =</span> <span class="st">"bayprior"</span>)</span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"robust-priors"</span>,         <span class="at">package =</span> <span class="st">"bayprior"</span>)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"regulatory-reporting"</span>,  <span class="at">package =</span> <span class="st">"bayprior"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"regulatory-reporting"</span>,  <span class="at">package =</span> <span class="st">"bayprior"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -689,14 +685,13 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
