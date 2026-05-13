@@ -20,7 +20,6 @@ docs
 /.quarto/
 vignettes/*_cache/
 vignettes/*_files/
-cheatsheet/
 .posit/
 _freeze/
 _includes/

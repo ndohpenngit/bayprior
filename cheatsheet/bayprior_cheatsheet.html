@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>bayprior Cheat Sheet</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --navy:#0f3460;
+  --navy2:#16213e;
+  --blue:#185FA5;
+  --teal:#1D9E75;
+  --orange:#D85A30;
+  --purple:#6C63FF;
+  --bg:#f5f6f8;
+  --white:#ffffff;
+  --code-bg:#eef1f5;
+  --text:#1a1a2e;
+  --muted:#5a6070;
+  --border:#d0d5e0;
+  --col1:#185FA5;
+  --col2:#1D9E75;
+  --col3:#D85A30;
+  --col4:#6C63FF;
+  --col5:#0f3460;
+}
+
+body{
+  font-family:'Source Sans 3',sans-serif;
+  font-size:8.2pt;
+  line-height:1.35;
+  color:var(--text);
+  background:var(--bg);
+}
+
+/* ── Page layout ── */
+.page{
+  width:297mm;
+  min-height:210mm;
+  background:var(--white);
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-rows:auto 1fr;
+  gap:0;
+  page-break-after:always;
+}
+
+/* ── Header ── */
+.header{
+  grid-column:1/-1;
+  background:var(--navy);
+  display:flex;
+  align-items:center;
+  padding:6px 10px;
+  gap:8px;
+}
+
+.header-logo{
+  width:32px;height:32px;flex-shrink:0;
+}
+
+.header-title{
+  font-size:16pt;
+  font-weight:700;
+  color:white;
+  letter-spacing:-0.5px;
+}
+.header-title span{font-weight:300;color:#1D9E75;}
+
+.header-sub{
+  font-size:7.5pt;
+  color:#8eb8d8;
+  margin-left:4px;
+  align-self:flex-end;
+  padding-bottom:1px;
+  white-space:nowrap;
+}
+
+.header-right{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.badge{
+  background:#1D9E75;
+  color:white;
+  font-size:6.5pt;
+  font-weight:600;
+  padding:2px 6px;
+  border-radius:3px;
+  letter-spacing:0.3px;
+}
+
+.version{color:#8eb8d8;font-size:7pt;}
+
+/* ── Columns ── */
+.col{
+  padding:7px 8px;
+  border-right:1px solid var(--border);
+  overflow:hidden;
+}
+.col:last-child{border-right:none;}
+
+/* ── Section ── */
+.section{
+  margin-bottom:8px;
+  border-radius:4px;
+  overflow:hidden;
+  border:1px solid var(--border);
+}
+
+.section-header{
+  padding:3px 7px;
+  font-size:8pt;
+  font-weight:700;
+  color:white;
+  letter-spacing:0.3px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.section-header .icon{font-size:9pt;opacity:0.9;}
+.section-header .sub{font-weight:300;font-size:7pt;opacity:0.85;margin-left:2px;}
+
+.s1 .section-header{background:var(--col1);}
+.s2 .section-header{background:var(--col2);}
+.s3 .section-header{background:var(--col3);}
+.s4 .section-header{background:var(--col4);}
+.s5 .section-header{background:var(--col5);}
+
+.section-body{
+  padding:5px 7px;
+  background:white;
+}
+
+/* ── Function blocks ── */
+.fn{
+  margin-bottom:5px;
+  padding-bottom:5px;
+  border-bottom:1px dashed var(--border);
+}
+.fn:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+
+.fn-sig{
+  font-family:'Source Code Pro',monospace;
+  font-size:7.2pt;
+  font-weight:600;
+  color:var(--navy);
+  background:var(--code-bg);
+  padding:2px 5px;
+  border-radius:3px;
+  display:inline-block;
+  margin-bottom:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
+
+.fn-desc{
+  font-size:7.4pt;
+  color:var(--muted);
+  margin-bottom:2px;
+  line-height:1.3;
+}
+
+.fn-ex{
+  font-family:'Source Code Pro',monospace;
+  font-size:6.8pt;
+  color:#2d4060;
+  background:#f0f4fa;
+  padding:2px 5px;
+  border-radius:3px;
+  border-left:2px solid var(--blue);
+  white-space:pre;
+  overflow:hidden;
+  line-height:1.4;
+}
+
+.fn-ex.teal{border-left-color:var(--teal);}
+.fn-ex.orange{border-left-color:var(--orange);}
+.fn-ex.purple{border-left-color:var(--purple);}
+
+/* ── Inline args ── */
+.args{
+  font-size:6.8pt;
+  color:var(--muted);
+  margin:1px 0 2px;
+}
+.arg{
+  display:inline-block;
+  background:#eef1f5;
+  border-radius:2px;
+  padding:0px 4px;
+  margin:1px 2px 1px 0;
+  font-family:'Source Code Pro',monospace;
+  color:#445;
+  font-size:6.5pt;
+}
+.arg.req{background:#e8f0fc;color:var(--blue);}
+
+/* ── Mini diagram ── */
+.diagram{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  margin:3px 0;
+  font-size:6.5pt;
+}
+
+.d-box{
+  background:var(--code-bg);
+  border:1px solid #ccd0dc;
+  border-radius:3px;
+  padding:2px 5px;
+  font-family:'Source Code Pro',monospace;
+  font-size:6.2pt;
+  text-align:center;
+  min-width:52px;
+}
+
+.d-box.result{background:#e8f8f2;border-color:var(--teal);color:#0a5c42;}
+.d-box.conflict{background:#fef0ea;border-color:var(--orange);color:#7a2a0a;}
+.d-box.prior{background:#eaf0fc;border-color:var(--blue);color:#1a3570;}
+
+.d-arrow{color:var(--muted);font-size:8pt;}
+
+/* ── Param table ── */
+.ptable{
+  width:100%;
+  border-collapse:collapse;
+  font-size:6.8pt;
+  margin-top:2px;
+}
+.ptable th{
+  background:#f0f3f8;
+  color:var(--navy);
+  font-weight:600;
+  padding:2px 4px;
+  border:1px solid var(--border);
+  text-align:left;
+}
+.ptable td{
+  padding:1px 4px;
+  border:1px solid var(--border);
+  vertical-align:top;
+}
+.ptable tr:nth-child(even) td{background:#fafbfc;}
+.ptable td:first-child{
+  font-family:'Source Code Pro',monospace;
+  font-size:6.5pt;
+  color:var(--navy);
+  font-weight:600;
+  white-space:nowrap;
+}
+
+/* ── Workflow steps ── */
+.steps{
+  counter-reset:step;
+  padding:0;
+  list-style:none;
+}
+.steps li{
+  counter-increment:step;
+  display:flex;
+  align-items:flex-start;
+  gap:5px;
+  margin-bottom:3px;
+  font-size:7.3pt;
+}
+.steps li::before{
+  content:counter(step);
+  background:var(--navy);
+  color:white;
+  border-radius:50%;
+  width:12px;height:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:6pt;font-weight:700;
+  flex-shrink:0;margin-top:1px;
+}
+
+/* ── Severity badges ── */
+.sev{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:6.5pt;font-weight:600;
+  padding:1px 5px;border-radius:10px;
+  margin:1px 2px;
+}
+.sev.none{background:#e8f8f2;color:#0a5c42;}
+.sev.mild{background:#fff4e0;color:#7a4500;}
+.sev.severe{background:#feebea;color:#7a0a0a;}
+
+/* ── Note box ── */
+.note{
+  background:#fffbe6;
+  border-left:3px solid #f0b429;
+  padding:3px 6px;
+  font-size:7pt;
+  color:#5a4000;
+  border-radius:0 3px 3px 0;
+  margin:3px 0;
+}
+
+/* ── Footer strip ── */
+.footer{
+  grid-column:1/-1;
+  background:var(--navy2);
+  padding:3px 10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.footer-text{color:#8eb8d8;font-size:6.5pt;}
+.footer-url{
+  font-family:'Source Code Pro',monospace;
+  color:#1D9E75;font-size:6.5pt;
+}
+
+@media print{
+  body{background:white;}
+  .page{box-shadow:none;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <svg class="header-logo" viewBox="0 0 520 600" xmlns="http://www.w3.org/2000/svg">
+      <defs><clipPath id="hc"><polygon points="260,30 476,152 476,448 260,570 44,448 44,152"/></clipPath></defs>
+      <polygon points="260,30 476,152 476,448 260,570 44,448 44,152" fill="#0f3460"/>
+      <g clip-path="url(#hc)">
+        <path d="M60 330 C90 330,115 240,135 225 C150 215,162 178,178 155 C194 132,206 120,222 116 C234 113,244 112,260 111 C276 110,286 113,298 116 C314 120,326 132,342 155 C358 178,370 215,385 225 C405 240,430 290,460 330" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+        <line x1="260" y1="111" x2="260" y2="330" stroke="#1D9E75" stroke-width="3" stroke-dasharray="8,6" opacity="0.9"/>
+        <circle cx="260" cy="111" r="8" fill="#1D9E75"/>
+        <text x="175" y="420" font-family="Georgia,serif" font-size="80" font-weight="700" fill="white" text-anchor="middle" opacity="0.95">bay</text>
+        <text x="360" y="420" font-family="Georgia,serif" font-size="80" font-weight="300" fill="#1D9E75" text-anchor="middle" opacity="0.95">prior</text>
+      </g>
+      <polygon points="260,30 476,152 476,448 260,570 44,448 44,152" fill="none" stroke="#1D9E75" stroke-width="10"/>
+    </svg>
+    <div>
+      <div class="header-title">bay<span>prior</span>
+        <span class="header-sub">Bayesian Prior Elicitation for Clinical Trials</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ COL 1 ════════════════ -->
+  <div class="col">
+
+    <!-- PRIOR ELICITATION -->
+    <div class="section s1">
+      <div class="section-header">
+        <span class="icon">&#9998;</span> Prior Elicitation
+        <span class="sub">-- Fit parametric distributions from expert beliefs</span>
+      </div>
+      <div class="section-body">
+
+        <div class="fn">
+          <div class="fn-sig">elicit_beta(mean, sd, method, ...)</div>
+          <div class="fn-desc">Fit a Beta prior for proportions / response rates.</div>
+          <div class="args"><span class="arg req">mean</span><span class="arg req">sd</span><span class="arg">method = "moments" | "quantile"</span><span class="arg">label</span><span class="arg">expert_id</span></div>
+          <div class="fn-ex">p &lt;- elicit_beta(mean=0.30, sd=0.10,
+  method="moments", label="ORR")</div>
+          <div class="diagram" style="margin-top:3px">
+            <div class="d-box prior">Expert belief<br/>mean=0.30<br/>sd=0.10</div>
+            <div class="d-arrow">&#8594;</div>
+            <div class="d-box result">Beta(alpha,beta)<br/>bayprior object</div>
+          </div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">elicit_normal(mean, sd, method, ...)</div>
+          <div class="fn-desc">Normal prior for unbounded quantities (log OR, mean differences).</div>
+          <div class="fn-ex">p &lt;- elicit_normal(mean=0, sd=0.5,
+  method="moments", label="Log OR")</div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">elicit_gamma(mean, sd, method, ...)</div>
+          <div class="fn-desc">Gamma prior for positive quantities (rates, variances).</div>
+          <div class="fn-ex">p &lt;- elicit_gamma(mean=5, sd=2,
+  method="moments", label="Event rate")</div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">elicit_lognormal(mean, sd, method, ...)</div>
+          <div class="fn-desc">Log-Normal prior for hazard ratios and PK parameters.</div>
+          <div class="fn-ex">p &lt;- elicit_lognormal(
+  quantiles = c("0.05"=0.4,"0.50"=0.7,"0.95"=1.2))</div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">elicit_roulette(chips, breaks, family, ...)</div>
+          <div class="fn-desc">SHELF roulette method: expert places chips across histogram bins.</div>
+          <div class="args"><span class="arg req">chips</span><span class="arg req">breaks</span><span class="arg req">family</span></div>
+          <div class="fn-ex teal">chips  &lt;- c(0L,1L,3L,7L,9L,7L,4L,2L,1L,1L)
+breaks &lt;- seq(0, 1, by=0.1)
+p &lt;- elicit_roulette(chips, breaks, "beta")</div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">elicit_mixture(priors, weights, ...)</div>
+          <div class="fn-desc">Build an explicit mixture prior from component bayprior objects.</div>
+          <div class="fn-ex">m &lt;- elicit_mixture(list(p1, p2),
+  weights = c(0.6, 0.4))</div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">plot(prior)</div>
+          <div class="fn-desc">Density plot with 95% CrI shading and mean dashed line.</div>
+        </div>
+
+        <div class="fn" style="border-bottom:none">
+          <div class="fn-sig">print(prior)</div>
+          <div class="fn-desc">Summary: distribution, parameters, mean, SD, 95% CrI.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- EXPERT POOLING -->
+    <div class="section s2">
+      <div class="section-header">
+        <span class="icon">&#9650;</span> Expert Pooling
+        <span class="sub">-- Aggregate beliefs from multiple experts</span>
+      </div>
+      <div class="section-body">
+        <div class="fn">
+          <div class="fn-sig">aggregate_experts(priors, weights, method)</div>
+          <div class="fn-desc">Linear or logarithmic opinion pooling with Bhattacharyya agreement diagnostics.</div>
+          <div class="args"><span class="arg req">priors</span> named list<span class="arg req">weights</span> must sum to 1<span class="arg">method = "linear" | "logarithmic"</span></div>
+          <div class="fn-ex teal">e1 &lt;- elicit_beta(0.25, 0.08, "moments", expert_id="E1")
+e2 &lt;- elicit_beta(0.35, 0.10, "moments", expert_id="E2")
+
+con &lt;- aggregate_experts(
+  priors  = list(E1=e1, E2=e2),
+  weights = c(0.6, 0.4),
+  method  = "linear")</div>
+          <div class="diagram" style="margin-top:3px">
+            <div class="d-box prior">E1: Beta(a1,b1)<br/>w=0.60</div>
+            <div class="d-arrow">&#8658;</div>
+            <div class="d-box prior">E2: Beta(a2,b2)<br/>w=0.40</div>
+            <div class="d-arrow">&#8594;</div>
+            <div class="d-box result">Mixture<br/>consensus</div>
+          </div>
+        </div>
+        <div class="fn" style="border-bottom:none">
+          <div class="fn-desc"><b>Bhattacharyya coefficient</b> in <code>con$aggregation$disagreement</code>: 1 = identical experts, 0 = no overlap. Values &lt;0.5 warrant review.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════ COL 2 ════════════════ -->
+  <div class="col">
+
+    <!-- CONFLICT DIAGNOSTICS -->
+    <div class="section s3">
+      <div class="section-header">
+        <span class="icon">&#9670;</span> Conflict Diagnostics
+        <span class="sub">-- Detect prior-data conflict</span>
+      </div>
+      <div class="section-body">
+
+        <div class="fn">
+          <div class="fn-sig">prior_conflict(prior, data_summary, alpha)</div>
+          <div class="fn-desc">Box p-value, surprise index, KL divergence, Bhattacharyya overlap.</div>
+          <div class="args">
+            <span class="arg">Binary: </span><span class="arg req">type="binary"</span><span class="arg req">x</span><span class="arg req">n</span><br/>
+            <span class="arg">Continuous: </span><span class="arg req">type="continuous"</span><span class="arg req">x</span><span class="arg req">sd</span><span class="arg req">n</span>
+          </div>
+          <div class="fn-ex orange">cd &lt;- prior_conflict(
+  prior        = p,
+  data_summary = list(type="binary", x=18, n=40),
+  alpha        = 0.05)</div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-desc"><b>Severity classification:</b></div>
+          <div style="margin:3px 0">
+            <span class="sev none">NONE &nbsp; Box p &gt; 0.10</span>
+            <span class="sev mild">MILD &nbsp; p &lt; 0.10</span>
+            <span class="sev severe">SEVERE &nbsp; p &lt; alpha</span>
+          </div>
+          <table class="ptable">
+            <tr><th>Field</th><th>Description</th></tr>
+            <tr><td>box_pvalue</td><td>Prior predictive p-value (Box 1980)</td></tr>
+            <tr><td>surprise_index</td><td>Standardised distance from prior mean</td></tr>
+            <tr><td>kl_prior_likelihood</td><td>KL divergence prior || likelihood</td></tr>
+            <tr><td>overlap</td><td>Bhattacharyya overlap coefficient</td></tr>
+            <tr><td>conflict_severity</td><td>"none" / "mild" / "severe"</td></tr>
+            <tr><td>recommendation</td><td>Automatic actionable guidance</td></tr>
+          </table>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">plot_prior_likelihood(prior, data_summary, show_posterior)</div>
+          <div class="fn-desc">Prior / likelihood / posterior density overlay plot.</div>
+          <div class="fn-ex orange">gp &lt;- plot_prior_likelihood(p, data_obs,
+  show_posterior = TRUE)</div>
+        </div>
+
+        <div class="fn" style="border-bottom:none">
+          <div class="fn-sig">conflict_mahalanobis(prior_means, prior_cov, obs_means, obs_cov, labels)</div>
+          <div class="fn-desc">Multivariate omnibus test for co-primary endpoints. Returns chi-squared p-value and per-parameter z-scores.</div>
+          <div class="fn-ex orange">mv &lt;- conflict_mahalanobis(
+  prior_means = c(0.35, 0.60),
+  prior_cov   = matrix(c(0.01, 0.003, 0.003, 0.015), 2, 2),
+  obs_means   = c(0.55, 0.58),
+  obs_cov     = matrix(c(0.008,0.002,0.002,0.010),2,2)/50,
+  labels      = c("ORR", "OS"))</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SENSITIVITY ANALYSIS -->
+    <div class="section s4">
+      <div class="section-header">
+        <span class="icon">&#9632;</span> Sensitivity Analysis
+        <span class="sub">-- Posterior robustness to hyperparameter choice</span>
+      </div>
+      <div class="section-body">
+
+        <div class="fn">
+          <div class="fn-sig">sensitivity_grid(prior, data_summary, param_grid, target, threshold)</div>
+          <div class="fn-desc">Evaluate posterior quantities over a hyperparameter grid.</div>
+          <div class="args">
+            <span class="arg">target: </span>
+            <span class="arg">"posterior_mean"</span>
+            <span class="arg">"posterior_sd"</span>
+            <span class="arg">"prob_efficacy"</span>
+          </div>
+          <div class="fn-ex purple">sa &lt;- sensitivity_grid(
+  prior        = p,
+  data_summary = list(type="binary", x=14, n=40),
+  param_grid   = list(alpha=seq(1,8,0.5), beta=seq(2,20,1)),
+  target       = c("posterior_mean","prob_efficacy"),
+  threshold    = 0.30)</div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">sensitivity_cri(prior, data_summary, param_grid, cri_level)</div>
+          <div class="fn-desc">Track credible interval width and bounds across the grid. Key for regulatory submissions.</div>
+          <div class="fn-ex purple">cri &lt;- sensitivity_cri(p, data_obs,
+  param_grid = list(alpha=seq(1,8,0.5), beta=seq(2,20,1)),
+  cri_level  = 0.95)</div>
+          <div class="diagram" style="margin-top:3px">
+            <div class="d-box prior">Grid<br/>alpha x beta</div>
+            <div class="d-arrow">&#8594;</div>
+            <div class="d-box result">cri_lower<br/>cri_upper<br/>cri_width</div>
+          </div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">plot_tornado(sa)</div>
+          <div class="fn-desc">Bar chart: influence range ordered from largest to smallest.</div>
+        </div>
+
+        <div class="fn" style="border-bottom:none">
+          <div class="fn-sig">plot_sensitivity(sa, target)</div>
+          <div class="fn-desc">Two-dimensional heatmap of posterior quantity over the parameter grid.</div>
+          <div class="fn-ex purple">plot_sensitivity(sa, target="posterior_mean")
+plot_sensitivity(cri, target="cri_width")</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════ COL 3 ════════════════ -->
+  <div class="col">
+
+    <!-- ROBUST PRIORS -->
+    <div class="section s5">
+      <div class="section-header">
+        <span class="icon">&#9650;</span> Robust Priors
+        <span class="sub">-- Sceptical, mixture, and power priors</span>
+      </div>
+      <div class="section-body">
+
+        <div class="fn">
+          <div class="fn-sig">robust_prior(prior, vague_weight, ...)</div>
+          <div class="fn-desc">Schmidli et al. (2014) robust mixture: informative + vague Normal component.</div>
+          <div class="args"><span class="arg req">prior</span><span class="arg req">vague_weight</span> 0-1, e.g. 0.20 = 20% vague</div>
+          <div class="fn-ex">rob &lt;- robust_prior(p, vague_weight=0.20)
+plot(rob)   # density overlay</div>
+          <div class="diagram" style="margin-top:3px">
+            <div class="d-box prior">Informative<br/>Beta(a,b) 80%</div>
+            <div class="d-arrow">+</div>
+            <div class="d-box conflict">Vague<br/>Normal 20%</div>
+            <div class="d-arrow">&#8594;</div>
+            <div class="d-box result">Robust<br/>mixture</div>
+          </div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">sceptical_prior(null_value, family, strength)</div>
+          <div class="fn-desc">Spiegelhalter &amp; Freedman (1994) prior centred at the null. Calibrated to weak / moderate / strong scepticism.</div>
+          <div class="args"><span class="arg">family: "normal" | "beta" | "lognormal"</span><br/><span class="arg">strength: "weak" | "moderate" | "strong"</span></div>
+          <div class="fn-ex">sc &lt;- sceptical_prior(
+  null_value = 0.20,
+  family     = "beta",
+  strength   = "moderate")</div>
+          <div class="note">For Beta priors, null_value must be in (0, 1).</div>
+        </div>
+
+        <div class="fn" style="border-bottom:none">
+          <div class="fn-sig">calibrate_power_prior(historical_data, current_data, base_prior, target_bf, delta_grid, method)</div>
+          <div class="fn-desc">Ibrahim &amp; Chen (2000) power prior: down-weights historical data by delta, calibrated to a target Bayes Factor.</div>
+          <div class="args"><span class="arg">method: "bayes_factor" | "compatibility"</span></div>
+          <div class="fn-ex">calib &lt;- calibrate_power_prior(
+  historical_data = list(type="binary", x=12, n=40),
+  current_data    = list(type="binary", x=18, n=50),
+  base_prior      = elicit_beta(0.5,0.2,"moments"),
+  target_bf       = 3,
+  method          = "bayes_factor")
+
+plot(calib)   # calibration curves + optimal delta</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- REPORTING -->
+    <div class="section s1">
+      <div class="section-header">
+        <span class="icon">&#9632;</span> Regulatory Reporting
+        <span class="sub">-- Quarto HTML / PDF / Word reports</span>
+      </div>
+      <div class="section-body">
+
+        <div class="fn">
+          <div class="fn-sig">prior_report(prior, conflict, sensitivity, ...)</div>
+          <div class="fn-desc">Render a self-contained regulatory justification report via Quarto.</div>
+          <div class="fn-ex">prior_report(
+  prior           = p,
+  conflict        = cd,
+  sensitivity     = sa,
+  robust_prior    = rob,    # optional
+  sceptical_prior = sc,     # optional
+  output_format   = "pdf",  # "html" | "pdf" | "docx"
+  output_file     = "prior_justification",
+  trial_name      = "TRIAL-001",
+  sponsor         = "BioPharma Ltd",
+  author          = "J. Smith, Biostatistician",
+  notes           = "Prior pre-specified in SAP v2.1.")</div>
+          <div class="note">Requires <b>devtools::install()</b> -- not load_all(). Quarto spawns a fresh R session.</div>
+        </div>
+
+        <div class="fn" style="border-bottom:none">
+          <div class="fn-desc"><b>Report sections:</b> Executive summary &bull; Trial information &bull; Prior specification (density + parameters) &bull; Conflict diagnostics (Box p-value, overlay) &bull; Sensitivity (tornado, heatmap) &bull; Robust/sceptical/power priors &bull; FDA/EMA compliance checklist &bull; Session info</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- WORKFLOW -->
+    <div class="section s2">
+      <div class="section-header">
+        <span class="icon">&#9654;</span> Typical Workflow
+      </div>
+      <div class="section-body">
+        <ol class="steps">
+          <li>Elicit prior: <code>elicit_beta()</code> / <code>elicit_roulette()</code></li>
+          <li>Pool experts: <code>aggregate_experts()</code></li>
+          <li>Check conflict: <code>prior_conflict()</code></li>
+          <li>Assess sensitivity: <code>sensitivity_grid()</code> or <code>sensitivity_cri()</code></li>
+          <li>Build robust prior: <code>robust_prior()</code> / <code>sceptical_prior()</code></li>
+          <li>Generate report: <code>prior_report(..., output_format="pdf")</code></li>
+        </ol>
+        <div style="margin-top:5px">
+          <div class="fn-sig" style="margin-bottom:3px">run_app()</div>
+          <div class="fn-desc">Launch the full Shiny app with dark/light mode toggle. All panels feed directly into the downloaded report.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK INSTALL -->
+    <div class="section" style="border-color:var(--teal)">
+      <div class="section-header" style="background:var(--teal)">
+        <span class="icon">&#8659;</span> Install &amp; Docs
+      </div>
+      <div class="section-body">
+        <div class="fn-ex teal" style="margin-bottom:4px">pak::pak("ndohpenngit/bayprior")
+# or
+devtools::install_github("ndohpenngit/bayprior",
+  build_vignettes = TRUE)</div>
+        <div class="fn-desc" style="font-size:7pt">
+          <b>Docs:</b> ndohpenngit.github.io/bayprior<br/>
+          <b>Vignettes:</b> browseVignettes("bayprior")<br/>
+          <b>Citation:</b> citation("bayprior")<br/>
+          <b>Issues:</b> github.com/ndohpenngit/bayprior/issues
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <span class="footer-text">bayprior v0.1.1 &nbsp;&bull;&nbsp; GPL-3 licence &nbsp;&bull;&nbsp; O'Hagan et al. (2006) &nbsp;&bull;&nbsp; Box (1980) &nbsp;&bull;&nbsp; Schmidli et al. (2014) &nbsp;&bull;&nbsp; Ibrahim &amp; Chen (2000) &nbsp;&bull;&nbsp; FDA Draft Guidance on Bayesian Methods (2026)</span>
+    <span class="footer-url">ndohpenngit.github.io/bayprior</span>
+  </div>
+
+</div>
+</body>
+</html>
