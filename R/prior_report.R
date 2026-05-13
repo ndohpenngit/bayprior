@@ -68,7 +68,6 @@ prior_report <- function(prior,
     "quarto", "templates", "prior_report", "prior_report.qmd",
     package = "bayprior"
   )
-
   if (!nzchar(qmd_src)) {
     cli::cli_alert_warning(
       "Bundled Quarto template not found - using built-in fallback template.")
@@ -82,11 +81,6 @@ prior_report <- function(prior,
   file.copy(qmd_src, tmp_qmd, overwrite = TRUE)
 
   # ── Serialize R objects to RDS ───────────────────────────────────────────────
-  # quarto::quarto_render() passes execute_params by serializing them to YAML
-  # before calling the Quarto CLI. YAML serialization fails on complex R objects
-  # (bayprior S3 instances, ggplot2 objects). The fix is to save all R objects
-  # to a single .rds file alongside the .qmd and pass only the file path as a
-  # plain string param. The .qmd reads them back with readRDS().
   rds_path <- file.path(tmp_dir, "bayprior_session.rds")
   saveRDS(
     list(
@@ -109,7 +103,7 @@ prior_report <- function(prior,
 
   # Only scalar/character params go through execute_params (YAML-safe)
   execute_params <- list(
-    rds_path   = rds_path,     # path to the .rds file with all R objects
+    rds_path   = rds_path,
     trial_name = trial_name,
     sponsor    = sponsor,
     author     = author,
@@ -122,20 +116,13 @@ prior_report <- function(prior,
   )
 
   # ── Ensure Quarto CLI is on PATH ─────────────────────────────────────────────
-  # On macOS, Shiny runs in a non-interactive R session that doesn't inherit the
-  # user's shell PATH. quarto::quarto_path() finds the binary via its own
-  # detection logic even when PATH is missing it, but quarto_render() ultimately
-  # calls the CLI via system(), which needs it on PATH.
-  # Solution: find the binary via quarto_path() and prepend its directory.
   qp <- tryCatch(quarto::quarto_path(), error = function(e) NULL)
   if (!is.null(qp) && nzchar(qp)) {
     qdir <- dirname(qp)
     cur_path <- Sys.getenv("PATH")
-    if (!grepl(qdir, cur_path, fixed = TRUE)) {
+    if (!grepl(qdir, cur_path, fixed = TRUE))
       Sys.setenv(PATH = paste(qdir, cur_path, sep = .Platform$path.sep))
-    }
   } else {
-    # Common macOS install locations as fallback
     for (candidate in c("/usr/local/bin", "/opt/homebrew/bin",
                         "~/.local/share/quarto/bin",
                         "/Applications/quarto/bin")) {
@@ -148,54 +135,111 @@ prior_report <- function(prior,
     }
   }
 
-  # ── Pass library paths to Quarto subprocess ─────────────────────────────────
-  # On shinyapps.io, Quarto spawns a fresh R process that uses the system
-  # library, not the packrat/renv library where the app's packages live.
-  # Setting R_LIBS propagates the current library paths to the subprocess
-  # so it can find bayprior and all its dependencies.
-  current_libs <- paste(unique(.libPaths()), collapse = .Platform$path.sep)
-  old_r_libs   <- Sys.getenv("R_LIBS", unset = "")
-  combined_libs <- if (nzchar(old_r_libs))
-    paste(current_libs, old_r_libs, sep = .Platform$path.sep)
-  else
-    current_libs
-  Sys.setenv(R_LIBS = combined_libs)
-  on.exit(Sys.setenv(R_LIBS = old_r_libs), add = TRUE)
+  # ── Two-step render: knitr in current session + Quarto for formatting ─────────
+  #
+  # Core problem on all remote platforms (shinyapps.io, Posit Connect, etc.):
+  # quarto::quarto_render() spawns an Rscript subprocess via the system PATH.
+  # That subprocess has no access to packrat/renv libraries, so bayprior is
+  # not found regardless of where in the Shiny code the call is placed.
+  #
+  # Solution (pure Quarto, works everywhere):
+  #
+  # Step 1 -- knitr::knit() executes all R code IN THE CURRENT R session,
+  #   which has the correct library paths. Output: a pre-executed .md file
+  #   with all tables, text, and base64-encoded plots already embedded.
+  #   Figures are encoded as base64 inline rather than saved as files,
+  #   so there are no relative path issues in the output markdown.
+  #
+  # Step 2 -- quarto::quarto_render(execute=FALSE) on the .md file.
+  #   execute=FALSE tells Quarto CLI to skip R entirely (no subprocess spawned)
+  #   and only run pandoc to apply the Quarto theme, TOC, and document format.
+  #
+  # This preserves 100% of Quarto output quality (themes, embed-resources,
+  # callout blocks, numbered sections) while avoiding the library path problem.
 
-  cli::cli_progress_step("Rendering {output_format} report via Quarto...")
+  cli::cli_progress_step("Executing report chunks in current session...")
+
+  knitr_env        <- new.env(parent = globalenv())
+  knitr_env$params <- execute_params
+
+  # Save and restore knitr state around the knit call
+  old_chunk <- knitr::opts_chunk$get(c("echo", "warning", "message",
+                                        "fig.path", "dev", "fig.ext",
+                                        "dpi"))
+  old_knit  <- knitr::opts_knit$get(c("base.dir", "upload.fun"))
+
+  fig_dir <- file.path(tmp_dir, "figures", "")
+  dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
+
+  knitr::opts_chunk$set(
+    echo    = FALSE,   # suppress source code — Quarto YAML not read by knitr
+    warning = FALSE,
+    message = FALSE,
+    fig.width  = 6,      # match Quarto HTML fig-width
+    fig.height = 3.5,    # match Quarto HTML fig-height
+    out.width  = "100%", # scale to container width in HTML
+    fig.path = fig_dir,
+    dev      = "png",
+    fig.ext  = "png",
+    dpi      = 120
+  )
+  # Encode figures as base64 data URIs inline in the .md output.
+  # This embeds plots directly in the markdown so they survive when
+  # Quarto processes the .md file regardless of working directory.
+  knitr::opts_knit$set(
+    base.dir   = tmp_dir,
+    upload.fun = knitr::image_uri   # base64-encode all figures inline
+  )
+
+  on.exit({
+    knitr::opts_chunk$set(old_chunk)
+    knitr::opts_knit$set(old_knit)
+  }, add = TRUE)
+
+  tmp_md <- file.path(tmp_dir, "prior_report.md")
 
   tryCatch(
-    quarto::quarto_render(
-      input          = tmp_qmd,
-      output_format  = quarto_format,
-      output_file    = basename(output_file),
-      execute_params = execute_params,
-      quiet          = TRUE
+    knitr::knit(
+      input  = tmp_qmd,
+      output = tmp_md,
+      envir  = knitr_env,
+      quiet  = TRUE
     ),
     error = function(e) {
-      full_err <- tryCatch(
-        quarto::quarto_render(
-          input          = tmp_qmd,
-          output_format  = quarto_format,
-          output_file    = paste0("retry_", basename(output_file)),
-          execute_params = execute_params,
-          quiet          = FALSE
-        ),
-        error = function(e2) conditionMessage(e2)
-      )
       rlang::abort(paste0(
-        "Quarto rendering failed.\n",
-        "Original error: ", conditionMessage(e), "\n",
-        "Check that:\n",
-        "  1. Quarto CLI is installed: https://quarto.org/docs/get-started/\n",
-        "  2. quarto::quarto_path() returns a valid path in your R session\n",
-        "  3. The rds_path temp file exists and is readable\n",
-        "quarto_path(): ", tryCatch(quarto::quarto_path(), error=function(e)"ERROR"),
-        "\nSys.which('quarto'): ", Sys.which("quarto")
+        "Report chunk execution failed (knitr::knit step).\n",
+        "Error: ", conditionMessage(e)
       ))
     }
   )
 
+  if (!file.exists(tmp_md))
+    rlang::abort("knitr::knit() did not produce expected output file.")
+
+  cli::cli_progress_step("Converting to {output_format} via Quarto (no R subprocess)...")
+
+  # Quarto processes the pre-executed .md using only pandoc — no R execution.
+  # The YAML front matter in the .md (preserved from the .qmd) tells Quarto
+  # which theme, TOC depth, and format options to apply.
+  tryCatch(
+    quarto::quarto_render(
+      input         = tmp_md,
+      output_format = quarto_format,
+      output_file   = basename(output_file),
+      execute       = FALSE,
+      quiet         = TRUE
+    ),
+    error = function(e) {
+      rlang::abort(paste0(
+        "Quarto pandoc conversion failed.\n",
+        "Error: ", conditionMessage(e), "\n",
+        "quarto_path(): ",
+        tryCatch(quarto::quarto_path(), error = function(e) "ERROR")
+      ))
+    }
+  )
+
+  # Locate rendered file and copy to final destination
   rendered_path <- file.path(tmp_dir, basename(output_file))
   if (!file.exists(rendered_path)) {
     candidates <- list.files(tmp_dir,
@@ -209,7 +253,9 @@ prior_report <- function(prior,
 
   file.copy(rendered_path, output_file, overwrite = TRUE)
   cli::cli_alert_success("Report written to: {.path {output_file}}")
-  if (open_after) utils::browseURL(output_file)
+  if (interactive() && isTRUE(open_after))
+    tryCatch(get("browseURL", envir = asNamespace("utils"))(output_file),
+             error = function(e) invisible(NULL))
   invisible(output_file)
 }
 

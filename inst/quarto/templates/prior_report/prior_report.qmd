@@ -49,6 +49,43 @@ knitr:
     dpi: 150
 ---
 
+```{=html}
+<style>
+/* Table striping — replaces Bootstrap table-striped class lost in knitr path */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9em;
+}
+table thead tr th {
+  background-color: #e9ecef;
+  border-bottom: 2px solid #dee2e6;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+table tbody tr:nth-child(even) td {
+  background-color: #f8f9fa;
+}
+table tbody tr td {
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid #dee2e6;
+}
+table caption {
+  caption-side: top;
+  font-style: italic;
+  color: #6c757d;
+  margin-bottom: 0.4rem;
+  font-size: 0.85em;
+}
+/* Constrain figure width */
+img {
+  max-width: 100%;
+  height: auto;
+}
+</style>
+```
+
 ```{r setup}
 if (!requireNamespace("bayprior", quietly = TRUE)) {
   stop(paste0(
@@ -537,7 +574,7 @@ if (!is.null(scep_prior)) {
     Attribute = c("Type", "Family", "Null value", "Mean", "SD"),
     Value     = c("Sceptical",
                   toupper(.safe_chr(scep_prior$dist)),
-                  .safe_chr(scep_prior$sceptical_null %||% "—"),
+                  .safe_chr(if(is.null(scep_prior$sceptical_null)) NULL else scep_prior$sceptical_null),
                   as.character(.safe_round(.fs(s, "mean"), 4)),
                   as.character(.safe_round(.fs(s, "sd"),   4))),
     stringsAsFactors = FALSE
@@ -560,7 +597,7 @@ if (!is.null(pow_result)) {
     Attribute = c("Method", "Target BF", "Optimal delta",
                   "Power prior mean", "Power prior SD"),
     Value     = c(.safe_chr(pow_result$method),
-                  as.character(pow_result$target_bf %||% "—"),
+                  as.character(if(is.null(pow_result$target_bf)) "-" else pow_result$target_bf),
                   as.character(pow_result$delta_opt),
                   as.character(.safe_round(
                     .fs(pow_result$power_prior$fit_summary, "mean"), 4)),
