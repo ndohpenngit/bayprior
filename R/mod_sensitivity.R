@@ -7,6 +7,13 @@ mod_sensitivity_ui <- function(id) {
       title = tagList(icon("chart-bar"), " Grid Settings"),
       uiOutput(ns("prior_banner")),
       tags$hr(),
+
+      # ── Observed data (independent of conflict diagnostics) ────────────────
+      tags$p(tags$strong("Observed data"),
+             style = "font-size:13px; margin-bottom:4px;"),
+      uiOutput(ns("data_entry_ui")),
+      tags$hr(),
+
       uiOutput(ns("param1_ui")),
       uiOutput(ns("param2_ui")),
       sliderInput(ns("grid_size"), "Grid points per axis", 5, 50, 20, 5),
@@ -118,12 +125,73 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         value = c(round(v2 * 0.5, 2), round(v2 * 2, 2)))
     }, ignoreInit = TRUE)
 
+    # ── Data entry UI — independent of conflict diagnostics ─────────────────
+    output$data_entry_ui <- renderUI({
+      p  <- active_prior(); req(p)
+      cd <- shared$conflict
+      if (!is.null(cd)) {
+        ds <- cd$data_summary
+        summary_text <- if (identical(ds$type, "binary")) {
+          sprintf("Binary: x = %s, n = %s", ds$x, ds$n)
+        } else {
+          sprintf("Continuous: mean = %s, SD = %s, n = %s", ds$x, ds$sd, ds$n)
+        }
+        tags$div(
+          tags$small(style = "color:#888; font-style:italic;",
+                     "Using data from Conflict Diagnostics:"),
+          tags$div(
+            style = "background:#f8f9fa; border-radius:4px; padding:6px 10px; margin-top:4px;",
+            tags$small(summary_text)
+          )
+        )
+      } else {
+        is_beta <- identical(p$dist, "beta") ||
+          (identical(p$dist, "mixture") &&
+             identical(p$components[[1]]$dist, "beta"))
+        tagList(
+          tags$small(style = "color:#888; font-style:italic;",
+                     "Enter observed data for posterior computation:"),
+          tags$br(),
+          selectInput(ns("sens_data_type"), "Data type",
+            choices  = c("Binary (events/n)" = "binary",
+                         "Continuous (mean/SD/n)" = "continuous"),
+            selected = if (is_beta) "binary" else "continuous"
+          ),
+          conditionalPanel(
+            condition = sprintf("input['%s'] === 'binary'", ns("sens_data_type")),
+            fluidRow(
+              column(6, numericInput(ns("sens_x"), "Events (x)", 15, min = 0, step = 1)),
+              column(6, numericInput(ns("sens_n"), "Total (n)",  50, min = 1, step = 1))
+            )
+          ),
+          conditionalPanel(
+            condition = sprintf("input['%s'] === 'continuous'", ns("sens_data_type")),
+            numericInput(ns("sens_mean"), "Observed mean", 0,   step = 0.01),
+            numericInput(ns("sens_sd"),   "Observed SD",   1,   min = 0.001, step = 0.01),
+            numericInput(ns("sens_n2"),   "Sample size n", 50L, min = 1, step = 1)
+          )
+        )
+      }
+    })
+
     observeEvent(input$run_btn, {
       p <- active_prior(); req(p, input$p1_range, input$p2_range)
       cd <- shared$conflict
-      data_sum <- if (!is.null(cd)) cd$data_summary else
-        list(type = "continuous", x = p$fit_summary$mean,
-             sd = p$fit_summary$sd, n = 50L)
+
+      # Build data_summary: prefer conflict diagnostics, fall back to own inputs.
+      # Critically: match data type to prior family to avoid conjugate update failure.
+      data_sum <- if (!is.null(cd)) {
+        cd$data_summary
+      } else if (identical(input$sens_data_type, "binary")) {
+        list(type = "binary",
+             x    = as.integer(input$sens_x %||% 15L),
+             n    = as.integer(input$sens_n %||% 50L))
+      } else {
+        list(type = "continuous",
+             x    = input$sens_mean %||% unlist(p$fit_summary$mean),
+             sd   = input$sens_sd   %||% unlist(p$fit_summary$sd),
+             n    = as.integer(input$sens_n2 %||% 50L))
+      }
       nm <- pnames()
       pg <- setNames(
         list(
