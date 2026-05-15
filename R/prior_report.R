@@ -80,7 +80,7 @@ prior_report <- function(prior,
   tmp_qmd <- file.path(tmp_dir, "prior_report.qmd")
   file.copy(qmd_src, tmp_qmd, overwrite = TRUE)
 
-  # ── Serialize R objects to RDS ───────────────────────────────────────────────
+  # -- Serialize R objects to RDS -------------------------------------
   rds_path <- file.path(tmp_dir, "bayprior_session.rds")
   saveRDS(
     list(
@@ -115,7 +115,7 @@ prior_report <- function(prior,
     html = "html", pdf = "pdf", docx = "docx"
   )
 
-  # ── Ensure Quarto CLI is on PATH ─────────────────────────────────────────────
+  # -- Ensure Quarto CLI is on PATH -------------------------------------
   qp <- tryCatch(quarto::quarto_path(), error = function(e) NULL)
   if (!is.null(qp) && nzchar(qp)) {
     qdir <- dirname(qp)
@@ -135,7 +135,7 @@ prior_report <- function(prior,
     }
   }
 
-  # ── Two-step render: knitr in current session + Quarto for formatting ─────────
+  # -- Two-step render: knitr in current session + Quarto for formatting --------
   #
   # Core problem on all remote platforms (shinyapps.io, Posit Connect, etc.):
   # quarto::quarto_render() spawns an Rscript subprocess via the system PATH.
@@ -177,8 +177,8 @@ prior_report <- function(prior,
 
   # upload.fun strategy per format:
   # HTML: image_uri encodes as base64 data URIs (fully self-contained)
-  # docx: image_uri — pandoc Word handles base64 URIs fine
-  # pdf:  identity function (return path as-is) — Quarto/xelatex CANNOT
+  # docx: image_uri - pandoc Word handles base64 URIs fine
+  # pdf:  identity function (return path as-is) - Quarto/xelatex CANNOT
   #       process base64 data URIs; needs actual PNG files on disk.
   #       upload.fun=NULL causes "attempt to apply non-function"; use identity.
   knitr::opts_knit$set(
@@ -241,7 +241,7 @@ prior_report <- function(prior,
     }
   }
 
-  # ── Strip {=html} raw blocks for non-HTML formats ────────────────────────
+  # -- Strip {=html} raw blocks for non-HTML formats ------------------------
   # The QMD contains a ```{=html} CSS block for table striping.
   # This is valid Quarto syntax for HTML but breaks LaTeX/Word rendering
   # because pandoc passes the raw block through unprocessed.
@@ -259,7 +259,7 @@ prior_report <- function(prior,
 
   cli::cli_progress_step("Converting to {output_format} via Quarto (no R subprocess)...")
 
-  # Quarto processes the pre-executed .md using only pandoc — no R execution.
+  # Quarto processes the pre-executed .md using only pandoc - no R execution.
   # The YAML front matter in the .md (preserved from the .qmd) tells Quarto
   # which theme, TOC depth, and format options to apply.
   tryCatch(
@@ -273,7 +273,7 @@ prior_report <- function(prior,
     ),
     error = function(e) {
       # Retry with quiet=FALSE to surface the full pandoc/xelatex error
-      cli::cli_alert_warning("Quarto conversion failed — retrying with verbose output...")
+      cli::cli_alert_warning("Quarto conversion failed - retrying with verbose output...")
       tryCatch(
         quarto::quarto_render(
           input         = tmp_md,
@@ -317,7 +317,7 @@ prior_report <- function(prior,
 }
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+# -- Internal helpers -------------------------------------
 
 .safe_round <- function(x, digits = 4) {
   x <- suppressWarnings(as.numeric(x))
@@ -342,7 +342,7 @@ prior_report <- function(prior,
 }
 
 
-# ── Fallback QMD template ─────────────────────────────────────────────────────
+# -- Fallback QMD template -------------------------------------
 # Used when inst/quarto/templates/prior_report/prior_report.qmd is not found.
 # Written as a character vector (one element per line) so no single line
 # exceeds roxygen's 10 000-character limit and no Unicode escapes appear

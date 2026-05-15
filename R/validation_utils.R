@@ -1,8 +1,8 @@
-# ── Validation utilities ──────────────────────────────────────────────────────
+# -- Validation utilities ----------------------------------------------------
 # Centralised compatibility checks used across conflict, sensitivity,
 # pooling and elicitation modules.
 
-# ── Distribution support classification ──────────────────────────────────────
+# -- Distribution support classification -------------------------------------
 .dist_support <- function(dist) {
   switch(dist,
     beta        = "unit",      # (0, 1)
@@ -25,7 +25,7 @@
   "mixed"
 }
 
-# ── Prior-data type compatibility ─────────────────────────────────────────────
+# -- Prior-data type compatibility --------------------------------------------
 # Returns a list: list(ok = TRUE/FALSE, msg = "...")
 
 #' @noRd
@@ -57,7 +57,7 @@
     return(list(ok = TRUE, msg = NULL, severity = "none"))
   }
 
-  # Not in recommended — build a helpful message
+  # Not in recommended - build a helpful message
   dist_label <- switch(dist,
     beta        = "Beta",
     normal      = "Normal",
@@ -98,7 +98,7 @@
   list(ok = TRUE, msg = msg, severity = "warning")
 }
 
-# ── Expert pooling compatibility ──────────────────────────────────────────────
+# -- Expert pooling compatibility ---------------------------------------------
 # Called by aggregate_experts() and elicit_mixture()
 
 #' @noRd
@@ -120,9 +120,9 @@
 
     # Build per-family support descriptions
     support_desc <- c(
-      unit     = "(0, 1) — proportions only",
-      real     = "(-Inf, Inf) — any real value",
-      positive = "(0, Inf) — positive values only"
+      unit     = "(0, 1) - proportions only",
+      real     = "(-Inf, Inf) - any real value",
+      positive = "(0, Inf) - positive values only"
     )
 
     dist_support_pairs <- paste(
@@ -164,7 +164,7 @@
   results
 }
 
-# ── Sensitivity analysis compatibility ───────────────────────────────────────
+# -- Sensitivity analysis compatibility --------------------------------------
 # Returns list(ok, msg, severity)
 
 #' @noRd
@@ -221,7 +221,7 @@
   list(ok = TRUE, msg = NULL, severity = "none")
 }
 
-# ── UI helpers for validation feedback ───────────────────────────────────────
+# -- UI helpers for validation feedback --------------------------------------
 # Renders a coloured alert box for use inside renderUI()
 
 #' @noRd
