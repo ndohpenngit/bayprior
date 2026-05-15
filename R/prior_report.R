@@ -80,7 +80,7 @@ prior_report <- function(prior,
   tmp_qmd <- file.path(tmp_dir, "prior_report.qmd")
   file.copy(qmd_src, tmp_qmd, overwrite = TRUE)
 
-  # ── Serialize R objects to RDS ───────────────────────────────────────────────
+  # -- Serialize R objects to RDS -------------------------------------
   rds_path <- file.path(tmp_dir, "bayprior_session.rds")
   saveRDS(
     list(
@@ -115,7 +115,7 @@ prior_report <- function(prior,
     html = "html", pdf = "pdf", docx = "docx"
   )
 
-  # ── Ensure Quarto CLI is on PATH ─────────────────────────────────────────────
+  # -- Ensure Quarto CLI is on PATH -------------------------------------
   qp <- tryCatch(quarto::quarto_path(), error = function(e) NULL)
   if (!is.null(qp) && nzchar(qp)) {
     qdir <- dirname(qp)
@@ -135,7 +135,7 @@ prior_report <- function(prior,
     }
   }
 
-  # ── Two-step render: knitr in current session + Quarto for formatting ─────────
+  # -- Two-step render: knitr in current session + Quarto for formatting --------
   #
   # Core problem on all remote platforms (shinyapps.io, Posit Connect, etc.):
   # quarto::quarto_render() spawns an Rscript subprocess via the system PATH.
@@ -162,33 +162,43 @@ prior_report <- function(prior,
   knitr_env        <- new.env(parent = globalenv())
   knitr_env$params <- execute_params
 
-  # Save and restore knitr state around the knit call
+  # Save and restore knitr state
   old_chunk <- knitr::opts_chunk$get(c("echo", "warning", "message",
                                         "fig.path", "dev", "fig.ext",
-                                        "dpi"))
+                                        "dpi", "out.width"))
   old_knit  <- knitr::opts_knit$get(c("base.dir", "upload.fun"))
 
-  fig_dir <- file.path(tmp_dir, "figures", "")
-  dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
+  # Use relative fig.path for PDF so knitr writes relative paths in .md
+  # Absolute fig.path causes Quarto's Lua filter to fail resolving images.
+  # Save figures to tmp_dir/figures/ but reference them as figures/ (relative).
+  fig_dir_abs <- file.path(tmp_dir, "figures", "")
+  dir.create(fig_dir_abs, recursive = TRUE, showWarnings = FALSE)
+  fig_dir <- if (output_format == "pdf") "figures/" else fig_dir_abs
 
-  knitr::opts_chunk$set(
-    echo    = FALSE,   # suppress source code — Quarto YAML not read by knitr
-    warning = FALSE,
-    message = FALSE,
-    fig.width  = 6,      # match Quarto HTML fig-width
-    fig.height = 3.5,    # match Quarto HTML fig-height
-    out.width  = "100%", # scale to container width in HTML
-    fig.path = fig_dir,
-    dev      = "png",
-    fig.ext  = "png",
-    dpi      = 120
-  )
-  # Encode figures as base64 data URIs inline in the .md output.
-  # This embeds plots directly in the markdown so they survive when
-  # Quarto processes the .md file regardless of working directory.
+  # upload.fun strategy per format:
+  # HTML: image_uri encodes as base64 data URIs (fully self-contained)
+  # docx: image_uri - pandoc Word handles base64 URIs fine
+  # pdf:  identity function (return path as-is) - Quarto/xelatex CANNOT
+  #       process base64 data URIs; needs actual PNG files on disk.
+  #       upload.fun=NULL causes "attempt to apply non-function"; use identity.
   knitr::opts_knit$set(
     base.dir   = tmp_dir,
-    upload.fun = knitr::image_uri   # base64-encode all figures inline
+    upload.fun = if (output_format == "pdf") function(x, ...) x
+                 else knitr::image_uri
+  )
+
+  fmt_opts <- switch(output_format,
+    html = list(fig.width=6,   fig.height=3.5, out.width="100%", dpi=120),
+    docx = list(fig.width=6.5, fig.height=4,   out.width=NULL,   dpi=150),
+    pdf  = list(fig.width=7,   fig.height=4,   out.width=NULL,   dpi=150)
+  )
+  knitr::opts_chunk$set(
+    echo      = FALSE, warning = FALSE, message = FALSE,
+    fig.path  = fig_dir, dev = "png", fig.ext = "png",
+    fig.width = fmt_opts$fig.width,
+    fig.height= fmt_opts$fig.height,
+    out.width = fmt_opts$out.width,
+    dpi       = fmt_opts$dpi
   )
 
   on.exit({
@@ -216,9 +226,40 @@ prior_report <- function(prior,
   if (!file.exists(tmp_md))
     rlang::abort("knitr::knit() did not produce expected output file.")
 
+  # For PDF: inject fig-format: png into YAML so Quarto does not look for
+  # .pdf vector figures (its default for LaTeX). Our figures are PNG files.
+  if (output_format == "pdf") {
+    md_lines <- readLines(tmp_md, warn = FALSE)
+    yaml_end <- which(md_lines == "---")[2L]
+    if (!is.na(yaml_end)) {
+      md_lines <- c(
+        md_lines[seq_len(yaml_end - 1L)],
+        "fig-format: png",
+        md_lines[yaml_end:length(md_lines)]
+      )
+      writeLines(md_lines, tmp_md)
+    }
+  }
+
+  # -- Strip {=html} raw blocks for non-HTML formats ------------------------
+  # The QMD contains a ```{=html} CSS block for table striping.
+  # This is valid Quarto syntax for HTML but breaks LaTeX/Word rendering
+  # because pandoc passes the raw block through unprocessed.
+  if (output_format != "html") {
+    md_lines <- readLines(tmp_md, warn = FALSE)
+    in_html_block <- FALSE
+    clean_lines   <- character(0)
+    for (ln in md_lines) {
+      if (grepl("^```\\{=html\\}", ln)) { in_html_block <- TRUE; next }
+      if (in_html_block && grepl("^```\\s*$", ln)) { in_html_block <- FALSE; next }
+      if (!in_html_block) clean_lines <- c(clean_lines, ln)
+    }
+    writeLines(clean_lines, tmp_md)
+  }
+
   cli::cli_progress_step("Converting to {output_format} via Quarto (no R subprocess)...")
 
-  # Quarto processes the pre-executed .md using only pandoc — no R execution.
+  # Quarto processes the pre-executed .md using only pandoc - no R execution.
   # The YAML front matter in the .md (preserved from the .qmd) tells Quarto
   # which theme, TOC depth, and format options to apply.
   tryCatch(
@@ -227,15 +268,31 @@ prior_report <- function(prior,
       output_format = quarto_format,
       output_file   = basename(output_file),
       execute       = FALSE,
-      quiet         = TRUE
+      quiet         = TRUE,
+      pandoc_args   = character(0)  # Quarto resolves images from .md directory
     ),
     error = function(e) {
-      rlang::abort(paste0(
-        "Quarto pandoc conversion failed.\n",
-        "Error: ", conditionMessage(e), "\n",
-        "quarto_path(): ",
-        tryCatch(quarto::quarto_path(), error = function(e) "ERROR")
-      ))
+      # Retry with quiet=FALSE to surface the full pandoc/xelatex error
+      cli::cli_alert_warning("Quarto conversion failed - retrying with verbose output...")
+      tryCatch(
+        quarto::quarto_render(
+          input         = tmp_md,
+          output_format = quarto_format,
+          output_file   = paste0("retry_", basename(output_file)),
+          execute       = FALSE,
+          quiet         = FALSE,
+          pandoc_args   = if (output_format != "html")
+            c("--resource-path", tmp_dir) else character(0)
+        ),
+        error = function(e2) {
+          rlang::abort(paste0(
+            "Quarto pandoc conversion failed.\n",
+            "Error: ", conditionMessage(e2), "\n",
+            "quarto_path(): ",
+            tryCatch(quarto::quarto_path(), error = function(e) "ERROR")
+          ))
+        }
+      )
     }
   )
 
@@ -260,7 +317,7 @@ prior_report <- function(prior,
 }
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+# -- Internal helpers -------------------------------------
 
 .safe_round <- function(x, digits = 4) {
   x <- suppressWarnings(as.numeric(x))
@@ -285,7 +342,7 @@ prior_report <- function(prior,
 }
 
 
-# ── Fallback QMD template ─────────────────────────────────────────────────────
+# -- Fallback QMD template -------------------------------------
 # Used when inst/quarto/templates/prior_report/prior_report.qmd is not found.
 # Written as a character vector (one element per line) so no single line
 # exceeds roxygen's 10 000-character limit and no Unicode escapes appear
@@ -420,7 +477,7 @@ prior_report <- function(prior,
     "",
     paste0("This report documents the Bayesian prior specification for study ",
            "**`r params$trial_name`**, prepared by **`r params$author`** ",
-           "(`r params$sponsor`) and dated `r format(Sys.Date(), \"%d %B %Y\")`."),
+           "(`r params$sponsor`) and dated `r format(Sys.Date(), '%d %B %Y')`."),
     "",
     "```{r exec-table}",
     "if (has_prior) {",

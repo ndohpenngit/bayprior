@@ -15,7 +15,8 @@ elicit_normal(
 )
 }
 \arguments{
-\item{quantiles}{Named numeric vector. E.g. \code{c("0.025" = -0.5, "0.50" = 0.2, "0.975" = 0.9)}.}
+\item{quantiles}{Named numeric vector. E.g.
+\code{c("0.025" = -0.5, "0.50" = 0.2, "0.975" = 0.9)}.}
 
 \item{mean}{Optional numeric. Expert mean for moment matching.}
 
@@ -38,7 +39,7 @@ Elicit a Normal prior via quantile matching or moment matching
 \examples{
 prior <- elicit_normal(
   quantiles = c("0.025" = -0.5, "0.50" = 0.2, "0.975" = 0.9),
-  label = "Log odds ratio"
+  label     = "Log odds ratio"
 )
 
 }

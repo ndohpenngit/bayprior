@@ -24,6 +24,30 @@ app_server <- function(input, output, session) {
     shared$consensus %||% shared$current_prior
   })
 
+  # ── Output reset cascade ──────────────────────────────────────────────────
+  # When a new prior is fitted, all downstream results are stale.
+  # Clear them so users never see old results mixed with new inputs.
+  observeEvent(active_prior(), {
+    p <- active_prior()
+    # Only reset when prior actually changes (not on initial NULL)
+    if (!is.null(p)) {
+      shared$conflict       <- NULL
+      shared$sensitivity    <- NULL
+      shared$robust_prior   <- NULL
+      shared$sceptical_prior <- NULL
+      shared$power_prior    <- NULL
+    }
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+  # When expert pool changes (new expert added / pooling rerun),
+  # clear conflict and sensitivity since the active prior has changed
+  observeEvent(shared$consensus, {
+    if (!is.null(shared$consensus)) {
+      shared$conflict       <- NULL
+      shared$sensitivity    <- NULL
+    }
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
   # ── Sidebar prior badge ───────────────────────────────────────────────────
   # Rendered into uiOutput("sidebar_prior_badge") in app_ui.R sidebar footer.
   output$sidebar_prior_badge <- renderUI({

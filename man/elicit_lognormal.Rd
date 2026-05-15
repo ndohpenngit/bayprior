@@ -18,22 +18,20 @@ elicit_lognormal(
 \item{quantiles}{Named numeric vector. Values must be strictly positive.
 E.g. \code{c("0.05" = 0.5, "0.50" = 2.0, "0.95" = 8.0)}.}
 
-\item{mean}{Optional numeric. Expert-specified mean on the \strong{original}
-(not log) scale for moment matching.}
+\item{mean}{Optional numeric. Expert mean on the original scale.}
 
-\item{sd}{Optional numeric. Expert-specified SD on the original scale.}
+\item{sd}{Optional numeric. Expert SD on the original scale.}
 
 \item{method}{Character. \code{"quantile"} (default) or \code{"moments"}.}
 
 \item{expert_id}{Character. Expert identifier.}
 
-\item{label}{Character. Description of the quantity.}
+\item{label}{Character. Quantity description.}
 
-\item{tol}{Numeric. Optimisation tolerance. Default \code{1e-6}.}
+\item{tol}{Numeric. Optimisation tolerance.}
 }
 \value{
-An object of class \code{bayprior} with \code{dist = "lognormal"} and
-\code{params} list containing \code{meanlog} and \code{sdlog}.
+An object of class \code{bayprior} with \code{dist = "lognormal"}.
 }
 \description{
 Fits a Log-Normal distribution to expert-specified quantiles or moments.
@@ -41,19 +39,10 @@ Appropriate for positive-valued quantities such as hazard ratios, fold
 changes, median survival times, or PK parameters.
 }
 \examples{
-# Hazard ratio: expert believes median HR ~ 0.7, 90\% CI [0.4, 1.2]
 prior <- elicit_lognormal(
   quantiles = c("0.05" = 0.40, "0.50" = 0.70, "0.95" = 1.20),
   label     = "Hazard ratio (treatment vs control)"
 )
 print(prior)
-plot(prior)
-
-# Moment matching: mean HR = 0.75, SD = 0.25
-prior_m <- elicit_lognormal(
-  mean = 0.75, sd = 0.25,
-  method = "moments",
-  label  = "Hazard ratio"
-)
 
 }

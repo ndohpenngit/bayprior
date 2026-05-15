@@ -2,18 +2,23 @@
 #'
 #' A toolkit for constructing, validating, and justifying Bayesian priors
 #' in clinical trial settings. Implements SHELF-style expert elicitation
-#' (quantile matching, roulette method, moment matching), linear and
-#' logarithmic expert pooling, prior-data conflict diagnostics (Box p-value,
-#' surprise index, Mahalanobis check), sensitivity analyses with tornado and
-#' influence plots, sceptical/robust/power priors, and automated HTML/PDF
-#' regulatory reports aligned with FDA/EMA expectations. Includes a fully
-#' modular Shiny application.
+#' (quantile matching, roulette method, moment matching) across six
+#' distribution families, linear and logarithmic expert pooling with
+#' compatibility validation, prior-data conflict diagnostics (Box p-value,
+#' surprise index, KL divergence, Bhattacharyya overlap, Mahalanobis check)
+#' for binary, continuous, Poisson/count, and survival data types, sensitivity
+#' analyses with tornado and influence plots, sceptical/robust/power priors,
+#' and automated HTML/PDF/Word regulatory reports aligned with FDA/EMA
+#' expectations. Includes a fully modular Shiny application with automatic
+#' output reset on input change.
 #'
 #' @section Main workflow:
 #' \enumerate{
 #'   \item **Elicitation** — \code{\link{elicit_beta}},
 #'     \code{\link{elicit_normal}}, \code{\link{elicit_gamma}},
-#'     \code{\link{elicit_lognormal}}, \code{\link{elicit_roulette}}
+#'     \code{\link{elicit_lognormal}}, \code{\link{elicit_exponential}},
+#'     \code{\link{elicit_weibull}}, \code{\link{elicit_roulette}},
+#'     \code{\link{elicit_mixture}}
 #'   \item **Expert pooling** — \code{\link{aggregate_experts}}
 #'   \item **Conflict diagnostics** — \code{\link{prior_conflict}},
 #'     \code{\link{conflict_mahalanobis}}
@@ -25,12 +30,39 @@
 #'   \item **Shiny app** — \code{\link{run_app}}
 #' }
 #'
+#' @section Distribution families:
+#' \describe{
+#'   \item{\code{beta}}{Response rates and proportions — support (0, 1)}
+#'   \item{\code{normal}}{Mean differences and log odds ratios — support
+#'     (−∞, ∞)}
+#'   \item{\code{gamma}}{Event rates and median survival — support (0, ∞)}
+#'   \item{\code{lognormal}}{Hazard ratios and PK parameters — support (0, ∞)}
+#'   \item{\code{exponential}}{Constant hazard rates and Poisson rate priors
+#'     — support (0, ∞). Conjugate with Poisson and survival data via
+#'     Gamma-Poisson/Exponential updating.}
+#'   \item{\code{weibull}}{Non-constant hazard survival times (OS, PFS)
+#'     — support (0, ∞). Posterior approximated via Normal matching.}
+#' }
+#'
+#' @section Data types for conflict diagnostics and sensitivity:
+#' \describe{
+#'   \item{\code{"binary"}}{Events / sample size (x, n). Conjugate:
+#'     Beta-Binomial.}
+#'   \item{\code{"continuous"}}{Observed mean, SD, sample size (x, sd, n).
+#'     Conjugate: Normal-Normal.}
+#'   \item{\code{"poisson"}}{Event count / exposure person-time (x, n).
+#'     Conjugate: Gamma-Poisson.}
+#'   \item{\code{"survival"}}{Events / total follow-up time (x, n).
+#'     Conjugate: Gamma-Exponential.}
+#' }
+#'
 #' @section References:
 #' \itemize{
 #'   \item O'Hagan et al. (2006). \emph{Uncertain Judgements}. Wiley.
 #'   \item Box (1980). JRSS-A, 143, 383--430.
 #'   \item Schmidli et al. (2014). \emph{Biometrics}, 70, 1023--1032.
 #'   \item Ibrahim & Chen (2000). \emph{Statistical Science}, 15, 46--60.
+#'   \item Spiegelhalter et al. (1994). JRSS-A, 157, 357--416.
 #'   \item FDA Draft Guidance: Bayesian Methods in Clinical Trials (2026).
 #' }
 #'

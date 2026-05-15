@@ -9,9 +9,12 @@
 #' @param prior       A \code{bayprior} object.
 #' @param data_summary Named list describing the observed data:
 #'   \describe{
-#'     \item{\code{type}}{\code{"binary"} or \code{"continuous"}.}
-#'     \item{\code{x}}{Number of events (binary) or observed mean (continuous).}
-#'     \item{\code{n}}{Sample size.}
+#'     \item{\code{type}}{\code{"binary"}, \code{"continuous"},
+#'       \code{"poisson"}, or \code{"survival"}.}
+#'     \item{\code{x}}{Number of events (binary / poisson / survival)
+#'       or observed mean (continuous).}
+#'     \item{\code{n}}{Sample size (binary / continuous), total exposure
+#'       (poisson: person-time), or total follow-up time (survival).}
 #'     \item{\code{sd}}{Observed standard deviation (continuous only).}
 #'   }
 #' @param alpha Numeric. Significance level for the Box p-value flag.
@@ -60,10 +63,15 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05) {
   prior_mean <- prior$fit_summary$mean
   prior_sd   <- prior$fit_summary$sd
 
-  # Likelihood parameters
+  # Likelihood parameters — approximate as Normal for analytic diagnostics
   if (type == "binary") {
     obs_mean <- x / n
     obs_se   <- sqrt(obs_mean * (1 - obs_mean) / n)
+  } else if (type %in% c("poisson", "survival")) {
+    # Poisson: x events over exposure n; rate = x/n, SE via delta method
+    # Survival: x events over total follow-up n; hazard = x/n
+    obs_mean <- x / n
+    obs_se   <- sqrt(x) / n        # delta method: SE(x/n) = sqrt(x)/n
   } else {
     obs_mean <- x
     obs_se   <- data_summary$sd / sqrt(n)
@@ -323,7 +331,7 @@ sensitivity_grid <- function(prior,
       "every grid point. Check that:\n",
       "  1. param_grid values produce valid hyperparameters (e.g. alpha > 0).\n",
       "  2. The prior distribution supports conjugate updating with this data type.\n",
-      "  3. data_summary$type is set correctly ('binary' or 'continuous')."
+      "  3. data_summary$type is set correctly ('binary', 'continuous', 'poisson', or 'survival')."
     ))
   }
 
@@ -596,6 +604,58 @@ sensitivity_cri <- function(prior,
     post_var  <- 1 / (1 / prior_var + 1 / lik_var)
     post_mean <- post_var * (prior$params$mu / prior_var + obs_mean / lik_var)
     return(.make_bayprior("normal", list(mu = post_mean, sigma = sqrt(post_var)),
+                          "posterior", prior$expert_id, prior$label, list()))
+  }
+
+  # ── Exponential / Poisson or survival ───────────────────────────────────────
+  # Exponential prior on rate is equivalent to Gamma(1, rate) parameterisation.
+  # Conjugate update with Poisson/survival data: posterior is still Gamma.
+  # Map to Gamma update: shape = 1 + x, rate = rate + n.
+  if (prior$dist == "exponential" && type %in% c("poisson", "survival", "binary")) {
+    # Represent as Gamma(1, lambda) for conjugate update
+    lambda     <- prior$params$rate
+    shape_post <- 1 + x
+    rate_post  <- lambda + n
+    return(.make_bayprior("gamma", list(shape = shape_post, rate = rate_post),
+                          "posterior", prior$expert_id, prior$label, list()))
+  }
+
+  # ── Weibull — Normal approximation ──────────────────────────────────────────
+  # No closed-form conjugate update for Weibull. Approximate via a Normal
+  # distribution matched to the posterior mean and SD using the prior's
+  # fit_summary as the prior parameters.
+  if (prior$dist == "weibull") {
+    prior_mean <- prior$fit_summary$mean
+    prior_sd   <- prior$fit_summary$sd
+    if (type %in% c("poisson", "survival")) {
+      obs_mean_w <- x / n
+      obs_se_w   <- sqrt(x) / n
+    } else if (type == "binary") {
+      obs_mean_w <- x / n
+      obs_se_w   <- sqrt(obs_mean_w * (1 - obs_mean_w) / n)
+    } else {
+      obs_mean_w <- x
+      obs_se_w   <- (data_summary$sd %||% prior_sd) / sqrt(n)
+    }
+    obs_se_w   <- max(obs_se_w, 1e-8)
+    prior_var  <- prior_sd^2
+    lik_var    <- obs_se_w^2
+    post_var   <- 1 / (1 / prior_var + 1 / lik_var)
+    post_mean  <- post_var * (prior_mean / prior_var + obs_mean_w / lik_var)
+    return(.make_bayprior("normal",
+                          list(mu = post_mean, sigma = sqrt(post_var)),
+                          "posterior", prior$expert_id, prior$label, list()))
+  }
+
+  # ── Gamma / Poisson or survival ─────────────────────────────────────────────
+  # Gamma(shape, rate) prior on rate lambda; Poisson(lambda * n) likelihood.
+  # Posterior: Gamma(shape + x, rate + n).
+  # For survival data: Gamma prior on hazard; Exponential(lambda) lifetimes.
+  # Posterior: Gamma(shape + events, rate + total_follow_up).
+  if (prior$dist == "gamma" && type %in% c("poisson", "survival")) {
+    shape_post <- prior$params$shape + x
+    rate_post  <- prior$params$rate  + n
+    return(.make_bayprior("gamma", list(shape = shape_post, rate = rate_post),
                           "posterior", prior$expert_id, prior$label, list()))
   }
 

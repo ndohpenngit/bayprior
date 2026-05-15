@@ -2,38 +2,25 @@
 title: "Prior Elicitation Methods"
 author: "Ndoh Penn"
 date: "`r Sys.Date()`"
-output:
-  rmarkdown::html_vignette:
-    toc: true
-    toc_depth: 3
-    number_sections: true
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Prior Elicitation Methods}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse   = TRUE,
-  comment    = "#>",
-  fig.width  = 6,
-  fig.height = 3.8,
-  out.width  = "95%",
-  dpi        = 120,
-  warning    = FALSE,
-  message    = FALSE
-)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 7, fig.height = 4,
+                      message = FALSE, warning = FALSE)
 library(bayprior)
 ```
 
 # Overview
 
-Prior elicitation is the process of translating an expert's subjective beliefs
-about an unknown quantity into a formal probability distribution. **bayprior**
-implements the structured elicitation framework recommended in the SHELF
-methodology (O'Hagan et al., 2006) across four distribution families and three
-elicitation methods.
+Prior elicitation translates an expert's subjective beliefs about an unknown
+quantity into a formal probability distribution. **bayprior** implements the
+SHELF methodology (O'Hagan et al., 2006) across **six distribution families**
+and three elicitation methods.
 
 ## Distribution Families
 
@@ -43,22 +30,20 @@ elicitation methods.
 | **Normal** | (−∞, ∞) | Mean differences, log odds ratios |
 | **Gamma** | (0, ∞) | Event rates, median survival |
 | **Log-Normal** | (0, ∞) | Hazard ratios, PK parameters |
+| **Exponential** | (0, ∞) | Constant hazard rates, Poisson rate priors |
+| **Weibull** | (0, ∞) | Non-constant hazard survival times (OS, PFS) |
 
 ## Elicitation Methods
 
 - **Quantile matching** — expert specifies probability–value pairs
-- **Moment matching** — expert specifies mean and standard deviation
-- **Roulette method** — expert allocates chips across histogram bins
+- **Moment matching** — expert specifies mean and SD
+- **Roulette** — expert allocates chips across histogram bins
 
 ---
 
 # Beta Prior (Binary Endpoints)
 
 ## Quantile Matching
-
-The expert specifies three quantiles that anchor the distribution. For example,
-a clinician who believes the objective response rate (ORR) has a 5% chance of
-being below 10%, a median of 30%, and a 95% chance of being below 60%:
 
 ```{r beta-quantile}
 prior_q <- elicit_beta(
@@ -70,13 +55,7 @@ print(prior_q)
 plot(prior_q)
 ```
 
-The `quantiles` argument is a named numeric vector where names are
-probabilities (as strings) and values are the corresponding quantiles.
-
 ## Moment Matching
-
-When an expert finds it easier to specify a mean and standard deviation than
-exact quantiles:
 
 ```{r beta-moments}
 prior_m <- elicit_beta(
@@ -89,25 +68,13 @@ prior_m <- elicit_beta(
 print(prior_m)
 ```
 
-Moment matching solves analytically for the Beta parameters from the mean
-and variance. The SD must be small enough that implied $\alpha, \beta > 0$:
-
+Moment matching solves analytically:
 $$\alpha = \mu \left(\frac{\mu(1-\mu)}{\sigma^2} - 1\right), \quad
 \beta = (1-\mu)\left(\frac{\mu(1-\mu)}{\sigma^2} - 1\right)$$
-
-## Choosing Between Methods
-
-- **Use quantile matching** when the expert can more naturally think in terms of
-  probability statements ("I'm 90% sure the rate is between X and Y")
-- **Use moment matching** when the expert can directly state a best guess
-  (mean) and uncertainty (SD)
 
 ---
 
 # Normal Prior (Continuous Endpoints)
-
-For quantities that can take any real value, such as log odds ratios or
-mean differences:
 
 ```{r normal-quantile}
 prior_lor <- elicit_normal(
@@ -119,29 +86,23 @@ plot(prior_lor)
 
 ```{r normal-moments}
 prior_md <- elicit_normal(
-  mean      = 0.0,
-  sd        = 0.5,
-  method    = "moments",
-  label     = "Mean difference (sceptical)"
+  mean = 0.0, sd = 0.5, method = "moments",
+  label = "Mean difference (sceptical)"
 )
 plot(prior_md)
 ```
-
-The Normal prior is conjugate for continuous outcomes with known variance,
-making posterior updating straightforward.
 
 ---
 
 # Gamma Prior (Rate and Count Endpoints)
 
-For strictly positive quantities such as event rates or median survival times:
+The Gamma distribution is the conjugate prior for Poisson and exponential
+likelihoods — a natural choice for event rate priors.
 
 ```{r gamma-moments}
 prior_os <- elicit_gamma(
-  mean   = 18,
-  sd     = 6,
-  method = "moments",
-  label  = "Median OS (months)"
+  mean = 18, sd = 6, method = "moments",
+  label = "Median OS (months)"
 )
 plot(prior_os)
 ```
@@ -154,7 +115,6 @@ prior_rate <- elicit_gamma(
 print(prior_rate)
 ```
 
-The Gamma parameterisation uses shape and rate:
 $$\text{mean} = \frac{\text{shape}}{\text{rate}}, \quad
 \text{SD} = \frac{\sqrt{\text{shape}}}{\text{rate}}$$
 
@@ -162,50 +122,162 @@ $$\text{mean} = \frac{\text{shape}}{\text{rate}}, \quad
 
 # Log-Normal Prior (Hazard Ratios)
 
-For quantities that are inherently multiplicative and positive, such as hazard
-ratios or pharmacokinetic parameters. Moment matching operates on the original
-scale; parameters are stored on the log scale:
-
 ```{r lognormal-quantile}
 prior_hr <- elicit_lognormal(
   quantiles = c("0.05" = 0.40, "0.50" = 0.70, "0.95" = 1.20),
   label     = "Hazard ratio (treatment vs control)"
 )
-print(prior_hr)
 plot(prior_hr)
 ```
 
 ```{r lognormal-moments}
 prior_pk <- elicit_lognormal(
-  mean   = 25,
-  sd     = 10,
-  method = "moments",
-  label  = "AUC (ng/mL*h)"
+  mean = 25, sd = 10, method = "moments",
+  label = "AUC (ng/mL*h)"
 )
 print(prior_pk)
 ```
 
-The relationship between original-scale moments and log-scale parameters:
-$$\sigma_{\log}^2 = \log\left(1 + \frac{\sigma^2}{\mu^2}\right), \quad
-\mu_{\log} = \log(\mu) - \frac{\sigma_{\log}^2}{2}$$
+---
+
+# Exponential Prior (Constant Hazard Rates) {#exponential}
+
+The Exponential distribution models a **constant hazard rate** $\lambda > 0$.
+The mean is $1/\lambda$ and the SD equals the mean. It is the conjugate prior
+likelihood for Gamma priors on Poisson rates, and is appropriate when the
+hazard rate is assumed constant over time.
+
+**Use cases:** adverse event rates (events per person-time), constant-hazard
+survival endpoints, Poisson rate priors for count data.
+
+## Method: moments
+
+```{r exp-moments}
+# Mean hazard rate 0.05 => mean survival 1/0.05 = 20 months
+prior_hz <- elicit_exponential(
+  mean      = 0.05,
+  method    = "moments",
+  label     = "Hazard rate (constant)",
+  expert_id = "Expert_1"
+)
+print(prior_hz)
+plot(prior_hz)
+```
+
+## Method: rate
+
+Direct rate specification (= $\lambda$):
+
+```{r exp-rate}
+prior_ae <- elicit_exponential(
+  rate   = 0.12,
+  method = "rate",
+  label  = "AE rate per person-year"
+)
+print(prior_ae)
+```
+
+## Method: quantile
+
+Fit the rate from expert-specified quantiles:
+
+```{r exp-quantile}
+prior_hz_q <- elicit_exponential(
+  quantiles = c("0.25" = 0.02, "0.50" = 0.05, "0.75" = 0.10),
+  method    = "quantile",
+  label     = "Hazard rate"
+)
+print(prior_hz_q)
+plot(prior_hz_q)
+```
+
+## Conjugate update
+
+With Poisson/survival data:
+
+$$\text{Prior: Exponential}(\lambda) \approx \text{Gamma}(1, \lambda)$$
+$$\text{Posterior: Gamma}(1 + x,\; \lambda + n)$$
+
+where $x$ = observed events, $n$ = exposure time or follow-up.
+
+---
+
+# Weibull Prior (Non-Constant Hazard Survival Times) {#weibull}
+
+The Weibull distribution is the most widely used model for survival analysis.
+It is parameterised by shape $k > 0$ and scale $\lambda > 0$:
+
+$$\text{mean} = \lambda\,\Gamma(1 + 1/k), \quad
+\text{SD} = \lambda\sqrt{\Gamma(1 + 2/k) - \Gamma(1 + 1/k)^2}$$
+
+**Shape parameter interpretation:**
+
+| Shape $k$ | Hazard | Clinical scenario |
+|---|---|---|
+| $k < 1$ | Decreasing | Early frailty, selection |
+| $k = 1$ | Constant | Equivalent to Exponential |
+| $k > 1$ | Increasing | Ageing, post-surgical deterioration |
+
+## Method: moments
+
+Specify prior mean and SD — bayprior solves for shape and scale via
+Nelder-Mead optimisation:
+
+```{r weibull-moments}
+prior_wb <- elicit_weibull(
+  mean      = 20,
+  sd        = 10,
+  method    = "moments",
+  label     = "OS (months)",
+  expert_id = "Expert_1"
+)
+print(prior_wb)
+plot(prior_wb)
+```
+
+## Method: params
+
+Direct shape and scale specification:
+
+```{r weibull-params}
+# k=2: linearly increasing hazard
+prior_wb2 <- elicit_weibull(
+  shape  = 2,
+  scale  = 20,
+  method = "params",
+  label  = "PFS (months) — increasing hazard"
+)
+print(prior_wb2)
+plot(prior_wb2)
+```
+
+## Method: quantile
+
+```{r weibull-quantile}
+prior_wb3 <- elicit_weibull(
+  quantiles = c("0.10" = 5, "0.50" = 18, "0.90" = 40),
+  method    = "quantile",
+  label     = "OS (months)"
+)
+print(prior_wb3)
+plot(prior_wb3)
+```
+
+## Posterior approximation note
+
+The Weibull distribution does not have a closed-form conjugate prior. When used
+in `prior_conflict()` or `sensitivity_grid()`, bayprior applies a Normal
+approximation to the posterior matched to the Weibull's `fit_summary` moments.
 
 ---
 
 # Roulette Method
 
-The roulette method (Oakley & O'Hagan, 2010) is an interactive chip-allocation
-technique that makes elicitation accessible to clinical experts who are
-unfamiliar with probability distributions.
-
-The expert places chips in bins representing plausible values. The chip
-histogram is then fitted to a parametric family. In the Shiny app, this is
-interactive; programmatically:
+The interactive chip-allocation method for clinical experts unfamiliar with
+probability distributions. In the Shiny app this is fully interactive;
+programmatically:
 
 ```{r roulette}
-# Expert places chips: 0 very low, rising to peak at 0.25-0.35, falling off.
-# Note: chips must not sum such that any cumulative frequency equals exactly
-# 0 or 1 — elicit_roulette() strips those boundary bins automatically, but
-# at least 2 interior quantile points must remain after stripping.
 prior_rou <- elicit_roulette(
   chips  = c(0L, 1L, 3L, 7L, 9L, 7L, 4L, 2L, 1L, 1L),
   breaks = seq(0, 1, by = 0.1),
@@ -216,24 +288,11 @@ print(prior_rou)
 plot(prior_rou)
 ```
 
-The roulette object also stores the raw chip data for provenance:
-
-```{r roulette-chips}
-prior_rou$roulette$chips
-prior_rou$roulette$breaks
-```
-
 ---
 
 # Expert Pooling
 
-When multiple experts are elicited, their priors are combined into a single
-consensus distribution.
-
-## Linear Pooling (Recommended)
-
-Linear pooling produces a weighted mixture — the standard approach in clinical
-trials (externally Bayesian):
+## Linear Pooling
 
 ```{r linear-pooling}
 e1 <- elicit_beta(mean = 0.25, sd = 0.08, method = "moments",
@@ -244,84 +303,56 @@ e3 <- elicit_beta(
   quantiles = c("0.10" = 0.15, "0.50" = 0.30, "0.90" = 0.52),
   expert_id = "Statistician", label = "ORR"
 )
-
 consensus <- aggregate_experts(
-  priors  = list(
-    Oncologist_1 = e1,
-    Oncologist_2 = e2,
-    Statistician = e3
-  ),
+  priors  = list(Oncologist_1 = e1, Oncologist_2 = e2, Statistician = e3),
   weights = c(0.40, 0.35, 0.25),
   method  = "linear"
 )
-print(consensus)
 plot(consensus)
 ```
 
-The Bhattacharyya coefficient matrix quantifies pairwise agreement:
+## Pooling Compatibility
 
-```{r bc-matrix}
-round(consensus$aggregation$disagreement, 3)
-```
+bayprior validates compatibility before pooling. Priors with **incompatible
+supports** (e.g. Beta + Normal) are blocked with an error. Same-support
+cross-family pooling (e.g. Gamma + Exponential) proceeds with a warning noting
+that sensitivity analysis will use the dominant component's parameters.
 
-Values close to 1 indicate high agreement; values below 0.5 flag substantial
-disagreement and should trigger re-elicitation discussion.
-
-## Logarithmic Pooling
-
-Produces a sharper consensus when experts agree, but can be severely influenced
-by outlying opinions:
-
-```{r log-pooling}
-log_consensus <- aggregate_experts(
-  priors  = list(E1 = e1, E2 = e2, E3 = e3),
-  weights = c(1/3, 1/3, 1/3),
-  method  = "logarithmic"
+```{r pooling-compat-valid}
+# Same positive support — allowed (Gamma + Exponential)
+g1   <- elicit_gamma(mean = 5, sd = 2, method = "moments",
+                     expert_id = "E1", label = "Rate")
+exp1 <- elicit_exponential(mean = 0.2, method = "moments",
+                            expert_id = "E2", label = "Rate")
+pool_pos <- aggregate_experts(
+  priors  = list(E1 = g1, E2 = exp1),
+  weights = c(0.5, 0.5)
 )
-```
-
-## Manual Mixture Construction
-
-For full control over component distributions:
-
-```{r mixture}
-mix <- elicit_mixture(
-  components = list(e1, e2),
-  weights    = c(0.6, 0.4),
-  label      = "Weighted two-expert consensus"
-)
-plot(mix)
+print(pool_pos)
 ```
 
 ---
 
 # Prior Object Structure
 
-Every elicited prior is a `bayprior` S3 object with a consistent structure:
+All `elicit_*()` functions return a `"bayprior"` S3 object:
 
 ```{r structure}
-str(e1, max.level = 2)
+str(prior_q, max.level = 1)
 ```
 
-Key fields:
-
-| Field | Content |
+| Slot | Content |
 |---|---|
-| `$dist` | Distribution family (`"beta"`, `"normal"`, etc.) |
-| `$params` | Named list of hyperparameters |
-| `$method` | Elicitation method used |
-| `$expert_id` | Expert identifier for provenance |
-| `$label` | Human-readable quantity description |
-| `$fit_summary` | Mean, SD, and 2.5/50/97.5th percentiles |
-| `$input` | Raw elicitation inputs (quantiles or moments) |
+| `$dist` | Family: `"beta"`, `"normal"`, `"gamma"`, `"lognormal"`, `"exponential"`, `"weibull"`, `"mixture"` |
+| `$params` | Named list of fitted hyperparameters |
+| `$fit_summary` | `mean`, `sd`, `q025`, `q500`, `q975` |
+| `$method` | Elicitation method |
+| `$expert_id` | Expert identifier |
+| `$label` | Quantity label |
 
 ---
 
 # References
 
-O'Hagan, A., Buck, C. E., Daneshkhah, A., Eiser, J. R., Garthwaite, P. H.,
-Jenkinson, D. J., Oakley, J. E., & Rakow, T. (2006). *Uncertain Judgements:
-Eliciting Experts' Probabilities*. Wiley.
-
-Oakley, J. E. & O'Hagan, A. (2010). SHELF: the Sheffield Elicitation
-Framework. University of Sheffield.
+- O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts' Probabilities*. Wiley.
+- Oakley, J. E. & O'Hagan, A. (2010). *SHELF: the Sheffield Elicitation Framework*. University of Sheffield.

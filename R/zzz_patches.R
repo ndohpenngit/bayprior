@@ -53,10 +53,13 @@
 # Evaluates the density of a bayprior object at a vector of points x.
 .eval_density_vec <- function(prior, x) {
   switch(prior$dist,
-    beta      = stats::dbeta(x, prior$params$alpha, prior$params$beta),
-    normal    = stats::dnorm(x, prior$params$mu, prior$params$sigma),
-    gamma     = stats::dgamma(x, prior$params$shape, prior$params$rate),
-    lognormal = stats::dlnorm(x, prior$params$meanlog, prior$params$sdlog),
+    beta        = stats::dbeta(x, prior$params$alpha, prior$params$beta),
+    normal      = stats::dnorm(x, prior$params$mu, prior$params$sigma),
+    gamma       = stats::dgamma(x, prior$params$shape, prior$params$rate),
+    lognormal   = stats::dlnorm(x, prior$params$meanlog, prior$params$sdlog),
+    exponential = stats::dexp(x, rate = prior$params$rate),
+    weibull     = stats::dweibull(x, shape = prior$params$shape,
+                                     scale = prior$params$scale),
     mixture   = {
       d <- numeric(length(x))
       for (i in seq_along(prior$components)) {
@@ -75,14 +78,20 @@
 # turns white → black and preserves data colours via hue-rotate.
 # In light mode, white background looks correct as-is (no filter applied).
 .apply_plotly_theme <- function(p, layout_args = NULL) {
+  # plotly::layout() appends to layoutAttrs which gets merged at render time.
+  # ggplotly() pre-sets paper_bgcolor/plot_bgcolor and wins the merge.
+  # Direct mutation of p$x$layout is the only way to reliably override them.
   p$x$layout$paper_bgcolor <- "#ffffff"
   p$x$layout$plot_bgcolor  <- "#ffffff"
+
+  # Also clear any background shapes ggplotly inserts
   if (is.list(p$x$layout$shapes)) {
     p$x$layout$shapes <- lapply(p$x$layout$shapes, function(s) {
       if (identical(s$type, "rect")) s$fillcolor <- "#ffffff"
       s
     })
   }
+
   p
 }
 # Returns list(x, y) of grid points and density values for plotting.
@@ -95,6 +104,15 @@
   } else if (prior$dist == "gamma") {
     lo <- stats::qgamma(0.001, prior$params$shape, prior$params$rate)
     hi <- stats::qgamma(0.999, prior$params$shape, prior$params$rate)
+
+  } else if (prior$dist == "exponential") {
+    lo <- 0
+    hi <- stats::qexp(0.999, rate = prior$params$rate)
+
+  } else if (prior$dist == "weibull") {
+    lo <- 0
+    hi <- stats::qweibull(0.999, shape = prior$params$shape,
+                                  scale = prior$params$scale)
 
   } else if (prior$dist == "beta") {
     lo <- 0
@@ -132,7 +150,7 @@
   # FIX: Only clamp lo to 1e-6 for distributions with non-negative support.
   # Clamping Normal priors silently drops the left tail and produces misleading
   # density plots for negative-valued parameters (e.g. log odds ratios).
-  if (prior$dist %in% c("beta", "gamma", "lognormal")) {
+  if (prior$dist %in% c("beta", "gamma", "lognormal", "exponential", "weibull")) {
     lo <- max(lo, 1e-6)
   }
 

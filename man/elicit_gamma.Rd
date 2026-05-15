@@ -37,9 +37,9 @@ Elicit a Gamma prior via quantile matching or moment matching
 }
 \examples{
 prior <- elicit_gamma(
-  mean = 5, sd = 2,
+  mean   = 5, sd = 2,
   method = "moments",
-  label = "Median OS (months)"
+  label  = "Median OS (months)"
 )
 
 }

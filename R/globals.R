@@ -15,7 +15,8 @@
 NULL
 
 # ── Stats / base globals ──────────────────────────────────────────────────────
-#' @importFrom stats median setNames density
+#' @importFrom stats median setNames density dexp dweibull qexp qweibull
+#' @importFrom stats qgamma pgamma dgamma optimise optim nlminb
 #' @importFrom graphics curve
 NULL
 

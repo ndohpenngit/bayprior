@@ -1,6 +1,6 @@
 ---
 title: "Introduction to bayprior"
-author: "Ndoh Penn"
+author: "bayprior package"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
@@ -212,7 +212,7 @@ prior <- elicit_beta(
 # Observed: 18 events in 40 patients
 cd <- prior_conflict(
   prior        = prior,
-  data_summary = list(type = "binary", x = 18, n = 40),
+  data_summary = list(type = "binary", x = 18, n = 40),  # also: "continuous", "poisson", "survival"
   alpha        = 0.05
 )
 print(cd)
@@ -246,7 +246,7 @@ practice, use finer grids (e.g. `seq(1, 8, 0.5)`) to obtain smooth surfaces.
 ```{r sensitivity, cache = TRUE}
 sa <- sensitivity_grid(
   prior        = prior,
-  data_summary = list(type = "binary", x = 14, n = 40),
+  data_summary = list(type = "binary", x = 14, n = 40),  # also: "continuous", "poisson", "survival"
   param_grid   = list(alpha = seq(1, 6, 1), beta = seq(2, 14, 2)),
   target       = c("posterior_mean", "prob_efficacy"),
   threshold    = 0.30
@@ -279,7 +279,7 @@ width — a key regulatory quantity:
 ```{r cri-sensitivity, cache = TRUE, fig.height = 4}
 cri_sa <- sensitivity_cri(
   prior        = prior,
-  data_summary = list(type = "binary", x = 14, n = 40),
+  data_summary = list(type = "binary", x = 14, n = 40),  # also: "continuous", "poisson", "survival"
   param_grid   = list(alpha = seq(1, 6, 1), beta = seq(2, 14, 2)),
   cri_level    = 0.95,
   threshold    = 0.30
@@ -493,10 +493,12 @@ plot(rob_full)
 
 | Function | Purpose |
 |---|---|
-| `elicit_beta()` | Beta prior for binary endpoints |
+| `elicit_beta()` | Beta prior for binary endpoints — support (0, 1) |
 | `elicit_normal()` | Normal prior for continuous endpoints |
 | `elicit_gamma()` | Gamma prior for rate/count endpoints |
 | `elicit_lognormal()` | Log-normal prior for hazard ratios |
+| `elicit_exponential()` | Exponential prior for constant hazard / Poisson rates |
+| `elicit_weibull()` | Weibull prior for non-constant hazard survival times |
 | `elicit_roulette()` | Chip-based roulette elicitation |
 | `elicit_mixture()` | Manual mixture prior construction |
 | `aggregate_experts()` | Pool multiple expert priors |

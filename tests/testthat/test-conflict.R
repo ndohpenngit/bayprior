@@ -110,3 +110,149 @@ test_that("conflict_mahalanobis detects conflict when means are far apart", {
   )
   expect_true(mv$conflict_flag)
 })
+
+
+# ── Additional coverage ──────────────────────────────────────────────────────
+
+test_that("print.bayprior_conflict does not error for all severities", {
+  prior <- elicit_beta(mean=0.30, sd=0.05, method="moments")
+  # None
+  cd_none <- prior_conflict(prior, list(type="binary", x=12, n=40))
+  expect_error(print(cd_none), NA)
+  # Severe
+  cd_sev <- prior_conflict(prior, list(type="binary", x=38, n=40))
+  expect_error(print(cd_sev), NA)
+})
+
+# ── Robust priors coverage ────────────────────────────────────────────────────
+
+test_that("plot_prior_likelihood without posterior returns ggplot", {
+  prior <- elicit_beta(mean=0.30, sd=0.10, method="moments")
+  gp <- plot_prior_likelihood(
+    prior,
+    data_summary   = list(type="binary", x=12, n=40),
+    show_posterior = FALSE
+  )
+  expect_s3_class(gp, "gg")
+})
+
+test_that("plot_prior_likelihood continuous data returns ggplot", {
+  prior <- elicit_normal(mean=0.0, sd=0.3, method="moments")
+  gp <- plot_prior_likelihood(
+    prior,
+    data_summary   = list(type="continuous", x=0.2, sd=0.25, n=60),
+    show_posterior = TRUE
+  )
+  expect_s3_class(gp, "gg")
+})
+
+test_that("prior_conflict alpha field stored correctly", {
+  prior <- elicit_beta(mean=0.30, sd=0.10, method="moments")
+  cd <- prior_conflict(prior, list(type="binary", x=12, n=40), alpha=0.10)
+  expect_equal(cd$alpha, 0.10)
+})
+
+test_that("conflict_mahalanobis with custom alpha", {
+  mv <- conflict_mahalanobis(
+    prior_means = c(0.35, 0.60),
+    prior_cov   = matrix(c(0.010, 0.003, 0.003, 0.015), 2, 2),
+    obs_means   = c(0.40, 0.62),
+    obs_cov     = matrix(c(0.008, 0.002, 0.002, 0.010), 2, 2) / 50,
+    labels      = c("ORR", "OS"),
+    alpha       = 0.10
+  )
+  expect_equal(mv$alpha, 0.10)
+})
+
+# ── Elicitation coverage ──────────────────────────────────────────────────────
+
+# ── Poisson data type ─────────────────────────────────────────────────────────
+
+test_that("prior_conflict Poisson data returns valid diagnostics", {
+  prior <- elicit_gamma(mean = 0.15, sd = 0.06, method = "moments",
+                        label = "Adverse event rate")
+  cd <- prior_conflict(
+    prior,
+    data_summary = list(type = "poisson", x = 12, n = 100),
+    alpha = 0.05
+  )
+  expect_s3_class(cd, "bayprior_conflict")
+  expect_true(is.numeric(cd$box_pvalue))
+  expect_true(cd$box_pvalue >= 0 && cd$box_pvalue <= 1)
+  expect_true(is.numeric(cd$surprise_index))
+  expect_true(cd$surprise_index >= 0)
+  expect_true(cd$conflict_severity %in% c("none", "mild", "severe"))
+  expect_equal(cd$data_summary$type, "poisson")
+})
+
+test_that("prior_conflict Poisson conjugate update via .conjugate_update", {
+  prior <- elicit_gamma(mean = 0.20, sd = 0.08, method = "moments",
+                        label = "Rate")
+  ds    <- list(type = "poisson", x = 20, n = 80)
+  post  <- bayprior:::.conjugate_update(prior, ds)
+  expect_equal(post$dist, "gamma")
+  # Posterior shape = prior shape + x
+  expect_equal(post$params$shape, prior$params$shape + 20, tolerance = 1e-6)
+  # Posterior rate  = prior rate  + n
+  expect_equal(post$params$rate,  prior$params$rate  + 80, tolerance = 1e-6)
+})
+
+test_that("prior_conflict Poisson severe conflict detected", {
+  # Prior: rate ~ 0.05; observed rate 0.30 -- should flag severe conflict
+  prior <- elicit_gamma(mean = 0.05, sd = 0.02, method = "moments")
+  cd <- prior_conflict(
+    prior,
+    data_summary = list(type = "poisson", x = 30, n = 100)
+  )
+  expect_equal(cd$conflict_severity, "severe")
+})
+
+# ── Survival data type ────────────────────────────────────────────────────────
+
+test_that("prior_conflict survival data returns valid diagnostics", {
+  prior <- elicit_gamma(mean = 0.05, sd = 0.02, method = "moments",
+                        label = "Hazard rate")
+  cd <- prior_conflict(
+    prior,
+    data_summary = list(type = "survival", x = 20, n = 400)
+  )
+  expect_s3_class(cd, "bayprior_conflict")
+  expect_true(cd$box_pvalue >= 0 && cd$box_pvalue <= 1)
+  expect_equal(cd$data_summary$type, "survival")
+})
+
+test_that("survival conjugate update gives Gamma posterior", {
+  prior <- elicit_gamma(mean = 0.05, sd = 0.02, method = "moments")
+  ds    <- list(type = "survival", x = 20, n = 400)
+  post  <- bayprior:::.conjugate_update(prior, ds)
+  expect_equal(post$dist, "gamma")
+  expect_equal(post$params$shape, prior$params$shape + 20, tolerance = 1e-6)
+  expect_equal(post$params$rate,  prior$params$rate  + 400, tolerance = 1e-6)
+})
+
+# ── Poisson in sensitivity ────────────────────────────────────────────────────
+
+test_that("sensitivity_grid works with Poisson data", {
+  prior <- elicit_gamma(mean = 0.15, sd = 0.05, method = "moments")
+  sa <- sensitivity_grid(
+    prior,
+    data_summary = list(type = "poisson", x = 12, n = 100),
+    param_grid   = list(shape = seq(2, 8, 1), rate = seq(10, 50, 5)),
+    target       = c("posterior_mean", "prob_efficacy"),
+    threshold    = 0.10
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+  expect_false(all(is.na(sa$grid$posterior_mean)))
+})
+
+test_that("sensitivity_cri works with survival data", {
+  prior <- elicit_gamma(mean = 0.05, sd = 0.02, method = "moments")
+  sa <- sensitivity_cri(
+    prior,
+    data_summary = list(type = "survival", x = 20, n = 400),
+    param_grid   = list(shape = seq(1, 6, 1), rate = seq(10, 40, 5)),
+    cri_level    = 0.95
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+  expect_false(all(is.na(sa$grid$cri_width)))
+})

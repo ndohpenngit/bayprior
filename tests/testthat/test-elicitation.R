@@ -160,3 +160,102 @@ test_that("elicit_lognormal moments stores correct parameters", {
   expect_true(length(p$params) > 0)
   expect_gt(p$fit_summary$mean, 0)
 })
+
+
+# ── Exponential elicitation ───────────────────────────────────────────────────
+
+test_that("elicit_exponential moments method returns valid bayprior", {
+  p <- elicit_exponential(mean = 0.05, method = "moments",
+                           label = "Hazard rate", expert_id = "E1")
+  expect_s3_class(p, "bayprior")
+  expect_equal(p$dist, "exponential")
+  expect_equal(p$params$rate, 1 / 0.05, tolerance = 1e-6)
+  expect_equal(p$fit_summary$mean, 0.05, tolerance = 1e-6)
+  expect_equal(p$fit_summary$sd,   0.05, tolerance = 1e-6)  # Exp: mean = SD
+  expect_lt(p$fit_summary$q025, p$fit_summary$mean)
+  expect_gt(p$fit_summary$q975, p$fit_summary$mean)
+  expect_equal(p$expert_id, "E1")
+  expect_equal(p$label, "Hazard rate")
+})
+
+test_that("elicit_exponential rate method", {
+  p <- elicit_exponential(rate = 0.10, method = "rate")
+  expect_equal(p$params$rate, 0.10, tolerance = 1e-6)
+  expect_equal(p$fit_summary$mean, 10, tolerance = 1e-6)
+})
+
+test_that("elicit_exponential quantile method converges", {
+  p <- elicit_exponential(
+    quantiles = c("0.25" = 0.02, "0.50" = 0.05, "0.75" = 0.10),
+    method = "quantile"
+  )
+  expect_s3_class(p, "bayprior")
+  expect_gt(p$params$rate, 0)
+  # Median should be close to specified 0.05
+  expect_equal(p$fit_summary$q500, 0.05, tolerance = 0.02)
+})
+
+test_that("elicit_exponential errors on invalid inputs", {
+  expect_error(elicit_exponential(mean = -1, method = "moments"))
+  expect_error(elicit_exponential(rate = 0, method = "rate"))
+  expect_error(elicit_exponential(method = "quantile"))  # no quantiles
+})
+
+# ── Weibull elicitation ───────────────────────────────────────────────────────
+
+test_that("elicit_weibull moments method returns valid bayprior", {
+  p <- elicit_weibull(mean = 20, sd = 10, method = "moments",
+                       label = "Survival time", expert_id = "E1")
+  expect_s3_class(p, "bayprior")
+  expect_equal(p$dist, "weibull")
+  expect_gt(p$params$shape, 0)
+  expect_gt(p$params$scale, 0)
+  expect_equal(p$fit_summary$mean, 20, tolerance = 0.5)
+  expect_equal(p$fit_summary$sd,   10, tolerance = 0.5)
+  expect_lt(p$fit_summary$q025, p$fit_summary$mean)
+  expect_gt(p$fit_summary$q975, p$fit_summary$mean)
+})
+
+test_that("elicit_weibull params method", {
+  p <- elicit_weibull(shape = 2, scale = 20, method = "params")
+  expect_equal(p$params$shape, 2, tolerance = 1e-6)
+  expect_equal(p$params$scale, 20, tolerance = 1e-6)
+  # Weibull(2,20) mean = 20 * gamma(1.5) = 20 * sqrt(pi)/2
+  expect_equal(p$fit_summary$mean, 20 * gamma(1.5), tolerance = 1e-4)
+})
+
+test_that("elicit_weibull quantile method converges", {
+  p <- elicit_weibull(
+    quantiles = c("0.10" = 5, "0.50" = 18, "0.90" = 40),
+    method    = "quantile"
+  )
+  expect_s3_class(p, "bayprior")
+  expect_gt(p$params$shape, 0)
+  expect_equal(p$fit_summary$q500, 18, tolerance = 1)
+})
+
+test_that("elicit_weibull errors on invalid inputs", {
+  expect_error(elicit_weibull(mean = 20, method = "moments"))  # no sd
+  expect_error(elicit_weibull(shape = -1, scale = 10, method = "params"))
+  expect_error(elicit_weibull(quantiles = c("0.5" = 10), method = "quantile"))  # only 1 quantile
+})
+
+# ── Exponential conjugate update ──────────────────────────────────────────────
+
+test_that("Exponential prior updates correctly with Poisson data", {
+  p  <- elicit_exponential(mean = 0.10, method = "moments")
+  ds <- list(type = "poisson", x = 12, n = 100)
+  post <- bayprior:::.conjugate_update(p, ds)
+  expect_equal(post$dist, "gamma")
+  expect_equal(post$params$shape, 1 + 12,         tolerance = 1e-6)
+  expect_equal(post$params$rate,  10 + 100,        tolerance = 1e-6)
+})
+
+test_that("Weibull prior updates via Normal approximation", {
+  p  <- elicit_weibull(shape = 2, scale = 20, method = "params")
+  ds <- list(type = "survival", x = 20, n = 400)
+  post <- bayprior:::.conjugate_update(p, ds)
+  expect_equal(post$dist, "normal")
+  expect_gt(post$params$mu, 0)
+  expect_gt(post$params$sigma, 0)
+})
