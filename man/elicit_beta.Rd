@@ -16,14 +16,15 @@ elicit_beta(
 }
 \arguments{
 \item{quantiles}{Named numeric vector of quantile specifications, e.g.
-\code{c("0.05" = 0.1, "0.50" = 0.3, "0.95" = 0.6)}. At least two quantiles
-required.}
+\code{c("0.05" = 0.1, "0.50" = 0.3, "0.95" = 0.6)}. At least two
+quantiles required.}
 
 \item{mean}{Optional numeric. Expert-specified mean for moment matching.}
 
 \item{sd}{Optional numeric. Expert-specified SD for moment matching.}
 
-\item{method}{Character. One of \code{"quantile"} (default) or \code{"moments"}.}
+\item{method}{Character. One of \code{"quantile"} (default) or
+\code{"moments"}.}
 
 \item{expert_id}{Character. Identifier for this expert's elicitation.}
 
@@ -39,7 +40,6 @@ An object of class \code{bayprior} with components:
 \item{\code{method}}{Elicitation method used}
 \item{\code{expert_id}}{Expert identifier}
 \item{\code{label}}{Quantity label}
-\item{\code{input}}{Raw elicitation inputs}
 \item{\code{fit_summary}}{Summary statistics of fitted prior}
 }
 }
@@ -53,16 +53,16 @@ the SHELF methodology and FDA guidance on Bayesian clinical trials.
 prior <- elicit_beta(
   quantiles = c("0.05" = 0.10, "0.50" = 0.30, "0.95" = 0.60),
   expert_id = "Expert_1",
-  label = "Response rate (treatment arm)"
+  label     = "Response rate (treatment arm)"
 )
 print(prior)
 plot(prior)
 
 # Moment-based elicitation
 prior_mom <- elicit_beta(
-  mean = 0.30, sd = 0.12,
+  mean   = 0.30, sd = 0.12,
   method = "moments",
-  label = "Response rate (treatment arm)"
+  label  = "Response rate"
 )
 
 }

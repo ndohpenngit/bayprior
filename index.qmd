@@ -201,10 +201,6 @@ preference persisted across sessions via browser localStorage.
 # Development version from GitHub:
 # install.packages("pak")
 pak::pak("ndohpenngit/bayprior")
-
-# Or (with vignettes included):
-# install.packages("devtools")
-devtools::install_github("ndohpenngit/bayprior", build_vignettes = TRUE)
 ```
 
 > **System requirements:** PDF report generation requires

@@ -11,9 +11,12 @@ prior_conflict(prior, data_summary, alpha = 0.05)
 
 \item{data_summary}{Named list describing the observed data:
 \describe{
-\item{\code{type}}{\code{"binary"} or \code{"continuous"}.}
-\item{\code{x}}{Number of events (binary) or observed mean (continuous).}
-\item{\code{n}}{Sample size.}
+\item{\code{type}}{\code{"binary"}, \code{"continuous"},
+\code{"poisson"}, or \code{"survival"}.}
+\item{\code{x}}{Number of events (binary / poisson / survival)
+or observed mean (continuous).}
+\item{\code{n}}{Sample size (binary / continuous), total exposure
+(poisson: person-time), or total follow-up time (survival).}
 \item{\code{sd}}{Observed standard deviation (continuous only).}
 }}
 
