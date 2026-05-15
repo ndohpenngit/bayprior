@@ -332,15 +332,37 @@ if (has_prior) {
 ### Fitted Parameters
 
 ```{r fitted-params}
+#| results: asis
 if (has_prior) {
-  df <- .params_df(pr)
-  rownames(df) <- NULL
-  if (nrow(df) > 0L) {
-    kable(df, col.names = c("Parameter", "Value"),
-          caption = "Fitted hyperparameters", align = "lr",
-          row.names = FALSE)
+  if (identical(pr$dist, "mixture")) {
+    # For mixture priors: show component summary table instead of raw params
+    n_comp <- length(pr$components)
+    df_mix <- do.call(rbind, lapply(seq_len(n_comp), function(i) {
+      comp <- pr$components[[i]]
+      s    <- comp$fit_summary
+      data.frame(
+        Component  = paste0("Component ", i,
+                            " (", toupper(.safe_chr(comp$dist)), ")"),
+        Weight     = as.character(round(pr$weights[[i]], 4)),
+        Expert     = .safe_chr(comp$expert_id),
+        Mean       = as.character(.safe_round(.fs(s, "mean"), 4)),
+        SD         = as.character(.safe_round(.fs(s, "sd"), 4)),
+        stringsAsFactors = FALSE
+      )
+    }))
+    rownames(df_mix) <- NULL
+    kable(df_mix,
+          col.names = c("Component", "Weight", "Expert", "Mean", "SD"),
+          caption   = "Mixture prior: component summary",
+          align     = "lllrr", row.names = FALSE)
   } else {
-    cat("Hyperparameters not available for this prior type.\n")
+    df <- .params_df(pr)
+    rownames(df) <- NULL
+    if (nrow(df) > 0L) {
+      kable(df, col.names = c("Parameter", "Value"),
+            caption = "Fitted hyperparameters", align = "lr",
+            row.names = FALSE)
+    }
   }
 }
 ```

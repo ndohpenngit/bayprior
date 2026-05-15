@@ -21,3 +21,5 @@
 ^rsconnect$
 ^favicon\.png$
 ^^cheatsheet$$
+^doc$
+^Meta$

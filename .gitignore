@@ -23,3 +23,5 @@ vignettes/*_files/
 .posit/
 _freeze/
 _includes/
+/doc/
+/Meta/
