@@ -2,16 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.7.32">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
 <title>bayprior</title>
 <style>
-/* Default styles provided by pandoc.
-** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -75,10 +72,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-f7919f14b89ae9a431cba0b331f0b52b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -118,8 +115,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./man/figures/favicon.png" alt="" class="navbar-logo light-content">
-    <img src="./man/figures/favicon.png" alt="" class="navbar-logo dark-content">
+    <img src="./man/figures/favicon.png" alt="" class="navbar-logo">
     </a>
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">bayprior</span>
@@ -203,6 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#prior-elicitation" id="toc-prior-elicitation" class="nav-link" data-scroll-target="#prior-elicitation">Prior Elicitation</a></li>
   <li><a href="#prior-data-conflict-diagnostics" id="toc-prior-data-conflict-diagnostics" class="nav-link" data-scroll-target="#prior-data-conflict-diagnostics">Prior-Data Conflict Diagnostics</a></li>
+  <li><a href="#validation-and-compatibility-checks" id="toc-validation-and-compatibility-checks" class="nav-link" data-scroll-target="#validation-and-compatibility-checks">Validation and Compatibility Checks</a></li>
   <li><a href="#sensitivity-analysis" id="toc-sensitivity-analysis" class="nav-link" data-scroll-target="#sensitivity-analysis">Sensitivity Analysis</a></li>
   <li><a href="#robust-and-power-priors" id="toc-robust-and-power-priors" class="nav-link" data-scroll-target="#robust-and-power-priors">Robust and Power Priors</a></li>
   </ul></li>
@@ -220,6 +217,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#quick-start" id="toc-quick-start" class="nav-link" data-scroll-target="#quick-start">Quick Start</a></li>
   <li><a href="#vignettes" id="toc-vignettes" class="nav-link" data-scroll-target="#vignettes">Vignettes</a></li>
+  <li><a href="#documentation" id="toc-documentation" class="nav-link" data-scroll-target="#documentation">Documentation</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/ndohpenngit/bayprior/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
@@ -249,8 +247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p align="center">
 <img src="man/figures/logo.png" width="150" style="margin-bottom: 10px;">
 </p><h1 align="center">
-bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://www.r-project.org/"> <img src="https://img.shields.io/badge/R-%3E=4.1.0-blue?logo=r&amp;logoColor=white" alt="R version"> </a> <a href="https://shiny.posit.co/"> <img src="https://img.shields.io/badge/Built%20with-Shiny-009999?logo=rstudio&amp;logoColor=white" alt="Shiny"> </a> <a href="https://thinkr-open.github.io/golem/"> <img src="https://img.shields.io/badge/Framework-golem-6C63FF?logo=r&amp;logoColor=white" alt="golem"> </a> <a href="https://www.gnu.org/licenses/gpl-3.0"> <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="GPL-3"> </a> <a href="https://github.com/ndohpenngit/bayprior/actions"> <img src="https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"> </a> <a href="https://rstudio.github.io/renv/"> <img src="https://img.shields.io/badge/renv-enabled-brightgreen" alt="renv"> </a> <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"> <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle"> </a> <a href="https://quarto.org"> <img src="https://img.shields.io/badge/Reports-Quarto-blue?logo=quarto&amp;logoColor=white" alt="Quarto"> </a> <a href="https://npenn.shinyapps.io/bayprior/"> <img src="https://img.shields.io/badge/Live_App-bayprior-blueviolet?logo=shiny" alt="Live app"> </a><br>
-
+bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://www.r-project.org/"> <img src="https://img.shields.io/badge/R-%3E=4.1.0-blue?logo=r&amp;logoColor=white" alt="R version"> </a> <a href="https://shiny.posit.co/"> <img src="https://img.shields.io/badge/Built%20with-Shiny-009999?logo=rstudio&amp;logoColor=white" alt="Shiny"> </a> <a href="https://thinkr-open.github.io/golem/"> <img src="https://img.shields.io/badge/Framework-golem-6C63FF?logo=r&amp;logoColor=white" alt="golem"> </a> <a href="https://www.gnu.org/licenses/gpl-3.0"> <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="GPL-3"> </a> <a href="https://github.com/ndohpenngit/bayprior/actions"> <img src="https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"> </a> <a href="https://rstudio.github.io/renv/"> <img src="https://img.shields.io/badge/renv-enabled-brightgreen" alt="renv"> </a> <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"> <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle"> </a> <a href="https://ndohpenngit.github.io/bayprior/"> <img src="https://img.shields.io/badge/docs-website-blue?logo=quarto&amp;logoColor=white" alt="Docs"> </a> <a href="https://npenn.shinyapps.io/bayprior/"> <img src="https://img.shields.io/badge/Live_App-bayprior-blueviolet?logo=shiny" alt="Live app"> </a>
 </h1>
 <p></p>
 <hr>
@@ -260,10 +257,10 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 <p>The package addresses the upstream problem that existing Bayesian trial packages (<code>trialr</code>, <code>RBesT</code>, <code>hdbayes</code>) largely ignore: <em>how do you construct, validate, and justify your prior to a regulator?</em> The FDA’s 2026 draft guidance on Bayesian methods makes this a live, urgent need — with no unified R tool previously addressing it.</p>
 <p><strong>bayprior</strong> enables users to:</p>
 <ul>
-<li><strong>Elicit structured priors</strong> — SHELF-style quantile matching, moment matching, and the interactive roulette method across Beta, Normal, Gamma, and Log-Normal families.</li>
-<li><strong>Aggregate expert opinions</strong> — Linear or logarithmic pooling of multiple expert priors with pairwise Bhattacharyya agreement diagnostics.</li>
-<li><strong>Diagnose prior-data conflict</strong> — Box’s p-value, surprise index, Bhattacharyya overlap, and multivariate Mahalanobis distance.</li>
-<li><strong>Quantify sensitivity</strong> — Posterior conclusions evaluated across hyperparameter grids via tornado plots and influence heatmaps.</li>
+<li><strong>Elicit structured priors</strong> — SHELF-style quantile matching, moment matching, and the interactive roulette method across Beta, Normal, Gamma, Log-Normal, <strong>Exponential</strong>, and <strong>Weibull</strong> families.</li>
+<li><strong>Aggregate expert opinions</strong> — Linear or logarithmic pooling of multiple expert priors with pairwise Bhattacharyya agreement diagnostics and cross-family compatibility validation.</li>
+<li><strong>Diagnose prior-data conflict</strong> — Box’s p-value, surprise index, Bhattacharyya overlap, and multivariate Mahalanobis distance, supporting <strong>binary, continuous, Poisson/count, and survival</strong> data types.</li>
+<li><strong>Quantify sensitivity</strong> — Posterior conclusions evaluated across hyperparameter grids via tornado plots and influence heatmaps, with independent data entry.</li>
 <li><strong>Build robust priors</strong> — Sceptical, robust mixture, and calibrated power priors for regulatory sensitivity analyses.</li>
 <li><strong>Generate regulatory reports</strong> — Self-contained HTML, PDF, or Word (.docx) prior justification reports aligned with FDA/EMA submission expectations, rendered via Quarto.</li>
 </ul>
@@ -289,19 +286,19 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 <tbody>
 <tr class="odd">
 <td><strong>Prior Elicitation</strong></td>
-<td>Quantile matching, moment matching, SHELF roulette for Beta / Normal / Gamma / Log-Normal</td>
+<td>Quantile matching, moment matching, SHELF roulette for Beta / Normal / Gamma / Log-Normal / <strong>Exponential</strong> / <strong>Weibull</strong></td>
 <td>Fitted density plot + parameter table</td>
 <td>Structured expert prior elicitation</td>
 </tr>
 <tr class="even">
 <td><strong>Expert Pooling</strong></td>
-<td>Linear and logarithmic opinion pooling across multiple experts</td>
+<td>Linear and logarithmic opinion pooling with support compatibility validation</td>
 <td>Consensus density overlay + Bhattacharyya matrix</td>
 <td>Aggregate multi-expert beliefs</td>
 </tr>
 <tr class="odd">
 <td><strong>Conflict Diagnostics</strong></td>
-<td>Box p-value, surprise index, KL divergence, Bhattacharyya overlap</td>
+<td>Box p-value, surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, <strong>Poisson</strong>, and <strong>survival</strong> data</td>
 <td>Prior–Likelihood–Posterior overlay</td>
 <td>Detect prior misspecification</td>
 </tr>
@@ -313,7 +310,7 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 </tr>
 <tr class="odd">
 <td><strong>Sensitivity Analysis</strong></td>
-<td>Hyperparameter grid over posterior mean, SD, CrI width, Pr(efficacy)</td>
+<td>Hyperparameter grid over posterior mean, SD, CrI width, Pr(efficacy); independent data entry</td>
 <td>Tornado plot + influence heatmap</td>
 <td>Demonstrate robustness to regulators</td>
 </tr>
@@ -331,13 +328,13 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 </tr>
 <tr class="even">
 <td><strong>Power Prior</strong></td>
-<td>Ibrahim–Chen calibrated borrowing weight via Bayes Factor; supports Beta, Normal, Gamma, Log-Normal, and Mixture priors</td>
+<td>Ibrahim–Chen calibrated borrowing weight via Bayes Factor</td>
 <td>Calibration curves + optimal δ</td>
 <td>Principled historical data borrowing</td>
 </tr>
 <tr class="odd">
 <td><strong>Export Report</strong></td>
-<td>HTML / PDF / Word (.docx) prior justification document rendered via Quarto</td>
+<td>HTML / PDF / Word (.docx) prior justification document via Quarto</td>
 <td>Regulatory-ready self-contained report</td>
 <td>FDA/EMA submission documentation</td>
 </tr>
@@ -350,8 +347,13 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 <section id="prior-elicitation" class="level3">
 <h3 class="anchored" data-anchor-id="prior-elicitation">Prior Elicitation</h3>
 <p>Three structured elicitation approaches are implemented. <strong>Quantile matching</strong> fits a parametric distribution to expert-specified probability–value pairs via numerical optimisation. <strong>Moment matching</strong> derives hyperparameters analytically from an expert-supplied mean and SD. The <strong>SHELF roulette method</strong> (Oakley &amp; O’Hagan, 2010) lets the expert allocate chips across histogram bins, fitting a parametric family to the chip allocation in real time.</p>
-<p>All three methods support four distribution families:</p>
+<p>All three methods support six distribution families:</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Family</th>
@@ -380,208 +382,223 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 <td>(0, ∞)</td>
 <td>Hazard ratios, PK parameters</td>
 </tr>
+<tr class="odd">
+<td><strong>Exponential</strong></td>
+<td>(0, ∞)</td>
+<td>Constant hazard rates, Poisson rate priors</td>
+</tr>
+<tr class="even">
+<td><strong>Weibull</strong></td>
+<td>(0, ∞)</td>
+<td>Non-constant hazard survival times (OS, PFS)</td>
+</tr>
 </tbody>
 </table>
+<p>Exponential priors support <code>"moments"</code>, <code>"rate"</code>, and <code>"quantile"</code> methods. Weibull priors support <code>"moments"</code>, <code>"params"</code>, and <code>"quantile"</code> methods.</p>
 </section>
 <section id="prior-data-conflict-diagnostics" class="level3">
 <h3 class="anchored" data-anchor-id="prior-data-conflict-diagnostics">Prior-Data Conflict Diagnostics</h3>
-<p>Conflict detection follows Box (1980). The <strong>prior predictive p-value</strong> tests whether the observed data is plausible under the prior predictive distribution. The <strong>surprise index</strong> measures standardised distance between the prior mean and the observed data. The <strong>Bhattacharyya overlap coefficient</strong> quantifies distributional overlap between the prior and the normalised likelihood. For two-endpoint trials, a <strong>Mahalanobis distance</strong> provides an omnibus multivariate conflict statistic with a known chi-squared reference distribution.</p>
-<p>All diagnostics work transparently with mixture priors via a Normal approximation based on the mixture’s <code>fit_summary</code>.</p>
+<p>Conflict detection follows Box (1980). Four complementary metrics are computed:</p>
+<ul>
+<li><strong>Prior predictive p-value</strong> — tests whether observed data is plausible under the prior predictive distribution.</li>
+<li><strong>Surprise index</strong> — standardised distance between prior mean and observed data.</li>
+<li><strong>Bhattacharyya overlap</strong> — distributional overlap between prior and normalised likelihood.</li>
+<li><strong>KL divergence</strong> — information-theoretic distance from prior to likelihood.</li>
+</ul>
+<p>Four data types are supported:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Data type</th>
+<th>Conjugate update</th>
+<th>Typical endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Binary</strong> (x events / n)</td>
+<td>Beta–Binomial</td>
+<td>Response rate, ORR</td>
+</tr>
+<tr class="even">
+<td><strong>Continuous</strong> (mean, SD, n)</td>
+<td>Normal–Normal</td>
+<td>Mean difference, HbA1c</td>
+</tr>
+<tr class="odd">
+<td><strong>Poisson / count</strong> (events / exposure)</td>
+<td>Gamma–Poisson</td>
+<td>Adverse event rate</td>
+</tr>
+<tr class="even">
+<td><strong>Survival</strong> (events / follow-up time)</td>
+<td>Gamma–Exponential</td>
+<td>Hazard rate, OS, PFS</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="validation-and-compatibility-checks" class="level3">
+<h3 class="anchored" data-anchor-id="validation-and-compatibility-checks">Validation and Compatibility Checks</h3>
+<p>bayprior includes a comprehensive validation layer:</p>
+<ul>
+<li><strong>Prior–data compatibility</strong> — warns when a prior family is atypical for the selected data type.</li>
+<li><strong>Pooling compatibility</strong> — blocks pooling of distributions with incompatible supports; warns for same-support cross-family pooling.</li>
+<li><strong>Sensitivity compatibility</strong> — warns for single-parameter families and cross-family mixture grids; blocks incompatible-support mixtures.</li>
+</ul>
 </section>
 <section id="sensitivity-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="sensitivity-analysis">Sensitivity Analysis</h3>
-<p>The sensitivity module evaluates how key posterior quantities — posterior mean, SD, credible interval width, and Pr(θ &gt; θ₀) — change as prior hyperparameters vary over a user-specified grid. Results are visualised as <strong>tornado plots</strong> (bar width = range of influence, ordered from most to least sensitive) and <strong>influence heatmaps</strong> (two-dimensional colour-coded grid with the reference prior marked). A dedicated <code>sensitivity_cri()</code> function tracks credible interval width specifically — a key regulatory quantity.</p>
+<p>The sensitivity module is <strong>fully independent of conflict diagnostics</strong> — users can enter observed data directly without running conflict diagnostics first. Results are visualised as <strong>tornado plots</strong> and <strong>influence heatmaps</strong>. A dedicated <code>sensitivity_cri()</code> function tracks credible interval width specifically — a key regulatory quantity.</p>
 </section>
 <section id="robust-and-power-priors" class="level3">
 <h3 class="anchored" data-anchor-id="robust-and-power-priors">Robust and Power Priors</h3>
-<p>The <strong>robust mixture prior</strong> (Schmidli et al., 2014) mixes the informative elicited prior with a vague Normal component, protecting against prior-data conflict while preserving the main prior’s information.</p>
-<p>The <strong>sceptical prior</strong> (Spiegelhalter &amp; Freedman, 1994) is centred at the null value of the treatment effect and calibrated to weak, moderate, or strong scepticism. For Beta family priors, the null value must be in (0, 1).</p>
-<p>The <strong>power prior</strong> (Ibrahim &amp; Chen, 2000) down-weights historical data by δ ∈ (0, 1], calibrated to achieve a target Bayes Factor. Conjugate updating is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors.</p>
+<p>The <strong>robust mixture prior</strong> (Schmidli et al., 2014) mixes the informative prior with a vague Normal component. The <strong>sceptical prior</strong> (Spiegelhalter &amp; Freedman, 1994) is centred at the null treatment effect. The <strong>power prior</strong> (Ibrahim &amp; Chen, 2000) down-weights historical data by δ ∈ (0, 1], calibrated to achieve a target Bayes Factor.</p>
 <hr>
 </section>
 </section>
 <section id="user-interface" class="level2">
 <h2 class="anchored" data-anchor-id="user-interface">User Interface</h2>
-<p>The Shiny app includes a <strong>dark / light mode toggle</strong> in the header, with theme preference persisted across sessions via browser localStorage.</p>
+<p>The Shiny app includes a <strong>dark / light mode toggle</strong> persisted via browser localStorage. <strong>All module outputs reset automatically when inputs change</strong>, preventing stale results from being shown alongside new inputs.</p>
 <section id="prior-elicitation-panel" class="level3">
 <h3 class="anchored" data-anchor-id="prior-elicitation-panel">Prior Elicitation Panel</h3>
 <ul>
-<li><strong>Distribution family:</strong> Beta, Normal, Gamma, or Log-Normal</li>
+<li><strong>Distribution family:</strong> Beta, Normal, Gamma, Log-Normal, Exponential, or Weibull</li>
 <li><strong>Elicitation method:</strong> Quantile matching, moment matching, or roulette</li>
-<li><strong>Real-time density preview:</strong> Prior density rendered after fitting</li>
-<li><strong>Expert pool:</strong> Accumulate multiple fitted priors for consensus aggregation</li>
+<li><strong>Output reset:</strong> Panel resets to placeholder on any input change; active prior indicator stays on until a new prior is explicitly fitted</li>
 <li><strong>Value boxes:</strong> Prior mean, SD, and 95% CrI at a glance</li>
 </ul>
 </section>
 <section id="conflict-diagnostics-panel" class="level3">
 <h3 class="anchored" data-anchor-id="conflict-diagnostics-panel">Conflict Diagnostics Panel</h3>
 <ul>
-<li><strong>Data entry:</strong> Binary (events / n) or continuous (mean, SD, n)</li>
-<li><strong>Diagnostic statistics:</strong> Box p-value, surprise index, and overlap with colour-coded severity (green = none, amber = mild, red = severe)</li>
-<li><strong>Overlay plot:</strong> Interactive Prior–Likelihood–Posterior density overlay</li>
-<li><strong>Recommendation:</strong> Automatic severity classification with actionable guidance</li>
+<li><strong>Data type:</strong> Binary, continuous, Poisson/count, or survival</li>
+<li><strong>Compatibility check:</strong> Alert if prior family is atypical for chosen data type</li>
+<li><strong>Diagnostic statistics:</strong> Box p-value, surprise index, and overlap with colour-coded severity</li>
 </ul>
 </section>
 <section id="sensitivity-analysis-panel" class="level3">
 <h3 class="anchored" data-anchor-id="sensitivity-analysis-panel">Sensitivity Analysis Panel</h3>
 <ul>
-<li><strong>Analysis type toggle:</strong> “Posterior quantities” runs <code>sensitivity_grid()</code>; “Credible interval” runs <code>sensitivity_cri()</code> with a CrI level slider</li>
-<li><strong>Hyperparameter grid:</strong> User-defined ranges and grid resolution via sliders</li>
-<li><strong>Target outcomes:</strong> Posterior mean, SD, CrI width and bounds, and Pr(efficacy)</li>
-<li><strong>Tornado plot:</strong> Influence ordered from largest to smallest</li>
-<li><strong>Influence heatmap:</strong> Two-dimensional colour map across the parameter grid</li>
+<li><strong>Independent data entry:</strong> Own data type selector with auto-detection from prior family</li>
+<li><strong>Analysis type:</strong> “Posterior quantities” or “Credible interval” with CrI level slider</li>
+<li><strong>Visualisations:</strong> Tornado plot and interactive influence heatmap</li>
 </ul>
 </section>
 <section id="robust-priors-panel" class="level3">
 <h3 class="anchored" data-anchor-id="robust-priors-panel">Robust Priors Panel</h3>
 <ul>
-<li><strong>Robust mixture:</strong> Vague weight slider; density overlay of informative vs robust prior</li>
+<li><strong>Robust mixture:</strong> Vague weight slider</li>
 <li><strong>Sceptical prior:</strong> Family and strength selection</li>
-<li><strong>Power prior:</strong> Historical and current data entry; calibration curve displaying Bayes Factor and Box p-value vs δ</li>
+<li><strong>Power prior:</strong> Historical and current data entry; calibration curves</li>
 </ul>
 </section>
 <section id="report-export-panel" class="level3">
 <h3 class="anchored" data-anchor-id="report-export-panel">Report Export Panel</h3>
 <ul>
-<li><strong>Trial metadata:</strong> Protocol number, indication, sponsor, statistician, date, and free-text scientific rationale</li>
-<li><strong>Contents checklist:</strong> Live indicators showing which sections are complete</li>
-<li><strong>Output format:</strong> HTML (self-contained), PDF (xelatex via Quarto), or Word (.docx)</li>
-<li><strong>Download:</strong> Single click renders and downloads the complete report</li>
+<li><strong>Format:</strong> HTML (self-contained), PDF (xelatex), or Word (.docx)</li>
+<li><strong>All formats embed figures correctly</strong></li>
+<li><strong>Single-click render and download</strong></li>
 </ul>
 <hr>
 </section>
 </section>
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">Installation</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development version from GitHub:</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("pak")</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">"ndohpenngit/bayprior"</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Or (with vignettes included):</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("devtools")</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"ndohpenngit/bayprior"</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development version from GitHub:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">"ndohpenngit/bayprior"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or (with vignettes):</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"ndohpenngit/bayprior"</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <blockquote class="blockquote">
-<p><strong>System requirements:</strong> PDF report generation requires <a href="https://quarto.org/docs/get-started/">Quarto CLI</a> and a LaTeX installation. HTML and Word reports work without either.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install TinyTeX (recommended LaTeX distribution)</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"tinytex"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>tinytex<span class="sc">::</span><span class="fu">install_tinytex</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>PDF reports</strong> require <a href="https://quarto.org/docs/get-started/">Quarto CLI</a> and a LaTeX installation:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"tinytex"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>tinytex<span class="sc">::</span><span class="fu">install_tinytex</span>()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># If PDF fails with missing package errors:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>tinytex<span class="sc">::</span><span class="fu">tlmgr_install</span>(<span class="fu">c</span>(<span class="st">"tikzfill"</span>, <span class="st">"pgf"</span>, <span class="st">"tcolorbox"</span>, <span class="st">"environ"</span>, <span class="st">"pdfcol"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </blockquote>
 <section id="reproducible-environment-renv" class="level3">
 <h3 class="anchored" data-anchor-id="reproducible-environment-renv">Reproducible environment (renv)</h3>
-<p>This project uses <a href="https://rstudio.github.io/renv/">renv</a> for reproducible package management. After cloning:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">restore</span>()   <span class="co"># installs exact package versions from renv.lock</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">restore</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <hr>
 </section>
 </section>
 <section id="quick-start" class="level2">
 <h2 class="anchored" data-anchor-id="quick-start">Quick Start</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bayprior)</span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bayprior)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 1. Elicit a Beta prior ────────────────────────────────────────────────────</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>prior <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.35</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="fl">0.10</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Response rate (treatment arm)"</span>,</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Elicit a Beta prior ───────────────────────────────────────────────────────</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>prior <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.35</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">label =</span> <span class="st">"Response rate"</span>, <span class="at">expert_id =</span> <span class="st">"Expert_1"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Elicit an Exponential prior (hazard rate) ─────────────────────────────────</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>prior_hz <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(<span class="at">mean =</span> <span class="fl">0.05</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                                <span class="at">label =</span> <span class="st">"Hazard rate"</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hz)</span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 2. Pool two expert priors ─────────────────────────────────────────────────</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>e1  <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.30</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                   <span class="at">expert_id =</span> <span class="st">"E1"</span>, <span class="at">label =</span> <span class="st">"Response rate"</span>)</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>e2  <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.42</span>, <span class="at">sd =</span> <span class="fl">0.12</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                   <span class="at">expert_id =</span> <span class="st">"E2"</span>, <span class="at">label =</span> <span class="st">"Response rate"</span>)</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>agg <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(<span class="fu">list</span>(<span class="at">E1 =</span> e1, <span class="at">E2 =</span> e2), <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.6</span>, <span class="fl">0.4</span>))</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(agg)</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 3. Diagnose prior-data conflict ───────────────────────────────────────────</span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>data_obs <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">40</span>)</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>cd <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(prior, data_obs)</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd)</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(prior, data_obs, <span class="at">show_posterior =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 4. Sensitivity analysis ───────────────────────────────────────────────────</span></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_grid</span>(</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>  prior,</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> data_obs,</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">8</span>, <span class="fl">0.5</span>), <span class="at">beta =</span> <span class="fu">seq</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">1</span>)),</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="fu">c</span>(<span class="st">"posterior_mean"</span>, <span class="st">"prob_efficacy"</span>),</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">threshold    =</span> <span class="fl">0.30</span></span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa)</span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(sa, <span class="at">target =</span> <span class="st">"posterior_mean"</span>)</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 5. Credible interval sensitivity ─────────────────────────────────────────</span></span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>cri_sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_cri</span>(</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>  prior,</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> data_obs,</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">8</span>, <span class="fl">0.5</span>), <span class="at">beta =</span> <span class="fu">seq</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">1</span>)),</span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">cri_level    =</span> <span class="fl">0.95</span></span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(cri_sa, <span class="at">target =</span> <span class="st">"cri_width"</span>)</span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 6. Robust and sceptical priors ────────────────────────────────────────────</span></span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>rob  <span class="ot">&lt;-</span> <span class="fu">robust_prior</span>(prior, <span class="at">vague_weight =</span> <span class="fl">0.20</span>)</span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>scep <span class="ot">&lt;-</span> <span class="fu">sceptical_prior</span>(<span class="at">null_value =</span> <span class="fl">0.20</span>, <span class="at">family =</span> <span class="st">"beta"</span>,</span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>                        <span class="at">strength   =</span> <span class="st">"moderate"</span>,</span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label      =</span> <span class="st">"Response rate (sceptical)"</span>)</span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 7. Power prior (calibrated historical borrowing) ─────────────────────────</span></span>
-<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>calib <span class="ot">&lt;-</span> <span class="fu">calibrate_power_prior</span>(</span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>  <span class="at">historical_data =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">12</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">current_data    =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">50</span>),</span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>  <span class="at">base_prior      =</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.5</span>, <span class="at">sd =</span> <span class="fl">0.2</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>                                <span class="at">label =</span> <span class="st">"Response rate"</span>),</span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_bf       =</span> <span class="dv">3</span></span>
-<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(calib)</span>
-<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 8. Multivariate conflict (co-primary endpoints) ───────────────────────────</span></span>
-<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a><span class="fu">conflict_mahalanobis</span>(</span>
-<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_means =</span> <span class="fu">c</span>(<span class="fl">0.35</span>, <span class="fl">0.60</span>),</span>
-<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_cov   =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.003</span>, <span class="fl">0.003</span>, <span class="fl">0.015</span>), <span class="dv">2</span>, <span class="dv">2</span>),</span>
-<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs_means   =</span> <span class="fu">c</span>(<span class="fl">0.55</span>, <span class="fl">0.58</span>),</span>
-<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs_cov     =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">0.008</span>, <span class="fl">0.002</span>, <span class="fl">0.002</span>, <span class="fl">0.010</span>), <span class="dv">2</span>, <span class="dv">2</span>) <span class="sc">/</span> <span class="dv">50</span>,</span>
-<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels      =</span> <span class="fu">c</span>(<span class="st">"Response rate"</span>, <span class="st">"OS rate"</span>)</span>
-<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 9. Generate regulatory report ─────────────────────────────────────────────</span></span>
-<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a><span class="co"># Requires devtools::install() — not just devtools::load_all()</span></span>
-<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_report</span>(</span>
-<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior           =</span> prior,</span>
-<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>  <span class="at">conflict        =</span> cd,</span>
-<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>  <span class="at">sensitivity     =</span> sa,</span>
-<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>  <span class="at">robust_prior    =</span> rob,           <span class="co"># included in report if supplied</span></span>
-<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>  <span class="at">sceptical_prior =</span> scep,          <span class="co"># ditto</span></span>
-<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_format   =</span> <span class="st">"html"</span>,        <span class="co"># or "pdf" or "docx"</span></span>
-<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_file     =</span> <span class="st">"prior_report"</span>,</span>
-<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>  <span class="at">trial_name      =</span> <span class="st">"TRIAL-001"</span>,</span>
-<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>  <span class="at">sponsor         =</span> <span class="st">"Example Pharma Ltd"</span>,</span>
-<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>  <span class="at">author          =</span> <span class="st">"Ndoh Penn, Biostatistician"</span>,</span>
-<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>  <span class="at">notes           =</span> <span class="fu">paste0</span>(</span>
-<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Prior based on Phase 2 data and two external expert elicitations. "</span>,</span>
-<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Pre-specified in the Bayesian SAP version 2.1."</span></span>
-<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a><span class="co"># ── 10. Launch the full Shiny app ─────────────────────────────────────────────</span></span>
-<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a><span class="fu">run_app</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Elicit a Weibull prior (OS in months) ─────────────────────────────────────</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>prior_wb <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(<span class="at">mean =</span> <span class="dv">20</span>, <span class="at">sd =</span> <span class="dv">10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                            <span class="at">label =</span> <span class="st">"OS (months)"</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Pool two experts ──────────────────────────────────────────────────────────</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>e1  <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.30</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>, <span class="at">expert_id =</span> <span class="st">"E1"</span>,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>                   <span class="at">label =</span> <span class="st">"Response rate"</span>)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>e2  <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.42</span>, <span class="at">sd =</span> <span class="fl">0.12</span>, <span class="at">method =</span> <span class="st">"moments"</span>, <span class="at">expert_id =</span> <span class="st">"E2"</span>,</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>                   <span class="at">label =</span> <span class="st">"Response rate"</span>)</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>agg <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(<span class="fu">list</span>(<span class="at">E1 =</span> e1, <span class="at">E2 =</span> e2), <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.6</span>, <span class="fl">0.4</span>))</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Conflict diagnostics — binary data ────────────────────────────────────────</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>cd <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(prior, <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">40</span>))</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Conflict diagnostics — Poisson / count data ───────────────────────────────</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>pg <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(<span class="at">mean =</span> <span class="fl">0.15</span>, <span class="at">sd =</span> <span class="fl">0.06</span>, <span class="at">method =</span> <span class="st">"moments"</span>, <span class="at">label =</span> <span class="st">"AE rate"</span>)</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_conflict</span>(pg, <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">12</span>, <span class="at">n =</span> <span class="dv">100</span>))</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Conflict diagnostics — survival data ──────────────────────────────────────</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_conflict</span>(prior_hz, <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">20</span>, <span class="at">n =</span> <span class="dv">400</span>))</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Sensitivity analysis ──────────────────────────────────────────────────────</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_grid</span>(</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>  prior,</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">8</span>, <span class="fl">0.5</span>), <span class="at">beta =</span> <span class="fu">seq</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">1</span>)),</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="fu">c</span>(<span class="st">"posterior_mean"</span>, <span class="st">"prob_efficacy"</span>),</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">threshold    =</span> <span class="fl">0.30</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa)</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Robust prior ──────────────────────────────────────────────────────────────</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>rob  <span class="ot">&lt;-</span> <span class="fu">robust_prior</span>(prior, <span class="at">vague_weight =</span> <span class="fl">0.20</span>)</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>scep <span class="ot">&lt;-</span> <span class="fu">sceptical_prior</span>(<span class="at">null_value =</span> <span class="fl">0.20</span>, <span class="at">family =</span> <span class="st">"beta"</span>,</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>                        <span class="at">strength =</span> <span class="st">"moderate"</span>, <span class="at">label =</span> <span class="st">"Response rate (sceptical)"</span>)</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Generate regulatory report ────────────────────────────────────────────────</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_report</span>(</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior           =</span> prior,</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>  <span class="at">conflict        =</span> cd,</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>  <span class="at">sensitivity     =</span> sa,</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">robust_prior    =</span> rob,</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>  <span class="at">sceptical_prior =</span> scep,</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_format   =</span> <span class="st">"html"</span>,</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>  <span class="at">trial_name      =</span> <span class="st">"TRIAL-001"</span>,</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>  <span class="at">sponsor         =</span> <span class="st">"Example Pharma Ltd"</span>,</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>  <span class="at">author          =</span> <span class="st">"N.P., Biostatistician"</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Launch the Shiny app ──────────────────────────────────────────────────────</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a><span class="fu">run_app</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <hr>
 </section>
 <section id="vignettes" class="level2">
 <h2 class="anchored" data-anchor-id="vignettes">Vignettes</h2>
-<p>Six vignettes cover the full analytical workflow:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Browse all vignettes</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">browseVignettes</span>(<span class="st">"bayprior"</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or open individually</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"bayprior-introduction"</span>, <span class="at">package =</span> <span class="st">"bayprior"</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"prior-elicitation"</span>,     <span class="at">package =</span> <span class="st">"bayprior"</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"conflict-diagnostics"</span>,  <span class="at">package =</span> <span class="st">"bayprior"</span>)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"sensitivity-analysis"</span>,  <span class="at">package =</span> <span class="st">"bayprior"</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"robust-priors"</span>,         <span class="at">package =</span> <span class="st">"bayprior"</span>)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">"regulatory-reporting"</span>,  <span class="at">package =</span> <span class="st">"bayprior"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -600,11 +617,11 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 </tr>
 <tr class="even">
 <td><code>prior-elicitation</code></td>
-<td>All four families and three elicitation methods in depth</td>
+<td>All six families and three elicitation methods</td>
 </tr>
 <tr class="odd">
 <td><code>conflict-diagnostics</code></td>
-<td>Univariate and multivariate conflict detection</td>
+<td>All four data types; univariate and multivariate</td>
 </tr>
 <tr class="even">
 <td><code>sensitivity-analysis</code></td>
@@ -620,6 +637,12 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
 </tr>
 </tbody>
 </table>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">browseVignettes</span>(<span class="st">"bayprior"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<hr>
+</section>
+<section id="documentation" class="level2">
+<h2 class="anchored" data-anchor-id="documentation">Documentation</h2>
+<p>Full documentation at <strong><a href="https://ndohpenngit.github.io/bayprior/">ndohpenngit.github.io/bayprior</a></strong> — rendered vignettes, function reference, changelog, and cheat sheet.</p>
 <hr>
 </section>
 <section id="references" class="level2">
@@ -689,14 +712,13 @@ bayprior: Bayesian Prior Elicitation for Clinical Trials <br> <a href="https://w
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
