@@ -54,6 +54,17 @@ mod_pooling_server <- function(id, shared, active_prior) {
     observeEvent(input$pool_btn, {
       pool <- shared$expert_pool
       req(length(pool) >= 2)
+
+      # Compatibility check before pooling
+      compat <- .check_pooling_compat(pool)
+      if (!compat$ok) {
+        showNotification(compat$msgs, type = "error", duration = 12)
+        return(invisible(NULL))
+      }
+      if (length(compat$msgs) > 0) {
+        showNotification(compat$msgs, type = "warning", duration = 8)
+      }
+
       k   <- length(pool)
       wts <- vapply(seq_len(k),
                     function(i) input[[paste0("w_", i)]] %||% (1/k),

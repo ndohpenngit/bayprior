@@ -7,6 +7,7 @@ mod_sensitivity_ui <- function(id) {
       title = tagList(icon("chart-bar"), " Grid Settings"),
       uiOutput(ns("prior_banner")),
       tags$hr(),
+      uiOutput(ns("sens_compat_alert")),
 
       # ── Observed data (independent of conflict diagnostics) ────────────────
       tags$p(tags$strong("Observed data"),
@@ -78,6 +79,14 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
                " ", msg)
     })
 
+    # ── Sensitivity compatibility check ──────────────────────────────────────
+    output$sens_compat_alert <- renderUI({
+      p <- active_prior()
+      if (is.null(p)) return(NULL)
+      chk <- .check_sensitivity_compat(p)
+      .validation_alert(chk$msg, chk$severity)
+    })
+
     pnames <- reactive({
       p <- active_prior()
       if (is.null(p)) return(list(p1 = "param1", p2 = "param2"))
@@ -87,8 +96,9 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       nms <- names(working$params)
       list(
         p1   = if (length(nms) >= 1) nms[[1]] else "param1",
-        p2   = if (length(nms) >= 2) nms[[2]] else "param2",
-        vals = working$params
+        p2   = if (length(nms) >= 2) nms[[2]] else nms[[1]],  # fallback to p1
+        vals = working$params,
+        single_param = length(nms) == 1  # Exponential has only 'rate'
       )
     })
 
@@ -153,8 +163,12 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
                      "Enter observed data for posterior computation:"),
           tags$br(),
           selectInput(ns("sens_data_type"), "Data type",
-            choices  = c("Binary (events/n)" = "binary",
-                         "Continuous (mean/SD/n)" = "continuous"),
+            choices  = c(
+              "Binary (events/n)"                = "binary",
+              "Continuous (mean/SD/n)"           = "continuous",
+              "Count / Poisson (events/exposure)"= "poisson",
+              "Survival (events/follow-up)"      = "survival"
+            ),
             selected = if (is_beta) "binary" else "continuous"
           ),
           conditionalPanel(
@@ -169,28 +183,68 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
             numericInput(ns("sens_mean"), "Observed mean", 0,   step = 0.01),
             numericInput(ns("sens_sd"),   "Observed SD",   1,   min = 0.001, step = 0.01),
             numericInput(ns("sens_n2"),   "Sample size n", 50L, min = 1, step = 1)
+          ),
+          conditionalPanel(
+            condition = sprintf("input['%s'] === 'poisson'", ns("sens_data_type")),
+            numericInput(ns("sens_pois_x"), "Event count (x)", 12, min = 0, step = 1),
+            numericInput(ns("sens_pois_n"), "Exposure (person-time)", 100, min = 0.001, step = 1)
+          ),
+          conditionalPanel(
+            condition = sprintf("input['%s'] === 'survival'", ns("sens_data_type")),
+            numericInput(ns("sens_surv_x"), "Events (d)", 20, min = 0, step = 1),
+            numericInput(ns("sens_surv_n"), "Total follow-up time", 400, min = 0.001, step = 1)
           )
         )
       }
     })
 
+    # Reset results whenever ANY input changes — prevents stale results
+    observeEvent(
+      list(active_prior(), input$p1_range, input$p2_range,
+           input$grid_size, input$analysis_type,
+           input$threshold, input$targets, input$cri_level,
+           input$sens_data_type,
+           input$sens_x, input$sens_n, input$sens_mean,
+           input$sens_sd, input$sens_n2,
+           input$sens_pois_x, input$sens_pois_n,
+           input$sens_surv_x, input$sens_surv_n),
+      { shared$sensitivity <- NULL },
+      ignoreInit = TRUE
+    )
+
     observeEvent(input$run_btn, {
       p <- active_prior(); req(p, input$p1_range, input$p2_range)
+
+      # Compatibility check — block if error-level incompatibility
+      compat <- .check_sensitivity_compat(p)
+      if (!compat$ok) {
+        showNotification(compat$msg, type = "error", duration = 10)
+        return(invisible(NULL))
+      }
+
       cd <- shared$conflict
 
       # Build data_summary: prefer conflict diagnostics, fall back to own inputs.
       # Critically: match data type to prior family to avoid conjugate update failure.
       data_sum <- if (!is.null(cd)) {
         cd$data_summary
-      } else if (identical(input$sens_data_type, "binary")) {
-        list(type = "binary",
-             x    = as.integer(input$sens_x %||% 15L),
-             n    = as.integer(input$sens_n %||% 50L))
       } else {
-        list(type = "continuous",
-             x    = input$sens_mean %||% unlist(p$fit_summary$mean),
-             sd   = input$sens_sd   %||% unlist(p$fit_summary$sd),
-             n    = as.integer(input$sens_n2 %||% 50L))
+        switch(input$sens_data_type,
+          binary   = list(type = "binary",
+                          x    = input$sens_x   %||% 15L,
+                          n    = input$sens_n   %||% 50L),
+          continuous = list(type = "continuous",
+                          x    = input$sens_mean %||% unlist(p$fit_summary$mean),
+                          sd   = input$sens_sd   %||% unlist(p$fit_summary$sd),
+                          n    = as.integer(input$sens_n2 %||% 50L)),
+          poisson  = list(type = "poisson",
+                          x    = input$sens_pois_x %||% 12L,
+                          n    = input$sens_pois_n %||% 100),
+          survival = list(type = "survival",
+                          x    = input$sens_surv_x %||% 20L,
+                          n    = input$sens_surv_n %||% 400),
+          list(type = "binary", x = 15L, n = 50L)
+        )
       }
       nm <- pnames()
       pg <- setNames(

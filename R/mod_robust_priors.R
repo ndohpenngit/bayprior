@@ -40,6 +40,13 @@ mod_sceptical_server <- function(id, shared) {
   moduleServer(id, function(input, output, session) {
     fitted <- reactiveVal(NULL)
 
+    # Reset when inputs change
+    observeEvent(
+      list(input$family, input$null_val, input$strength),
+      { fitted(NULL); shared$sceptical_prior <- NULL },
+      ignoreInit = TRUE
+    )
+
     observeEvent(input$family, {
       if (input$family == "beta") {
         updateNumericInput(session, "null_val",
@@ -191,6 +198,13 @@ mod_robust_ui <- function(id) {
 mod_robust_server <- function(id, shared, active_prior) {
   moduleServer(id, function(input, output, session) {
     fitted <- reactiveVal(NULL)
+
+    # Reset when prior or inputs change
+    observeEvent(
+      list(active_prior(), input$vague_weight, input$vague_sd_mult),
+      { fitted(NULL); shared$robust_prior <- NULL },
+      ignoreInit = TRUE
+    )
 
     output$prior_banner <- renderUI({
       p   <- active_prior()
@@ -359,6 +373,16 @@ mod_power_ui <- function(id) {
 mod_power_server <- function(id, shared, active_prior) {
   moduleServer(id, function(input, output, session) {
     res <- reactiveVal(NULL)
+
+    # Reset when prior or inputs change
+    observeEvent(
+      list(active_prior(), input$data_type,
+           input$hist_x, input$hist_n, input$hist_mean, input$hist_sd,
+           input$curr_x, input$curr_n, input$curr_mean, input$curr_sd,
+           input$target_bf, input$method),
+      { res(NULL); shared$power_prior <- NULL },
+      ignoreInit = TRUE
+    )
 
     output$prior_banner <- renderUI({
       p   <- active_prior()

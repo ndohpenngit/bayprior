@@ -10,8 +10,12 @@ mod_conflict_ui <- function(id) {
       uiOutput(ns("prior_banner")),
       tags$hr(),
       selectInput(ns("data_type"), "Data type",
-        choices = c("Binary (events / n)"     = "binary",
-                    "Continuous (mean, SD, n)" = "continuous")),
+        choices = c(
+          "Binary (events / n)"                 = "binary",
+          "Continuous (mean, SD, n)"            = "continuous",
+          "Count / Poisson (events / exposure)" = "poisson",
+          "Survival (events / follow-up time)"  = "survival"
+        )),
       conditionalPanel(
         condition = sprintf("input['%s'] === 'binary'", ns("data_type")),
         numericInput(ns("bin_x"), "Events (x)", 14, 0),
@@ -22,6 +26,20 @@ mod_conflict_ui <- function(id) {
         numericInput(ns("cont_mean"), "Observed mean", 0.45, step = 0.01),
         numericInput(ns("cont_sd"),   "Observed SD",   0.18, step = 0.01),
         numericInput(ns("cont_n"),    "Sample size (n)", 50, 1)
+      ),
+      conditionalPanel(
+        condition = sprintf("input['%s'] === 'poisson'", ns("data_type")),
+        numericInput(ns("pois_x"), "Event count (x)", 12, 0, step = 1),
+        numericInput(ns("pois_n"), "Exposure (person-time)", 100, 0.001, step = 1),
+        tags$small(style = "color:#888;",
+                   "e.g. 12 adverse events over 100 person-years")
+      ),
+      conditionalPanel(
+        condition = sprintf("input['%s'] === 'survival'", ns("data_type")),
+        numericInput(ns("surv_x"), "Events (d)", 20, 0, step = 1),
+        numericInput(ns("surv_n"), "Total follow-up time", 400, 0.001, step = 1),
+        tags$small(style = "color:#888;",
+                   "e.g. 20 deaths over 400 person-months total follow-up")
       ),
       tags$hr(),
       numericInput(ns("alpha"), "Significance level (alpha)",
@@ -51,17 +69,52 @@ mod_conflict_server <- function(id, shared, active_prior) {
     })
 
     data_sum <- reactive({
-      if (input$data_type == "binary")
+      switch(input$data_type,
+        binary     = list(type = "binary",
+                          x    = input$bin_x,
+                          n    = input$bin_n),
+        continuous = list(type = "continuous",
+                          x    = input$cont_mean,
+                          sd   = input$cont_sd,
+                          n    = input$cont_n),
+        poisson    = list(type = "poisson",
+                          x    = input$pois_x,
+                          n    = input$pois_n),
+        survival   = list(type = "survival",
+                          x    = input$surv_x,
+                          n    = input$surv_n),
+        # default — shouldn't reach here
         list(type = "binary", x = input$bin_x, n = input$bin_n)
-      else
-        list(type = "continuous", x = input$cont_mean,
-             sd = input$cont_sd, n = input$cont_n)
+      )
     })
 
     res <- reactiveVal(NULL)
 
+    # Reset results whenever ANY input changes — prevents stale results
+    observeEvent(
+      list(active_prior(), input$data_type,
+           input$bin_x, input$bin_n,
+           input$cont_mean, input$cont_sd, input$cont_n,
+           input$pois_x, input$pois_n,
+           input$surv_x, input$surv_n,
+           input$alpha),
+      { res(NULL); shared$conflict <- NULL },
+      ignoreInit = TRUE
+    )
+
     observeEvent(input$run_btn, {
       p <- active_prior(); req(p)
+
+      # Prior-data compatibility check
+      chk <- .check_prior_data_compat(p, data_sum())
+      if (!chk$ok) {
+        showNotification(chk$msg, type = "error", duration = 12)
+        return(invisible(NULL))
+      }
+      if (!is.null(chk$msg)) {
+        showNotification(chk$msg, type = "warning", duration = 8)
+      }
+
       r <- tryCatch(
         prior_conflict(p, data_sum(), alpha = input$alpha),
         error = function(e) {

@@ -14,10 +14,12 @@ mod_elicitation_ui <- function(id) {
 
       selectInput(ns("family"), "Distribution family",
         choices = c(
-          "Beta (proportions)"  = "beta",
-          "Normal (unbounded)"  = "normal",
-          "Gamma (positive)"    = "gamma",
-          "Log-Normal (ratios)" = "lognormal"
+          "Beta (proportions)"            = "beta",
+          "Normal (unbounded)"            = "normal",
+          "Gamma (positive)"              = "gamma",
+          "Log-Normal (ratios)"           = "lognormal",
+          "Exponential (constant hazard)" = "exponential",
+          "Weibull (survival times)"      = "weibull"
         )
       ),
 
@@ -81,6 +83,17 @@ mod_elicitation_server <- function(id, shared) {
   moduleServer(id, function(input, output, session) {
 
     fitted <- reactiveVal(NULL)
+    
+    observeEvent(
+      list(input$family, input$method,
+           input$q1p, input$q1v, input$q2p, input$q2v, input$q3p, input$q3v,
+           input$mom_mean, input$mom_sd,
+           input$expert_id, input$label),
+      {
+        fitted(NULL) 
+      },
+      ignoreInit = TRUE
+    )
 
     observeEvent(input$fit_btn, {
       pr <- tryCatch({
@@ -88,34 +101,48 @@ mod_elicitation_server <- function(id, shared) {
           qs <- setNames(c(input$q1v, input$q2v, input$q3v),
                          as.character(c(input$q1p, input$q2p, input$q3p) / 100))
           switch(input$family,
-            beta      = elicit_beta(quantiles = qs, method = "quantile",
-                                    expert_id = input$expert_id,
-                                    label     = input$label),
-            normal    = elicit_normal(quantiles = qs, method = "quantile",
+            beta        = elicit_beta(quantiles = qs, method = "quantile",
                                       expert_id = input$expert_id,
                                       label     = input$label),
-            gamma     = elicit_gamma(quantiles = qs, method = "quantile",
-                                     expert_id = input$expert_id,
-                                     label     = input$label),
-            lognormal = elicit_lognormal(quantiles = qs, method = "quantile",
+            normal      = elicit_normal(quantiles = qs, method = "quantile",
+                                        expert_id = input$expert_id,
+                                        label     = input$label),
+            gamma       = elicit_gamma(quantiles = qs, method = "quantile",
+                                       expert_id = input$expert_id,
+                                       label     = input$label),
+            lognormal   = elicit_lognormal(quantiles = qs, method = "quantile",
+                                           expert_id = input$expert_id,
+                                           label     = input$label),
+            exponential = elicit_exponential(quantiles = qs, method = "quantile",
+                                             expert_id = input$expert_id,
+                                             label     = input$label),
+            weibull     = elicit_weibull(quantiles = qs, method = "quantile",
                                          expert_id = input$expert_id,
                                          label     = input$label)
           )
         } else {
           switch(input$family,
-            beta      = elicit_beta(mean = input$mom_mean, sd = input$mom_sd,
-                                    method    = "moments",
-                                    expert_id = input$expert_id,
-                                    label     = input$label),
-            normal    = elicit_normal(mean = input$mom_mean, sd = input$mom_sd,
+            beta        = elicit_beta(mean = input$mom_mean, sd = input$mom_sd,
                                       method    = "moments",
                                       expert_id = input$expert_id,
                                       label     = input$label),
-            gamma     = elicit_gamma(mean = input$mom_mean, sd = input$mom_sd,
-                                     method    = "moments",
-                                     expert_id = input$expert_id,
-                                     label     = input$label),
-            lognormal = elicit_lognormal(mean = input$mom_mean, sd = input$mom_sd,
+            normal      = elicit_normal(mean = input$mom_mean, sd = input$mom_sd,
+                                        method    = "moments",
+                                        expert_id = input$expert_id,
+                                        label     = input$label),
+            gamma       = elicit_gamma(mean = input$mom_mean, sd = input$mom_sd,
+                                       method    = "moments",
+                                       expert_id = input$expert_id,
+                                       label     = input$label),
+            lognormal   = elicit_lognormal(mean = input$mom_mean, sd = input$mom_sd,
+                                           method    = "moments",
+                                           expert_id = input$expert_id,
+                                           label     = input$label),
+            exponential = elicit_exponential(mean = input$mom_mean,
+                                             method    = "moments",
+                                             expert_id = input$expert_id,
+                                             label     = input$label),
+            weibull     = elicit_weibull(mean = input$mom_mean, sd = input$mom_sd,
                                          method    = "moments",
                                          expert_id = input$expert_id,
                                          label     = input$label)
