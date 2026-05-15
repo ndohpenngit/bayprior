@@ -1,3 +1,95 @@
+# bayprior 0.2.0
+
+## New features
+
+* Added `elicit_exponential()` — elicits an Exponential(rate) prior for
+  constant hazard rates and Poisson rate priors. Supports `"moments"` (mean
+  to rate), `"rate"` (direct), and `"quantile"` (1D optimisation) methods.
+  The Exponential distribution is conjugate for Poisson and survival data via
+  Gamma-Poisson/Exponential updating.
+
+* Added `elicit_weibull()` — elicits a Weibull(shape, scale) prior for
+  non-constant hazard survival times (OS, PFS). Supports `"moments"` (2D
+  Nelder-Mead), `"params"` (direct shape and scale), and `"quantile"` (2D
+  Nelder-Mead) methods. Posteriors are approximated via Normal matching.
+
+* Added `"poisson"` data type to `prior_conflict()`, `sensitivity_grid()`,
+  and `sensitivity_cri()`. Supports count/adverse-event-rate endpoints:
+  `list(type = "poisson", x = 12, n = 100)` (events / person-time).
+  Conjugate update: `Gamma(shape + x, rate + n)`.
+
+* Added `"survival"` data type to `prior_conflict()`, `sensitivity_grid()`,
+  and `sensitivity_cri()`. Supports OS/PFS hazard rate endpoints:
+  `list(type = "survival", x = 20, n = 400)` (events / total follow-up time).
+  Conjugate update: `Gamma(shape + x, rate + n)` (Gamma-Exponential).
+
+* Added density and x-range support for Exponential and Weibull distributions
+  in `plot.bayprior()`. Previously these distributions rendered blank density
+  plots; they now display correctly.
+
+* Added comprehensive validation layer across all modules:
+  - `.check_prior_data_compat()` — warns when a prior family is atypical for
+    the chosen data type (e.g. Beta prior + Poisson data).
+  - `.check_pooling_compat()` — blocks pooling of distributions with
+    incompatible supports (e.g. Beta + Normal); warns for same-support
+    cross-family pooling (e.g. Gamma + Exponential).
+  - `.check_sensitivity_compat()` — warns for single-parameter families
+    (Exponential) and cross-family mixtures; blocks incompatible-support
+    mixture sensitivity.
+  - `.validation_alert()` — renders Bootstrap alert boxes for inline UI
+    feedback in the Shiny app.
+
+* Sensitivity analysis is now **fully independent of conflict diagnostics**.
+  The Sensitivity Analysis module has its own data entry UI (data type
+  selector, events/n for binary, mean/SD/n for continuous, events/exposure
+  for Poisson, events/follow-up for survival) that auto-populates the correct
+  type from the active prior family. Previously, running conflict diagnostics
+  was required before sensitivity analysis could proceed.
+
+* All Shiny modules now **reset outputs automatically on input change**,
+  preventing stale results from being displayed alongside new inputs.
+  Each module uses `observeEvent(list(...))` watching all its relevant inputs
+  to reset result reactives immediately. The active prior sidebar indicator
+  is preserved during elicitation input changes (only the density plot and
+  parameter table reset; `shared$current_prior` is retained until a new prior
+  is explicitly fitted).
+
+## Bug fixes
+
+* Fixed `prior_report()` producing blank figures in Word (.docx) reports.
+  knitr was writing absolute figure paths to the markdown; pandoc could not
+  resolve them. Fixed by using `fig.path = "figures/"` (relative) with
+  `base.dir = tmp_dir` for docx/pdf, and `knitr::image_uri` for HTML.
+
+* Fixed `prior_report()` failing for PDF with "tikzfill.image.sty not found".
+  Added `tinytex::tlmgr_install()` recommendation in documentation. The
+  `default-image-extension: pdf` Quarto default is now overridden to `png`
+  via YAML injection in the pre-executed markdown.
+
+* Fixed mixture prior hyperparameters section in `prior_report.qmd` rendering
+  as literal markdown (`## Hyperparameters not available`) rather than as
+  formatted text. Added `#| results: asis` to the `fitted-params` chunk and
+  updated to show a component summary table for mixture priors.
+
+* Fixed `mod_conflict_mahal.R` containing a stale duplicate definition of
+  `mod_conflict_ui` that was overriding the correct 4-choice version in
+  `mod_conflict.R` (files sourced alphabetically, mahal comes after conflict).
+  Removed the duplicate; `mod_conflict_mahal.R` now only contains
+  `mod_mahal_ui` and `mod_mahal_server`.
+
+## Documentation
+
+* Updated `bayprior-package.R` to document all six distribution families,
+  all four data types for conflict diagnostics and sensitivity, and the new
+  validation functions.
+* Updated all six vignettes to cover Exponential and Weibull elicitation,
+  Poisson and survival conflict diagnostics, independent sensitivity data
+  entry, and the output reset behaviour.
+* Updated README with new badges, six-family distribution table, four-data-type
+  conflict table, and updated Quick Start examples.
+
+---
+
 # bayprior 0.1.2
 
 ## Bug fixes
