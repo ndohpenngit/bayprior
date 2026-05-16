@@ -57,7 +57,7 @@ app_ui <- function(request) {
             icon     = icon("house")
           ),
           shinydashboard::menuItem(
-            "Prior Elicitation",
+            tagList("Prior Elicitation", uiOutput("step_badge_elicit", inline = TRUE)),
             icon     = icon("pencil"),
             tabName  = "elicitation",
             shinydashboard::menuSubItem(
@@ -68,12 +68,12 @@ app_ui <- function(request) {
             )
           ),
           shinydashboard::menuItem(
-            "Expert Pooling",
+            tagList("Expert Pooling", uiOutput("step_badge_pool", inline = TRUE)),
             tabName  = "pooling",
             icon     = icon("users")
           ),
           shinydashboard::menuItem(
-            "Conflict Diagnostics",
+            tagList("Conflict Diagnostics", uiOutput("step_badge_conflict", inline = TRUE)),
             icon     = icon("vial"),
             tabName  = "conflict",
             shinydashboard::menuSubItem(
@@ -84,12 +84,12 @@ app_ui <- function(request) {
             )
           ),
           shinydashboard::menuItem(
-            "Sensitivity Analysis",
+            tagList("Sensitivity Analysis", uiOutput("step_badge_sens", inline = TRUE)),
             tabName  = "sensitivity",
             icon     = icon("chart-bar")
           ),
           shinydashboard::menuItem(
-            "Robust Priors",
+            tagList("Robust Priors", uiOutput("step_badge_robust", inline = TRUE)),
             icon     = icon("shield-halved"),
             tabName  = "robust",
             shinydashboard::menuSubItem(
@@ -109,7 +109,7 @@ app_ui <- function(request) {
           )
         ),
 
-        # Active prior badge in sidebar footer
+        # Active prior badge + version footer
         tags$div(
           style = "position:absolute; bottom:0; width:100%; padding:4px 0;",
           tags$div(
@@ -119,7 +119,16 @@ app_ui <- function(request) {
             ),
             "Active prior:"
           ),
-          uiOutput("sidebar_prior_badge")
+          uiOutput("sidebar_prior_badge"),
+          tags$div(
+            style = paste0(
+              "font-size:9px; color:#666; text-align:center;",
+              "padding:4px 0 6px; border-top:1px solid #333; margin-top:4px;"
+            ),
+            paste0("bayprior v",
+                   tryCatch(as.character(utils::packageVersion("bayprior")),
+                            error = function(e) "dev"))
+          )
         )
       ),
 

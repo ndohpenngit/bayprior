@@ -67,21 +67,55 @@ mod_report_server <- function(id, shared, active_prior) {
     })
 
     output$contents_checklist <- renderUI({
-      p <- active_prior()
+      p     <- active_prior()
       has_p <- !is.null(p)
       has_c <- !is.null(shared$conflict)
       has_s <- !is.null(shared$sensitivity)
-      items <- list(
-        .check_item(TRUE,  "Elicitation methodology section"),
-        .check_item(has_p, "Fitted prior density + parameter table"),
-        .check_item(has_c, "Prior-data conflict diagnostics"),
-        .check_item(has_c, "Prior-Likelihood-Posterior overlay"),
-        .check_item(has_s, "Sensitivity analysis heatmap"),
-        .check_item(has_s, "Tornado plot"),
-        .check_item(TRUE,  "FDA/EMA regulatory checklist"),
-        .check_item(nzchar(isolate(input$notes) %||% ""), "Statistician's narrative")
+      has_r <- !is.null(shared$robust_prior) ||
+               !is.null(shared$sceptical_prior) ||
+               !is.null(shared$power_prior)
+      has_n <- nzchar(input$notes %||% "")
+
+      .item <- function(done, label, optional = FALSE) {
+        col   <- if (done) "#1D9E75" else if (optional) "#f0ad4e" else "#dc3545"
+        ico   <- if (done) "circle-check" else if (optional) "circle-minus" else "circle-xmark"
+        tip   <- if (done) "Complete" else if (optional) "Optional \u2014 not run" else "Required \u2014 not done"
+        tags$li(
+          style = "margin-bottom:5px; display:flex; align-items:center; gap:8px;",
+          icon(ico, style = paste0("color:", col, "; font-size:13px;")),
+          tags$span(style = paste0("font-size:12px; color:", if (done) "#333" else "#777", ";"),
+                    label),
+          tags$span(style = paste0("font-size:10px; color:", col, "; margin-left:auto;"),
+                    tip)
+        )
+      }
+
+      tagList(
+        tags$ul(
+          class = "list-unstyled",
+          style = "margin:0;",
+          .item(has_p,  "Prior fitted and density plotted"),
+          .item(has_p,  "Expert / source identified"),
+          .item(has_c,  "Prior-data conflict assessed",    optional = !has_c),
+          .item(has_c,  "Prior-Likelihood-Posterior overlay", optional = !has_c),
+          .item(has_s,  "Sensitivity analysis performed",  optional = !has_s),
+          .item(has_s,  "Tornado plot and heatmap",        optional = !has_s),
+          .item(has_r,  "Robust / sceptical prior computed", optional = !has_r),
+          .item(has_n,  "Statistician's narrative notes",  optional = !has_n),
+          .item(TRUE,   "FDA/EMA compliance checklist")
+        ),
+        tags$div(
+          style = "margin-top:10px; padding:8px 10px; border-radius:4px; font-size:11px;",
+          style = if (has_p)
+            "background:#EFF8F0; border-left:3px solid #1D9E75; color:#1A7A4A;"
+          else
+            "background:#FFF3F3; border-left:3px solid #dc3545; color:#C0392B;",
+          if (has_p)
+            tagList(icon("circle-check"), " Ready to generate report")
+          else
+            tagList(icon("circle-xmark"), " Fit a prior before generating report")
+        )
       )
-      tags$ul(class = "list-unstyled", style = "font-size:12px;", items)
     })
 
     output$dl_report <- downloadHandler(
@@ -102,7 +136,6 @@ mod_report_server <- function(id, shared, active_prior) {
           return(NULL)
         }
 
-        # Capture prior and overlay plots
         prior_plot   <- tryCatch(plot(p), error = function(e) NULL)
         overlay_plot <- if (!is.null(shared$conflict))
           tryCatch(
@@ -110,8 +143,6 @@ mod_report_server <- function(id, shared, active_prior) {
                                   show_posterior = TRUE),
             error = function(e) NULL)
           else NULL
-        
-        # Capture sensitivity plots
         tornado_plot <- if (!is.null(shared$sensitivity))
           tryCatch(plot_tornado(shared$sensitivity), error = function(e) NULL)
           else NULL

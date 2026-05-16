@@ -24,7 +24,35 @@ app_server <- function(input, output, session) {
     shared$consensus %||% shared$current_prior
   })
 
-  # ── Output reset cascade ──────────────────────────────────────────────────
+  # ── Step completion indicators ────────────────────────────────────────────
+  # Small coloured dot next to each sidebar menu item.
+  # Green check = step complete; invisible = not yet done.
+  .step_badge <- function(done) {
+    if (isTRUE(done))
+      tags$span(
+        style = paste0(
+          "display:inline-block; margin-left:4px; vertical-align:middle;",
+          "width:9px; height:9px; border-radius:50%;",
+          "background:#1D9E75; box-shadow:0 0 3px #1D9E75;"
+        )
+      )
+    else
+      tags$span(style = "display:inline-block; width:9px; height:9px;")
+  }
+
+  output$step_badge_elicit  <- renderUI(
+    .step_badge(!is.null(active_prior())))
+  output$step_badge_pool    <- renderUI(
+    .step_badge(!is.null(shared$consensus)))
+  output$step_badge_conflict <- renderUI(
+    .step_badge(!is.null(shared$conflict)))
+  output$step_badge_sens    <- renderUI(
+    .step_badge(!is.null(shared$sensitivity)))
+  output$step_badge_robust  <- renderUI(
+    .step_badge(!is.null(shared$robust_prior) ||
+                !is.null(shared$sceptical_prior) ||
+                !is.null(shared$power_prior))
+  )
   # When a new prior is fitted, all downstream results are stale.
   # Clear them so users never see old results mixed with new inputs.
   observeEvent(active_prior(), {
