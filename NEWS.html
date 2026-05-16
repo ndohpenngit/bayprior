@@ -162,11 +162,17 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#bayprior-0.2.0" id="toc-bayprior-0.2.0" class="nav-link active" data-scroll-target="#bayprior-0.2.0">bayprior 0.2.0</a>
+  <li><a href="#bayprior-0.2.1" id="toc-bayprior-0.2.1" class="nav-link active" data-scroll-target="#bayprior-0.2.1">bayprior 0.2.1</a>
+  <ul class="collapse">
+  <li><a href="#ux-improvements" id="toc-ux-improvements" class="nav-link" data-scroll-target="#ux-improvements">UX improvements</a></li>
+  <li><a href="#deployment-fixes" id="toc-deployment-fixes" class="nav-link" data-scroll-target="#deployment-fixes">Deployment fixes</a></li>
+  <li><a href="#documentation" id="toc-documentation" class="nav-link" data-scroll-target="#documentation">Documentation</a></li>
+  </ul></li>
+  <li><a href="#bayprior-0.2.0" id="toc-bayprior-0.2.0" class="nav-link" data-scroll-target="#bayprior-0.2.0">bayprior 0.2.0</a>
   <ul class="collapse">
   <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
   <li><a href="#bug-fixes" id="toc-bug-fixes" class="nav-link" data-scroll-target="#bug-fixes">Bug fixes</a></li>
-  <li><a href="#documentation" id="toc-documentation" class="nav-link" data-scroll-target="#documentation">Documentation</a></li>
+  <li><a href="#documentation-1" id="toc-documentation-1" class="nav-link" data-scroll-target="#documentation-1">Documentation</a></li>
   </ul></li>
   <li><a href="#bayprior-0.1.2" id="toc-bayprior-0.1.2" class="nav-link" data-scroll-target="#bayprior-0.1.2">bayprior 0.1.2</a>
   <ul class="collapse">
@@ -183,7 +189,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#sensitivity-analysis" id="toc-sensitivity-analysis" class="nav-link" data-scroll-target="#sensitivity-analysis">Sensitivity Analysis</a></li>
   <li><a href="#robust-priors" id="toc-robust-priors" class="nav-link" data-scroll-target="#robust-priors">Robust Priors</a></li>
   <li><a href="#reporting" id="toc-reporting" class="nav-link" data-scroll-target="#reporting">Reporting</a></li>
-  <li><a href="#documentation-1" id="toc-documentation-1" class="nav-link" data-scroll-target="#documentation-1">Documentation</a></li>
+  <li><a href="#documentation-2" id="toc-documentation-2" class="nav-link" data-scroll-target="#documentation-2">Documentation</a></li>
   <li><a href="#app" id="toc-app" class="nav-link" data-scroll-target="#app">App</a></li>
   </ul></li>
   </ul></li>
@@ -196,6 +202,32 @@ ul.task-list li input[type="checkbox"] {
 
 
 
+<section id="bayprior-0.2.1" class="level1">
+<h1>bayprior 0.2.1</h1>
+<section id="ux-improvements" class="level2">
+<h2 class="anchored" data-anchor-id="ux-improvements">UX improvements</h2>
+<ul>
+<li>Welcome tab now shows an SVG workflow diagram of all six analytical steps with colour-coded boxes and arrows.</li>
+<li>Sidebar menu items now show a green glowing dot when each step is complete (elicitation, pooling, conflict, sensitivity, robust priors).</li>
+<li>Export Report compliance checklist is now fully reactive — items update live with colour-coded icons (green check, amber minus, red X) and a ready/not- ready summary alert.</li>
+<li>Package version (<code>bayprior vX.X.X</code>) now displayed in the sidebar footer.</li>
+</ul>
+</section>
+<section id="deployment-fixes" class="level2">
+<h2 class="anchored" data-anchor-id="deployment-fixes">Deployment fixes</h2>
+<ul>
+<li>Removed <code>pkgload::load_all()</code> from <code>app.R</code> — it was a development-only line that caused startup failure on shinyapps.io.</li>
+<li>Added <code>renv::snapshot(type = "explicit")</code> to deployment workflow to prevent dev tools (<code>pkgload</code>, <code>pkgbuild</code>, <code>callr</code>, <code>desc</code>) from entering <code>renv.lock</code>.</li>
+</ul>
+</section>
+<section id="documentation" class="level2">
+<h2 class="anchored" data-anchor-id="documentation">Documentation</h2>
+<ul>
+<li>Information boxes on Welcome tab updated: Distributions 4 → 6, Conflict diagnostics → Data types (Binary · Continuous · Poisson · Survival).</li>
+</ul>
+<hr>
+</section>
+</section>
 <section id="bayprior-0.2.0" class="level1">
 <h1>bayprior 0.2.0</h1>
 <section id="new-features" class="level2">
@@ -226,8 +258,8 @@ ul.task-list li input[type="checkbox"] {
 <li><p>Fixed <code>mod_conflict_mahal.R</code> containing a stale duplicate definition of <code>mod_conflict_ui</code> that was overriding the correct 4-choice version in <code>mod_conflict.R</code> (files sourced alphabetically, mahal comes after conflict). Removed the duplicate; <code>mod_conflict_mahal.R</code> now only contains <code>mod_mahal_ui</code> and <code>mod_mahal_server</code>.</p></li>
 </ul>
 </section>
-<section id="documentation" class="level2">
-<h2 class="anchored" data-anchor-id="documentation">Documentation</h2>
+<section id="documentation-1" class="level2">
+<h2 class="anchored" data-anchor-id="documentation-1">Documentation</h2>
 <ul>
 <li>Updated <code>bayprior-package.R</code> to document all six distribution families, all four data types for conflict diagnostics and sensitivity, and the new validation functions.</li>
 <li>Updated all six vignettes to cover Exponential and Weibull elicitation, Poisson and survival conflict diagnostics, independent sensitivity data entry, and the output reset behaviour.</li>
@@ -305,8 +337,8 @@ ul.task-list li input[type="checkbox"] {
 <li>FDA/EMA regulatory compliance checklist</li>
 </ul>
 </section>
-<section id="documentation-1" class="level3">
-<h3 class="anchored" data-anchor-id="documentation-1">Documentation</h3>
+<section id="documentation-2" class="level3">
+<h3 class="anchored" data-anchor-id="documentation-2">Documentation</h3>
 <ul>
 <li><p>Added Quarto GitHub Pages documentation site at <code>https://ndohpenngit.github.io/bayprior/</code> with six rendered vignettes, a Changelog page, and a Cheat Sheet. Site auto-rebuilds on every push to <code>main</code> via GitHub Actions.</p></li>
 <li><p>Updated all six vignettes to document new <code>prior_report()</code> arguments, the sensitivity analysis CrI toggle, and the robust priors report integration.</p></li>
