@@ -1,3 +1,30 @@
+# bayprior 0.2.1
+
+## UX improvements
+
+* Welcome tab now shows an SVG workflow diagram of all six analytical steps
+  with colour-coded boxes and arrows.
+* Sidebar menu items now show a green glowing dot when each step is complete
+  (elicitation, pooling, conflict, sensitivity, robust priors).
+* Export Report compliance checklist is now fully reactive — items update live
+  with colour-coded icons (green check, amber minus, red X) and a ready/not-
+  ready summary alert.
+* Package version (`bayprior vX.X.X`) now displayed in the sidebar footer.
+
+## Deployment fixes
+
+* Removed `pkgload::load_all()` from `app.R` — it was a development-only
+  line that caused startup failure on shinyapps.io.
+* Added `renv::snapshot(type = "explicit")` to deployment workflow to prevent
+  dev tools (`pkgload`, `pkgbuild`, `callr`, `desc`) from entering `renv.lock`.
+
+## Documentation
+
+* Information boxes on Welcome tab updated: Distributions 4 → 6, Conflict
+  diagnostics → Data types (Binary · Continuous · Poisson · Survival).
+
+---
+
 # bayprior 0.2.0
 
 ## New features
