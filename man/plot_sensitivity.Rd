@@ -7,29 +7,15 @@
 plot_sensitivity(sensitivity, target = NULL, highlight_reference = TRUE)
 }
 \arguments{
-\item{sensitivity}{A \code{bayprior_sensitivity} object from
-\code{\link{sensitivity_grid}}.}
+\item{sensitivity}{A \code{bayprior_sensitivity} object.}
 
 \item{target}{Character. Which target quantity to plot.}
 
-\item{highlight_reference}{Logical. Mark the reference prior. Default
-\code{TRUE}.}
+\item{highlight_reference}{Logical. Default \code{TRUE}.}
 }
 \value{
 A \code{ggplot} object.
 }
 \description{
-Visualises how a target posterior quantity changes across the hyperparameter
-grid. Produces either a heatmap (2-parameter grid) or a line plot
-(1-parameter grid).
-}
-\examples{
-\dontrun{
-prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
-sa    <- sensitivity_grid(prior, list(type = "binary", x = 14, n = 40),
-                          param_grid = list(alpha = seq(1, 6, 0.5),
-                                            beta  = seq(2, 14, 1)))
-plot_sensitivity(sa, target = "posterior_mean")
-}
-
+Plot sensitivity analysis results
 }

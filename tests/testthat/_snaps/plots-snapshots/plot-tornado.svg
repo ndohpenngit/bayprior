@@ -18,32 +18,32 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
-<rect x='0.00' y='0.00' width='720.00' height='576.00' style='stroke-width: 1.26; stroke: none; fill: #FFFFFF;' />
+<rect x='-0.000000000000064' y='0.00' width='720.00' height='576.00' style='stroke-width: 1.26; stroke: none; fill: #FFFFFF;' />
 </g>
 <defs>
-  <clipPath id='cpODQuNTh8NzEzLjUyfDQ1LjA1fDUzOS41MA=='>
-    <rect x='84.58' y='45.05' width='628.95' height='494.45' />
+  <clipPath id='cpODIuODN8NzEzLjUyfDQ1LjA1fDUzOS41MA=='>
+    <rect x='82.83' y='45.05' width='630.69' height='494.45' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpODQuNTh8NzEzLjUyfDQ1LjA1fDUzOS41MA==)'>
-<polyline points='84.58,404.65 713.52,404.65 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
-<polyline points='84.58,179.90 713.52,179.90 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
-<polyline points='203.34,539.50 203.34,45.05 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
-<polyline points='395.45,539.50 395.45,45.05 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
-<polyline points='587.57,539.50 587.57,45.05 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
-<line x1='319.56' y1='179.90' x2='684.94' y2='179.90' style='stroke-width: 10.67; stroke: #B5D4F4;' />
-<line x1='113.16' y1='404.65' x2='194.99' y2='404.65' style='stroke-width: 10.67; stroke: #B5D4F4;' />
-<circle cx='542.13' cy='179.90' r='3.62' style='stroke-width: 0.84; stroke: #185FA5; fill: #185FA5;' />
-<circle cx='151.62' cy='404.65' r='3.62' style='stroke-width: 0.84; stroke: #185FA5; fill: #185FA5;' />
+<g clip-path='url(#cpODIuODN8NzEzLjUyfDQ1LjA1fDUzOS41MA==)'>
+<polyline points='82.83,404.65 713.52,404.65 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='82.83,179.90 713.52,179.90 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='201.93,539.50 201.93,45.05 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='394.57,539.50 394.57,45.05 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='587.22,539.50 587.22,45.05 ' style='stroke-width: 1.26; stroke: #EBEBEB; stroke-linecap: butt;' />
+<line x1='318.47' y1='179.90' x2='684.86' y2='179.90' style='stroke-width: 10.67; stroke: #B5D4F4;' />
+<line x1='111.50' y1='404.65' x2='193.55' y2='404.65' style='stroke-width: 10.67; stroke: #B5D4F4;' />
+<circle cx='541.66' cy='179.90' r='3.62' style='stroke-width: 0.84; stroke: #185FA5; fill: #185FA5;' />
+<circle cx='150.06' cy='404.65' r='3.62' style='stroke-width: 0.84; stroke: #185FA5; fill: #185FA5;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
-<text x='78.75' y='408.23' text-anchor='end' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='72.27px' lengthAdjust='spacingAndGlyphs'>posterior_mean</text>
-<text x='78.75' y='183.48' text-anchor='end' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='61.87px' lengthAdjust='spacingAndGlyphs'>prob_efficacy</text>
-<text x='203.34' y='552.48' text-anchor='middle' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='14.46px' lengthAdjust='spacingAndGlyphs'>0.4</text>
-<text x='395.45' y='552.48' text-anchor='middle' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='14.46px' lengthAdjust='spacingAndGlyphs'>0.6</text>
-<text x='587.57' y='552.48' text-anchor='middle' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='14.46px' lengthAdjust='spacingAndGlyphs'>0.8</text>
-<text x='399.05' y='566.83' text-anchor='middle' style='font-size: 13.00px; font-family: sans;' textLength='141.64px' lengthAdjust='spacingAndGlyphs'>Posterior estimate range</text>
-<text x='84.58' y='35.87' style='font-size: 13.00px; font-family: sans;' textLength='387.35px' lengthAdjust='spacingAndGlyphs'>Bar width = range across sensitivity grid. Blue dot = reference prior.</text>
-<text x='84.58' y='17.21' style='font-size: 15.60px; font-family: sans;' textLength='257.55px' lengthAdjust='spacingAndGlyphs'>Prior influence on posterior estimates</text>
+<text x='77.01' y='408.23' text-anchor='end' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='70.53px' lengthAdjust='spacingAndGlyphs'>Posterior mean</text>
+<text x='77.01' y='183.48' text-anchor='end' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='52.60px' lengthAdjust='spacingAndGlyphs'>Pr(efficacy)</text>
+<text x='201.93' y='552.48' text-anchor='middle' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='14.46px' lengthAdjust='spacingAndGlyphs'>0.4</text>
+<text x='394.57' y='552.48' text-anchor='middle' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='14.46px' lengthAdjust='spacingAndGlyphs'>0.6</text>
+<text x='587.22' y='552.48' text-anchor='middle' style='font-size: 10.40px; fill: #4D4D4D; font-family: sans;' textLength='14.46px' lengthAdjust='spacingAndGlyphs'>0.8</text>
+<text x='398.18' y='566.83' text-anchor='middle' style='font-size: 13.00px; font-family: sans;' textLength='141.64px' lengthAdjust='spacingAndGlyphs'>Posterior estimate range</text>
+<text x='82.83' y='35.87' style='font-size: 13.00px; font-family: sans;' textLength='387.35px' lengthAdjust='spacingAndGlyphs'>Bar width = range across sensitivity grid. Blue dot = reference prior.</text>
+<text x='82.83' y='17.21' style='font-size: 15.60px; font-family: sans;' textLength='257.55px' lengthAdjust='spacingAndGlyphs'>Prior influence on posterior estimates</text>
 </g>
 </svg>

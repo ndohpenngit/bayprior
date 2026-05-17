@@ -7,8 +7,7 @@
 plot_tornado(sensitivity, title = "Prior influence on posterior estimates")
 }
 \arguments{
-\item{sensitivity}{A \code{bayprior_sensitivity} object from
-\code{\link{sensitivity_grid}}.}
+\item{sensitivity}{A \code{bayprior_sensitivity} object.}
 
 \item{title}{Character. Plot title.}
 }
@@ -16,17 +15,5 @@ plot_tornado(sensitivity, title = "Prior influence on posterior estimates")
 A \code{ggplot} object.
 }
 \description{
-Displays the range of each posterior target quantity ordered from most
-to least influential — the standard regulatory visualisation for
-demonstrating robustness to prior choice.
-}
-\examples{
-\dontrun{
-prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
-sa    <- sensitivity_grid(prior, list(type = "binary", x = 14, n = 40),
-                          param_grid = list(alpha = seq(1, 6, 0.5),
-                                            beta  = seq(2, 14, 1)))
-plot_tornado(sa)
-}
-
+Tornado plot of prior influence on posterior quantities
 }

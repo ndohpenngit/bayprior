@@ -1,3 +1,45 @@
+# bayprior 0.2.2
+
+## UX improvements
+
+* **Three-state auto theme** — theme now cycles Auto → Dark → Light on toggle.
+  In Auto mode the app follows the OS `prefers-color-scheme` setting, which
+  most operating systems tie to time of day. The button label shows the active
+  state and whether it is following the OS or set manually (e.g.
+  `Auto (dark)`, `Dark (manual)`). Switching back to Auto removes the stored
+  preference and resumes OS tracking.
+
+* **Disabled downstream buttons** — analysis buttons (Run Diagnostics, Run
+  Sensitivity Analysis, Build robust/sceptical/power prior, Compute consensus
+  prior) are now greyed out with a `not-allowed` cursor when no prior has been
+  fitted. Hovering shows the tooltip *"Fit a prior in Prior Elicitation first"*.
+  Buttons re-enable immediately when a prior is fitted. The Mahalanobis
+  Conflict Setup button is intentionally excluded as it does not require an
+  elicited prior.
+
+* **Prior summary card in sidebar** — the active prior badge now shows a
+  mini stats table with Mean, SD, and 95% CrI (where available) below the
+  distribution family and label. Updates reactively on every prior change.
+  Mixture priors show Mean and SD only (no closed-form CrI).
+
+* **Diagnostic tooltips** — each conflict value box (Box p-value, Surprise
+  index, Overlap coefficient) now has an info icon that displays a plain-
+  language explanation on hover, useful for non-statistician stakeholders.
+
+## Bug fixes
+
+* Accepted updated plot snapshots for `plot_tornado()` and
+  `plot_sensitivity()` following the axis label formatting change in v0.2.1
+  (snake_case -> title case).
+
+## Documentation
+
+* Sensitivity plot labels updated in `plot_tornado()` and `plot_sensitivity()`
+  package functions directly (not just the Shiny layer), so label formatting
+  applies when functions are called from R as well as in the app.
+
+---
+
 # bayprior 0.2.1
 
 ## UX improvements

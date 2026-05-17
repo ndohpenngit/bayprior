@@ -14,16 +14,16 @@ plot_prior_likelihood(
 )
 }
 \arguments{
-\item{prior}{A \code{bayprior} object.}
+\item{prior}{A \code{bayprior} object from any \code{elicit_*()} function.}
 
 \item{data_summary}{Named list with \code{n}, \code{x}, optionally
-\code{sd} and \code{type} (\code{"binary"} or \code{"continuous"}).}
+\code{sd} and \code{type}.}
 
-\item{show_posterior}{Logical. Include posterior density. Default \code{TRUE}.}
+\item{show_posterior}{Logical. Default \code{TRUE}.}
 
-\item{show_conflict}{Logical. Shade conflict region. Default \code{TRUE}.}
+\item{show_conflict}{Logical. Default \code{TRUE}.}
 
-\item{n_grid}{Integer. Grid resolution. Default \code{500}.}
+\item{n_grid}{Integer. Default \code{500}.}
 
 \item{title}{Character. Plot title.}
 }
@@ -31,13 +31,10 @@ plot_prior_likelihood(
 A \code{ggplot} object.
 }
 \description{
-Creates a ggplot2 overlay of the prior, (normalised) likelihood, and
-resulting posterior distribution — the canonical diagnostic plot for
-Bayesian clinical trial reports.
+Plot prior, likelihood, and posterior density overlays
 }
 \examples{
 prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
                      label = "Response rate")
 plot_prior_likelihood(prior, list(n = 40, x = 20, type = "binary"))
-
 }
