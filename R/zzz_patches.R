@@ -157,3 +157,51 @@
   x <- seq(lo, hi, length.out = n_grid)
   list(x = x, y = .eval_density_vec(prior, x))
 }
+
+# ── Sensitivity target label formatting ──────────────────────────────────────
+# Converts snake_case target names to professional title-case labels.
+# Used in plot_tornado() and plot_sensitivity() to avoid underscore labels.
+
+.TARGET_LABELS <- c(
+  posterior_mean = "Posterior mean",
+  posterior_sd   = "Posterior SD",
+  cri_lower      = "95% CrI lower bound",
+  cri_upper      = "95% CrI upper bound",
+  cri_width      = "95% CrI width",
+  prob_efficacy  = "Pr(efficacy)"
+)
+
+#' @noRd
+.target_label <- function(x) {
+  unname(ifelse(x %in% names(.TARGET_LABELS), .TARGET_LABELS[x], x))
+}
+
+#' @noRd
+.relabel_sensitivity <- function(sa) {
+  # Relabel the $target and $influence_scores names in the sensitivity object
+  # so plot_tornado() and plot_sensitivity() render professional labels
+  if (is.null(sa)) return(sa)
+
+  # Rename target vector
+  if (!is.null(sa$target)) {
+    sa$target <- vapply(sa$target, .target_label, character(1))
+  }
+
+  # Rename influence_scores rows
+  if (!is.null(sa$influence_scores) && !is.null(rownames(sa$influence_scores))) {
+    rownames(sa$influence_scores) <- vapply(
+      rownames(sa$influence_scores), .target_label, character(1)
+    )
+  }
+
+  # Rename grid columns if present
+  if (!is.null(sa$grid)) {
+    col_map <- intersect(names(.TARGET_LABELS), names(sa$grid))
+    if (length(col_map) > 0) {
+      names(sa$grid)[names(sa$grid) %in% col_map] <-
+        .TARGET_LABELS[names(sa$grid)[names(sa$grid) %in% col_map]]
+    }
+  }
+
+  sa
+}

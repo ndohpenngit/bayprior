@@ -1,24 +1,17 @@
 #' Plot prior, likelihood, and posterior density overlays
 #'
-#' Creates a ggplot2 overlay of the prior, (normalised) likelihood, and
-#' resulting posterior distribution — the canonical diagnostic plot for
-#' Bayesian clinical trial reports.
-#'
-#' @param prior A \code{bayprior} object.
+#' @param prior A \code{bayprior} object from any \code{elicit_*()} function.
 #' @param data_summary Named list with \code{n}, \code{x}, optionally
-#'   \code{sd} and \code{type} (\code{"binary"} or \code{"continuous"}).
-#' @param show_posterior Logical. Include posterior density. Default \code{TRUE}.
-#' @param show_conflict Logical. Shade conflict region. Default \code{TRUE}.
-#' @param n_grid Integer. Grid resolution. Default \code{500}.
+#'   \code{sd} and \code{type}.
+#' @param show_posterior Logical. Default \code{TRUE}.
+#' @param show_conflict Logical. Default \code{TRUE}.
+#' @param n_grid Integer. Default \code{500}.
 #' @param title Character. Plot title.
-#'
 #' @return A \code{ggplot} object.
-#'
 #' @examples
 #' prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
 #'                      label = "Response rate")
 #' plot_prior_likelihood(prior, list(n = 40, x = 20, type = "binary"))
-#'
 #' @export
 plot_prior_likelihood <- function(prior,
                                   data_summary,
@@ -82,27 +75,10 @@ plot_prior_likelihood <- function(prior,
 
 #' Plot sensitivity analysis results
 #'
-#' Visualises how a target posterior quantity changes across the hyperparameter
-#' grid. Produces either a heatmap (2-parameter grid) or a line plot
-#' (1-parameter grid).
-#'
-#' @param sensitivity A \code{bayprior_sensitivity} object from
-#'   \code{\link{sensitivity_grid}}.
+#' @param sensitivity A \code{bayprior_sensitivity} object.
 #' @param target Character. Which target quantity to plot.
-#' @param highlight_reference Logical. Mark the reference prior. Default
-#'   \code{TRUE}.
-#'
+#' @param highlight_reference Logical. Default \code{TRUE}.
 #' @return A \code{ggplot} object.
-#'
-#' @examples
-#' \dontrun{
-#' prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
-#' sa    <- sensitivity_grid(prior, list(type = "binary", x = 14, n = 40),
-#'                           param_grid = list(alpha = seq(1, 6, 0.5),
-#'                                             beta  = seq(2, 14, 1)))
-#' plot_sensitivity(sa, target = "posterior_mean")
-#' }
-#'
 #' @export
 plot_sensitivity <- function(sensitivity,
                              target = NULL,
@@ -115,6 +91,9 @@ plot_sensitivity <- function(sensitivity,
   grid    <- sensitivity$grid
   params  <- names(sensitivity$param_grid)
   ref_row <- sensitivity$reference_row
+
+  # Professional axis label — replace snake_case with readable title
+  target_label <- .target_label(target)
 
   if (length(params) == 1) {
     p <- ggplot2::ggplot(
@@ -130,8 +109,8 @@ plot_sensitivity <- function(sensitivity,
       p <- p + ggplot2::geom_point(data = grid[ref_row, , drop = FALSE],
                                    colour = "#D85A30", size = 3, shape = 18)
     p + ggplot2::labs(
-      title = glue::glue("Sensitivity: {target} vs {params[1]}"),
-      x = params[1], y = target
+      title = glue::glue("Sensitivity: {target_label} vs {params[1]}"),
+      x = params[1], y = target_label
     ) + ggplot2::theme_minimal(base_size = 13)
 
   } else if (length(params) == 2) {
@@ -141,13 +120,14 @@ plot_sensitivity <- function(sensitivity,
     ) +
       ggplot2::geom_tile() +
       ggplot2::scale_fill_gradientn(
-        colours = c("#042C53", "#185FA5", "#9FE1CB", "#1D9E75"), name = target)
+        colours = c("#042C53", "#185FA5", "#9FE1CB", "#1D9E75"),
+        name    = target_label)
     if (highlight_reference)
       p <- p + ggplot2::geom_point(
         data = grid[ref_row, , drop = FALSE],
         colour = "#D85A30", size = 4, shape = 23, fill = "#D85A30")
     p + ggplot2::labs(
-      title = glue::glue("Sensitivity heatmap: {target}"),
+      title = glue::glue("Sensitivity heatmap: {target_label}"),
       x = params[1], y = params[2]
     ) + ggplot2::theme_minimal(base_size = 13)
 
@@ -159,25 +139,9 @@ plot_sensitivity <- function(sensitivity,
 
 #' Tornado plot of prior influence on posterior quantities
 #'
-#' Displays the range of each posterior target quantity ordered from most
-#' to least influential — the standard regulatory visualisation for
-#' demonstrating robustness to prior choice.
-#'
-#' @param sensitivity A \code{bayprior_sensitivity} object from
-#'   \code{\link{sensitivity_grid}}.
+#' @param sensitivity A \code{bayprior_sensitivity} object.
 #' @param title Character. Plot title.
-#'
 #' @return A \code{ggplot} object.
-#'
-#' @examples
-#' \dontrun{
-#' prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
-#' sa    <- sensitivity_grid(prior, list(type = "binary", x = 14, n = 40),
-#'                           param_grid = list(alpha = seq(1, 6, 0.5),
-#'                                             beta  = seq(2, 14, 1)))
-#' plot_tornado(sa)
-#' }
-#'
 #' @export
 plot_tornado <- function(sensitivity,
                          title = "Prior influence on posterior estimates") {
@@ -188,7 +152,7 @@ plot_tornado <- function(sensitivity,
   df <- purrr::imap_dfr(scores, function(range_val, nm) {
     vals <- grid[[nm]]
     data.frame(
-      target    = nm,
+      target    = .target_label(nm),   # ← professional label
       ref_value = grid[[nm]][sensitivity$reference_row],
       lower     = min(vals, na.rm = TRUE),
       upper     = max(vals, na.rm = TRUE),
@@ -216,23 +180,6 @@ plot_tornado <- function(sensitivity,
 }
 
 
-#' Plot method for bayprior objects
-#'
-#' Produces a density plot of a fitted prior distribution with the 95%
-#' credible interval shaded and the prior mean shown as a dashed vertical
-#' line. Dispatched automatically when \code{plot()} is called on a
-#' \code{bayprior} object.
-#'
-#' @param x A \code{bayprior} object from any \code{elicit_*()} function.
-#' @param ... Additional arguments (currently unused).
-#'
-#' @return A \code{ggplot} object.
-#'
-#' @examples
-#' prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
-#'                      label = "Response rate")
-#' plot(prior)
-#'
 #' @method plot bayprior
 #' @export
 plot.bayprior <- function(x, ...) {
@@ -265,27 +212,19 @@ plot.bayprior <- function(x, ...) {
 }
 
 
-#' Plot method for bayprior_conflict objects
-#'
-#' @param x A `bayprior_conflict` object from [prior_conflict()].
-#' @param ... Additional arguments (currently unused).
-#' @return A ggplot2 object (invisibly).
 #' @export
 plot.bayprior_conflict <- function(x, ...) {
-  # Reconstruct grid from prior support
   grid <- seq(
     max(0, x$prior_mean - 5 * x$prior_sd),
     min(1, x$prior_mean + 5 * x$prior_sd),
     length.out = 500
   )
 
-  # Prior density (Beta)
   p   <- x$prior$params
   pri <- stats::dbeta(grid, p$alpha, p$beta)
 
-  # Approximate likelihood as Normal on observed mean
   lik <- stats::dnorm(grid, mean = x$obs_mean, sd = x$obs_se)
-  lik <- lik / max(lik) * max(pri)   # scale to same height as prior
+  lik <- lik / max(lik) * max(pri)
 
   df <- data.frame(
     theta   = rep(grid, 2),

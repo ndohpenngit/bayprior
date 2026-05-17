@@ -45,8 +45,12 @@ mod_sensitivity_ui <- function(id) {
                     0.80, 0.99, 0.95, 0.01)
       ),
       tags$hr(),
-      actionButton(ns("run_btn"), "Run Sensitivity Analysis",
-                   icon = icon("play"), class = "btn-primary btn-block")
+      tags$div(
+        class = "btn-tip-wrap",
+        actionButton(ns("run_btn"), "Run Sensitivity Analysis",
+                     icon = icon("play"), class = "btn-primary btn-block"),
+        tags$span(class = "btn-tip-text", "Fit a prior in Prior Elicitation first")
+      )
     ),
     column(8,
       uiOutput(ns("results_or_placeholder"))
@@ -319,10 +323,14 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
 
     output$outcome_picker <- renderUI({
       req(shared$sensitivity)
+      raw_targets   <- shared$sensitivity$target
+      pretty_labels <- vapply(raw_targets, .target_label, character(1))
+      # named vector: label shown → raw value sent to input$outcome
+      choices <- setNames(raw_targets, pretty_labels)
       shinyWidgets::radioGroupButtons(
         ns("outcome"), NULL,
-        choices  = shared$sensitivity$target,
-        selected = shared$sensitivity$target[1],
+        choices  = choices,
+        selected = raw_targets[1],
         justified = TRUE, status = "info")
     })
 

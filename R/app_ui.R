@@ -8,15 +8,13 @@ app_ui <- function(request) {
 
     shinydashboard::dashboardPage(
 
-      title = "Bayesian Prior Justification",
-
       # -- Header --------------------------------------------------------------
       shinydashboard::dashboardHeader(
         title = tagList(
           tags$img(
             src    = "www/favicon.png",
-            height = "45px",
-            width  = "45px",
+            height = "34px",
+            width  = "34px",
             style  = paste0(
               "margin-right:8px;",
               "margin-top:-3px;",
@@ -143,7 +141,6 @@ app_ui <- function(request) {
             }
 
             // Restore Plotly axis/text colours when switching to light mode.
-            // Dark mode is handled by CSS filter; light mode needs explicit reset.
             function relayoutPlotly() {
               var fg   = '#444444';
               var grid = '#eeeeee';
@@ -164,47 +161,117 @@ app_ui <- function(request) {
               });
             }
 
-            function toggleTheme() {
-              var body = document.body;
-              var btn  = document.getElementById('theme_toggle');
-              if (isDark()) {
-                body.classList.remove('dark-mode');
-                localStorage.setItem('bayprior_theme', 'light');
-                btn.innerHTML = '<i class=\"fa fa-moon\"></i> Dark';
-                relayoutPlotly();   // restore light-mode Plotly colours
-                if (window.Shiny) Shiny.setInputValue('app_theme', 'light', {priority:'event'});
-              } else {
-                body.classList.add('dark-mode');
-                localStorage.setItem('bayprior_theme', 'dark');
-                btn.innerHTML = '<i class=\"fa fa-sun\"></i> Light';
-                if (window.Shiny) Shiny.setInputValue('app_theme', 'dark', {priority:'event'});
-              }
+            // -- Three-state theme: auto | dark | light ---------------------
+            // State is stored in localStorage:
+            //   null / absent = Auto (follows OS prefers-color-scheme)
+            //   'dark'        = Manual dark
+            //   'light'       = Manual light
+            //
+            // Clicking the toggle cycles: Auto -> Dark -> Light -> Auto
+
+            function getThemeState() {
+              return localStorage.getItem('bayprior_theme') || 'auto';
             }
 
-            // -- Theme restore ----------------------------------------------
-            // Step 1: Apply body class IMMEDIATELY as script parses.
-            // DOMContentLoaded is too late -- AdminLTE re-renders the body
-            // after it fires, stripping any class added there.
-            (function() {
-              if (localStorage.getItem('bayprior_theme') === 'dark')
+            function applyThemeState(state) {
+              var btn = document.getElementById('theme_toggle');
+              if (state === 'dark') {
                 document.body.classList.add('dark-mode');
+                if (btn) btn.innerHTML =
+                  '<i class=\"fa fa-moon\"></i> Dark' +
+                  '<span style=\"font-size:9px;opacity:0.6;margin-left:4px;\">(manual)</span>';
+              } else if (state === 'light') {
+                document.body.classList.remove('dark-mode');
+                relayoutPlotly();
+                if (btn) btn.innerHTML =
+                  '<i class=\"fa fa-sun\"></i> Light' +
+                  '<span style=\"font-size:9px;opacity:0.6;margin-left:4px;\">(manual)</span>';
+              } else {
+                // Auto -- follow OS
+                var osDark = window.matchMedia &&
+                             window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (osDark) {
+                  document.body.classList.add('dark-mode');
+                } else {
+                  document.body.classList.remove('dark-mode');
+                  relayoutPlotly();
+                }
+                if (btn) btn.innerHTML =
+                  '<i class=\"fa fa-circle-half-stroke\"></i> Auto' +
+                  '<span style=\"font-size:9px;opacity:0.6;margin-left:4px;\">' +
+                  (osDark ? '(dark)' : '(light)') + '</span>';
+              }
+              if (window.Shiny)
+                Shiny.setInputValue('app_theme', isDark() ? 'dark' : 'light',
+                                    {priority:'event'});
+            }
+
+            function toggleTheme() {
+              var current = getThemeState();
+              var next = current === 'auto'  ? 'dark'  :
+                         current === 'dark'  ? 'light' : 'auto';
+              if (next === 'auto') {
+                localStorage.removeItem('bayprior_theme');
+              } else {
+                localStorage.setItem('bayprior_theme', next);
+              }
+              applyThemeState(next);
+            }
+
+            // -- Initialise on page load -------------------------------------
+            (function() {
+              applyThemeState(getThemeState());
             })();
 
-            // Step 2: Update the button label once Shiny has rendered the UI.
-            // theme_toggle element only exists after Shiny initialises the header.
+            // -- React to OS changes at runtime ------------------------------
+            // Only applies when in Auto mode (no manual preference saved)
+            if (window.matchMedia) {
+              window.matchMedia('(prefers-color-scheme: dark)')
+                .addEventListener('change', function(e) {
+                  if (getThemeState() === 'auto') {
+                    applyThemeState('auto');
+                  }
+                });
+            }
+
+            // -- Set correct button label after Shiny renders the header -----
             document.addEventListener('shiny:sessioninitialized', function() {
-              var btn = document.getElementById('theme_toggle');
-              if (btn && localStorage.getItem('bayprior_theme') === 'dark')
-                btn.innerHTML = '<i class=\"fa fa-sun\"></i> Light';
+              applyThemeState(getThemeState());
             });
 
             document.addEventListener('shiny:connected', function() {
               if (window.Shiny)
-                Shiny.setInputValue('app_theme', isDark() ? 'dark' : 'light', {priority:'event'});
+                Shiny.setInputValue('app_theme', isDark() ? 'dark' : 'light',
+                                    {priority:'event'});
             });
           "))
         ),
         shinyjs::useShinyjs(),
+
+        # -- Disabled button + tooltip styles ---------------------------------
+        tags$style(HTML("
+          .btn[disabled], .btn.disabled {
+            opacity: 0.45 !important;
+            cursor: not-allowed !important;
+            pointer-events: auto !important;
+          }
+          .btn-tip-wrap {
+            position: relative; display: block; width: 100%;
+          }
+          .btn-tip-wrap .btn-tip-text {
+            visibility: hidden; opacity: 0;
+            background: #333; color: #fff;
+            font-size: 11px; border-radius: 4px;
+            padding: 4px 8px; white-space: nowrap;
+            position: absolute; bottom: 110%; left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.15s;
+            z-index: 9999; pointer-events: none;
+          }
+          .btn-tip-wrap:hover .btn-tip-text {
+            visibility: visible; opacity: 1;
+          }
+        ")),
 
         # Inline dark mode Plotly fix -- invert filter at compositor level
         # This overrides Plotly's inline SVG styles which CSS selectors cannot touch
@@ -279,7 +346,7 @@ app_ui <- function(request) {
 golem_add_external_resources <- function() {
   addResourcePath("www", app_sys("app/www"))
   tags$head(
-    golem::favicon(ext = "png"),
+    golem::favicon(),
     tags$link(rel = "stylesheet", type = "text/css",
                href = "www/bayprior-dark.css")
   )

@@ -53,6 +53,22 @@ app_server <- function(input, output, session) {
                 !is.null(shared$sceptical_prior) ||
                 !is.null(shared$power_prior))
   )
+
+  # ── Button enable / disable based on active prior ─────────────────────────
+  # Downstream analysis buttons are disabled when no prior is fitted,
+  # preventing silent failures and guiding users through the workflow.
+  observe({
+    has <- !is.null(active_prior())
+    # Note: mahal-run_btn is NOT disabled — Mahalanobis takes raw prior
+    # parameters as direct inputs and does not require an elicited prior.
+    btns <- c("conflict-run_btn", "sensitivity-run_btn",
+              "robust-fit_btn",   "sceptical-fit_btn", "power-run_btn",
+              "pooling-pool_btn")
+    for (btn in btns) {
+      if (has) shinyjs::enable(btn) else shinyjs::disable(btn)
+    }
+  })
+
   # When a new prior is fitted, all downstream results are stale.
   # Clear them so users never see old results mixed with new inputs.
   observeEvent(active_prior(), {
@@ -96,6 +112,7 @@ app_server <- function(input, output, session) {
         )
       )
     } else {
+      s <- p$fit_summary
       tags$div(
         style = paste0(
           "margin:6px 8px; padding:8px 10px; border-radius:6px;",
@@ -107,16 +124,39 @@ app_server <- function(input, output, session) {
           icon("circle-check"), " ", toupper(p$dist)
         ),
         tags$div(
-          style = "opacity:0.9; margin-top:3px;",
-          glue::glue("mean = {round(p$fit_summary$mean, 3)}")
-        ),
-        tags$div(
           style = paste0(
             "opacity:0.75; margin-top:2px; font-size:10px;",
             "white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
           ),
           p$label
-        )
+        ),
+        tags$hr(style = "border-color:rgba(255,255,255,0.3); margin:6px 0 4px;"),
+        {
+          # Safe numeric extraction -- fit_summary may contain named vectors
+          # or lists; use tryCatch to avoid non-numeric errors
+          .fmt <- function(x) tryCatch(round(as.numeric(x)[1L], 3),
+                                       error = function(e) "N/A")
+          tags$table(
+            style = "width:100%; font-size:10px; border-collapse:collapse;",
+            tags$tr(
+              tags$td(style = "opacity:0.8; padding:1px 0;", "Mean"),
+              tags$td(style = "text-align:right; font-weight:600;",
+                      .fmt(s$mean))
+            ),
+            tags$tr(
+              tags$td(style = "opacity:0.8; padding:1px 0;", "SD"),
+              tags$td(style = "text-align:right; font-weight:600;",
+                      .fmt(s$sd))
+            ),
+            if (!is.null(s$q025) && !is.null(s$q975) &&
+                is.numeric(tryCatch(as.numeric(s$q025), error = function(e) NA)))
+              tags$tr(
+                tags$td(style = "opacity:0.8; padding:1px 0;", "95% CrI"),
+                tags$td(style = "text-align:right; font-weight:600;",
+                        paste0("[", .fmt(s$q025), ", ", .fmt(s$q975), "]"))
+              )
+          )
+        }
       )
     }
   })
