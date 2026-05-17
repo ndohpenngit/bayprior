@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Ndoh Penn">
-<meta name="dcterms.date" content="2026-05-15">
+<meta name="dcterms.date" content="2026-05-13">
 
 <title>Prior Elicitation Methods – bayprior</title>
 <style>
@@ -233,29 +233,17 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#quantile-matching" id="toc-quantile-matching" class="nav-link" data-scroll-target="#quantile-matching">Quantile Matching</a></li>
   <li><a href="#moment-matching" id="toc-moment-matching" class="nav-link" data-scroll-target="#moment-matching">Moment Matching</a></li>
+  <li><a href="#choosing-between-methods" id="toc-choosing-between-methods" class="nav-link" data-scroll-target="#choosing-between-methods">Choosing Between Methods</a></li>
   </ul></li>
   <li><a href="#normal-prior-continuous-endpoints" id="toc-normal-prior-continuous-endpoints" class="nav-link" data-scroll-target="#normal-prior-continuous-endpoints">Normal Prior (Continuous Endpoints)</a></li>
   <li><a href="#gamma-prior-rate-and-count-endpoints" id="toc-gamma-prior-rate-and-count-endpoints" class="nav-link" data-scroll-target="#gamma-prior-rate-and-count-endpoints">Gamma Prior (Rate and Count Endpoints)</a></li>
   <li><a href="#log-normal-prior-hazard-ratios" id="toc-log-normal-prior-hazard-ratios" class="nav-link" data-scroll-target="#log-normal-prior-hazard-ratios">Log-Normal Prior (Hazard Ratios)</a></li>
-  <li><a href="#exponential" id="toc-exponential" class="nav-link" data-scroll-target="#exponential">Exponential Prior (Constant Hazard Rates)</a>
-  <ul class="collapse">
-  <li><a href="#method-moments" id="toc-method-moments" class="nav-link" data-scroll-target="#method-moments">Method: moments</a></li>
-  <li><a href="#method-rate" id="toc-method-rate" class="nav-link" data-scroll-target="#method-rate">Method: rate</a></li>
-  <li><a href="#method-quantile" id="toc-method-quantile" class="nav-link" data-scroll-target="#method-quantile">Method: quantile</a></li>
-  <li><a href="#conjugate-update" id="toc-conjugate-update" class="nav-link" data-scroll-target="#conjugate-update">Conjugate update</a></li>
-  </ul></li>
-  <li><a href="#weibull" id="toc-weibull" class="nav-link" data-scroll-target="#weibull">Weibull Prior (Non-Constant Hazard Survival Times)</a>
-  <ul class="collapse">
-  <li><a href="#method-moments-1" id="toc-method-moments-1" class="nav-link" data-scroll-target="#method-moments-1">Method: moments</a></li>
-  <li><a href="#method-params" id="toc-method-params" class="nav-link" data-scroll-target="#method-params">Method: params</a></li>
-  <li><a href="#method-quantile-1" id="toc-method-quantile-1" class="nav-link" data-scroll-target="#method-quantile-1">Method: quantile</a></li>
-  <li><a href="#posterior-approximation-note" id="toc-posterior-approximation-note" class="nav-link" data-scroll-target="#posterior-approximation-note">Posterior approximation note</a></li>
-  </ul></li>
   <li><a href="#roulette-method" id="toc-roulette-method" class="nav-link" data-scroll-target="#roulette-method">Roulette Method</a></li>
   <li><a href="#expert-pooling" id="toc-expert-pooling" class="nav-link" data-scroll-target="#expert-pooling">Expert Pooling</a>
   <ul class="collapse">
-  <li><a href="#linear-pooling" id="toc-linear-pooling" class="nav-link" data-scroll-target="#linear-pooling">Linear Pooling</a></li>
-  <li><a href="#pooling-compatibility" id="toc-pooling-compatibility" class="nav-link" data-scroll-target="#pooling-compatibility">Pooling Compatibility</a></li>
+  <li><a href="#linear-pooling-recommended" id="toc-linear-pooling-recommended" class="nav-link" data-scroll-target="#linear-pooling-recommended">Linear Pooling (Recommended)</a></li>
+  <li><a href="#logarithmic-pooling" id="toc-logarithmic-pooling" class="nav-link" data-scroll-target="#logarithmic-pooling">Logarithmic Pooling</a></li>
+  <li><a href="#manual-mixture-construction" id="toc-manual-mixture-construction" class="nav-link" data-scroll-target="#manual-mixture-construction">Manual Mixture Construction</a></li>
   </ul></li>
   <li><a href="#prior-object-structure" id="toc-prior-object-structure" class="nav-link" data-scroll-target="#prior-object-structure">Prior Object Structure</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
@@ -284,7 +272,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 15, 2026</p>
+      <p class="date">May 13, 2026</p>
     </div>
   </div>
   
@@ -298,15 +286,10 @@ window.Quarto = {
 
 <section id="overview" class="level1">
 <h1>Overview</h1>
-<p>Prior elicitation translates an expert’s subjective beliefs about an unknown quantity into a formal probability distribution. <strong>bayprior</strong> implements the SHELF methodology (O’Hagan et al., 2006) across <strong>six distribution families</strong> and three elicitation methods.</p>
+<p>Prior elicitation is the process of translating an expert’s subjective beliefs about an unknown quantity into a formal probability distribution. <strong>bayprior</strong> implements the structured elicitation framework recommended in the SHELF methodology (O’Hagan et al., 2006) across four distribution families and three elicitation methods.</p>
 <section id="distribution-families" class="level2">
 <h2 class="anchored" data-anchor-id="distribution-families">Distribution Families</h2>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Family</th>
@@ -335,16 +318,6 @@ window.Quarto = {
 <td>(0, ∞)</td>
 <td>Hazard ratios, PK parameters</td>
 </tr>
-<tr class="odd">
-<td><strong>Exponential</strong></td>
-<td>(0, ∞)</td>
-<td>Constant hazard rates, Poisson rate priors</td>
-</tr>
-<tr class="even">
-<td><strong>Weibull</strong></td>
-<td>(0, ∞)</td>
-<td>Non-constant hazard survival times (OS, PFS)</td>
-</tr>
 </tbody>
 </table>
 </section>
@@ -352,8 +325,8 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="elicitation-methods">Elicitation Methods</h2>
 <ul>
 <li><strong>Quantile matching</strong> — expert specifies probability–value pairs</li>
-<li><strong>Moment matching</strong> — expert specifies mean and SD</li>
-<li><strong>Roulette</strong> — expert allocates chips across histogram bins</li>
+<li><strong>Moment matching</strong> — expert specifies mean and standard deviation</li>
+<li><strong>Roulette method</strong> — expert allocates chips across histogram bins</li>
 </ul>
 <hr>
 </section>
@@ -362,6 +335,7 @@ window.Quarto = {
 <h1>Beta Prior (Binary Endpoints)</h1>
 <section id="quantile-matching" class="level2">
 <h2 class="anchored" data-anchor-id="quantile-matching">Quantile Matching</h2>
+<p>The expert specifies three quantiles that anchor the distribution. For example, a clinician who believes the objective response rate (ORR) has a 5% chance of being below 10%, a median of 30%, and a 95% chance of being below 60%:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>prior_q <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.05"</span> <span class="ot">=</span> <span class="fl">0.10</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.30</span>, <span class="st">"0.95"</span> <span class="ot">=</span> <span class="fl">0.60</span>),</span>
@@ -373,14 +347,16 @@ window.Quarto = {
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/beta-quantile-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="prior-elicitation_files/figure-html/beta-quantile-1.png" class="img-fluid figure-img" style="width:95.0%"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>The <code>quantiles</code> argument is a named numeric vector where names are probabilities (as strings) and values are the corresponding quantiles.</p>
 </section>
 <section id="moment-matching" class="level2">
 <h2 class="anchored" data-anchor-id="moment-matching">Moment Matching</h2>
+<p>When an expert finds it easier to specify a mean and standard deviation than exact quantiles:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>prior_m <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.30</span>,</span>
@@ -391,13 +367,22 @@ window.Quarto = {
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_m)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Moment matching solves analytically: <span class="math display">\[\alpha = \mu \left(\frac{\mu(1-\mu)}{\sigma^2} - 1\right), \quad
+<p>Moment matching solves analytically for the Beta parameters from the mean and variance. The SD must be small enough that implied <span class="math inline">\(\alpha, \beta &gt; 0\)</span>:</p>
+<p><span class="math display">\[\alpha = \mu \left(\frac{\mu(1-\mu)}{\sigma^2} - 1\right), \quad
 \beta = (1-\mu)\left(\frac{\mu(1-\mu)}{\sigma^2} - 1\right)\]</span></p>
+</section>
+<section id="choosing-between-methods" class="level2">
+<h2 class="anchored" data-anchor-id="choosing-between-methods">Choosing Between Methods</h2>
+<ul>
+<li><strong>Use quantile matching</strong> when the expert can more naturally think in terms of probability statements (“I’m 90% sure the rate is between X and Y”)</li>
+<li><strong>Use moment matching</strong> when the expert can directly state a best guess (mean) and uncertainty (SD)</li>
+</ul>
 <hr>
 </section>
 </section>
 <section id="normal-prior-continuous-endpoints" class="level1">
 <h1>Normal Prior (Continuous Endpoints)</h1>
+<p>For quantities that can take any real value, such as log odds ratios or mean differences:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>prior_lor <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.025"</span> <span class="ot">=</span> <span class="sc">-</span><span class="fl">0.50</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.20</span>, <span class="st">"0.975"</span> <span class="ot">=</span> <span class="fl">0.90</span>),</span>
@@ -407,40 +392,45 @@ window.Quarto = {
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/normal-quantile-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="prior-elicitation_files/figure-html/normal-quantile-1.png" class="img-fluid figure-img" style="width:95.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>prior_md <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fl">0.0</span>, <span class="at">sd =</span> <span class="fl">0.5</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"Mean difference (sceptical)"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_md)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.0</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="fl">0.5</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Mean difference (sceptical)"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_md)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/normal-moments-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="prior-elicitation_files/figure-html/normal-moments-1.png" class="img-fluid figure-img" style="width:95.0%"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>The Normal prior is conjugate for continuous outcomes with known variance, making posterior updating straightforward.</p>
 <hr>
 </section>
 <section id="gamma-prior-rate-and-count-endpoints" class="level1">
 <h1>Gamma Prior (Rate and Count Endpoints)</h1>
-<p>The Gamma distribution is the conjugate prior for Poisson and exponential likelihoods — a natural choice for event rate priors.</p>
+<p>For strictly positive quantities such as event rates or median survival times:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>prior_os <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="dv">18</span>, <span class="at">sd =</span> <span class="dv">6</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"Median OS (months)"</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_os)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean   =</span> <span class="dv">18</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd     =</span> <span class="dv">6</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"Median OS (months)"</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_os)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/gamma-moments-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="prior-elicitation_files/figure-html/gamma-moments-1.png" class="img-fluid figure-img" style="width:95.0%"></p>
 </figure>
 </div>
 </div>
@@ -452,321 +442,212 @@ window.Quarto = {
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_rate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><span class="math display">\[\text{mean} = \frac{\text{shape}}{\text{rate}}, \quad
+<p>The Gamma parameterisation uses shape and rate: <span class="math display">\[\text{mean} = \frac{\text{shape}}{\text{rate}}, \quad
 \text{SD} = \frac{\sqrt{\text{shape}}}{\text{rate}}\]</span></p>
 <hr>
 </section>
 <section id="log-normal-prior-hazard-ratios" class="level1">
 <h1>Log-Normal Prior (Hazard Ratios)</h1>
+<p>For quantities that are inherently multiplicative and positive, such as hazard ratios or pharmacokinetic parameters. Moment matching operates on the original scale; parameters are stored on the log scale:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>prior_hr <span class="ot">&lt;-</span> <span class="fu">elicit_lognormal</span>(</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.05"</span> <span class="ot">=</span> <span class="fl">0.40</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.70</span>, <span class="st">"0.95"</span> <span class="ot">=</span> <span class="fl">1.20</span>),</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard ratio (treatment vs control)"</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hr)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/lognormal-quantile-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="prior-elicitation_files/figure-html/lognormal-quantile-1.png" class="img-fluid figure-img" style="width:95.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>prior_pk <span class="ot">&lt;-</span> <span class="fu">elicit_lognormal</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="dv">25</span>, <span class="at">sd =</span> <span class="dv">10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"AUC (ng/mL*h)"</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_pk)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean   =</span> <span class="dv">25</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd     =</span> <span class="dv">10</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"AUC (ng/mL*h)"</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_pk)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>The relationship between original-scale moments and log-scale parameters: <span class="math display">\[\sigma_{\log}^2 = \log\left(1 + \frac{\sigma^2}{\mu^2}\right), \quad
+\mu_{\log} = \log(\mu) - \frac{\sigma_{\log}^2}{2}\]</span></p>
 <hr>
-</section>
-<section id="exponential" class="level1">
-<h1>Exponential Prior (Constant Hazard Rates)</h1>
-<p>The Exponential distribution models a <strong>constant hazard rate</strong> <span class="math inline">\(\lambda &gt; 0\)</span>. The mean is <span class="math inline">\(1/\lambda\)</span> and the SD equals the mean. It is the conjugate prior likelihood for Gamma priors on Poisson rates, and is appropriate when the hazard rate is assumed constant over time.</p>
-<p><strong>Use cases:</strong> adverse event rates (events per person-time), constant-hazard survival endpoints, Poisson rate priors for count data.</p>
-<section id="method-moments" class="level2">
-<h2 class="anchored" data-anchor-id="method-moments">Method: moments</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mean hazard rate 0.05 =&gt; mean survival 1/0.05 = 20 months</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>prior_hz <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.05</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard rate (constant)"</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hz)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hz)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/exp-moments-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="method-rate" class="level2">
-<h2 class="anchored" data-anchor-id="method-rate">Method: rate</h2>
-<p>Direct rate specification (= <span class="math inline">\(\lambda\)</span>):</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>prior_ae <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">rate   =</span> <span class="fl">0.12</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"rate"</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"AE rate per person-year"</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_ae)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="method-quantile" class="level2">
-<h2 class="anchored" data-anchor-id="method-quantile">Method: quantile</h2>
-<p>Fit the rate from expert-specified quantiles:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>prior_hz_q <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.25"</span> <span class="ot">=</span> <span class="fl">0.02</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.05</span>, <span class="st">"0.75"</span> <span class="ot">=</span> <span class="fl">0.10</span>),</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard rate"</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hz_q)</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hz_q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/exp-quantile-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="conjugate-update" class="level2">
-<h2 class="anchored" data-anchor-id="conjugate-update">Conjugate update</h2>
-<p>With Poisson/survival data:</p>
-<p><span class="math display">\[\text{Prior: Exponential}(\lambda) \approx \text{Gamma}(1, \lambda)\]</span> <span class="math display">\[\text{Posterior: Gamma}(1 + x,\; \lambda + n)\]</span></p>
-<p>where <span class="math inline">\(x\)</span> = observed events, <span class="math inline">\(n\)</span> = exposure time or follow-up.</p>
-<hr>
-</section>
-</section>
-<section id="weibull" class="level1">
-<h1>Weibull Prior (Non-Constant Hazard Survival Times)</h1>
-<p>The Weibull distribution is the most widely used model for survival analysis. It is parameterised by shape <span class="math inline">\(k &gt; 0\)</span> and scale <span class="math inline">\(\lambda &gt; 0\)</span>:</p>
-<p><span class="math display">\[\text{mean} = \lambda\,\Gamma(1 + 1/k), \quad
-\text{SD} = \lambda\sqrt{\Gamma(1 + 2/k) - \Gamma(1 + 1/k)^2}\]</span></p>
-<p><strong>Shape parameter interpretation:</strong></p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Shape <span class="math inline">\(k\)</span></th>
-<th>Hazard</th>
-<th>Clinical scenario</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><span class="math inline">\(k &lt; 1\)</span></td>
-<td>Decreasing</td>
-<td>Early frailty, selection</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">\(k = 1\)</span></td>
-<td>Constant</td>
-<td>Equivalent to Exponential</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\(k &gt; 1\)</span></td>
-<td>Increasing</td>
-<td>Ageing, post-surgical deterioration</td>
-</tr>
-</tbody>
-</table>
-<section id="method-moments-1" class="level2">
-<h2 class="anchored" data-anchor-id="method-moments-1">Method: moments</h2>
-<p>Specify prior mean and SD — bayprior solves for shape and scale via Nelder-Mead optimisation:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>prior_wb <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="dv">20</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="dv">10</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"OS (months)"</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb)</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/weibull-moments-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="method-params" class="level2">
-<h2 class="anchored" data-anchor-id="method-params">Method: params</h2>
-<p>Direct shape and scale specification:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># k=2: linearly increasing hazard</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>prior_wb2 <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">shape  =</span> <span class="dv">2</span>,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">scale  =</span> <span class="dv">20</span>,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"params"</span>,</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"PFS (months) — increasing hazard"</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb2)</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/weibull-params-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="method-quantile-1" class="level2">
-<h2 class="anchored" data-anchor-id="method-quantile-1">Method: quantile</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>prior_wb3 <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="dv">5</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="dv">18</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="dv">40</span>),</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"OS (months)"</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb3)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/weibull-quantile-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="posterior-approximation-note" class="level2">
-<h2 class="anchored" data-anchor-id="posterior-approximation-note">Posterior approximation note</h2>
-<p>The Weibull distribution does not have a closed-form conjugate prior. When used in <code>prior_conflict()</code> or <code>sensitivity_grid()</code>, bayprior applies a Normal approximation to the posterior matched to the Weibull’s <code>fit_summary</code> moments.</p>
-<hr>
-</section>
 </section>
 <section id="roulette-method" class="level1">
 <h1>Roulette Method</h1>
-<p>The interactive chip-allocation method for clinical experts unfamiliar with probability distributions. In the Shiny app this is fully interactive; programmatically:</p>
+<p>The roulette method (Oakley &amp; O’Hagan, 2010) is an interactive chip-allocation technique that makes elicitation accessible to clinical experts who are unfamiliar with probability distributions.</p>
+<p>The expert places chips in bins representing plausible values. The chip histogram is then fitted to a parametric family. In the Shiny app, this is interactive; programmatically:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>prior_rou <span class="ot">&lt;-</span> <span class="fu">elicit_roulette</span>(</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">chips  =</span> <span class="fu">c</span>(<span class="dv">0</span>L, <span class="dv">1</span>L, <span class="dv">3</span>L, <span class="dv">7</span>L, <span class="dv">9</span>L, <span class="dv">7</span>L, <span class="dv">4</span>L, <span class="dv">2</span>L, <span class="dv">1</span>L, <span class="dv">1</span>L),</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.1</span>),</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="st">"beta"</span>,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"Response rate"</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_rou)</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_rou)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Expert places chips: 0 very low, rising to peak at 0.25-0.35, falling off.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: chips must not sum such that any cumulative frequency equals exactly</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 0 or 1 — elicit_roulette() strips those boundary bins automatically, but</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># at least 2 interior quantile points must remain after stripping.</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>prior_rou <span class="ot">&lt;-</span> <span class="fu">elicit_roulette</span>(</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">chips  =</span> <span class="fu">c</span>(<span class="dv">0</span>L, <span class="dv">1</span>L, <span class="dv">3</span>L, <span class="dv">7</span>L, <span class="dv">9</span>L, <span class="dv">7</span>L, <span class="dv">4</span>L, <span class="dv">2</span>L, <span class="dv">1</span>L, <span class="dv">1</span>L),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.1</span>),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="st">"beta"</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"Response rate"</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_rou)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_rou)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/roulette-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="prior-elicitation_files/figure-html/roulette-1.png" class="img-fluid figure-img" style="width:95.0%"></p>
 </figure>
 </div>
 </div>
+</div>
+<p>The roulette object also stores the raw chip data for provenance:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>prior_rou<span class="sc">$</span>roulette<span class="sc">$</span>chips</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] 0 1 3 7 9 7 4 2 1 1</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>prior_rou<span class="sc">$</span>roulette<span class="sc">$</span>breaks</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <hr>
 </section>
 <section id="expert-pooling" class="level1">
 <h1>Expert Pooling</h1>
-<section id="linear-pooling" class="level2">
-<h2 class="anchored" data-anchor-id="linear-pooling">Linear Pooling</h2>
+<p>When multiple experts are elicited, their priors are combined into a single consensus distribution.</p>
+<section id="linear-pooling-recommended" class="level2">
+<h2 class="anchored" data-anchor-id="linear-pooling-recommended">Linear Pooling (Recommended)</h2>
+<p>Linear pooling produces a weighted mixture — the standard approach in clinical trials (externally Bayesian):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>e1 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"Oncologist_1"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>e2 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.35</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"Oncologist_2"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>e3 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="fl">0.15</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.30</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="fl">0.52</span>),</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Statistician"</span>, <span class="at">label =</span> <span class="st">"ORR"</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>consensus <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">priors  =</span> <span class="fu">list</span>(<span class="at">Oncologist_1 =</span> e1, <span class="at">Oncologist_2 =</span> e2, <span class="at">Statistician =</span> e3),</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.40</span>, <span class="fl">0.35</span>, <span class="fl">0.25</span>),</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">method  =</span> <span class="st">"linear"</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(consensus)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>e1 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"Oncologist_1"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>e2 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.35</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"Oncologist_2"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>e3 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="fl">0.15</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.30</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="fl">0.52</span>),</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Statistician"</span>, <span class="at">label =</span> <span class="st">"ORR"</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>consensus <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">priors  =</span> <span class="fu">list</span>(</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">Oncologist_1 =</span> e1,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">Oncologist_2 =</span> e2,</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">Statistician =</span> e3</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.40</span>, <span class="fl">0.35</span>, <span class="fl">0.25</span>),</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">method  =</span> <span class="st">"linear"</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(consensus)</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(consensus)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="prior-elicitation_files/figure-html/linear-pooling-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="prior-elicitation_files/figure-html/linear-pooling-1.png" class="img-fluid figure-img" style="width:95.0%"></p>
 </figure>
 </div>
 </div>
 </div>
-</section>
-<section id="pooling-compatibility" class="level2">
-<h2 class="anchored" data-anchor-id="pooling-compatibility">Pooling Compatibility</h2>
-<p>bayprior validates compatibility before pooling. Priors with <strong>incompatible supports</strong> (e.g.&nbsp;Beta + Normal) are blocked with an error. Same-support cross-family pooling (e.g.&nbsp;Gamma + Exponential) proceeds with a warning noting that sensitivity analysis will use the dominant component’s parameters.</p>
+<p>The Bhattacharyya coefficient matrix quantifies pairwise agreement:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Same positive support — allowed (Gamma + Exponential)</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>g1   <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(<span class="at">mean =</span> <span class="dv">5</span>, <span class="at">sd =</span> <span class="dv">2</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">expert_id =</span> <span class="st">"E1"</span>, <span class="at">label =</span> <span class="st">"Rate"</span>)</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>exp1 <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(<span class="at">mean =</span> <span class="fl">0.2</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                            <span class="at">expert_id =</span> <span class="st">"E2"</span>, <span class="at">label =</span> <span class="st">"Rate"</span>)</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>pool_pos <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">priors  =</span> <span class="fu">list</span>(<span class="at">E1 =</span> g1, <span class="at">E2 =</span> exp1),</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(pool_pos)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(consensus<span class="sc">$</span>aggregation<span class="sc">$</span>disagreement, <span class="dv">3</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              Oncologist_1 Oncologist_2 Statistician</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Oncologist_1        1.000        0.857        0.903</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Oncologist_2        0.857        1.000        0.948</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Statistician        0.903        0.948        1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Values close to 1 indicate high agreement; values below 0.5 flag substantial disagreement and should trigger re-elicitation discussion.</p>
+</section>
+<section id="logarithmic-pooling" class="level2">
+<h2 class="anchored" data-anchor-id="logarithmic-pooling">Logarithmic Pooling</h2>
+<p>Produces a sharper consensus when experts agree, but can be severely influenced by outlying opinions:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>log_consensus <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">priors  =</span> <span class="fu">list</span>(<span class="at">E1 =</span> e1, <span class="at">E2 =</span> e2, <span class="at">E3 =</span> e3),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method  =</span> <span class="st">"logarithmic"</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="manual-mixture-construction" class="level2">
+<h2 class="anchored" data-anchor-id="manual-mixture-construction">Manual Mixture Construction</h2>
+<p>For full control over component distributions:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mix <span class="ot">&lt;-</span> <span class="fu">elicit_mixture</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">components =</span> <span class="fu">list</span>(e1, e2),</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights    =</span> <span class="fu">c</span>(<span class="fl">0.6</span>, <span class="fl">0.4</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label      =</span> <span class="st">"Weighted two-expert consensus"</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mix)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="prior-elicitation_files/figure-html/mixture-1.png" class="img-fluid figure-img" style="width:95.0%"></p>
+</figure>
+</div>
+</div>
 </div>
 <hr>
 </section>
 </section>
 <section id="prior-object-structure" class="level1">
 <h1>Prior Object Structure</h1>
-<p>All <code>elicit_*()</code> functions return a <code>"bayprior"</code> S3 object:</p>
+<p>Every elicited prior is a <code>bayprior</code> S3 object with a consistent structure:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(prior_q, <span class="at">max.level =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>List of 7
- $ dist       : chr "beta"
- $ params     :List of 2
- $ method     : chr "quantile"
- $ expert_id  : chr "Expert_1"
- $ label      : chr "ORR (treatment arm)"
- $ input      :List of 1
- $ fit_summary:List of 5
- - attr(*, "class")= chr "bayprior"</code></pre>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(e1, <span class="at">max.level =</span> <span class="dv">2</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 7</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ dist       : chr "beta"</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ params     :List of 2</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ alpha: num 7.07</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ beta : num 21.2</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ method     : chr "moments"</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ expert_id  : chr "Oncologist_1"</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ label      : chr "ORR"</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ input      :List of 2</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ mean: num 0.25</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ sd  : num 0.08</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ fit_summary:List of 5</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ mean: num 0.25</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ sd  : num 0.08</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ q025: num 0.112</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ q500: num 0.244</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ q975: num 0.422</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, "class")= chr "bayprior"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
+<p>Key fields:</p>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Slot</th>
+<th>Field</th>
 <th>Content</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>$dist</code></td>
-<td>Family: <code>"beta"</code>, <code>"normal"</code>, <code>"gamma"</code>, <code>"lognormal"</code>, <code>"exponential"</code>, <code>"weibull"</code>, <code>"mixture"</code></td>
+<td>Distribution family (<code>"beta"</code>, <code>"normal"</code>, etc.)</td>
 </tr>
 <tr class="even">
 <td><code>$params</code></td>
-<td>Named list of fitted hyperparameters</td>
+<td>Named list of hyperparameters</td>
 </tr>
 <tr class="odd">
-<td><code>$fit_summary</code></td>
-<td><code>mean</code>, <code>sd</code>, <code>q025</code>, <code>q500</code>, <code>q975</code></td>
-</tr>
-<tr class="even">
 <td><code>$method</code></td>
-<td>Elicitation method</td>
-</tr>
-<tr class="odd">
-<td><code>$expert_id</code></td>
-<td>Expert identifier</td>
+<td>Elicitation method used</td>
 </tr>
 <tr class="even">
+<td><code>$expert_id</code></td>
+<td>Expert identifier for provenance</td>
+</tr>
+<tr class="odd">
 <td><code>$label</code></td>
-<td>Quantity label</td>
+<td>Human-readable quantity description</td>
+</tr>
+<tr class="even">
+<td><code>$fit_summary</code></td>
+<td>Mean, SD, and 2.5/50/97.5th percentiles</td>
+</tr>
+<tr class="odd">
+<td><code>$input</code></td>
+<td>Raw elicitation inputs (quantiles or moments)</td>
 </tr>
 </tbody>
 </table>
@@ -774,10 +655,8 @@ window.Quarto = {
 </section>
 <section id="references" class="level1">
 <h1>References</h1>
-<ul>
-<li>O’Hagan, A. et al.&nbsp;(2006). <em>Uncertain Judgements: Eliciting Experts’ Probabilities</em>. Wiley.</li>
-<li>Oakley, J. E. &amp; O’Hagan, A. (2010). <em>SHELF: the Sheffield Elicitation Framework</em>. University of Sheffield.</li>
-</ul>
+<p>O’Hagan, A., Buck, C. E., Daneshkhah, A., Eiser, J. R., Garthwaite, P. H., Jenkinson, D. J., Oakley, J. E., &amp; Rakow, T. (2006). <em>Uncertain Judgements: Eliciting Experts’ Probabilities</em>. Wiley.</p>
+<p>Oakley, J. E. &amp; O’Hagan, A. (2010). SHELF: the Sheffield Elicitation Framework. University of Sheffield.</p>
 
 
 </section>
