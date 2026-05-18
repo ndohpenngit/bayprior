@@ -9,7 +9,7 @@ mod_sensitivity_ui <- function(id) {
       tags$hr(),
       uiOutput(ns("sens_compat_alert")),
 
-      # ── Observed data (independent of conflict diagnostics) ────────────────
+      # -- Observed data (independent of conflict diagnostics) ----------------
       tags$p(tags$strong("Observed data"),
              style = "font-size:13px; margin-bottom:4px;"),
       uiOutput(ns("data_entry_ui")),
@@ -26,7 +26,7 @@ mod_sensitivity_ui <- function(id) {
         selected = "grid", justified = TRUE, status = "primary"
       ),
       tags$br(),
-      # Posterior quantity targets — shown for grid analysis
+      # Posterior quantity targets -- shown for grid analysis
       conditionalPanel(
         condition = sprintf("input['%s'] === 'grid'", ns("analysis_type")),
         numericInput(ns("threshold"), "Efficacy threshold (theta_0)",
@@ -38,7 +38,7 @@ mod_sensitivity_ui <- function(id) {
           selected = c("posterior_mean", "prob_efficacy")
         )
       ),
-      # CrI options — shown for CrI analysis
+      # CrI options -- shown for CrI analysis
       conditionalPanel(
         condition = sprintf("input['%s'] === 'cri'", ns("analysis_type")),
         sliderInput(ns("cri_level"), "Credible interval level",
@@ -83,7 +83,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
                " ", msg)
     })
 
-    # ── Sensitivity compatibility check ──────────────────────────────────────
+    # -- Sensitivity compatibility check --------------------------------------
     output$sens_compat_alert <- renderUI({
       p <- active_prior()
       if (is.null(p)) return(NULL)
@@ -108,18 +108,22 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
 
     output$param1_ui <- renderUI({
       nm <- pnames()$p1
-      v  <- pnames()$vals[[nm]] %||% 1
+      v  <- max(0.01, abs(pnames()$vals[[nm]] %||% 1))  # abs+floor avoids 0/negative
+      lo  <- max(0.001, round(v * 0.2, 3))
+      hi  <- max(lo + 0.01, round(v * 4, 2))
+      val <- c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2)))
       sliderInput(ns("p1_range"), glue::glue("Range for {nm}"),
-        max(0.001, round(v * 0.2, 3)), round(v * 4, 2),
-        c(round(v * 0.5, 2), round(v * 2, 2)), round(v * 0.05, 3))
+        lo, hi, val, max(0.001, round(v * 0.05, 3)))
     })
 
     output$param2_ui <- renderUI({
       nm <- pnames()$p2
-      v  <- pnames()$vals[[nm]] %||% 1
+      v  <- max(0.01, abs(pnames()$vals[[nm]] %||% 1))
+      lo  <- max(0.001, round(v * 0.2, 3))
+      hi  <- max(lo + 0.01, round(v * 4, 2))
+      val <- c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2)))
       sliderInput(ns("p2_range"), glue::glue("Range for {nm}"),
-        max(0.001, round(v * 0.2, 3)), round(v * 4, 2),
-        c(round(v * 0.5, 2), round(v * 2, 2)), round(v * 0.05, 3))
+        lo, hi, val, max(0.001, round(v * 0.05, 3)))
     })
 
     observeEvent(active_prior()$dist, {
@@ -127,19 +131,30 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       nm <- pnames()
       v1 <- nm$vals[[nm$p1]] %||% 1
       v2 <- nm$vals[[nm$p2]] %||% 1
-      updateSliderInput(session, "p1_range",
-        label = glue::glue("Range for {nm$p1}"),
-        min   = max(0.001, round(v1 * 0.2, 3)),
-        max   = round(v1 * 4, 2),
-        value = c(round(v1 * 0.5, 2), round(v1 * 2, 2)))
-      updateSliderInput(session, "p2_range",
-        label = glue::glue("Range for {nm$p2}"),
-        min   = max(0.001, round(v2 * 0.2, 3)),
-        max   = round(v2 * 4, 2),
-        value = c(round(v2 * 0.5, 2), round(v2 * 2, 2)))
+
+      # Guard: ensure all slider values are finite, non-NULL, and value >= min
+      # abs() + floor of 0.01 handles Normal priors with mean = 0 or
+      # any parameter that is zero/negative (which breaks the multiplier logic)
+      .safe_slider <- function(session, id, label, v) {
+        v   <- max(0.01, abs(v))   # same floor as renderUI definitions
+        lo  <- max(0.001, round(v * 0.2, 3))
+        hi  <- max(lo + 0.01, round(v * 4, 2))
+        val <- c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2)))
+        stp <- max(0.001, round(v * 0.05, 3))
+        if (any(is.null(c(lo, hi, val, stp))) ||
+            any(is.na(c(lo, hi, val, stp))) ||
+            any(!is.finite(c(lo, hi, val, stp)))) return(invisible(NULL))
+        updateSliderInput(session, id, label = label,
+                          min = lo, max = hi, value = val, step = stp)
+      }
+
+      .safe_slider(session, "p1_range",
+                   glue::glue("Range for {nm$p1}"), v1)
+      .safe_slider(session, "p2_range",
+                   glue::glue("Range for {nm$p2}"), v2)
     }, ignoreInit = TRUE)
 
-    # ── Data entry UI — independent of conflict diagnostics ─────────────────
+    # -- Data entry UI -- independent of conflict diagnostics -----------------
     output$data_entry_ui <- renderUI({
       p  <- active_prior(); req(p)
       cd <- shared$conflict
@@ -202,7 +217,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       }
     })
 
-    # Reset results whenever ANY input changes — prevents stale results
+    # Reset results whenever ANY input changes -- prevents stale results
     observeEvent(
       list(active_prior(), input$p1_range, input$p2_range,
            input$grid_size, input$analysis_type,
@@ -219,7 +234,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
     observeEvent(input$run_btn, {
       p <- active_prior(); req(p, input$p1_range, input$p2_range)
 
-      # Compatibility check — block if error-level incompatibility
+      # Compatibility check -- block if error-level incompatibility
       compat <- .check_sensitivity_compat(p)
       if (!compat$ok) {
         showNotification(compat$msg, type = "error", duration = 10)
@@ -281,9 +296,10 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         }
       )
       shared$sensitivity <- res
+      shinyjs::runjs("bpToast('Sensitivity analysis complete &#10003;', 'info', 3000);")
     })
 
-    # ── Main output: placeholder before run, plots after ────────────────────
+    # -- Main output: placeholder before run, plots after --------------------
     output$results_or_placeholder <- renderUI({
       if (is.null(shared$sensitivity)) {
         return(
@@ -303,19 +319,43 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       tagList(
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-          title = tagList(icon("bar-chart-steps"), " Tornado plot"),
-          shinycssloaders::withSpinner(
-            plotly::plotlyOutput(ns("tornado_plot"), height = "220px"),
-            color = "#1D9E75"
+          title = tagList(
+            icon("bar-chart-steps"), " Tornado plot",
+            tags$span(
+              style = "float:right; margin-top:-2px;",
+              tags$button(
+                class = "btn btn-xs btn-default",
+                onclick = "bpSavePlot('sensitivity-tornado_wrapper', 'bayprior-tornado')",
+                icon("download"), " Save PNG"
+              )
+            )
+          ),
+          tags$div(id = "sensitivity-tornado_wrapper",
+            shinycssloaders::withSpinner(
+              plotly::plotlyOutput(ns("tornado_plot"), height = "220px"),
+              color = "#1D9E75"
+            )
           )
         ),
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-          title = tagList(icon("map"), " Influence heatmap"),
+          title = tagList(
+            icon("map"), " Influence heatmap",
+            tags$span(
+              style = "float:right; margin-top:-2px;",
+              tags$button(
+                class = "btn btn-xs btn-default",
+                onclick = "bpSavePlot('sensitivity-heatmap_wrapper', 'bayprior-heatmap')",
+                icon("download"), " Save PNG"
+              )
+            )
+          ),
           uiOutput(ns("outcome_picker")),
-          shinycssloaders::withSpinner(
-            plotly::plotlyOutput(ns("influence_plot"), height = "300px"),
-            color = "#1D9E75"
+          tags$div(id = "sensitivity-heatmap_wrapper",
+            shinycssloaders::withSpinner(
+              plotly::plotlyOutput(ns("influence_plot"), height = "300px"),
+              color = "#1D9E75"
+            )
           )
         )
       )
@@ -325,7 +365,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       req(shared$sensitivity)
       raw_targets   <- shared$sensitivity$target
       pretty_labels <- vapply(raw_targets, .target_label, character(1))
-      # named vector: label shown → raw value sent to input$outcome
+      # named vector: label shown -> raw value sent to input$outcome
       choices <- setNames(raw_targets, pretty_labels)
       shinyWidgets::radioGroupButtons(
         ns("outcome"), NULL,

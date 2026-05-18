@@ -3,7 +3,7 @@ mod_elicitation_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
 
-    # ── Left: inputs ─────────────────────────────────────────────────────────
+    # -- Left: inputs ---------------------------------------------------------
     shinydashboard::box(
       width = 4, status = "primary", solidHeader = TRUE,
       title = tagList(icon("pencil"), " Expert Input"),
@@ -71,7 +71,7 @@ mod_elicitation_ui <- function(id) {
       uiOutput(ns("fit_msg"))
     ),
 
-    # ── Right: outputs ────────────────────────────────────────────────────────
+    # -- Right: outputs --------------------------------------------------------
     column(8,
       uiOutput(ns("results_or_placeholder"))
     )
@@ -83,14 +83,19 @@ mod_elicitation_server <- function(id, shared) {
   moduleServer(id, function(input, output, session) {
 
     fitted <- reactiveVal(NULL)
-    
+
+    # Reset fitted prior whenever ANY input changes -- clears density plot
+    # and parameter table so stale results are not shown while editing.
+    # NOTE: shared$current_prior is NOT cleared here -- the sidebar "Active prior"
+    # badge and downstream modules should still reference the last fitted prior
+    # until a new one is explicitly fitted by clicking "Fit Prior".
     observeEvent(
       list(input$family, input$method,
            input$q1p, input$q1v, input$q2p, input$q2v, input$q3p, input$q3v,
            input$mom_mean, input$mom_sd,
            input$expert_id, input$label),
       {
-        fitted(NULL) 
+        fitted(NULL)   # clear local display only
       },
       ignoreInit = TRUE
     )
@@ -155,6 +160,8 @@ mod_elicitation_server <- function(id, shared) {
       })
       fitted(pr)
       shared$current_prior <- pr
+      shared$base_prior    <- pr   # sensitivity uses base_prior only
+      shinyjs::runjs("bpToast('Prior fitted successfully &#10003;', 'info', 3000);")
     })
 
     observeEvent(input$add_btn, {
@@ -177,7 +184,7 @@ mod_elicitation_server <- function(id, shared) {
                           "SD={round(p$fit_summary$sd, 3)}"))
     })
 
-    # ── Placeholder before fit, full results after ───────────────────────────
+    # -- Placeholder before fit, full results after ---------------------------
     output$results_or_placeholder <- renderUI({
       if (is.null(fitted())) {
         return(tags$div(
@@ -198,24 +205,51 @@ mod_elicitation_server <- function(id, shared) {
 
       tagList(
         fluidRow(
-          shinydashboard::valueBox(
-            round(s$mean, 3), "Prior mean",
-            icon = icon("dot-circle"), color = "blue", width = 4),
-          shinydashboard::valueBox(
-            round(s$sd, 3), "Prior SD",
-            icon = icon("arrows-left-right"), color = "green", width = 4),
-          shinydashboard::valueBox(
-            glue::glue("[{round(s$q025 %||% (s$mean - 1.96*s$sd), 3)}, ",
-                       "{round(s$q975 %||% (s$mean + 1.96*s$sd), 3)}]"),
-            "95% CrI",
-            icon = icon("ruler-horizontal"), color = "purple", width = 4)
+          tags$div(
+            class = "bp-clip-box",
+            onclick = paste0("bpCopy('", round(s$mean, 3), "', 'Prior mean')"),
+            shinydashboard::valueBox(
+              round(s$mean, 3), "Prior mean \u2014 click to copy",
+              icon = icon("dot-circle"), color = "blue", width = 4)
+          ),
+          tags$div(
+            class = "bp-clip-box",
+            onclick = paste0("bpCopy('", round(s$sd, 3), "', 'Prior SD')"),
+            shinydashboard::valueBox(
+              round(s$sd, 3), "Prior SD \u2014 click to copy",
+              icon = icon("arrows-left-right"), color = "green", width = 4)
+          ),
+          tags$div(
+            class = "bp-clip-box",
+            onclick = paste0("bpCopy('",
+              glue::glue("[{round(s$q025 %||% (s$mean - 1.96*s$sd), 3)}, ",
+                         "{round(s$q975 %||% (s$mean + 1.96*s$sd), 3)}]"),
+              "', '95% CrI')"),
+            shinydashboard::valueBox(
+              glue::glue("[{round(s$q025 %||% (s$mean - 1.96*s$sd), 3)}, ",
+                         "{round(s$q975 %||% (s$mean + 1.96*s$sd), 3)}]"),
+              "95% CrI \u2014 click to copy",
+              icon = icon("ruler-horizontal"), color = "purple", width = 4)
+          )
         ),
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-          title = tagList(icon("chart-line"), " Fitted prior density"),
-          shinycssloaders::withSpinner(
-            plotly::plotlyOutput(ns("prior_plot"), height = "300px"),
-            color = "#1D9E75"
+          title = tagList(
+            icon("chart-line"), " Fitted prior density",
+            tags$span(
+              style = "float:right; margin-top:-2px;",
+              tags$button(
+                class = "btn btn-xs btn-default",
+                onclick = "bpSavePlot('elicitation-prior_plot_wrapper', 'bayprior-prior-density')",
+                icon("download"), " Save PNG"
+              )
+            )
+          ),
+          tags$div(id = "elicitation-prior_plot_wrapper",
+            shinycssloaders::withSpinner(
+              plotly::plotlyOutput(ns("prior_plot"), height = "300px"),
+              color = "#1D9E75"
+            )
           )
         ),
         shinydashboard::box(

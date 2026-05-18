@@ -78,7 +78,8 @@ mod_pooling_server <- function(id, shared, active_prior) {
                            type = "error")
           NULL
         })
-      shared$consensus <- res
+      shared$consensus  <- res
+      shared$base_prior <- res   # sensitivity uses base_prior only
     })
 
     output$pool_msg <- renderUI({

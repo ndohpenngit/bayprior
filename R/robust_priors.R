@@ -86,7 +86,7 @@ sceptical_prior <- function(null_value = 0,
                                expert_id = expert_id,
                                label     = label)
 
-  } else {  # beta — null_value already validated above
+  } else {  # beta -- null_value already validated above
     sd_map <- c(weak = 0.15, moderate = 0.08, strong = 0.04)
     prior  <- elicit_beta(mean      = null_value,
                           sd        = sd_map[strength],
@@ -229,10 +229,12 @@ calibrate_power_prior <- function(historical_data,
       error = function(e) NULL
     )
 
-    bf <- tryCatch(
-      .marginal_bf(pp, base_prior, current_data),
-      error = function(e) NA_real_
-    )
+    bf <- tryCatch({
+      raw_bf <- .marginal_bf(pp, base_prior, current_data)
+      # Cap at 1e6 to avoid display overflow (e.g. 10^148 from
+      # tight-prior + compatible data). BF > 1e6 = "decisive" by any scale.
+      min(raw_bf, 1e6, na.rm = TRUE)
+    }, error = function(e) NA_real_)
 
     data.frame(
       delta        = delta,
@@ -353,7 +355,7 @@ plot.bayprior_power_prior <- function(x, ...) {
 }
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+# -- Internal helpers ----------------------------------------------------------
 
 .power_prior_update <- function(base_prior, hist_data, delta) {
   type <- hist_data$type %||% "binary"
@@ -364,7 +366,7 @@ plot.bayprior_power_prior <- function(x, ...) {
     rlang::abort(glue::glue("`delta` must be in (0, 1]; got {delta}."))
   }
 
-  # ── Beta / binary ────────────────────────────────────────────────────────────
+  # -- Beta / binary ------------------------------------------------------------
   if (base_prior$dist == "beta" && type == "binary") {
     a_new <- base_prior$params$alpha + delta * x
     b_new <- base_prior$params$beta  + delta * (n - x)
@@ -373,7 +375,7 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # ── Normal ───────────────────────────────────────────────────────────────────
+  # -- Normal -------------------------------------------------------------------
   if (base_prior$dist == "normal") {
     obs_mean  <- x
     obs_se    <- (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
@@ -388,8 +390,9 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # ── Gamma / continuous ───────────────────────────────────────────────────────
-  if (base_prior$dist == "gamma" && type == "continuous") {
+  # -- Gamma / continuous or Poisson -------------------------------------------------------
+  if (base_prior$dist == "gamma" &&
+      type %in% c("continuous", "poisson")) {
     x_sum     <- hist_data$x_sum %||% (x * n)
     shape_new <- base_prior$params$shape + delta * x_sum
     rate_new  <- base_prior$params$rate  + delta * n
@@ -398,7 +401,7 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # ── Log-normal ───────────────────────────────────────────────────────────────
+  # -- Log-normal ---------------------------------------------------------------
   if (base_prior$dist == "lognormal") {
     log_obs_mean <- if (isTRUE(hist_data$log_scale)) x else log(x)
     raw_sd       <- hist_data$sd %||% base_prior$fit_summary$sd
@@ -415,7 +418,7 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # ── Mixture ──────────────────────────────────────────────────────────────────
+  # -- Mixture ------------------------------------------------------------------
   if (base_prior$dist == "mixture") {
     components <- base_prior$components
     weights    <- base_prior$weights
@@ -494,9 +497,12 @@ plot.bayprior_power_prior <- function(x, ...) {
   type     <- current_data$type %||% "binary"
   n        <- current_data$n
   x        <- current_data$x
-  obs_mean <- if (type == "binary") x / n else x
+  obs_mean <- if (type == "binary")   x / n else
+              if (type == "poisson")  x / n else x
   obs_se   <- if (type == "binary") {
     sqrt(obs_mean * (1 - obs_mean) / n)
+  } else if (type == "poisson") {
+    sqrt(obs_mean / n)   # Poisson SE: sqrt(rate / n)
   } else {
     (current_data$sd %||% power_prior$fit_summary$sd) / sqrt(n)
   }

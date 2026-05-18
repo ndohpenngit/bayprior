@@ -1,4 +1,4 @@
-# ── Module: univariate conflict ───────────────────────────────────────────────
+# -- Module: univariate conflict -----------------------------------------------
 
 #' @noRd
 mod_conflict_ui <- function(id) {
@@ -87,14 +87,14 @@ mod_conflict_server <- function(id, shared, active_prior) {
         survival   = list(type = "survival",
                           x    = input$surv_x,
                           n    = input$surv_n),
-        # default — shouldn't reach here
+        # default -- shouldn't reach here
         list(type = "binary", x = input$bin_x, n = input$bin_n)
       )
     })
 
     res <- reactiveVal(NULL)
 
-    # Reset results whenever ANY input changes — prevents stale results
+    # Reset results whenever ANY input changes -- prevents stale results
     observeEvent(
       list(active_prior(), input$data_type,
            input$bin_x, input$bin_n,
@@ -127,9 +127,15 @@ mod_conflict_server <- function(id, shared, active_prior) {
         })
       res(r)
       shared$conflict <- r
+      sev <- toupper(r$conflict_severity)
+      toast_type <- if (r$conflict_flag) "warn" else "info"
+      shinyjs::runjs(paste0(
+        "bpToast('Diagnostics complete &#10003; &mdash; Severity: ", sev, "', '",
+        toast_type, "', 3500);"
+      ))
     })
 
-    # ── Placeholder before run, full results after ───────────────────────────
+    # -- Placeholder before run, full results after ---------------------------
     output$results_or_placeholder <- renderUI({
       if (is.null(res())) {
         return(tags$div(
@@ -197,11 +203,22 @@ mod_conflict_server <- function(id, shared, active_prior) {
         ),
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-          title = tagList(icon("chart-area"),
-                          " Prior - Likelihood - Posterior overlay"),
-          shinycssloaders::withSpinner(
-            plotly::plotlyOutput(ns("overlay_plot"), height = "300px"),
-            color = "#1D9E75"
+          title = tagList(
+            icon("chart-area"), " Prior - Likelihood - Posterior overlay",
+            tags$span(
+              style = "float:right; margin-top:-2px;",
+              tags$button(
+                class = "btn btn-xs btn-default",
+                onclick = "bpSavePlot('conflict-overlay_wrapper', 'bayprior-conflict-overlay')",
+                icon("download"), " Save PNG"
+              )
+            )
+          ),
+          tags$div(id = "conflict-overlay_wrapper",
+            shinycssloaders::withSpinner(
+              plotly::plotlyOutput(ns("overlay_plot"), height = "300px"),
+              color = "#1D9E75"
+            )
           )
         )
       )
@@ -223,7 +240,7 @@ mod_conflict_server <- function(id, shared, active_prior) {
 }
 
 
-# ── Module: multivariate Mahalanobis ─────────────────────────────────────────
+# -- Module: multivariate Mahalanobis -----------------------------------------
 
 #' @noRd
 mod_mahal_ui <- function(id) {
