@@ -573,6 +573,26 @@ elicit_weibull <- function(shape     = NULL,
 #'
 #' @return A \code{bayprior} object with \code{dist = "mixture"}.
 #'
+#' @details
+#' \strong{Same-family mixtures} (e.g. Beta + Beta, Normal + Normal) have
+#' mixture means and SDs computed in closed form. \strong{Cross-family
+#' mixtures} (e.g. Beta + Normal) also have closed-form mixture means and
+#' SDs, but the mixture \emph{density} must be computed numerically by
+#' evaluating and summing the component densities on a grid. A warning is
+#' issued in this case:
+#'
+#' \preformatted{
+#'   "Components have different distribution families.
+#'    Mixture densities computed numerically."
+#' }
+#'
+#' This warning is informative, not an error. The numerical approximation is
+#' accurate in the body of the distribution but may be less reliable at the
+#' tails, particularly for components with very different supports (e.g. a
+#' Beta defined on (0, 1) mixed with a Normal defined on (-Inf, Inf)). Use
+#' \code{suppressWarnings()} only when you have verified the mixture is
+#' appropriate for your use case.
+#'
 #' @examples
 #' p1  <- elicit_beta(mean = 0.2, sd = 0.08, method = "moments", expert_id = "E1")
 #' p2  <- elicit_beta(mean = 0.4, sd = 0.10, method = "moments", expert_id = "E2")

@@ -294,12 +294,17 @@ mod_robust_server <- function(id, shared, active_prior, base_prior) {
 
     output$prior_plot <- plotly::renderPlotly({
       req(fitted())
-      inf   <- base_prior()   # show the source informative prior, not the mixture
+      inf     <- base_prior()   # show the source informative prior, not the mixture
+      warned  <- FALSE          # track whether the numerical approximation warning fired
+
       x     <- withCallingHandlers(
         .density_grid(fitted())$x,
         warning = function(w) {
           if (grepl("different distribution families", conditionMessage(w),
-                    fixed = TRUE)) invokeRestart("muffleWarning")
+                    fixed = TRUE)) {
+            warned <<- TRUE
+            invokeRestart("muffleWarning")
+          }
         })
       y_mix <- withCallingHandlers(
         .eval_density_vec(fitted(), x),
@@ -307,6 +312,26 @@ mod_robust_server <- function(id, shared, active_prior, base_prior) {
           if (grepl("different distribution families", conditionMessage(w),
                     fixed = TRUE)) invokeRestart("muffleWarning")
         })
+
+      # Surface the warning in the UI rather than the console.
+      # The message is informative: the mixture density cannot be computed
+      # in closed form when components have different families (e.g. Beta +
+      # Normal), so it is approximated numerically. The analyst should know.
+      if (warned) {
+        showNotification(
+          tagList(
+            icon("triangle-exclamation"), " ",
+            tags$strong("Mixture density approximated numerically."),
+            tags$br(),
+            "The informative and vague components have different distribution",
+            "families. The density shown is a numerical approximation and may",
+            "be less accurate at the tails."
+          ),
+          type     = "warning",
+          duration = 8
+        )
+      }
+
       fig   <- plotly::plot_ly() |>
         plotly::add_lines(x = x, y = y_mix, name = "Robust mixture",
                           line = list(color = "#1D9E75", width = 2.5))
