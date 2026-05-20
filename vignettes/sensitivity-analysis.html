@@ -2,15 +2,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Ndoh Penn">
-<meta name="dcterms.date" content="2026-05-15">
+<meta name="dcterms.date" content="2026-05-20">
 
 <title>Sensitivity Analysis – bayprior</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -74,10 +77,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-f7333b7c44a7c3d55afcc11699a363c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -117,7 +120,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../man/figures/favicon.png" alt="" class="navbar-logo">
+    <img src="../man/figures/favicon.png" alt="" class="navbar-logo light-content">
+    <img src="../man/figures/favicon.png" alt="" class="navbar-logo dark-content">
     </a>
     <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">bayprior</span>
@@ -233,7 +237,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 15, 2026</p>
+      <p class="date">May 20, 2026</p>
     </div>
   </div>
   
@@ -296,26 +300,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="binary-data" class="level1">
 <h1>Binary Data</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>prior    <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.30</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>prior    <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.30</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label =</span> <span class="st">"Response rate"</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>data_obs <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">14</span>, <span class="at">n =</span> <span class="dv">40</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>data_obs <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">14</span>, <span class="at">n =</span> <span class="dv">40</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_grid</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_grid</span>(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> data_obs,</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">1</span>), <span class="at">beta =</span> <span class="fu">seq</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">2</span>)),</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="fu">c</span>(<span class="st">"posterior_mean"</span>, <span class="st">"prob_efficacy"</span>),</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">threshold    =</span> <span class="fl">0.30</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>sa<span class="sc">$</span>influence_scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>sa<span class="sc">$</span>influence_scores</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>posterior_mean  prob_efficacy 
      0.1940984      0.8184416 </code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -325,7 +329,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(sa, <span class="at">target =</span> <span class="st">"posterior_mean"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(sa, <span class="at">target =</span> <span class="st">"posterior_mean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -337,18 +341,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="credible-interval-sensitivity" class="level2">
 <h2 class="anchored" data-anchor-id="credible-interval-sensitivity">Credible Interval Sensitivity</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cri_sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_cri</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cri_sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_cri</span>(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior,</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> data_obs,</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">1</span>), <span class="at">beta =</span> <span class="fu">seq</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">2</span>)),</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">cri_level    =</span> <span class="fl">0.95</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>cri_sa<span class="sc">$</span>influence_scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>cri_sa<span class="sc">$</span>influence_scores</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     cri_lower      cri_upper      cri_width posterior_mean   posterior_sd 
     0.15946768     0.21751316     0.06678301     0.19409836     0.01716165 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(cri_sa, <span class="at">target =</span> <span class="st">"cri_width"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(cri_sa, <span class="at">target =</span> <span class="st">"cri_width"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -364,7 +368,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Poisson / Count Data</h1>
 <p>Sensitivity with Poisson data uses Gamma-Poisson conjugate updating.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>prior_ae  <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(<span class="at">mean =</span> <span class="fl">0.15</span>, <span class="at">sd =</span> <span class="fl">0.06</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>prior_ae  <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(<span class="at">mean =</span> <span class="fl">0.15</span>, <span class="at">sd =</span> <span class="fl">0.06</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">label =</span> <span class="st">"AE rate (per person-year)"</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>data_pois <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">120</span>)</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -375,12 +379,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="fu">c</span>(<span class="st">"posterior_mean"</span>, <span class="st">"prob_efficacy"</span>),</span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">threshold    =</span> <span class="fl">0.20</span></span>
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>sa_pois<span class="sc">$</span>influence_scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>sa_pois<span class="sc">$</span>influence_scores</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>posterior_mean  prob_efficacy 
      0.0990000      0.6908443 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa_pois)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa_pois)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -390,7 +394,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(sa_pois, <span class="at">target =</span> <span class="st">"posterior_mean"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(sa_pois, <span class="at">target =</span> <span class="st">"posterior_mean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -405,7 +409,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Survival / Time-to-Event Data</h1>
 <p>Sensitivity with survival data uses Gamma-Exponential conjugate updating.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>prior_hz  <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(<span class="at">mean =</span> <span class="fl">0.05</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>prior_hz  <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(<span class="at">mean =</span> <span class="fl">0.05</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">label =</span> <span class="st">"OS hazard rate"</span>)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>data_surv <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">30</span>, <span class="at">n =</span> <span class="dv">600</span>)</span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -416,12 +420,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="fu">c</span>(<span class="st">"posterior_mean"</span>, <span class="st">"prob_efficacy"</span>),</span>
 <span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">threshold    =</span> <span class="fl">0.10</span></span>
 <span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>sa_surv<span class="sc">$</span>influence_scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>sa_surv<span class="sc">$</span>influence_scores</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>posterior_mean  prob_efficacy 
   2.033320e-03   8.021621e-06 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa_surv)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa_surv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -431,13 +435,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>cri_surv <span class="ot">&lt;-</span> <span class="fu">sensitivity_cri</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>cri_surv <span class="ot">&lt;-</span> <span class="fu">sensitivity_cri</span>(</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_hz,</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> data_surv,</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">shape =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">5</span>, <span class="fl">0.5</span>), <span class="at">rate =</span> <span class="fu">seq</span>(<span class="dv">5</span>, <span class="dv">30</span>, <span class="dv">5</span>)),</span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">cri_level    =</span> <span class="fl">0.95</span></span>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(cri_surv, <span class="at">target =</span> <span class="st">"cri_width"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_sensitivity</span>(cri_surv, <span class="at">target =</span> <span class="st">"cri_width"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -451,7 +455,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="continuous-endpoints" class="level1">
 <h1>Continuous Endpoints</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>prior_cont <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(<span class="at">mean =</span> <span class="fl">0.0</span>, <span class="at">sd =</span> <span class="fl">0.3</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>prior_cont <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(<span class="at">mean =</span> <span class="fl">0.0</span>, <span class="at">sd =</span> <span class="fl">0.3</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">label =</span> <span class="st">"Log odds ratio"</span>)</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>sa_cont <span class="ot">&lt;-</span> <span class="fu">sensitivity_grid</span>(</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_cont,</span>
@@ -459,7 +463,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">mu =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">0.1</span>), <span class="at">sigma =</span> <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="fl">0.8</span>, <span class="fl">0.1</span>)),</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="fu">c</span>(<span class="st">"posterior_mean"</span>, <span class="st">"posterior_sd"</span>)</span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa_cont)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa_cont)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -503,7 +507,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="mixture-prior-sensitivity" class="level1">
 <h1>Mixture Prior Sensitivity</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>e1  <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>e1  <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">expert_id =</span> <span class="st">"E1"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>e2  <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.40</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">expert_id =</span> <span class="st">"E2"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
@@ -515,7 +519,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">1</span>), <span class="at">beta =</span> <span class="fu">seq</span>(<span class="dv">2</span>, <span class="dv">16</span>, <span class="dv">2</span>)),</span>
 <span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="st">"posterior_mean"</span></span>
 <span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa_mix)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa_mix)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -601,13 +605,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
