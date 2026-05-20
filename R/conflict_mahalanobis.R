@@ -5,9 +5,9 @@
 #' follows a chi-squared distribution with degrees of freedom equal to the
 #' number of endpoints.
 #'
-#' @param prior_mean Numeric vector of length k. Prior means for each endpoint.
+#' @param prior_means Numeric vector of length k. Prior means for each endpoint.
 #' @param prior_cov  k x k numeric matrix. Prior covariance matrix.
-#' @param obs_mean   Numeric vector of length k. Observed data means.
+#' @param obs_means   Numeric vector of length k. Observed data means.
 #' @param obs_cov    k x k numeric matrix. Observed data covariance (Var/n for
 #'   each diagonal; Cov/n for off-diagonal).
 #' @param alpha      Numeric. Significance level for the chi-squared test.

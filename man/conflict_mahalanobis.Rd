@@ -14,7 +14,11 @@ conflict_mahalanobis(
 )
 }
 \arguments{
+\item{prior_means}{Numeric vector of length k. Prior means for each endpoint.}
+
 \item{prior_cov}{k x k numeric matrix. Prior covariance matrix.}
+
+\item{obs_means}{Numeric vector of length k. Observed data means.}
 
 \item{obs_cov}{k x k numeric matrix. Observed data covariance (Var/n for
 each diagonal; Cov/n for off-diagonal).}
@@ -23,10 +27,6 @@ each diagonal; Cov/n for off-diagonal).}
 Default \code{0.05}.}
 
 \item{labels}{Character vector of length k. Endpoint labels for output.}
-
-\item{prior_mean}{Numeric vector of length k. Prior means for each endpoint.}
-
-\item{obs_mean}{Numeric vector of length k. Observed data means.}
 }
 \value{
 A named list with components:
