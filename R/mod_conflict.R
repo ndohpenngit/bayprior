@@ -204,21 +204,11 @@ mod_conflict_server <- function(id, shared, active_prior) {
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
           title = tagList(
-            icon("chart-area"), " Prior - Likelihood - Posterior overlay",
-            tags$span(
-              style = "float:right; margin-top:-2px;",
-              tags$button(
-                class = "btn btn-xs btn-default",
-                onclick = "bpSavePlot('conflict-overlay_wrapper', 'bayprior-conflict-overlay')",
-                icon("download"), " Save PNG"
-              )
-            )
+            icon("chart-area"), " Prior - Likelihood - Posterior overlay"
           ),
-          tags$div(id = "conflict-overlay_wrapper",
-            shinycssloaders::withSpinner(
-              plotly::plotlyOutput(ns("overlay_plot"), height = "300px"),
-              color = "#1D9E75"
-            )
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("overlay_plot"), height = "300px"),
+            color = "#1D9E75"
           )
         )
       )
@@ -250,9 +240,24 @@ mod_mahal_ui <- function(id) {
       width = 4, status = "primary", solidHeader = TRUE,
       title = tagList(icon("border-all"), " Multivariate Conflict Setup"),
       tags$small(class = "text-muted",
-        "Two-endpoint check. Enter prior and observed-data parameters for
-         each endpoint."),
+        "Bivariate (2-endpoint) prior-data conflict check using the",
+        "Mahalanobis distance. Tests both endpoints jointly,",
+        "accounting for their correlation."),
       tags$br(), tags$br(),
+      tags$div(
+        class = "alert alert-info",
+        style = "font-size:11px; padding:6px; margin-bottom:8px;",
+        icon("circle-info"), " ",
+        tags$strong("Assumptions:"), " Multivariate Normal summary statistics.",
+        tags$br(),
+        "For proportion endpoints, enter means and variances on the",
+        tags$strong("log-odds scale."),
+        "For hazard ratios, use the", tags$strong("log scale."),
+        "Results may be unreliable if the Normal approximation is poor.",
+        tags$br(), tags$br(),
+        tags$strong("Current limitation:"), " Bivariate (k = 2) only.",
+        "Three or more endpoints are a planned extension."
+      ),
       tags$b("Prior specification"),
       fluidRow(
         column(6, numericInput(ns("pm1"), "Mean - ep.1", 0.35, step = 0.01)),
