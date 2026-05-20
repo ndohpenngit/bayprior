@@ -8,13 +8,15 @@ app_ui <- function(request) {
 
     shinydashboard::dashboardPage(
 
+      title = "Bayesian Prior Elicitation and Analysis",
+
       # -- Header --------------------------------------------------------------
       shinydashboard::dashboardHeader(
         title = tagList(
           tags$img(
             src    = "www/favicon.png",
-            height = "34px",
-            width  = "34px",
+            height = "44px",
+            width  = "44px",
             style  = paste0(
               "margin-right:8px;",
               "margin-top:-3px;",
@@ -91,7 +93,7 @@ app_ui <- function(request) {
             icon     = icon("shield-halved"),
             tabName  = "robust",
             shinydashboard::menuSubItem(
-              "Robust Mixture", tabName = "robust",    icon = icon("circle")
+              "Robust Mixture", tabName = "robust",    icon = icon("layer-group")
             ),
             shinydashboard::menuSubItem(
               "Sceptical",      tabName = "sceptical", icon = icon("scale-balanced")
@@ -219,8 +221,48 @@ app_ui <- function(request) {
             }
 
             // -- Initialise on page load -------------------------------------
+            // Migration: earlier two-state toggle saved 'light' on first
+            // load without explicit user action. Clear stale preferences
+            // from before the three-state system was introduced.
             (function() {
+              var state   = localStorage.getItem('bayprior_theme');
+              var version = localStorage.getItem('bayprior_theme_v');
+              if (state && !version) {
+                // Saved by old two-state toggle -- treat as auto
+                localStorage.removeItem('bayprior_theme');
+              }
+              // Mark that we are using the versioned three-state system
+              localStorage.setItem('bayprior_theme_v', '2');
               applyThemeState(getThemeState());
+            })();
+
+            // MutationObserver: AdminLTE sometimes resets body class list
+            // during its own initialisation, stripping 'dark-mode'.
+            // Watch for that and immediately re-apply the saved preference.
+            (function() {
+              var obs = new MutationObserver(function() {
+                var desired = getThemeState();
+                var hasDark = document.body.classList.contains('dark-mode');
+                if (desired === 'dark' && !hasDark)
+                  document.body.classList.add('dark-mode');
+                else if (desired === 'light' && hasDark)
+                  document.body.classList.remove('dark-mode');
+                else if (desired === 'auto') {
+                  var osDark = window.matchMedia &&
+                               window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (osDark && !hasDark)
+                    document.body.classList.add('dark-mode');
+                  else if (!osDark && hasDark)
+                    document.body.classList.remove('dark-mode');
+                }
+              });
+              obs.observe(document.body, { attributes: true,
+                                           attributeFilter: ['class'] });
+              // Disconnect once Shiny is fully ready -- normal toggle takes over
+              document.addEventListener('shiny:sessioninitialized', function() {
+                obs.disconnect();
+                applyThemeState(getThemeState()); // final apply
+              }, { once: true });
             })();
 
             // -- React to OS changes at runtime ------------------------------
@@ -271,6 +313,70 @@ app_ui <- function(request) {
           .btn-tip-wrap:hover .btn-tip-text {
             visibility: visible; opacity: 1;
           }
+        ")),
+
+
+        # -- Toast notification + clipboard styles ----------------------------
+        tags$style(HTML("
+          /* Toast notifications */
+          #bp-toast-container {
+            position: fixed; top: 64px; right: 16px;
+            z-index: 99999; display: flex; flex-direction: column; gap: 8px;
+          }
+          .bp-toast {
+            background: #1D9E75; color: #fff;
+            padding: 10px 16px; border-radius: 6px;
+            font-size: 13px; font-family: Arial, sans-serif;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            display: flex; align-items: center; gap: 8px;
+            animation: bp-slide-in 0.25s ease;
+            max-width: 300px;
+          }
+          .bp-toast.bp-toast-error { background: #c0392b; }
+          .bp-toast.bp-toast-warn  { background: #e08030; }
+          @keyframes bp-slide-in {
+            from { opacity: 0; transform: translateX(40px); }
+            to   { opacity: 1; transform: translateX(0); }
+          }
+          @keyframes bp-slide-out {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(40px); }
+          }
+        ")),
+
+        tags$script(HTML("
+          // -- Toast system -----------------------------------------------
+          (function() {
+            function ensureContainer() {
+              var c = document.getElementById('bp-toast-container');
+              if (!c) {
+                c = document.createElement('div');
+                c.id = 'bp-toast-container';
+                document.body.appendChild(c);
+              }
+              return c;
+            }
+            window.bpToast = function(msg, type, duration) {
+              var container = ensureContainer();
+              var t = document.createElement('div');
+              t.className = 'bp-toast' +
+                (type === 'error' ? ' bp-toast-error' :
+                 type === 'warn'  ? ' bp-toast-warn'  : '');
+              t.innerHTML = (type === 'error' ? '<i class=\'fa fa-circle-xmark\'></i> ' :
+                             type === 'warn'  ? '<i class=\'fa fa-triangle-exclamation\'></i> ' :
+                                               '<i class=\'fa fa-circle-check\'></i> ') + msg;
+              container.appendChild(t);
+              setTimeout(function() {
+                t.style.animation = 'bp-slide-out 0.25s ease forwards';
+                setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); },
+                           280);
+              }, duration || 3000);
+            };
+          })();
+
+          // -- Clipboard helper -------------------------------------------
+
+          // -- Plot save helper -------------------------------------------
         ")),
 
         # Inline dark mode Plotly fix -- invert filter at compositor level
@@ -346,7 +452,10 @@ app_ui <- function(request) {
 golem_add_external_resources <- function() {
   addResourcePath("www", app_sys("app/www"))
   tags$head(
-    golem::favicon(),
+    tags$link(rel = "icon", type = "image/png",
+              href = "www/favicon.png"),
+    tags$link(rel = "shortcut icon", type = "image/png",
+              href = "www/favicon.png"),
     tags$link(rel = "stylesheet", type = "text/css",
                href = "www/bayprior-dark.css")
   )

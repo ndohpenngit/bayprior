@@ -1,3 +1,84 @@
+# bayprior 0.2.4
+
+## Documentation & UX
+
+* **`robust_prior()` — added `@details` section** explaining that the vague
+  component is always Normal, making cross-family mixtures (e.g. Beta +
+  Normal) structurally inevitable for non-Normal informative priors. Clarifies
+  that mixture mean and SD are always computed in closed form; only the density
+  (used for plotting) is approximated numerically. Updated `@examples` to
+  include a Beta informative prior case with `suppressWarnings()`.
+
+* **`elicit_mixture()` — added `@details` section** documenting the same
+  numerical density approximation behaviour at the lower level where mixtures
+  are first constructed. Notes that `suppressWarnings()` should only be used
+  after verifying the mixture is appropriate, not as a blanket silence.
+
+* **Robust Mixture density plot — warning redirected from console to UI.**
+  The "Components have different distribution families. Mixture densities
+  computed numerically." warning is now intercepted and surfaced as an amber
+  `showNotification()` in the Shiny app rather than printed to the
+  R console. The warning is informative — it signals numerical approximation
+  rather than closed-form density computation — and should be visible to the
+  analyst. Previously it was suppressed entirely, which was not ideal.
+
+---
+
+# bayprior 0.2.3
+
+## New features
+
+* **Poisson data type in Power Prior Calibration** — the power prior module now
+  supports Poisson/count endpoints alongside Binary and Continuous. Uses the
+  Gamma-Poisson conjugate update (same closed-form formula as Gamma-continuous).
+
+* **Prior-data compatibility warning in Power Prior** — an amber alert now
+  appears when the active prior family is incompatible with the selected data
+  type (e.g. Normal prior with binary data, Beta prior with Poisson data),
+  guiding users to re-elicit with an appropriate family before calibrating.
+
+* **Mahalanobis module limitations documented** — the Multivariate Conflict
+  Setup panel now shows an inline note clarifying that the test assumes
+  multivariate Normal summary statistics, that proportion/HR endpoints should
+  be entered on the log-odds/log scale, and that k > 2 endpoints are a planned
+  extension.
+
+## Architecture
+
+* **`base_prior` reactive** — introduced `shared$base_prior` (written only by
+  elicitation and pooling) alongside `active_prior()` (written by all modules).
+  Sensitivity analysis, Robust Mixture, and Power Prior reset observers now
+  watch `base_prior()` instead of `active_prior()`, eliminating the
+  self-invalidation loop that wiped results immediately after they were
+  produced.
+
+* **Robust mixture compounding SD bug fixed** — the robust prior fit handler
+  now always uses `base_prior()` as the informative component. Previously,
+  repeated clicks used the previous robust mixture as the input, causing the
+  vague SD to compound exponentially across clicks.
+
+## Tests
+
+* Added `tests/testthat/test-robust.R` — 33 tests covering `robust_prior()`,
+  `sceptical_prior()` (all three families and strength levels),
+  `calibrate_power_prior()` (all methods and data types),
+  `elicit_exponential()`, `elicit_weibull()`, `plot.bayprior_power_prior()`,
+  and `print.bayprior_power_prior()`.
+
+* Added `tests/testthat/test-validation.R` — 10 tests covering all four
+  functions in `validation_utils.R`.
+
+* Added `skip_on_ci()` to all `shinytest2` Chromote tests to prevent 30-second
+  timeout failures in non-interactive and CI environments.
+
+## Documentation
+
+* Added `@details` to `conflict_mahalanobis()` documenting the multivariate
+  Normal assumption, required scale transformations for proportion and HR
+  endpoints, and the bivariate (k = 2) limitation.
+
+---
+
 # bayprior 0.2.2
 
 ## UX improvements

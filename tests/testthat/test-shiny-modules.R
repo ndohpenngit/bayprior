@@ -1,5 +1,15 @@
+# test-shiny-modules.R
+# Shiny integration tests using shinytest2 + Chromote.
+# These tests require a running Chrome browser and are skipped:
+#   - on CI (no display / headless Chrome issues)
+#   - when shinytest2 is not installed
+#   - when chromote cannot connect
+# Run interactively only: devtools::test(filter = "shiny-modules")
+# ─────────────────────────────────────────────────────────────────────────────
+
 test_that("app loads without error", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "bayprior-app",
                                    height = 800, width = 1200,
                                    timeout = 60000)
@@ -13,6 +23,7 @@ test_that("app loads without error", {
 
 test_that("elicitation module fits a beta prior (moments)", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "elicitation-moments",
                                    height = 800, width = 1200,
                                    timeout = 30000)
@@ -39,6 +50,7 @@ test_that("elicitation module fits a beta prior (moments)", {
 
 test_that("elicitation module fits a beta prior (quantile)", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "elicitation-quantile",
                                    height = 800, width = 1200,
                                    timeout = 30000)
@@ -63,6 +75,7 @@ test_that("elicitation module fits a beta prior (quantile)", {
 
 test_that("conflict module runs diagnostics", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "conflict-diag",
                                    height = 800, width = 1200,
                                    timeout = 30000)
@@ -96,6 +109,7 @@ test_that("conflict module runs diagnostics", {
 
 test_that("sensitivity module runs analysis", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "sensitivity-run",
                                    height = 800, width = 1200,
                                    timeout = 30000)
@@ -125,6 +139,7 @@ test_that("sensitivity module runs analysis", {
 
 test_that("robust prior module builds prior", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "robust-build",
                                    height = 800, width = 1200,
                                    timeout = 30000)
@@ -153,6 +168,7 @@ test_that("robust prior module builds prior", {
 
 test_that("sceptical prior module builds prior", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "sceptical-build",
                                    height = 800, width = 1200,
                                    timeout = 30000)
@@ -173,6 +189,7 @@ test_that("sceptical prior module builds prior", {
 
 test_that("roulette module fits prior from chips", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "roulette-fit",
                                    height = 800, width = 1200,
                                    timeout = 30000)
@@ -196,6 +213,7 @@ test_that("roulette module fits prior from chips", {
 
 test_that("pooling module aggregates experts", {
   skip_if_not_installed("shinytest2")
+  skip_on_ci()
   app <- shinytest2::AppDriver$new(run_app(), name = "pooling-aggregate",
                                    height = 800, width = 1200,
                                    timeout = 30000)

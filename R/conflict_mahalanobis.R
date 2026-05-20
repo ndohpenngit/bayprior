@@ -1,48 +1,56 @@
-#' Mahalanobis-style prior-data conflict check (multivariate extension)
+#' Multivariate prior-data conflict via Mahalanobis distance
 #'
-#' Extends the standard scalar conflict diagnostics to the multivariate
-#' setting where the prior simultaneously specifies beliefs about multiple
-#' parameters. The Mahalanobis distance between the prior location and the
-#' observed data vector provides a single omnibus conflict statistic with
-#' a known chi-squared reference distribution under compatibility.
+#' Tests joint prior-data conflict across two correlated endpoints using the
+#' Mahalanobis distance. Under the null (no conflict) the squared distance
+#' follows a chi-squared distribution with degrees of freedom equal to the
+#' number of endpoints.
 #'
-#' For the univariate case this reduces to the squared surprise index from
-#' `prior_conflict()`, but the function also supports a two-endpoint version
-#' useful when a primary and key secondary endpoint are both modelled
-#' simultaneously (common in oncology trials).
+#' @param prior_means Numeric vector of length k. Prior means for each endpoint.
+#' @param prior_cov  k x k numeric matrix. Prior covariance matrix.
+#' @param obs_means   Numeric vector of length k. Observed data means.
+#' @param obs_cov    k x k numeric matrix. Observed data covariance (Var/n for
+#'   each diagonal; Cov/n for off-diagonal).
+#' @param alpha      Numeric. Significance level for the chi-squared test.
+#'   Default \code{0.05}.
+#' @param labels     Character vector of length k. Endpoint labels for output.
 #'
-#' @param prior_means Numeric vector. Prior means for each parameter.
-#' @param prior_cov   Numeric matrix. Prior covariance matrix
-#'   (p x p, positive definite).
-#' @param obs_means   Numeric vector. Observed data means (same length as
-#'   `prior_means`).
-#' @param obs_cov     Numeric matrix. Observed covariance matrix of the
-#'   sample means (often `Sigma_data / n`).
-#' @param alpha       Numeric. Significance level for the conflict flag.
-#'   Default `0.05`.
-#' @param labels      Character vector. Names of the parameters.
-#'
-#' @return A list of class `bayprior_conflict_mv` with:
+#' @return A named list with components:
 #'   \describe{
-#'     \item{`mahal_distance`}{Mahalanobis distance.}
-#'     \item{`pvalue`}{p-value under chi-squared distribution.}
-#'     \item{`df`}{Degrees of freedom (= number of parameters).}
-#'     \item{`conflict_flag`}{Logical.}
-#'     \item{`interpretation`}{Plain-language summary.}
+#'     \item{mahal_distance}{Mahalanobis distance D.}
+#'     \item{mahal_d2}{Squared distance D^2.}
+#'     \item{p_value}{Chi-squared p-value (df = k).}
+#'     \item{conflict_flag}{Logical. TRUE if p_value < alpha.}
+#'     \item{labels}{Endpoint labels.}
 #'   }
 #'
-#' @examples
-#' # Two endpoints: response rate and OS rate
-#' prior_means <- c(0.35, 0.60)
-#' prior_cov   <- matrix(c(0.01, 0.003, 0.003, 0.015), 2, 2)
-#' obs_means   <- c(0.55, 0.58)
-#' obs_cov     <- matrix(c(0.008, 0.002, 0.002, 0.010), 2, 2) / 50
+#' @details
+#' \strong{Assumptions:} This test assumes that the prior and observed summary
+#' statistics are approximately multivariate Normal. For proportion endpoints
+#' (e.g. response rates), transform to the \strong{log-odds scale} before
+#' entering means and variances. For hazard ratios, use the \strong{log scale}.
+#' Results may be unreliable if the Normal approximation is poor (e.g. for
+#' small samples with extreme proportions).
 #'
-#' mv_check <- conflict_mahalanobis(
-#'   prior_means, prior_cov, obs_means, obs_cov,
-#'   labels = c("Response rate", "OS rate")
-#' )
-#' print(mv_check)
+#' \strong{Current limitation:} The function is designed for bivariate
+#' (k = 2) endpoints. While it will accept k > 2, the Shiny interface
+#' currently only exposes two endpoints. Support for k >= 3 is a planned
+#' extension.
+#'
+#' \strong{Distribution family:} The Mahalanobis approach is
+#' distribution-agnostic at the summary statistic level -- it does not require
+#' a specific prior family (Beta, Normal, etc.). Any continuous prior whose
+#' mean and covariance can be extracted is supported.
+#'
+#' @references
+#' Mahalanobis, P. C. (1936). On the generalised distance in statistics.
+#' \emph{Proceedings of the National Institute of Sciences of India}, 2, 49--55.
+#'
+#' @examples
+#' pm   <- c(0.35, 0.60)
+#' pcov <- matrix(c(0.010, 0.003, 0.003, 0.015), 2, 2)
+#' om   <- c(0.55, 0.58)
+#' ocov <- matrix(c(2e-4, 4e-5, 4e-5, 2e-4), 2, 2)
+#' conflict_mahalanobis(pm, pcov, om, ocov, labels = c("Response rate", "OS rate"))
 #'
 #' @export
 conflict_mahalanobis <- function(prior_means,

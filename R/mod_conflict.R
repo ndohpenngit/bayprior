@@ -1,4 +1,4 @@
-# ── Module: univariate conflict ───────────────────────────────────────────────
+# -- Module: univariate conflict -----------------------------------------------
 
 #' @noRd
 mod_conflict_ui <- function(id) {
@@ -87,14 +87,14 @@ mod_conflict_server <- function(id, shared, active_prior) {
         survival   = list(type = "survival",
                           x    = input$surv_x,
                           n    = input$surv_n),
-        # default — shouldn't reach here
+        # default -- shouldn't reach here
         list(type = "binary", x = input$bin_x, n = input$bin_n)
       )
     })
 
     res <- reactiveVal(NULL)
 
-    # Reset results whenever ANY input changes — prevents stale results
+    # Reset results whenever ANY input changes -- prevents stale results
     observeEvent(
       list(active_prior(), input$data_type,
            input$bin_x, input$bin_n,
@@ -127,9 +127,15 @@ mod_conflict_server <- function(id, shared, active_prior) {
         })
       res(r)
       shared$conflict <- r
+      sev <- toupper(r$conflict_severity)
+      toast_type <- if (r$conflict_flag) "warn" else "info"
+      shinyjs::runjs(paste0(
+        "bpToast('Diagnostics complete &#10003; &mdash; Severity: ", sev, "', '",
+        toast_type, "', 3500);"
+      ))
     })
 
-    # ── Placeholder before run, full results after ───────────────────────────
+    # -- Placeholder before run, full results after ---------------------------
     output$results_or_placeholder <- renderUI({
       if (is.null(res())) {
         return(tags$div(
@@ -197,8 +203,9 @@ mod_conflict_server <- function(id, shared, active_prior) {
         ),
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
-          title = tagList(icon("chart-area"),
-                          " Prior - Likelihood - Posterior overlay"),
+          title = tagList(
+            icon("chart-area"), " Prior - Likelihood - Posterior overlay"
+          ),
           shinycssloaders::withSpinner(
             plotly::plotlyOutput(ns("overlay_plot"), height = "300px"),
             color = "#1D9E75"
@@ -223,7 +230,7 @@ mod_conflict_server <- function(id, shared, active_prior) {
 }
 
 
-# ── Module: multivariate Mahalanobis ─────────────────────────────────────────
+# -- Module: multivariate Mahalanobis -----------------------------------------
 
 #' @noRd
 mod_mahal_ui <- function(id) {
@@ -233,9 +240,24 @@ mod_mahal_ui <- function(id) {
       width = 4, status = "primary", solidHeader = TRUE,
       title = tagList(icon("border-all"), " Multivariate Conflict Setup"),
       tags$small(class = "text-muted",
-        "Two-endpoint check. Enter prior and observed-data parameters for
-         each endpoint."),
+        "Bivariate (2-endpoint) prior-data conflict check using the",
+        "Mahalanobis distance. Tests both endpoints jointly,",
+        "accounting for their correlation."),
       tags$br(), tags$br(),
+      tags$div(
+        class = "alert alert-info",
+        style = "font-size:11px; padding:6px; margin-bottom:8px;",
+        icon("circle-info"), " ",
+        tags$strong("Assumptions:"), " Multivariate Normal summary statistics.",
+        tags$br(),
+        "For proportion endpoints, enter means and variances on the",
+        tags$strong("log-odds scale."),
+        "For hazard ratios, use the", tags$strong("log scale."),
+        "Results may be unreliable if the Normal approximation is poor.",
+        tags$br(), tags$br(),
+        tags$strong("Current limitation:"), " Bivariate (k = 2) only.",
+        "Three or more endpoints are a planned extension."
+      ),
       tags$b("Prior specification"),
       fluidRow(
         column(6, numericInput(ns("pm1"), "Mean - ep.1", 0.35, step = 0.01)),

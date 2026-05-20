@@ -24,3 +24,5 @@
 ^doc$
 ^Meta$
 ^\\.posit$
+^^vignettes/\.*_files$$
+^^vignettes/\.*\\.html$$

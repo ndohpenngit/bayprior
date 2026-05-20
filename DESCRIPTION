@@ -1,6 +1,6 @@
 Package: bayprior
 Title: Bayesian Prior Elicitation, Conflict Diagnostics and Sensitivity Analysis for Clinical Trials
-Version: 0.2.2
+Version: 0.2.4
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0003-9054-465X"))
@@ -30,11 +30,7 @@ Imports:
     purrr (>= 1.0.0),
     quarto (>= 1.5.0),
     rlang (>= 1.2.0),
-    shiny (>= 1.7.4),
-    shinycssloaders (>= 1.0.0),
-    shinydashboard (>= 0.7.2),
-    shinyjs (>= 2.1.0),
-    shinyWidgets (>= 0.7.6)
+    shiny (>= 1.7.4)
 Suggests:
     covr,
     htmltools (>= 0.5.4),
@@ -42,7 +38,11 @@ Suggests:
     knitr (>= 1.40),
     patchwork,
     rmarkdown (>= 2.20),
+    shinycssloaders (>= 1.0.0),
+    shinydashboard (>= 0.7.2),
+    shinyjs (>= 2.1.0),
     shinytest2,
+    shinyWidgets (>= 0.7.6),
     testthat (>= 3.0.0),
     vdiffr,
     withr

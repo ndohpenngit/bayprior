@@ -33,11 +33,43 @@ Builds a robust prior by mixing an informative component with a vague
 (Schmidli et al., 2014). This protects against prior misspecification by
 ensuring the posterior is not dominated by a conflicting informative prior.
 }
+\details{
+The vague component is always a \strong{Normal distribution} centred at
+the informative prior's mean with SD = \code{vague_sd} (default: 10x the
+informative SD). When the informative prior is itself Normal, both
+components share the same family and the mixture density is computed
+analytically. For any other informative prior family (Beta, Gamma,
+Log-Normal, Exponential, Weibull), the components have \emph{different
+distribution families}, and the mixture density is \strong{computed
+numerically}. A warning is issued in this case:
+
+\preformatted{
+  "Components have different distribution families.
+   Mixture densities computed numerically."
+}
+
+This is expected behaviour, not an error. The numerical approximation is
+generally accurate in the body of the distribution but may be less reliable
+at the extreme tails. For proportion endpoints, the mixture is still defined
+on (0, 1) because the informative Beta prior constrains the support. For
+unbounded endpoints, use a Normal informative prior to avoid the numerical
+approximation.
+
+The \strong{mixture mean and SD} in \code{fit_summary} are computed in
+closed form from the component means, SDs, and weights regardless of
+family. The density values (used for plotting) are approximated numerically
+when families differ.
+}
 \examples{
 informative <- elicit_normal(mean = 0.30, sd = 0.10,
                              method = "moments", label = "Response rate")
 robust      <- robust_prior(informative, vague_weight = 0.20)
 plot(robust)
+
+# With a Beta informative prior -- density computed numerically
+beta_inf <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+robust_b <- suppressWarnings(robust_prior(beta_inf, vague_weight = 0.20))
+plot(robust_b)
 
 }
 \references{

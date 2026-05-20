@@ -1,4 +1,4 @@
-# ── Module: sceptical prior ───────────────────────────────────────────────────
+# -- Module: sceptical prior ---------------------------------------------------
 
 #' @noRd
 mod_sceptical_ui <- function(id) {
@@ -110,7 +110,7 @@ mod_sceptical_server <- function(id, shared) {
                           "sd = {round(p$fit_summary$sd, 3)}"))
     })
 
-    # ── Placeholder before fit, results after ───────────────────────────────
+    # -- Placeholder before fit, results after -------------------------------
     output$results_or_placeholder <- renderUI({
       if (is.null(fitted())) {
         return(tags$div(
@@ -161,7 +161,7 @@ mod_sceptical_server <- function(id, shared) {
 }
 
 
-# ── Module: robust mixture prior ─────────────────────────────────────────────
+# -- Module: robust mixture prior ---------------------------------------------
 
 #' @noRd
 mod_robust_ui <- function(id) {
@@ -195,19 +195,21 @@ mod_robust_ui <- function(id) {
 }
 
 #' @noRd
-mod_robust_server <- function(id, shared, active_prior) {
+mod_robust_server <- function(id, shared, active_prior, base_prior) {
   moduleServer(id, function(input, output, session) {
     fitted <- reactiveVal(NULL)
 
-    # Reset when prior or inputs change
+    # Reset when the BASE prior or inputs change.
+    # base_prior() only updates on elicitation/pooling -- not on
+    # robust/sceptical/power -- avoiding self-invalidation.
     observeEvent(
-      list(active_prior(), input$vague_weight, input$vague_sd_mult),
+      list(base_prior(), input$vague_weight, input$vague_sd_mult),
       { fitted(NULL); shared$robust_prior <- NULL },
       ignoreInit = TRUE
     )
 
     output$prior_banner <- renderUI({
-      p   <- active_prior()
+      p   <- base_prior()
       cls <- if (is.null(p)) "alert-warning" else "alert-success"
       msg <- if (is.null(p)) "No informative prior yet." else
         glue::glue("{p$label} ({toupper(p$dist)})")
@@ -218,7 +220,11 @@ mod_robust_server <- function(id, shared, active_prior) {
     })
 
     observeEvent(input$fit_btn, {
-      inf <- active_prior(); req(inf)
+      # CRITICAL: always use base_prior() (elicited/pooled prior) as the
+      # informative component -- never active_prior() which returns the
+      # robust mixture itself after the first click, causing SD to compound
+      # exponentially on each subsequent build.
+      inf <- base_prior(); req(inf)
       vsd <- input$vague_sd_mult * inf$fit_summary$sd
       pr  <- tryCatch(
         robust_prior(inf, vague_weight = input$vague_weight,
@@ -245,7 +251,7 @@ mod_robust_server <- function(id, shared, active_prior) {
                           "{round(p$vague_weight * 100)}% vague"))
     })
 
-    # ── Placeholder before fit, results after ───────────────────────────────
+    # -- Placeholder before fit, results after -------------------------------
     output$results_or_placeholder <- renderUI({
       if (is.null(fitted())) {
         return(tags$div(
@@ -288,9 +294,44 @@ mod_robust_server <- function(id, shared, active_prior) {
 
     output$prior_plot <- plotly::renderPlotly({
       req(fitted())
-      inf   <- active_prior()
-      x     <- .density_grid(fitted())$x
-      y_mix <- .eval_density_vec(fitted(), x)
+      inf     <- base_prior()   # show the source informative prior, not the mixture
+      warned  <- FALSE          # track whether the numerical approximation warning fired
+
+      x     <- withCallingHandlers(
+        .density_grid(fitted())$x,
+        warning = function(w) {
+          if (grepl("different distribution families", conditionMessage(w),
+                    fixed = TRUE)) {
+            warned <<- TRUE
+            invokeRestart("muffleWarning")
+          }
+        })
+      y_mix <- withCallingHandlers(
+        .eval_density_vec(fitted(), x),
+        warning = function(w) {
+          if (grepl("different distribution families", conditionMessage(w),
+                    fixed = TRUE)) invokeRestart("muffleWarning")
+        })
+
+      # Surface the warning in the UI rather than the console.
+      # The message is informative: the mixture density cannot be computed
+      # in closed form when components have different families (e.g. Beta +
+      # Normal), so it is approximated numerically. The analyst should know.
+      if (warned) {
+        showNotification(
+          tagList(
+            icon("triangle-exclamation"), " ",
+            tags$strong("Mixture density approximated numerically."),
+            tags$br(),
+            "The informative and vague components have different distribution",
+            "families. The density shown is a numerical approximation and may",
+            "be less accurate at the tails."
+          ),
+          type     = "warning",
+          duration = 8
+        )
+      }
+
       fig   <- plotly::plot_ly() |>
         plotly::add_lines(x = x, y = y_mix, name = "Robust mixture",
                           line = list(color = "#1D9E75", width = 2.5))
@@ -307,7 +348,7 @@ mod_robust_server <- function(id, shared, active_prior) {
 }
 
 
-# ── Module: power prior calibration ──────────────────────────────────────────
+# -- Module: power prior calibration ------------------------------------------
 
 #' @noRd
 mod_power_ui <- function(id) {
@@ -323,15 +364,24 @@ mod_power_ui <- function(id) {
       tags$br(), tags$br(),
       uiOutput(ns("prior_banner")),
       tags$hr(),
+      uiOutput(ns("compat_alert")),
       selectInput(ns("data_type"), "Data type",
         choices = c("Binary"     = "binary",
-                    "Continuous" = "continuous")),
+                    "Continuous" = "continuous",
+                    "Poisson (counts)" = "poisson")),
       tags$h6("Historical data"),
       conditionalPanel(
         condition = sprintf("input['%s'] === 'binary'", ns("data_type")),
         fluidRow(
           column(6, numericInput(ns("hx"), "Events", 12, 0)),
           column(6, numericInput(ns("hn"), "n",      40, 1))
+        )
+      ),
+      conditionalPanel(
+        condition = sprintf("input['%s'] === 'poisson'", ns("data_type")),
+        fluidRow(
+          column(6, numericInput(ns("hx_p"), "Count (sum)", 12, 0)),
+          column(6, numericInput(ns("hn_p"), "Exposure (n)", 40, 1))
         )
       ),
       conditionalPanel(
@@ -346,6 +396,13 @@ mod_power_ui <- function(id) {
         fluidRow(
           column(6, numericInput(ns("cx"), "Events", 18, 0)),
           column(6, numericInput(ns("cn"), "n",      50, 1))
+        )
+      ),
+      conditionalPanel(
+        condition = sprintf("input['%s'] === 'poisson'", ns("data_type")),
+        fluidRow(
+          column(6, numericInput(ns("cx_p"), "Count (sum)", 18, 0)),
+          column(6, numericInput(ns("cn_p"), "Exposure (n)", 50, 1))
         )
       ),
       conditionalPanel(
@@ -370,13 +427,15 @@ mod_power_ui <- function(id) {
 }
 
 #' @noRd
-mod_power_server <- function(id, shared, active_prior) {
+mod_power_server <- function(id, shared, active_prior, base_prior) {
   moduleServer(id, function(input, output, session) {
     res <- reactiveVal(NULL)
 
-    # Reset when prior or inputs change
+    # Reset when the BASE prior or inputs change.
+    # base_prior() only updates on elicitation/pooling -- not on
+    # robust/sceptical/power -- avoiding self-invalidation.
     observeEvent(
-      list(active_prior(), input$data_type,
+      list(base_prior(), input$data_type,
            input$hist_x, input$hist_n, input$hist_mean, input$hist_sd,
            input$curr_x, input$curr_n, input$curr_mean, input$curr_sd,
            input$target_bf, input$method),
@@ -395,18 +454,40 @@ mod_power_server <- function(id, shared, active_prior) {
                " ", msg)
     })
 
+    output$compat_alert <- renderUI({
+      p    <- active_prior(); if (is.null(p)) return(NULL)
+      type <- input$data_type
+      mismatch <- (p$dist %in% c("normal", "lognormal", "exponential",
+                                  "weibull") && type == "binary") ||
+                  (p$dist == "beta" && type %in% c("continuous", "poisson")) ||
+                  (p$dist == "gamma" && type == "binary")
+      if (!mismatch) return(NULL)
+      tags$div(
+        class = "alert alert-warning",
+        style = "font-size:12px; padding:6px; margin-bottom:6px;",
+        icon("triangle-exclamation"), " ",
+        glue::glue("Prior family ({toupper(p$dist)}) may be incompatible ",
+                   "with {type} data. Consider using your elicited prior ",
+                   "rather than a sceptical prior as the base.")
+      )
+    })
+
     observeEvent(input$run_btn, {
-      base   <- active_prior(); req(base)
-      hist_d <- if (input$data_type == "binary")
-        list(type = "binary",     x = input$hx,    n = input$hn)
-      else
-        list(type = "continuous", x = input$hmean, sd = input$hsd,
-             n = input$hn_c)
-      curr_d <- if (input$data_type == "binary")
-        list(type = "binary",     x = input$cx,    n = input$cn)
-      else
-        list(type = "continuous", x = input$cmean, sd = input$csd,
-             n = input$cn_c)
+      # Use base_prior() so repeated clicks always calibrate against
+      # the original elicited/pooled prior, not the power prior itself.
+      base   <- base_prior(); req(base)
+      hist_d <- switch(input$data_type,
+        binary     = list(type = "binary",     x = input$hx,    n = input$hn),
+        poisson    = list(type = "poisson",    x = input$hx_p,  n = input$hn_p),
+        continuous = list(type = "continuous", x = input$hmean, sd = input$hsd,
+                          n = input$hn_c)
+      )
+      curr_d <- switch(input$data_type,
+        binary     = list(type = "binary",     x = input$cx,    n = input$cn),
+        poisson    = list(type = "poisson",    x = input$cx_p,  n = input$cn_p),
+        continuous = list(type = "continuous", x = input$cmean, sd = input$csd,
+                          n = input$cn_c)
+      )
       r <- tryCatch(
         calibrate_power_prior(hist_d, curr_d, base,
                               target_bf = input$target_bf,
@@ -431,7 +512,7 @@ mod_power_server <- function(id, shared, active_prior) {
                glue::glue("Optimal delta = {res()$delta_opt}"))
     })
 
-    # ── Placeholder before calibration, results after ────────────────────────
+    # -- Placeholder before calibration, results after ------------------------
     output$results_or_placeholder <- renderUI({
       if (is.null(res())) {
         return(tags$div(

@@ -9,19 +9,29 @@ app_server <- function(input, output, session) {
 
   # ── Shared state ──────────────────────────────────────────────────────────
   shared <- reactiveValues(
-    current_prior  = NULL,   # most recently fitted bayprior
-    expert_pool    = list(), # named list of baypriors (one per expert)
-    consensus      = NULL,   # output of aggregate_experts()
-    conflict       = NULL,   # output of prior_conflict()
-    sensitivity    = NULL,   # output of sensitivity_grid() / sensitivity_cri()
-    robust_prior   = NULL,   # output of robust_prior()
+    current_prior   = NULL,  # most recently fitted bayprior (any module)
+    base_prior      = NULL,  # elicited or pooled prior only (for sensitivity)
+    expert_pool     = list(), # named list of baypriors (one per expert)
+    consensus       = NULL,  # output of aggregate_experts()
+    conflict        = NULL,  # output of prior_conflict()
+    sensitivity     = NULL,  # output of sensitivity_grid() / sensitivity_cri()
+    robust_prior    = NULL,  # output of robust_prior()
     sceptical_prior = NULL,  # output of sceptical_prior()
-    power_prior    = NULL    # output of calibrate_power_prior()
+    power_prior     = NULL   # output of calibrate_power_prior()
   )
 
   # Convenience: resolved prior (consensus preferred, else current)
+  # Used by conflict, robust, sceptical, power prior modules.
   active_prior <- reactive({
     shared$consensus %||% shared$current_prior
+  })
+
+  # Base prior: only set by elicitation and pooling.
+  # Sensitivity analysis uses this to avoid reacting to downstream
+  # priors (robust, sceptical, power) which are products of sensitivity,
+  # not inputs to it.
+  base_prior <- reactive({
+    shared$consensus %||% shared$base_prior
   })
 
   # ── Step completion indicators ────────────────────────────────────────────
@@ -69,17 +79,29 @@ app_server <- function(input, output, session) {
     }
   })
 
-  # When a new prior is fitted, all downstream results are stale.
-  # Clear them so users never see old results mixed with new inputs.
-  observeEvent(active_prior(), {
-    p <- active_prior()
-    # Only reset when prior actually changes (not on initial NULL)
+  # When the BASE prior changes (elicitation / pooling only), downstream
+  # results are stale. Robust/sceptical/power priors changing should NOT
+  # clear sensitivity -- they are downstream products, not inputs.
+  observeEvent(base_prior(), {
+    p <- base_prior()
     if (!is.null(p)) {
       shared$conflict       <- NULL
       shared$sensitivity    <- NULL
       shared$robust_prior   <- NULL
       shared$sceptical_prior <- NULL
       shared$power_prior    <- NULL
+    }
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+  # When active_prior changes due to robust/sceptical/power modules,
+  # only clear sibling downstream priors (not sensitivity).
+  observeEvent(active_prior(), {
+    p  <- active_prior()
+    bp <- base_prior()
+    # Only act when active_prior diverges from base_prior (i.e. a downstream
+    # module set current_prior), and there IS a base prior already.
+    if (!is.null(p) && !is.null(bp) && !identical(p, bp)) {
+      # Don't reset conflict or sensitivity -- they belong to the base prior
     }
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
@@ -168,9 +190,9 @@ app_server <- function(input, output, session) {
   mod_pooling_server("pooling",         shared = shared, active_prior = active_prior)
   mod_conflict_server("conflict",       shared = shared, active_prior = active_prior)
   mod_mahal_server("mahal")
-  mod_sensitivity_server("sensitivity", shared = shared, active_prior = active_prior)
+  mod_sensitivity_server("sensitivity", shared = shared, active_prior = base_prior)
+  mod_robust_server("robust",           shared = shared, active_prior = active_prior, base_prior = base_prior)
+  mod_power_server("power",             shared = shared, active_prior = active_prior, base_prior = base_prior)
   mod_sceptical_server("sceptical",     shared = shared)
-  mod_robust_server("robust",           shared = shared, active_prior = active_prior)
-  mod_power_server("power",             shared = shared, active_prior = active_prior)
   mod_report_server("report",           shared = shared, active_prior = active_prior)
 }

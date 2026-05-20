@@ -86,7 +86,7 @@ sceptical_prior <- function(null_value = 0,
                                expert_id = expert_id,
                                label     = label)
 
-  } else {  # beta — null_value already validated above
+  } else {  # beta -- null_value already validated above
     sd_map <- c(weak = 0.15, moderate = 0.08, strong = 0.04)
     prior  <- elicit_beta(mean      = null_value,
                           sd        = sd_map[strength],
@@ -120,6 +120,33 @@ sceptical_prior <- function(null_value = 0,
 #' @return A `bayprior` object with `dist = "mixture"` and
 #'   `prior_type = "robust"`.
 #'
+#' @details
+#' The vague component is always a \strong{Normal distribution} centred at
+#' the informative prior's mean with SD = \code{vague_sd} (default: 10x the
+#' informative SD). When the informative prior is itself Normal, both
+#' components share the same family and the mixture density is computed
+#' analytically. For any other informative prior family (Beta, Gamma,
+#' Log-Normal, Exponential, Weibull), the components have \emph{different
+#' distribution families}, and the mixture density is \strong{computed
+#' numerically}. A warning is issued in this case:
+#'
+#' \preformatted{
+#'   "Components have different distribution families.
+#'    Mixture densities computed numerically."
+#' }
+#'
+#' This is expected behaviour, not an error. The numerical approximation is
+#' generally accurate in the body of the distribution but may be less reliable
+#' at the extreme tails. For proportion endpoints, the mixture is still defined
+#' on (0, 1) because the informative Beta prior constrains the support. For
+#' unbounded endpoints, use a Normal informative prior to avoid the numerical
+#' approximation.
+#'
+#' The \strong{mixture mean and SD} in \code{fit_summary} are computed in
+#' closed form from the component means, SDs, and weights regardless of
+#' family. The density values (used for plotting) are approximated numerically
+#' when families differ.
+#'
 #' @references
 #' Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in
 #' clinical trials with historical control information.
@@ -130,6 +157,11 @@ sceptical_prior <- function(null_value = 0,
 #'                              method = "moments", label = "Response rate")
 #' robust      <- robust_prior(informative, vague_weight = 0.20)
 #' plot(robust)
+#'
+#' # With a Beta informative prior -- density computed numerically
+#' beta_inf <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+#' robust_b <- suppressWarnings(robust_prior(beta_inf, vague_weight = 0.20))
+#' plot(robust_b)
 #'
 #' @importFrom rlang abort
 #' @export
@@ -229,10 +261,12 @@ calibrate_power_prior <- function(historical_data,
       error = function(e) NULL
     )
 
-    bf <- tryCatch(
-      .marginal_bf(pp, base_prior, current_data),
-      error = function(e) NA_real_
-    )
+    bf <- tryCatch({
+      raw_bf <- .marginal_bf(pp, base_prior, current_data)
+      # Cap at 1e6 to avoid display overflow (e.g. 10^148 from
+      # tight-prior + compatible data). BF > 1e6 = "decisive" by any scale.
+      min(raw_bf, 1e6, na.rm = TRUE)
+    }, error = function(e) NA_real_)
 
     data.frame(
       delta        = delta,
@@ -353,7 +387,7 @@ plot.bayprior_power_prior <- function(x, ...) {
 }
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+# -- Internal helpers ----------------------------------------------------------
 
 .power_prior_update <- function(base_prior, hist_data, delta) {
   type <- hist_data$type %||% "binary"
@@ -364,7 +398,7 @@ plot.bayprior_power_prior <- function(x, ...) {
     rlang::abort(glue::glue("`delta` must be in (0, 1]; got {delta}."))
   }
 
-  # ── Beta / binary ────────────────────────────────────────────────────────────
+  # -- Beta / binary ------------------------------------------------------------
   if (base_prior$dist == "beta" && type == "binary") {
     a_new <- base_prior$params$alpha + delta * x
     b_new <- base_prior$params$beta  + delta * (n - x)
@@ -373,7 +407,7 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # ── Normal ───────────────────────────────────────────────────────────────────
+  # -- Normal -------------------------------------------------------------------
   if (base_prior$dist == "normal") {
     obs_mean  <- x
     obs_se    <- (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
@@ -388,8 +422,9 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # ── Gamma / continuous ───────────────────────────────────────────────────────
-  if (base_prior$dist == "gamma" && type == "continuous") {
+  # -- Gamma / continuous or Poisson -------------------------------------------------------
+  if (base_prior$dist == "gamma" &&
+      type %in% c("continuous", "poisson")) {
     x_sum     <- hist_data$x_sum %||% (x * n)
     shape_new <- base_prior$params$shape + delta * x_sum
     rate_new  <- base_prior$params$rate  + delta * n
@@ -398,7 +433,7 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # ── Log-normal ───────────────────────────────────────────────────────────────
+  # -- Log-normal ---------------------------------------------------------------
   if (base_prior$dist == "lognormal") {
     log_obs_mean <- if (isTRUE(hist_data$log_scale)) x else log(x)
     raw_sd       <- hist_data$sd %||% base_prior$fit_summary$sd
@@ -415,7 +450,7 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # ── Mixture ──────────────────────────────────────────────────────────────────
+  # -- Mixture ------------------------------------------------------------------
   if (base_prior$dist == "mixture") {
     components <- base_prior$components
     weights    <- base_prior$weights
@@ -494,9 +529,12 @@ plot.bayprior_power_prior <- function(x, ...) {
   type     <- current_data$type %||% "binary"
   n        <- current_data$n
   x        <- current_data$x
-  obs_mean <- if (type == "binary") x / n else x
+  obs_mean <- if (type == "binary")   x / n else
+              if (type == "poisson")  x / n else x
   obs_se   <- if (type == "binary") {
     sqrt(obs_mean * (1 - obs_mean) / n)
+  } else if (type == "poisson") {
+    sqrt(obs_mean / n)   # Poisson SE: sqrt(rate / n)
   } else {
     (current_data$sd %||% power_prior$fit_summary$sd) / sqrt(n)
   }
