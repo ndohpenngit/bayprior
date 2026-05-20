@@ -205,51 +205,26 @@ mod_elicitation_server <- function(id, shared) {
 
       tagList(
         fluidRow(
-          tags$div(
-            class = "bp-clip-box",
-            onclick = paste0("bpCopy('", round(s$mean, 3), "', 'Prior mean')"),
-            shinydashboard::valueBox(
-              round(s$mean, 3), "Prior mean \u2014 click to copy",
-              icon = icon("dot-circle"), color = "blue", width = 4)
-          ),
-          tags$div(
-            class = "bp-clip-box",
-            onclick = paste0("bpCopy('", round(s$sd, 3), "', 'Prior SD')"),
-            shinydashboard::valueBox(
-              round(s$sd, 3), "Prior SD \u2014 click to copy",
-              icon = icon("arrows-left-right"), color = "green", width = 4)
-          ),
-          tags$div(
-            class = "bp-clip-box",
-            onclick = paste0("bpCopy('",
-              glue::glue("[{round(s$q025 %||% (s$mean - 1.96*s$sd), 3)}, ",
-                         "{round(s$q975 %||% (s$mean + 1.96*s$sd), 3)}]"),
-              "', '95% CrI')"),
-            shinydashboard::valueBox(
-              glue::glue("[{round(s$q025 %||% (s$mean - 1.96*s$sd), 3)}, ",
-                         "{round(s$q975 %||% (s$mean + 1.96*s$sd), 3)}]"),
-              "95% CrI \u2014 click to copy",
-              icon = icon("ruler-horizontal"), color = "purple", width = 4)
-          )
+          shinydashboard::valueBox(
+            round(s$mean, 3), "Prior mean",
+            icon = icon("dot-circle"), color = "blue", width = 4),
+          shinydashboard::valueBox(
+            round(s$sd, 3), "Prior SD",
+            icon = icon("arrows-left-right"), color = "green", width = 4),
+          shinydashboard::valueBox(
+            glue::glue("[{round(s$q025 %||% (s$mean - 1.96*s$sd), 3)}, ",
+                       "{round(s$q975 %||% (s$mean + 1.96*s$sd), 3)}]"),
+            "95% CrI",
+            icon = icon("ruler-horizontal"), color = "purple", width = 4)
         ),
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
           title = tagList(
-            icon("chart-line"), " Fitted prior density",
-            tags$span(
-              style = "float:right; margin-top:-2px;",
-              tags$button(
-                class = "btn btn-xs btn-default",
-                onclick = "bpSavePlot('elicitation-prior_plot_wrapper', 'bayprior-prior-density')",
-                icon("download"), " Save PNG"
-              )
-            )
+            icon("chart-line"), " Fitted prior density"
           ),
-          tags$div(id = "elicitation-prior_plot_wrapper",
-            shinycssloaders::withSpinner(
-              plotly::plotlyOutput(ns("prior_plot"), height = "300px"),
-              color = "#1D9E75"
-            )
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("prior_plot"), height = "300px"),
+            color = "#1D9E75"
           )
         ),
         shinydashboard::box(

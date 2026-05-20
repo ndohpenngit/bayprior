@@ -320,42 +320,22 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
           title = tagList(
-            icon("bar-chart-steps"), " Tornado plot",
-            tags$span(
-              style = "float:right; margin-top:-2px;",
-              tags$button(
-                class = "btn btn-xs btn-default",
-                onclick = "bpSavePlot('sensitivity-tornado_wrapper', 'bayprior-tornado')",
-                icon("download"), " Save PNG"
-              )
-            )
+            icon("bar-chart-steps"), " Tornado plot"
           ),
-          tags$div(id = "sensitivity-tornado_wrapper",
-            shinycssloaders::withSpinner(
-              plotly::plotlyOutput(ns("tornado_plot"), height = "220px"),
-              color = "#1D9E75"
-            )
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("tornado_plot"), height = "220px"),
+            color = "#1D9E75"
           )
         ),
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
           title = tagList(
-            icon("map"), " Influence heatmap",
-            tags$span(
-              style = "float:right; margin-top:-2px;",
-              tags$button(
-                class = "btn btn-xs btn-default",
-                onclick = "bpSavePlot('sensitivity-heatmap_wrapper', 'bayprior-heatmap')",
-                icon("download"), " Save PNG"
-              )
-            )
+            icon("map"), " Influence heatmap"
           ),
           uiOutput(ns("outcome_picker")),
-          tags$div(id = "sensitivity-heatmap_wrapper",
-            shinycssloaders::withSpinner(
-              plotly::plotlyOutput(ns("influence_plot"), height = "300px"),
-              color = "#1D9E75"
-            )
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("influence_plot"), height = "300px"),
+            color = "#1D9E75"
           )
         )
       )

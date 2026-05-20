@@ -96,10 +96,10 @@ app_ui <- function(request) {
               "Robust Mixture", tabName = "robust",    icon = icon("layer-group")
             ),
             shinydashboard::menuSubItem(
-              "Power Prior",    tabName = "power",     icon = icon("bolt")
+              "Sceptical",      tabName = "sceptical", icon = icon("scale-balanced")
             ),
             shinydashboard::menuSubItem(
-              "Sceptical",      tabName = "sceptical", icon = icon("scale-balanced")
+              "Power Prior",    tabName = "power",     icon = icon("bolt")
             )
           ),
           shinydashboard::menuItem(
@@ -342,16 +342,6 @@ app_ui <- function(request) {
             from { opacity: 1; transform: translateX(0); }
             to   { opacity: 0; transform: translateX(40px); }
           }
-          /* Clipboard value box */
-          .bp-clip-box {
-            cursor: pointer; position: relative;
-          }
-          .bp-clip-box::after {
-            content: '\\00a0\\1F4CB';
-            font-size: 10px; opacity: 0.5;
-            position: absolute; bottom: 6px; right: 8px;
-          }
-          .bp-clip-box:hover::after { opacity: 1; }
         ")),
 
         tags$script(HTML("
@@ -385,39 +375,8 @@ app_ui <- function(request) {
           })();
 
           // -- Clipboard helper -------------------------------------------
-          window.bpCopy = function(value, label) {
-            var text = String(value);
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(text).then(function() {
-                bpToast((label || 'Value') + ' copied: ' + text, 'info', 2000);
-              });
-            } else {
-              // Fallback for non-HTTPS
-              var ta = document.createElement('textarea');
-              ta.value = text;
-              document.body.appendChild(ta);
-              ta.select();
-              document.execCommand('copy');
-              document.body.removeChild(ta);
-              bpToast((label || 'Value') + ' copied: ' + text, 'info', 2000);
-            }
-          };
 
           // -- Plot save helper -------------------------------------------
-          window.bpSavePlot = function(plotId, filename) {
-            var el = document.getElementById(plotId);
-            if (!el || !el.querySelector('.js-plotly-plot')) {
-              bpToast('Plot not ready yet', 'warn', 2000);
-              return;
-            }
-            var plt = el.querySelector('.js-plotly-plot');
-            Plotly.downloadImage(plt, {
-              format: 'png', width: 1200, height: 700,
-              filename: filename || 'bayprior-plot'
-            }).catch(function() {
-              bpToast('Could not save plot', 'error', 3000);
-            });
-          };
         ")),
 
         # Inline dark mode Plotly fix -- invert filter at compositor level
@@ -493,7 +452,10 @@ app_ui <- function(request) {
 golem_add_external_resources <- function() {
   addResourcePath("www", app_sys("app/www"))
   tags$head(
-    golem::favicon(ext = "png"),
+    tags$link(rel = "icon", type = "image/png",
+              href = "www/favicon.png"),
+    tags$link(rel = "shortcut icon", type = "image/png",
+              href = "www/favicon.png"),
     tags$link(rel = "stylesheet", type = "text/css",
                href = "www/bayprior-dark.css")
   )
