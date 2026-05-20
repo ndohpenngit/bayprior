@@ -158,39 +158,10 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#bayprior-0.2.4" id="toc-bayprior-0.2.4" class="nav-link active" data-scroll-target="#bayprior-0.2.4">bayprior 0.2.4</a>
+  <li><a href="#bayprior-0.1.2" id="toc-bayprior-0.1.2" class="nav-link active" data-scroll-target="#bayprior-0.1.2">bayprior 0.1.2</a>
   <ul class="collapse">
-  <li><a href="#documentation-ux" id="toc-documentation-ux" class="nav-link" data-scroll-target="#documentation-ux">Documentation &amp; UX</a></li>
-  </ul></li>
-  <li><a href="#bayprior-0.2.3" id="toc-bayprior-0.2.3" class="nav-link" data-scroll-target="#bayprior-0.2.3">bayprior 0.2.3</a>
-  <ul class="collapse">
-  <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
-  <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a></li>
-  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests">Tests</a></li>
-  <li><a href="#documentation" id="toc-documentation" class="nav-link" data-scroll-target="#documentation">Documentation</a></li>
-  </ul></li>
-  <li><a href="#bayprior-0.2.2" id="toc-bayprior-0.2.2" class="nav-link" data-scroll-target="#bayprior-0.2.2">bayprior 0.2.2</a>
-  <ul class="collapse">
-  <li><a href="#ux-improvements" id="toc-ux-improvements" class="nav-link" data-scroll-target="#ux-improvements">UX improvements</a></li>
   <li><a href="#bug-fixes" id="toc-bug-fixes" class="nav-link" data-scroll-target="#bug-fixes">Bug fixes</a></li>
-  <li><a href="#documentation-1" id="toc-documentation-1" class="nav-link" data-scroll-target="#documentation-1">Documentation</a></li>
-  </ul></li>
-  <li><a href="#bayprior-0.2.1" id="toc-bayprior-0.2.1" class="nav-link" data-scroll-target="#bayprior-0.2.1">bayprior 0.2.1</a>
-  <ul class="collapse">
-  <li><a href="#ux-improvements-1" id="toc-ux-improvements-1" class="nav-link" data-scroll-target="#ux-improvements-1">UX improvements</a></li>
-  <li><a href="#deployment-fixes" id="toc-deployment-fixes" class="nav-link" data-scroll-target="#deployment-fixes">Deployment fixes</a></li>
-  <li><a href="#documentation-2" id="toc-documentation-2" class="nav-link" data-scroll-target="#documentation-2">Documentation</a></li>
-  </ul></li>
-  <li><a href="#bayprior-0.2.0" id="toc-bayprior-0.2.0" class="nav-link" data-scroll-target="#bayprior-0.2.0">bayprior 0.2.0</a>
-  <ul class="collapse">
-  <li><a href="#new-features-1" id="toc-new-features-1" class="nav-link" data-scroll-target="#new-features-1">New features</a></li>
-  <li><a href="#bug-fixes-1" id="toc-bug-fixes-1" class="nav-link" data-scroll-target="#bug-fixes-1">Bug fixes</a></li>
-  <li><a href="#documentation-3" id="toc-documentation-3" class="nav-link" data-scroll-target="#documentation-3">Documentation</a></li>
-  </ul></li>
-  <li><a href="#bayprior-0.1.2" id="toc-bayprior-0.1.2" class="nav-link" data-scroll-target="#bayprior-0.1.2">bayprior 0.1.2</a>
-  <ul class="collapse">
-  <li><a href="#bug-fixes-2" id="toc-bug-fixes-2" class="nav-link" data-scroll-target="#bug-fixes-2">Bug fixes</a></li>
-  <li><a href="#new-features-2" id="toc-new-features-2" class="nav-link" data-scroll-target="#new-features-2">New features</a></li>
+  <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
   </ul></li>
   <li><a href="#bayprior-0.1.1" id="toc-bayprior-0.1.1" class="nav-link" data-scroll-target="#bayprior-0.1.1">bayprior 0.1.1</a>
   <ul class="collapse">
@@ -202,7 +173,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#sensitivity-analysis" id="toc-sensitivity-analysis" class="nav-link" data-scroll-target="#sensitivity-analysis">Sensitivity Analysis</a></li>
   <li><a href="#robust-priors" id="toc-robust-priors" class="nav-link" data-scroll-target="#robust-priors">Robust Priors</a></li>
   <li><a href="#reporting" id="toc-reporting" class="nav-link" data-scroll-target="#reporting">Reporting</a></li>
-  <li><a href="#documentation-4" id="toc-documentation-4" class="nav-link" data-scroll-target="#documentation-4">Documentation</a></li>
+  <li><a href="#documentation" id="toc-documentation" class="nav-link" data-scroll-target="#documentation">Documentation</a></li>
   <li><a href="#app" id="toc-app" class="nav-link" data-scroll-target="#app">App</a></li>
   </ul></li>
   </ul></li>
@@ -215,146 +186,10 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<section id="bayprior-0.2.4" class="level1">
-<h1>bayprior 0.2.4</h1>
-<section id="documentation-ux" class="level2">
-<h2 class="anchored" data-anchor-id="documentation-ux">Documentation &amp; UX</h2>
-<ul>
-<li><p><strong><code>robust_prior()</code> — added <code>@details</code> section</strong> explaining that the vague component is always Normal, making cross-family mixtures (e.g.&nbsp;Beta + Normal) structurally inevitable for non-Normal informative priors. Clarifies that mixture mean and SD are always computed in closed form; only the density (used for plotting) is approximated numerically. Updated <code>@examples</code> to include a Beta informative prior case with <code>suppressWarnings()</code>.</p></li>
-<li><p><strong><code>elicit_mixture()</code> — added <code>@details</code> section</strong> documenting the same numerical density approximation behaviour at the lower level where mixtures are first constructed. Notes that <code>suppressWarnings()</code> should only be used after verifying the mixture is appropriate, not as a blanket silence.</p></li>
-<li><p><strong>Robust Mixture density plot — warning redirected from console to UI.</strong> The “Components have different distribution families. Mixture densities computed numerically.” warning is now intercepted and surfaced as an amber <code>showNotification()</code> in the Shiny app rather than printed to the R console. The warning is informative — it signals numerical approximation rather than closed-form density computation — and should be visible to the analyst. Previously it was suppressed entirely, which was not ideal.</p></li>
-</ul>
-<hr>
-</section>
-</section>
-<section id="bayprior-0.2.3" class="level1">
-<h1>bayprior 0.2.3</h1>
-<section id="new-features" class="level2">
-<h2 class="anchored" data-anchor-id="new-features">New features</h2>
-<ul>
-<li><p><strong>Poisson data type in Power Prior Calibration</strong> — the power prior module now supports Poisson/count endpoints alongside Binary and Continuous. Uses the Gamma-Poisson conjugate update (same closed-form formula as Gamma-continuous).</p></li>
-<li><p><strong>Prior-data compatibility warning in Power Prior</strong> — an amber alert now appears when the active prior family is incompatible with the selected data type (e.g.&nbsp;Normal prior with binary data, Beta prior with Poisson data), guiding users to re-elicit with an appropriate family before calibrating.</p></li>
-<li><p><strong>Mahalanobis module limitations documented</strong> — the Multivariate Conflict Setup panel now shows an inline note clarifying that the test assumes multivariate Normal summary statistics, that proportion/HR endpoints should be entered on the log-odds/log scale, and that k &gt; 2 endpoints are a planned extension.</p></li>
-</ul>
-</section>
-<section id="architecture" class="level2">
-<h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
-<ul>
-<li><p><strong><code>base_prior</code> reactive</strong> — introduced <code>shared$base_prior</code> (written only by elicitation and pooling) alongside <code>active_prior()</code> (written by all modules). Sensitivity analysis, Robust Mixture, and Power Prior reset observers now watch <code>base_prior()</code> instead of <code>active_prior()</code>, eliminating the self-invalidation loop that wiped results immediately after they were produced.</p></li>
-<li><p><strong>Robust mixture compounding SD bug fixed</strong> — the robust prior fit handler now always uses <code>base_prior()</code> as the informative component. Previously, repeated clicks used the previous robust mixture as the input, causing the vague SD to compound exponentially across clicks.</p></li>
-</ul>
-</section>
-<section id="tests" class="level2">
-<h2 class="anchored" data-anchor-id="tests">Tests</h2>
-<ul>
-<li><p>Added <code>tests/testthat/test-robust.R</code> — 33 tests covering <code>robust_prior()</code>, <code>sceptical_prior()</code> (all three families and strength levels), <code>calibrate_power_prior()</code> (all methods and data types), <code>elicit_exponential()</code>, <code>elicit_weibull()</code>, <code>plot.bayprior_power_prior()</code>, and <code>print.bayprior_power_prior()</code>.</p></li>
-<li><p>Added <code>tests/testthat/test-validation.R</code> — 10 tests covering all four functions in <code>validation_utils.R</code>.</p></li>
-<li><p>Added <code>skip_on_ci()</code> to all <code>shinytest2</code> Chromote tests to prevent 30-second timeout failures in non-interactive and CI environments.</p></li>
-</ul>
-</section>
-<section id="documentation" class="level2">
-<h2 class="anchored" data-anchor-id="documentation">Documentation</h2>
-<ul>
-<li>Added <code>@details</code> to <code>conflict_mahalanobis()</code> documenting the multivariate Normal assumption, required scale transformations for proportion and HR endpoints, and the bivariate (k = 2) limitation.</li>
-</ul>
-<hr>
-</section>
-</section>
-<section id="bayprior-0.2.2" class="level1">
-<h1>bayprior 0.2.2</h1>
-<section id="ux-improvements" class="level2">
-<h2 class="anchored" data-anchor-id="ux-improvements">UX improvements</h2>
-<ul>
-<li><p><strong>Three-state auto theme</strong> — theme now cycles Auto → Dark → Light on toggle. In Auto mode the app follows the OS <code>prefers-color-scheme</code> setting, which most operating systems tie to time of day. The button label shows the active state and whether it is following the OS or set manually (e.g. <code>Auto (dark)</code>, <code>Dark (manual)</code>). Switching back to Auto removes the stored preference and resumes OS tracking.</p></li>
-<li><p><strong>Disabled downstream buttons</strong> — analysis buttons (Run Diagnostics, Run Sensitivity Analysis, Build robust/sceptical/power prior, Compute consensus prior) are now greyed out with a <code>not-allowed</code> cursor when no prior has been fitted. Hovering shows the tooltip <em>“Fit a prior in Prior Elicitation first”</em>. Buttons re-enable immediately when a prior is fitted. The Mahalanobis Conflict Setup button is intentionally excluded as it does not require an elicited prior.</p></li>
-<li><p><strong>Prior summary card in sidebar</strong> — the active prior badge now shows a mini stats table with Mean, SD, and 95% CrI (where available) below the distribution family and label. Updates reactively on every prior change. Mixture priors show Mean and SD only (no closed-form CrI).</p></li>
-<li><p><strong>Diagnostic tooltips</strong> — each conflict value box (Box p-value, Surprise index, Overlap coefficient) now has an info icon that displays a plain- language explanation on hover, useful for non-statistician stakeholders.</p></li>
-</ul>
-</section>
-<section id="bug-fixes" class="level2">
-<h2 class="anchored" data-anchor-id="bug-fixes">Bug fixes</h2>
-<ul>
-<li>Accepted updated plot snapshots for <code>plot_tornado()</code> and <code>plot_sensitivity()</code> following the axis label formatting change in v0.2.1 (snake_case -&gt; title case).</li>
-</ul>
-</section>
-<section id="documentation-1" class="level2">
-<h2 class="anchored" data-anchor-id="documentation-1">Documentation</h2>
-<ul>
-<li>Sensitivity plot labels updated in <code>plot_tornado()</code> and <code>plot_sensitivity()</code> package functions directly (not just the Shiny layer), so label formatting applies when functions are called from R as well as in the app.</li>
-</ul>
-<hr>
-</section>
-</section>
-<section id="bayprior-0.2.1" class="level1">
-<h1>bayprior 0.2.1</h1>
-<section id="ux-improvements-1" class="level2">
-<h2 class="anchored" data-anchor-id="ux-improvements-1">UX improvements</h2>
-<ul>
-<li>Welcome tab now shows an SVG workflow diagram of all six analytical steps with colour-coded boxes and arrows.</li>
-<li>Sidebar menu items now show a green glowing dot when each step is complete (elicitation, pooling, conflict, sensitivity, robust priors).</li>
-<li>Export Report compliance checklist is now fully reactive — items update live with colour-coded icons (green check, amber minus, red X) and a ready/not- ready summary alert.</li>
-<li>Package version (<code>bayprior vX.X.X</code>) now displayed in the sidebar footer.</li>
-</ul>
-</section>
-<section id="deployment-fixes" class="level2">
-<h2 class="anchored" data-anchor-id="deployment-fixes">Deployment fixes</h2>
-<ul>
-<li>Removed <code>pkgload::load_all()</code> from <code>app.R</code> — it was a development-only line that caused startup failure on shinyapps.io.</li>
-<li>Added <code>renv::snapshot(type = "explicit")</code> to deployment workflow to prevent dev tools (<code>pkgload</code>, <code>pkgbuild</code>, <code>callr</code>, <code>desc</code>) from entering <code>renv.lock</code>.</li>
-</ul>
-</section>
-<section id="documentation-2" class="level2">
-<h2 class="anchored" data-anchor-id="documentation-2">Documentation</h2>
-<ul>
-<li>Information boxes on Welcome tab updated: Distributions 4 → 6, Conflict diagnostics → Data types (Binary · Continuous · Poisson · Survival).</li>
-</ul>
-<hr>
-</section>
-</section>
-<section id="bayprior-0.2.0" class="level1">
-<h1>bayprior 0.2.0</h1>
-<section id="new-features-1" class="level2">
-<h2 class="anchored" data-anchor-id="new-features-1">New features</h2>
-<ul>
-<li><p>Added <code>elicit_exponential()</code> — elicits an Exponential(rate) prior for constant hazard rates and Poisson rate priors. Supports <code>"moments"</code> (mean to rate), <code>"rate"</code> (direct), and <code>"quantile"</code> (1D optimisation) methods. The Exponential distribution is conjugate for Poisson and survival data via Gamma-Poisson/Exponential updating.</p></li>
-<li><p>Added <code>elicit_weibull()</code> — elicits a Weibull(shape, scale) prior for non-constant hazard survival times (OS, PFS). Supports <code>"moments"</code> (2D Nelder-Mead), <code>"params"</code> (direct shape and scale), and <code>"quantile"</code> (2D Nelder-Mead) methods. Posteriors are approximated via Normal matching.</p></li>
-<li><p>Added <code>"poisson"</code> data type to <code>prior_conflict()</code>, <code>sensitivity_grid()</code>, and <code>sensitivity_cri()</code>. Supports count/adverse-event-rate endpoints: <code>list(type = "poisson", x = 12, n = 100)</code> (events / person-time). Conjugate update: <code>Gamma(shape + x, rate + n)</code>.</p></li>
-<li><p>Added <code>"survival"</code> data type to <code>prior_conflict()</code>, <code>sensitivity_grid()</code>, and <code>sensitivity_cri()</code>. Supports OS/PFS hazard rate endpoints: <code>list(type = "survival", x = 20, n = 400)</code> (events / total follow-up time). Conjugate update: <code>Gamma(shape + x, rate + n)</code> (Gamma-Exponential).</p></li>
-<li><p>Added density and x-range support for Exponential and Weibull distributions in <code>plot.bayprior()</code>. Previously these distributions rendered blank density plots; they now display correctly.</p></li>
-<li><p>Added comprehensive validation layer across all modules:</p>
-<ul>
-<li><code>.check_prior_data_compat()</code> — warns when a prior family is atypical for the chosen data type (e.g.&nbsp;Beta prior + Poisson data).</li>
-<li><code>.check_pooling_compat()</code> — blocks pooling of distributions with incompatible supports (e.g.&nbsp;Beta + Normal); warns for same-support cross-family pooling (e.g.&nbsp;Gamma + Exponential).</li>
-<li><code>.check_sensitivity_compat()</code> — warns for single-parameter families (Exponential) and cross-family mixtures; blocks incompatible-support mixture sensitivity.</li>
-<li><code>.validation_alert()</code> — renders Bootstrap alert boxes for inline UI feedback in the Shiny app.</li>
-</ul></li>
-<li><p>Sensitivity analysis is now <strong>fully independent of conflict diagnostics</strong>. The Sensitivity Analysis module has its own data entry UI (data type selector, events/n for binary, mean/SD/n for continuous, events/exposure for Poisson, events/follow-up for survival) that auto-populates the correct type from the active prior family. Previously, running conflict diagnostics was required before sensitivity analysis could proceed.</p></li>
-<li><p>All Shiny modules now <strong>reset outputs automatically on input change</strong>, preventing stale results from being displayed alongside new inputs. Each module uses <code>observeEvent(list(...))</code> watching all its relevant inputs to reset result reactives immediately. The active prior sidebar indicator is preserved during elicitation input changes (only the density plot and parameter table reset; <code>shared$current_prior</code> is retained until a new prior is explicitly fitted).</p></li>
-</ul>
-</section>
-<section id="bug-fixes-1" class="level2">
-<h2 class="anchored" data-anchor-id="bug-fixes-1">Bug fixes</h2>
-<ul>
-<li><p>Fixed <code>prior_report()</code> producing blank figures in Word (.docx) reports. knitr was writing absolute figure paths to the markdown; pandoc could not resolve them. Fixed by using <code>fig.path = "figures/"</code> (relative) with <code>base.dir = tmp_dir</code> for docx/pdf, and <code>knitr::image_uri</code> for HTML.</p></li>
-<li><p>Fixed <code>prior_report()</code> failing for PDF with “tikzfill.image.sty not found”. Added <code>tinytex::tlmgr_install()</code> recommendation in documentation. The <code>default-image-extension: pdf</code> Quarto default is now overridden to <code>png</code> via YAML injection in the pre-executed markdown.</p></li>
-<li><p>Fixed mixture prior hyperparameters section in <code>prior_report.qmd</code> rendering as literal markdown (<code>## Hyperparameters not available</code>) rather than as formatted text. Added <code>#| results: asis</code> to the <code>fitted-params</code> chunk and updated to show a component summary table for mixture priors.</p></li>
-<li><p>Fixed <code>mod_conflict_mahal.R</code> containing a stale duplicate definition of <code>mod_conflict_ui</code> that was overriding the correct 4-choice version in <code>mod_conflict.R</code> (files sourced alphabetically, mahal comes after conflict). Removed the duplicate; <code>mod_conflict_mahal.R</code> now only contains <code>mod_mahal_ui</code> and <code>mod_mahal_server</code>.</p></li>
-</ul>
-</section>
-<section id="documentation-3" class="level2">
-<h2 class="anchored" data-anchor-id="documentation-3">Documentation</h2>
-<ul>
-<li>Updated <code>bayprior-package.R</code> to document all six distribution families, all four data types for conflict diagnostics and sensitivity, and the new validation functions.</li>
-<li>Updated all six vignettes to cover Exponential and Weibull elicitation, Poisson and survival conflict diagnostics, independent sensitivity data entry, and the output reset behaviour.</li>
-<li>Updated README with new badges, six-family distribution table, four-data-type conflict table, and updated Quick Start examples.</li>
-</ul>
-<hr>
-</section>
-</section>
 <section id="bayprior-0.1.2" class="level1">
 <h1>bayprior 0.1.2</h1>
-<section id="bug-fixes-2" class="level2">
-<h2 class="anchored" data-anchor-id="bug-fixes-2">Bug fixes</h2>
+<section id="bug-fixes" class="level2">
+<h2 class="anchored" data-anchor-id="bug-fixes">Bug fixes</h2>
 <ul>
 <li><p>Fixed <code>prior_report()</code> failing on remote platforms (shinyapps.io, Posit Connect) due to Quarto spawning a subprocess that could not find the <code>bayprior</code> package. The report now uses a two-step approach: <code>knitr::knit()</code> executes all R code in the current session, then <code>quarto::quarto_render(execute = FALSE)</code> handles formatting via pandoc only. No R subprocess is spawned in the second step (#1).</p></li>
 <li><p>Fixed <code>mod_sensitivity</code>: sensitivity analysis no longer requires conflict diagnostics to have been run first. The module now has its own data entry UI (data type, events/n for binary; mean/SD/n for continuous) that auto-selects the correct type based on the prior family (Beta → binary, others → continuous). Previously the fallback always used <code>type = "continuous"</code>, causing conjugate updating to fail for Beta priors and returning NA for all grid evaluations.</p></li>
@@ -363,8 +198,8 @@ ul.task-list li input[type="checkbox"] {
 <li><p>Fixed <code>prior_report()</code> missing <code>@param</code> documentation for <code>prior_plot</code>, <code>overlay_plot</code>, <code>tornado_plot</code>, and <code>heatmap_plot</code>, causing an R CMD check WARNING about undocumented arguments.</p></li>
 </ul>
 </section>
-<section id="new-features-2" class="level2">
-<h2 class="anchored" data-anchor-id="new-features-2">New features</h2>
+<section id="new-features" class="level2">
+<h2 class="anchored" data-anchor-id="new-features">New features</h2>
 <ul>
 <li><p>Added <code>robust_prior</code>, <code>sceptical_prior</code>, <code>power_prior</code>, <code>robust_plot</code>, <code>sceptical_plot</code>, and <code>power_plot</code> arguments to <code>prior_report()</code>. When supplied, robust and sensitivity priors appear as a dedicated section in the report with parameter tables and density plots. The compliance checklist row “Robust / sceptical prior computed” is automatically marked Complete.</p></li>
 <li><p>Added bayprior hex logo to the Shiny app header and browser favicon. Logo is served from <code>inst/app/www/favicon.png</code>.</p></li>
@@ -420,8 +255,8 @@ ul.task-list li input[type="checkbox"] {
 <li>FDA/EMA regulatory compliance checklist</li>
 </ul>
 </section>
-<section id="documentation-4" class="level3">
-<h3 class="anchored" data-anchor-id="documentation-4">Documentation</h3>
+<section id="documentation" class="level3">
+<h3 class="anchored" data-anchor-id="documentation">Documentation</h3>
 <ul>
 <li><p>Added Quarto GitHub Pages documentation site at <code>https://ndohpenngit.github.io/bayprior/</code> with six rendered vignettes, a Changelog page, and a Cheat Sheet. Site auto-rebuilds on every push to <code>main</code> via GitHub Actions.</p></li>
 <li><p>Updated all six vignettes to document new <code>prior_report()</code> arguments, the sensitivity analysis CrI toggle, and the robust priors report integration.</p></li>
