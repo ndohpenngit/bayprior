@@ -1,3 +1,5 @@
+# bayprior 0.2.3
+
 # bayprior 0.2.2
 
 ## UX improvements
