@@ -1,3 +1,23 @@
+# bayprior 0.2.5
+
+## CRAN resubmission fixes
+
+* Removed all Unicode characters from R source files that caused LaTeX PDF
+  generation errors on CRAN's Windows and Debian build servers. Affected
+  characters: U+2014 em dash (replaced with --), U+2212 Unicode minus
+  (replaced with -), U+221E infinity (replaced with Inf), U+2019/U+2018
+  curly quotes (replaced with '), and others. All replacements made in
+  comments and roxygen documentation only -- no functional code changed.
+
+* Added `inst/WORDLIST` declaring package-specific acronyms (EMA, FDA, CrI,
+  MAP, Mahalanobis, Bhattacharyya, SHELF, PFS, PK) that were flagged as
+  possibly misspelled in the DESCRIPTION file.
+
+* Rebuilt prebuilt vignette index via `devtools::build_vignettes()` to
+  resolve the "no prebuilt vignette index" NOTE.
+
+---
+  
 # bayprior 0.2.4
 
 ## Documentation & UX

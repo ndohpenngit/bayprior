@@ -51,7 +51,7 @@ mod_roulette_ui <- function(id) {
         title = tagList(icon("sliders"), " Chip controls"),
         uiOutput(ns("chip_ui"))
       ),
-      # Fitted parameters box — only rendered after Fit Prior is clicked
+      # Fitted parameters box -- only rendered after Fit Prior is clicked
       uiOutput(ns("params_conditional"))
     )
   )

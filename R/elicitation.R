@@ -1,4 +1,4 @@
-# ── Prior Elicitation Functions ───────────────────────────────────────────────
+# -- Prior Elicitation Functions -----------------------------------------------
 # All elicit_*() functions share the same bayprior S3 constructor
 # (.make_bayprior in R/zzz_patches.R) so fit_summary is always consistent.
 
@@ -631,7 +631,7 @@ elicit_mixture <- function(components, weights = NULL, label = "Mixture prior") 
 }
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+# -- Internal helpers ----------------------------------------------------------
 # Note: .make_bayprior() is the authoritative constructor defined in
 # R/zzz_patches.R. It handles lognormal via .prior_summary_lognormal().
 # elicit_exponential() and elicit_weibull() build fit_summary directly

@@ -211,7 +211,7 @@ mod_report_server <- function(id, shared, active_prior) {
   })
 }
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers -------------------------------------------------------------------
 .status_item <- function(ok, text) {
   ico <- if (ok) tags$span(style = "color:#1D9E75;", icon("check-circle"))
          else    tags$span(style = "color:#aaa;",    icon("dash-circle"))

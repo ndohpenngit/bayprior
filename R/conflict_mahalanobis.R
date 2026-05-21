@@ -258,6 +258,6 @@ sensitivity_cri <- function(prior,
       cri_level        = cri_level,
       prior            = prior
     ),
-    class = "bayprior_sensitivity"   # reuse existing class → reuse plot methods
+    class = "bayprior_sensitivity"   # reuse existing class -> reuse plot methods
   )
 }

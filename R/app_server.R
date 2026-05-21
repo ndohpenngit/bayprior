@@ -1,13 +1,13 @@
 #' Application server (golem convention)
 #'
 #' Wires all module servers via a single shared \code{reactiveValues} object.
-#' Modules read and write \code{shared} — no global state.
+#' Modules read and write \code{shared} -- no global state.
 #'
 #' @param input,output,session Internal shiny parameters.
 #' @noRd
 app_server <- function(input, output, session) {
 
-  # ── Shared state ──────────────────────────────────────────────────────────
+  # -- Shared state ----------------------------------------------------------
   shared <- reactiveValues(
     current_prior   = NULL,  # most recently fitted bayprior (any module)
     base_prior      = NULL,  # elicited or pooled prior only (for sensitivity)
@@ -34,7 +34,7 @@ app_server <- function(input, output, session) {
     shared$consensus %||% shared$base_prior
   })
 
-  # ── Step completion indicators ────────────────────────────────────────────
+  # -- Step completion indicators --------------------------------------------
   # Small coloured dot next to each sidebar menu item.
   # Green check = step complete; invisible = not yet done.
   .step_badge <- function(done) {
@@ -64,12 +64,12 @@ app_server <- function(input, output, session) {
                 !is.null(shared$power_prior))
   )
 
-  # ── Button enable / disable based on active prior ─────────────────────────
+  # -- Button enable / disable based on active prior -------------------------
   # Downstream analysis buttons are disabled when no prior is fitted,
   # preventing silent failures and guiding users through the workflow.
   observe({
     has <- !is.null(active_prior())
-    # Note: mahal-run_btn is NOT disabled — Mahalanobis takes raw prior
+    # Note: mahal-run_btn is NOT disabled -- Mahalanobis takes raw prior
     # parameters as direct inputs and does not require an elicited prior.
     btns <- c("conflict-run_btn", "sensitivity-run_btn",
               "robust-fit_btn",   "sceptical-fit_btn", "power-run_btn",
@@ -114,7 +114,7 @@ app_server <- function(input, output, session) {
     }
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
-  # ── Sidebar prior badge ───────────────────────────────────────────────────
+  # -- Sidebar prior badge ---------------------------------------------------
   # Rendered into uiOutput("sidebar_prior_badge") in app_ui.R sidebar footer.
   output$sidebar_prior_badge <- renderUI({
     p <- active_prior()
@@ -183,7 +183,7 @@ app_server <- function(input, output, session) {
     }
   })
 
-  # ── Module servers ────────────────────────────────────────────────────────
+  # -- Module servers --------------------------------------------------------
   mod_welcome_server("welcome")
   mod_elicitation_server("elicitation", shared = shared)
   mod_roulette_server("roulette",       shared = shared)

@@ -2,7 +2,7 @@
 # Suppress R CMD CHECK notes for Shiny functions and ggplot2 aes() variables
 # that are used but not explicitly imported at the top level of each file.
 
-# ── Shiny globals ─────────────────────────────────────────────────────────────
+# -- Shiny globals -------------------------------------------------------------
 #' @importFrom shiny NS tagList tags icon fluidRow column uiOutput HTML
 #' @importFrom shiny textInput textAreaInput dateInput numericInput
 #' @importFrom shiny selectInput sliderInput checkboxGroupInput
@@ -14,13 +14,13 @@
 #' @importFrom shiny updateNumericInput updateSliderInput
 NULL
 
-# ── Stats / base globals ──────────────────────────────────────────────────────
+# -- Stats / base globals ------------------------------------------------------
 #' @importFrom stats median setNames density dexp dweibull qexp qweibull
 #' @importFrom stats qgamma pgamma dgamma optimise optim nlminb
 #' @importFrom graphics curve
 NULL
 
-# ── ggplot2 / tidy-eval aes() column names ───────────────────────────────────
+# -- ggplot2 / tidy-eval aes() column names -----------------------------------
 # These are bare column names used inside aes() that R CMD CHECK cannot
 # resolve statically. Declaring them here silences the NOTEs.
 utils::globalVariables(c(

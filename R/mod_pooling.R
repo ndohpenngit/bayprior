@@ -93,7 +93,7 @@ mod_pooling_server <- function(id, shared, active_prior) {
                           "SD = {round(con$fit_summary$sd, 3)}"))
     })
 
-    # ── Placeholder before pooling, results after ────────────────────────────
+    # -- Placeholder before pooling, results after ----------------------------
     output$results_or_placeholder <- renderUI({
       if (is.null(shared$consensus)) {
         return(tags$div(

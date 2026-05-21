@@ -14,34 +14,34 @@
 #'
 #' @section Main workflow:
 #' \enumerate{
-#'   \item **Elicitation** — \code{\link{elicit_beta}},
+#'   \item **Elicitation** -- \code{\link{elicit_beta}},
 #'     \code{\link{elicit_normal}}, \code{\link{elicit_gamma}},
 #'     \code{\link{elicit_lognormal}}, \code{\link{elicit_exponential}},
 #'     \code{\link{elicit_weibull}}, \code{\link{elicit_roulette}},
 #'     \code{\link{elicit_mixture}}
-#'   \item **Expert pooling** — \code{\link{aggregate_experts}}
-#'   \item **Conflict diagnostics** — \code{\link{prior_conflict}},
+#'   \item **Expert pooling** -- \code{\link{aggregate_experts}}
+#'   \item **Conflict diagnostics** -- \code{\link{prior_conflict}},
 #'     \code{\link{conflict_mahalanobis}}
-#'   \item **Sensitivity analysis** — \code{\link{sensitivity_grid}},
+#'   \item **Sensitivity analysis** -- \code{\link{sensitivity_grid}},
 #'     \code{\link{sensitivity_cri}}
-#'   \item **Robust priors** — \code{\link{sceptical_prior}},
+#'   \item **Robust priors** -- \code{\link{sceptical_prior}},
 #'     \code{\link{robust_prior}}, \code{\link{calibrate_power_prior}}
-#'   \item **Reporting** — \code{\link{prior_report}}
-#'   \item **Shiny app** — \code{\link{run_app}}
+#'   \item **Reporting** -- \code{\link{prior_report}}
+#'   \item **Shiny app** -- \code{\link{run_app}}
 #' }
 #'
 #' @section Distribution families:
 #' \describe{
-#'   \item{\code{beta}}{Response rates and proportions — support (0, 1)}
-#'   \item{\code{normal}}{Mean differences and log odds ratios — support
-#'     (−∞, ∞)}
-#'   \item{\code{gamma}}{Event rates and median survival — support (0, ∞)}
-#'   \item{\code{lognormal}}{Hazard ratios and PK parameters — support (0, ∞)}
+#'   \item{\code{beta}}{Response rates and proportions -- support (0, 1)}
+#'   \item{\code{normal}}{Mean differences and log odds ratios -- support
+#'     (-Inf, Inf)}
+#'   \item{\code{gamma}}{Event rates and median survival -- support (0, Inf)}
+#'   \item{\code{lognormal}}{Hazard ratios and PK parameters -- support (0, Inf)}
 #'   \item{\code{exponential}}{Constant hazard rates and Poisson rate priors
-#'     — support (0, ∞). Conjugate with Poisson and survival data via
+#'     -- support (0, Inf). Conjugate with Poisson and survival data via
 #'     Gamma-Poisson/Exponential updating.}
 #'   \item{\code{weibull}}{Non-constant hazard survival times (OS, PFS)
-#'     — support (0, ∞). Posterior approximated via Normal matching.}
+#'     -- support (0, Inf). Posterior approximated via Normal matching.}
 #' }
 #'
 #' @section Data types for conflict diagnostics and sensitivity:

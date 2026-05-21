@@ -52,7 +52,7 @@ elicit_roulette <- function(chips,
   if (any(chips < 0)) rlang::abort("All chip counts must be non-negative.")
   if (sum(chips) == 0) rlang::abort("At least one chip must be placed.")
 
-  # Convert chips → empirical CDF at bin midpoints
+  # Convert chips -> empirical CDF at bin midpoints
   total    <- sum(chips)
   freqs    <- chips / total
   mids     <- (breaks[-length(breaks)] + breaks[-1]) / 2

@@ -5,12 +5,12 @@
 # aggregation.R, and all Shiny modules.
 # Do NOT export any function from this file.
 
-# ── %||% null-coalescing operator ─────────────────────────────────────────────
+# -- %||% null-coalescing operator ---------------------------------------------
 #' @importFrom rlang `%||%`
 `%||%` <- rlang::`%||%`
 
 
-# ── .prior_summary_lognormal ──────────────────────────────────────────────────
+# -- .prior_summary_lognormal --------------------------------------------------
 .prior_summary_lognormal <- function(params) {
   ml <- params$meanlog
   sl <- params$sdlog
@@ -26,7 +26,7 @@
 }
 
 
-# ── .make_bayprior ────────────────────────────────────────────────────────────
+# -- .make_bayprior ------------------------------------------------------------
 # Central constructor for all bayprior objects.
 .make_bayprior <- function(dist, params, method, expert_id, label, input) {
   fit_summary <- if (dist == "lognormal") {
@@ -49,7 +49,7 @@
 }
 
 
-# ── .eval_density_vec ─────────────────────────────────────────────────────────
+# -- .eval_density_vec ---------------------------------------------------------
 # Evaluates the density of a bayprior object at a vector of points x.
 .eval_density_vec <- function(prior, x) {
   switch(prior$dist,
@@ -72,10 +72,10 @@
 }
 
 
-# ── .apply_plotly_theme ───────────────────────────────────────────────────────
+# -- .apply_plotly_theme -------------------------------------------------------
 # Sets a WHITE background explicitly.
 # In dark mode, CSS filter: invert(1) hue-rotate(180deg) on .js-plotly-plot
-# turns white → black and preserves data colours via hue-rotate.
+# turns white -> black and preserves data colours via hue-rotate.
 # In light mode, white background looks correct as-is (no filter applied).
 .apply_plotly_theme <- function(p, layout_args = NULL) {
   # plotly::layout() appends to layoutAttrs which gets merged at render time.
@@ -158,7 +158,7 @@
   list(x = x, y = .eval_density_vec(prior, x))
 }
 
-# ── Sensitivity target label formatting ──────────────────────────────────────
+# -- Sensitivity target label formatting --------------------------------------
 # Converts snake_case target names to professional title-case labels.
 # Used in plot_tornado() and plot_sensitivity() to avoid underscore labels.
 

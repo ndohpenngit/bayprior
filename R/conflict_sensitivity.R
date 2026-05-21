@@ -63,7 +63,7 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05) {
   prior_mean <- prior$fit_summary$mean
   prior_sd   <- prior$fit_summary$sd
 
-  # Likelihood parameters — approximate as Normal for analytic diagnostics
+  # Likelihood parameters -- approximate as Normal for analytic diagnostics
   if (type == "binary") {
     obs_mean <- x / n
     obs_se   <- sqrt(obs_mean * (1 - obs_mean) / n)
@@ -77,7 +77,7 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05) {
     obs_se   <- data_summary$sd / sqrt(n)
   }
 
-  # FIX #7: Guard against obs_se = 0 (e.g. all successes / all failures),
+  # Guard against obs_se = 0 (e.g. all successes / all failures),
   # which would cause division-by-zero in pred_sd, z, kl, and overlap.
   obs_se <- max(obs_se, 1e-8)
 
@@ -186,7 +186,7 @@ sensitivity_grid <- function(prior,
   n    <- data_summary$n
   x    <- data_summary$x
 
-  # ── For mixture priors, use the dominant component as working prior ─────────
+  # -- For mixture priors, use the dominant component as working prior ---------
   # Mixture params (weights) are not hyperparameters to grid over.
   working_prior <- if (prior$dist == "mixture") {
     dominant <- which.max(prior$weights)
@@ -195,24 +195,24 @@ sensitivity_grid <- function(prior,
     prior
   }
 
-  # ── Auto-remap param_grid names to prior hyperparameter names ────────────────
+  # -- Auto-remap param_grid names to prior hyperparameter names ----------------
   #
-  # The Shiny UI generates generic names ("param1", "param2", …) that will
+  # The Shiny UI generates generic names ("param1", "param2", ?) that will
   # never literally match prior hyperparameter names ("alpha"/"beta", etc.).
   # We resolve this with a three-step strategy:
   #
-  #   1. Exact match  — use as-is (names already correct).
-  #   2. Positional remap — if no names match but the *count* equals the number
+  #   1. Exact match  -- use as-is (names already correct).
+  #   2. Positional remap -- if no names match but the *count* equals the number
   #      of prior hyperparameters, rename param_grid entries to the prior's
   #      param names in order and warn the caller.
-  #   3. Abort — counts also differ; the mapping is genuinely ambiguous.
+  #   3. Abort -- counts also differ; the mapping is genuinely ambiguous.
   #
   prior_param_names <- names(working_prior$params)
   grid_param_names  <- names(param_grid)
   valid_names       <- intersect(grid_param_names, prior_param_names)
 
   if (length(valid_names) == 0) {
-    # No exact matches — attempt positional remap
+    # No exact matches -- attempt positional remap
     if (length(grid_param_names) == length(prior_param_names)) {
       # Downgraded to a message (not a warning) because this is expected
       # behaviour when the Shiny UI passes generic names like param1/param2.
@@ -587,7 +587,7 @@ sensitivity_cri <- function(prior,
   n    <- data_summary$n
   x    <- data_summary$x
 
-  # ── Beta / binary ──────────────────────────────────────────────────────────
+  # -- Beta / binary ----------------------------------------------------------
   if (prior$dist == "beta" && type == "binary") {
     a_post <- prior$params$alpha + x
     b_post <- prior$params$beta  + (n - x)
@@ -595,7 +595,7 @@ sensitivity_cri <- function(prior,
                           "posterior", prior$expert_id, prior$label, list()))
   }
 
-  # ── Normal ─────────────────────────────────────────────────────────────────
+  # -- Normal -----------------------------------------------------------------
   if (prior$dist == "normal") {
     obs_mean  <- x
     obs_se    <- (data_summary$sd %||% prior$fit_summary$sd) / sqrt(n)
@@ -607,7 +607,7 @@ sensitivity_cri <- function(prior,
                           "posterior", prior$expert_id, prior$label, list()))
   }
 
-  # ── Exponential / Poisson or survival ───────────────────────────────────────
+  # -- Exponential / Poisson or survival ---------------------------------------
   # Exponential prior on rate is equivalent to Gamma(1, rate) parameterisation.
   # Conjugate update with Poisson/survival data: posterior is still Gamma.
   # Map to Gamma update: shape = 1 + x, rate = rate + n.
@@ -620,7 +620,7 @@ sensitivity_cri <- function(prior,
                           "posterior", prior$expert_id, prior$label, list()))
   }
 
-  # ── Weibull — Normal approximation ──────────────────────────────────────────
+  # -- Weibull -- Normal approximation ------------------------------------------
   # No closed-form conjugate update for Weibull. Approximate via a Normal
   # distribution matched to the posterior mean and SD using the prior's
   # fit_summary as the prior parameters.
@@ -647,7 +647,7 @@ sensitivity_cri <- function(prior,
                           "posterior", prior$expert_id, prior$label, list()))
   }
 
-  # ── Gamma / Poisson or survival ─────────────────────────────────────────────
+  # -- Gamma / Poisson or survival ---------------------------------------------
   # Gamma(shape, rate) prior on rate lambda; Poisson(lambda * n) likelihood.
   # Posterior: Gamma(shape + x, rate + n).
   # For survival data: Gamma prior on hazard; Exponential(lambda) lifetimes.
@@ -659,7 +659,7 @@ sensitivity_cri <- function(prior,
                           "posterior", prior$expert_id, prior$label, list()))
   }
 
-  # ── Gamma ──────────────────────────────────────────────────────────────────
+  # -- Gamma ------------------------------------------------------------------
   # FIX #4: The original code used `n * x` where x is the *mean*, which is
   # numerically correct only when x happens to be the total count. For
   # continuous data, x is explicitly documented as the observed mean, so we
@@ -673,7 +673,7 @@ sensitivity_cri <- function(prior,
                           "posterior", prior$expert_id, prior$label, list()))
   }
 
-  # ── Mixture — update each component and re-weight by marginal likelihood ───
+  # -- Mixture -- update each component and re-weight by marginal likelihood ---
   if (prior$dist == "mixture") {
     components <- prior$components
     weights    <- prior$weights
@@ -744,7 +744,7 @@ sensitivity_cri <- function(prior,
 }
 
 
-# ── Density helpers (shared with zzz_patches.R — defined here as fallback) ───
+# -- Density helpers (shared with zzz_patches.R -- defined here as fallback) ---
 
 .density_grid <- function(prior, n_grid = 500) {
 
@@ -764,8 +764,8 @@ sensitivity_cri <- function(prior,
 
     # FIX #C: Filter to finite values before calling min/max.  When all
     # components have NULL or NA summaries, sapply() returns a vector of NAs
-    # and min/max emit "no non-missing arguments … returning Inf/-Inf", which
-    # then propagates to seq() → .eval_density_vec → the Plotly colorscale.
+    # and min/max emit "no non-missing arguments ? returning Inf/-Inf", which
+    # then propagates to seq() -> .eval_density_vec -> the Plotly colorscale.
     lo_vals <- lo_vals[is.finite(lo_vals)]
     hi_vals <- hi_vals[is.finite(hi_vals)]
 

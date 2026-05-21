@@ -92,7 +92,7 @@ plot_sensitivity <- function(sensitivity,
   params  <- names(sensitivity$param_grid)
   ref_row <- sensitivity$reference_row
 
-  # Professional axis label — replace snake_case with readable title
+  # Professional axis label -- replace snake_case with readable title
   target_label <- .target_label(target)
 
   if (length(params) == 1) {
@@ -152,7 +152,7 @@ plot_tornado <- function(sensitivity,
   df <- purrr::imap_dfr(scores, function(range_val, nm) {
     vals <- grid[[nm]]
     data.frame(
-      target    = .target_label(nm),   # ← professional label
+      target    = .target_label(nm),   # ? professional label
       ref_value = grid[[nm]][sensitivity$reference_row],
       lower     = min(vals, na.rm = TRUE),
       upper     = max(vals, na.rm = TRUE),
