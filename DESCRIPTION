@@ -1,5 +1,5 @@
 Package: bayprior
-Title: Bayesian Prior Elicitation, Conflict Diagnostics and Sensitivity Analysis for Clinical Trials
+Title: Bayesian Prior Elicitation and Diagnostics for Clinical Trials
 Version: 0.2.5
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
@@ -26,27 +26,26 @@ Imports:
     ggplot2 (>= 3.4.0),
     glue (>= 1.6.2),
     golem (>= 0.4.1),
-    purrr (>= 1.0.0),
-    quarto (>= 1.5.0),
-    rlang (>= 1.2.0),
-    shiny (>= 1.7.4)
-Suggests:
-    covr,
-    htmltools (>= 0.5.4),
-    htmlwidgets,
-    knitr (>= 1.40),
-    patchwork,
     plotly (>= 4.10.1),
-    rmarkdown (>= 2.20),
+    purrr (>= 1.0.0),
+    rlang (>= 1.2.0),
+    shiny (>= 1.7.4),
     shinycssloaders (>= 1.0.0),
     shinydashboard (>= 0.7.2),
     shinyjs (>= 2.1.0),
-    shinytest2,
     shinyWidgets (>= 0.7.6),
-    spelling,
+    stats
+Suggests:
+    htmlwidgets (>= 1.5.4),
+    knitr (>= 1.40),
+    patchwork (>= 1.1.0),
+    quarto (>= 1.4),
+    rmarkdown (>= 2.20),
+    shinytest2 (>= 0.3.1),
+    spelling (>= 2.2.0),
     testthat (>= 3.0.0),
-    vdiffr,
-    withr
+    vdiffr (>= 1.0.0),
+    withr (>= 2.5.0)
 VignetteBuilder:
     knitr
 Config/Needs/vignettes: knitr, rmarkdown

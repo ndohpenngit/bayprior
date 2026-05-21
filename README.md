@@ -317,6 +317,12 @@ Full documentation at **[ndohpenngit.github.io/bayprior](https://ndohpenngit.git
 
 ---
 
+## Code of Conduct
+
+Please note that the bayprior project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
+
+---
+
 ## References
 
 - O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts' Probabilities*. Wiley.
