@@ -15,6 +15,7 @@
 
 * macOS 26.3 aarch64, R 4.4.2 (local)
 * Tested with devtools::check(cran = TRUE)
+* devtools::check_win_devel() (Windows R-devel)
 
 ## Downstream dependencies
 
