@@ -469,13 +469,6 @@
     "text": "Vignettes\n\n\n\n\n\n\n\nVignette\nCovers\n\n\n\n\nbayprior-introduction\nFull end-to-end workflow overview\n\n\nprior-elicitation\nAll six families and three elicitation methods\n\n\nconflict-diagnostics\nAll four data types; univariate and multivariate\n\n\nsensitivity-analysis\nGrid sensitivity, tornado plots, CrI tracking\n\n\nrobust-priors\nRobust mixture, sceptical, and power priors\n\n\nregulatory-reporting\nReport generation, FDA/EMA compliance checklist\n\n\n\nbrowseVignettes(\"bayprior\")"
   },
   {
-    "objectID": "index.html#documentation",
-    "href": "index.html#documentation",
-    "title": "bayprior",
-    "section": "Documentation",
-    "text": "Documentation\nFull documentation at ndohpenngit.github.io/bayprior — rendered vignettes, function reference, changelog, and cheat sheet."
-  },
-  {
     "objectID": "index.html#references",
     "href": "index.html#references",
     "title": "bayprior",
