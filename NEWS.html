@@ -162,7 +162,11 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#bayprior-0.2.4" id="toc-bayprior-0.2.4" class="nav-link active" data-scroll-target="#bayprior-0.2.4">bayprior 0.2.4</a>
+  <li><a href="#bayprior-0.2.5" id="toc-bayprior-0.2.5" class="nav-link active" data-scroll-target="#bayprior-0.2.5">bayprior 0.2.5</a>
+  <ul class="collapse">
+  <li><a href="#cran-resubmission-fixes" id="toc-cran-resubmission-fixes" class="nav-link" data-scroll-target="#cran-resubmission-fixes">CRAN resubmission fixes</a></li>
+  </ul></li>
+  <li><a href="#bayprior-0.2.4" id="toc-bayprior-0.2.4" class="nav-link" data-scroll-target="#bayprior-0.2.4">bayprior 0.2.4</a>
   <ul class="collapse">
   <li><a href="#documentation-ux" id="toc-documentation-ux" class="nav-link" data-scroll-target="#documentation-ux">Documentation &amp; UX</a></li>
   </ul></li>
@@ -219,6 +223,18 @@ ul.task-list li input[type="checkbox"] {
 
 
 
+<section id="bayprior-0.2.5" class="level1">
+<h1>bayprior 0.2.5</h1>
+<section id="cran-resubmission-fixes" class="level2">
+<h2 class="anchored" data-anchor-id="cran-resubmission-fixes">CRAN resubmission fixes</h2>
+<ul>
+<li><p>Removed all Unicode characters from R source files that caused LaTeX PDF generation errors on CRAN’s Windows and Debian build servers. Affected characters: U+2014 em dash (replaced with –), U+2212 Unicode minus (replaced with -), U+221E infinity (replaced with Inf), U+2019/U+2018 curly quotes (replaced with ’), and others. All replacements made in comments and roxygen documentation only – no functional code changed.</p></li>
+<li><p>Added <code>inst/WORDLIST</code> declaring package-specific acronyms (EMA, FDA, CrI, MAP, Mahalanobis, Bhattacharyya, SHELF, PFS, PK) that were flagged as possibly misspelled in the DESCRIPTION file.</p></li>
+<li><p>Rebuilt prebuilt vignette index via <code>devtools::build_vignettes()</code> to resolve the “no prebuilt vignette index” NOTE.</p></li>
+</ul>
+<hr>
+</section>
+</section>
 <section id="bayprior-0.2.4" class="level1">
 <h1>bayprior 0.2.4</h1>
 <section id="documentation-ux" class="level2">
