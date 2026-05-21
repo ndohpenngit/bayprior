@@ -2,10 +2,14 @@
 
 0 errors | 0 warnings | 1 note
 
+0 errors | 0 warnings | 2 notes
+
 * NOTE: 'unable to verify current time'
-  This is a transient network/system clock issue on the build machine.
-  It is not related to the package and appears consistently on macOS
-  aarch64. CRAN infrastructure will not reproduce this.
+  Transient network/system clock issue on the build machine (macOS aarch64).
+  Not package-related. Will not reproduce on CRAN infrastructure.
+
+* NOTE: 'Non-standard file/directory found at top level: cran-comments.md'
+  This file is intentionally included per CRAN submission guidelines.
 
 ## Test environments
 

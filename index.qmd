@@ -318,12 +318,6 @@ browseVignettes("bayprior")
 
 ---
 
-## Documentation
-
-Full documentation at **[ndohpenngit.github.io/bayprior](https://ndohpenngit.github.io/bayprior/)** — rendered vignettes, function reference, changelog, and cheat sheet.
-
----
-
 ## References
 
 - O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts' Probabilities*. Wiley.

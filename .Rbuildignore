@@ -26,3 +26,8 @@
 ^\\.posit$
 ^^vignettes/\.*_files$$
 ^^vignettes/\.*\\.html$$
+^^renv$$
+^^renv\\.lock$$
+^^build$$
+^^R/_disable_autoload\\.R$$
+^^cran-comments\\.md$$
