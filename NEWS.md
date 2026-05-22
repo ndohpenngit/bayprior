@@ -1,3 +1,22 @@
+# bayprior 0.2.6
+
+## CRAN resubmission fixes
+
+* Updated `inst/WORDLIST` to include all package-specific terms flagged by
+  the spelling checker, and package
+  infrastructure terms (golem, shinydashboard, knitr, pandoc). Resolved
+  `spelling.Rout` vs `spelling.Rout.save` mismatch in tests.
+
+* Changed `Language` field in DESCRIPTION from `en-US` to `en-GB` to reflect
+  the package's consistent use of British English spelling throughout
+  documentation and vignettes (sceptical, colour, behaviour, centred).
+
+* Added prebuilt vignette index (`inst/doc/index.html`) to resolve the
+  "no prebuilt vignette index" NOTE reported by CRAN's automated pre-check
+  on Windows and Debian.
+  
+---
+
 # bayprior 0.2.5
 
 ## CRAN resubmission fixes
@@ -17,7 +36,7 @@
   resolve the "no prebuilt vignette index" NOTE.
 
 ---
-  
+
 # bayprior 0.2.4
 
 ## Documentation & UX
