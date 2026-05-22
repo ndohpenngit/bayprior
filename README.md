@@ -18,12 +18,6 @@
     <a href="https://github.com/ndohpenngit/bayprior/actions">
       <img src="https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"/>
     </a>
-    <a href="https://rstudio.github.io/renv/">
-      <img src="https://img.shields.io/badge/renv-enabled-brightgreen" alt="renv"/>
-    </a>
-    <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental">
-      <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle"/>
-    </a>
     <a href="https://ndohpenngit.github.io/bayprior/">
       <img src="https://img.shields.io/badge/docs-website-blue?logo=quarto&logoColor=white" alt="Docs"/>
     </a>
@@ -127,7 +121,7 @@ Four data types are supported:
 | Data type | Conjugate update | Typical endpoint |
 |---|---|---|
 | **Binary** (x events / n) | Beta–Binomial | Response rate, ORR |
-| **Continuous** (mean, SD, n) | Normal–Normal | Mean difference, HbA1c |
+| **Continuous** (mean, SD, n) | Normal–Normal | Mean difference |
 | **Poisson / count** (events / exposure) | Gamma–Poisson | Adverse event rate |
 | **Survival** (events / follow-up time) | Gamma–Exponential | Hazard rate, OS, PFS |
 
@@ -158,10 +152,6 @@ The **power prior** (Ibrahim & Chen, 2000) down-weights historical data by
 ---
 
 ## User Interface
-
-The Shiny app includes a **dark / light mode toggle** persisted via browser
-localStorage. **All module outputs reset automatically when inputs change**,
-preventing stale results from being shown alongside new inputs.
 
 ### Prior Elicitation Panel
 
@@ -213,12 +203,6 @@ pak::pak("ndohpenngit/bayprior")
 > # If PDF fails with missing package errors:
 > tinytex::tlmgr_install(c("tikzfill", "pgf", "tcolorbox", "environ", "pdfcol"))
 > ```
-
-### Reproducible environment (renv)
-
-```r
-renv::restore()
-```
 
 ---
 
@@ -313,7 +297,7 @@ browseVignettes("bayprior")
 
 ## Documentation
 
-Full documentation at **[ndohpenngit.github.io/bayprior](https://ndohpenngit.github.io/bayprior/)** — rendered vignettes, function reference, changelog, and cheat sheet.
+Checkout the full **[documentation](https://ndohpenngit.github.io/bayprior/)** — vignettes, function reference, changelog, and cheat sheet.
 
 ---
 

@@ -22,12 +22,6 @@ title: bayprior
     <a href="https://github.com/ndohpenngit/bayprior/actions">
       <img src="https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"/>
     </a>
-    <a href="https://rstudio.github.io/renv/">
-      <img src="https://img.shields.io/badge/renv-enabled-brightgreen" alt="renv"/>
-    </a>
-    <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental">
-      <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle"/>
-    </a>
     <a href="https://ndohpenngit.github.io/bayprior/">
       <img src="https://img.shields.io/badge/docs-website-blue?logo=quarto&logoColor=white" alt="Docs"/>
     </a>
@@ -220,12 +214,6 @@ devtools::install_github("ndohpenngit/bayprior", build_vignettes = TRUE)
 > # If PDF fails with missing package errors:
 > tinytex::tlmgr_install(c("tikzfill", "pgf", "tcolorbox", "environ", "pdfcol"))
 > ```
-
-### Reproducible environment (renv)
-
-```r
-renv::restore()
-```
 
 ---
 
