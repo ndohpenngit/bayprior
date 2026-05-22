@@ -16,14 +16,15 @@ renv/staging/
 rsconnect/
 .DS_Store
 Thumbs.db
-docs
+docs/
 /.quarto/
 vignettes/*_cache/
 vignettes/*_files/
 .posit/
 _freeze/
 _includes/
-/doc/
 /Meta/
 vignettes/*_files/
 vignettes/*.html
+vignettes/*.html
+doc/
