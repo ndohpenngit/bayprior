@@ -459,7 +459,7 @@
     "href": "index.html#installation",
     "title": "bayprior",
     "section": "Installation",
-    "text": "Installation\n# Development version from GitHub:\npak::pak(\"ndohpenngit/bayprior\")\n\n# Or (with vignettes):\ndevtools::install_github(\"ndohpenngit/bayprior\", build_vignettes = TRUE)\n\nPDF reports require Quarto CLI and a LaTeX installation:\ninstall.packages(\"tinytex\")\ntinytex::install_tinytex()\n# If PDF fails with missing package errors:\ntinytex::tlmgr_install(c(\"tikzfill\", \"pgf\", \"tcolorbox\", \"environ\", \"pdfcol\"))\n\n\nReproducible environment (renv)\nrenv::restore()"
+    "text": "Installation\n# Development version from GitHub:\npak::pak(\"ndohpenngit/bayprior\")\n\n# Or (with vignettes):\ndevtools::install_github(\"ndohpenngit/bayprior\", build_vignettes = TRUE)\n\nPDF reports require Quarto CLI and a LaTeX installation:\ninstall.packages(\"tinytex\")\ntinytex::install_tinytex()\n# If PDF fails with missing package errors:\ntinytex::tlmgr_install(c(\"tikzfill\", \"pgf\", \"tcolorbox\", \"environ\", \"pdfcol\"))"
   },
   {
     "objectID": "index.html#quick-start",
