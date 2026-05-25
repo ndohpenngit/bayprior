@@ -1,3 +1,22 @@
+# bayprior 0.2.8
+
+## CRAN resubmission fixes
+
+* Revised `Description` field in DESCRIPTION to remove regulatory body
+  references (FDA, European Medicines Agency). The description now focuses
+  on what the software does rather than which bodies it is aligned with.
+  This resolves the persistent "EMA possibly misspelled" NOTE in CRAN's
+  automated pre-check across all previous submissions (v0.2.4--v0.2.7).
+  Regulatory context is documented in the vignettes and README where
+  precise framing is more appropriate.
+
+* Prebuilt vignette index (`inst/doc/index.html`) confirmed present in
+  submitted tarball. Build workflow changed to use `R CMD build` directly
+  from the system shell rather than `devtools::build()`, which could not
+  locate Pandoc outside the IDE session on macOS aarch64.
+  
+---
+
 # bayprior 0.2.7
 
 ## CRAN resubmission fixes
