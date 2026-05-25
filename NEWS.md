@@ -1,3 +1,11 @@
+# bayprior 0.2.7
+
+## CRAN resubmission fixes
+
+* Resolve `EMA` in DESCRIPTION. The `EMA` acronym (European Medicines Agency) was flagged as a possible misspelling in the DESCRIPTION file, causing a CRAN resubmission WARNING. 
+
+* Updated `inst/WORDLIST`.
+
 # bayprior 0.2.6
 
 ## CRAN resubmission fixes
