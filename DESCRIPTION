@@ -1,17 +1,18 @@
 Package: bayprior
 Title: Bayesian Prior Elicitation and Diagnostics for Clinical Trials
-Version: 0.2.8
+Version: 0.2.9
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0003-9054-465X"))
 Description: A toolkit for constructing, validating, and justifying Bayesian priors
-  in clinical trial settings. Implements SHELF-style expert elicitation
-  (quantile matching, roulette method, moment matching), linear and
-  logarithmic expert pooling, prior-data conflict diagnostics (Box p-value,
-  surprise index, KL divergence, Mahalanobis distance), sensitivity analyses
-  with tornado and influence heatmap plots, sceptical, robust, and power
-  priors, and automated HTML, PDF, and Word regulatory submission reports.
-  Includes a fully modular Shiny application for interactive use.
+  in clinical trial settings. Implements expert elicitation via quantile
+  matching, the roulette method, and moment matching across six distribution
+  families, linear and logarithmic expert pooling, prior-data conflict
+  diagnostics including the Box p-value, surprise index, Kullback-Leibler
+  divergence, and Mahalanobis distance, sensitivity analyses with tornado
+  and influence heatmap plots, sceptical, robust, and power priors, and
+  automated prior justification reports. Includes a fully modular Shiny
+  application for interactive use.
 License: GPL-3 | file LICENSE
 URL: https://github.com/ndohpenngit/bayprior
 BugReports: https://github.com/ndohpenngit/bayprior/issues
@@ -50,7 +51,7 @@ VignetteBuilder:
 Config/Needs/vignettes: knitr, rmarkdown
 Config/testthat/edition: 3
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 SystemRequirements: Quarto CLI (>= 1.5, https://quarto.org)
-Language: en-US

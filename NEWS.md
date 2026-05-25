@@ -1,3 +1,5 @@
+# bayprior 0.2.9
+
 # bayprior 0.2.8
 
 ## CRAN resubmission fixes
