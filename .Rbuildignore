@@ -28,7 +28,6 @@
 ^^vignettes/\.*\\.html$$
 ^^renv$$
 ^^renv\\.lock$$
-^^build$$
 ^^R/_disable_autoload\\.R$$
 ^^cran-comments\\.md$$
 ^CRAN-SUBMISSION$

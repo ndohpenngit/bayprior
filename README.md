@@ -12,9 +12,6 @@
     <a href="https://thinkr-open.github.io/golem/">
       <img src="https://img.shields.io/badge/Framework-golem-6C63FF?logo=r&logoColor=white" alt="golem"/>
     </a>
-    <a href="https://www.gnu.org/licenses/gpl-3.0">
-      <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="GPL-3"/>
-    </a>
     <a href="https://github.com/ndohpenngit/bayprior/actions">
       <img src="https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"/>
     </a>
