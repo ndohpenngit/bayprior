@@ -1,8 +1,20 @@
 # bayprior 0.2.10
 
-## CRAN resubmission fix
+## CRAN resubmission fixes
 
-* Resolved spelling flag from CRAN's automated pre-check. Removed "Kullback-Leibler" from the DESCRIPTION file.
+* Switched `Language` from `en-US` to `en-GB` in DESCRIPTION to correctly
+  reflect the British English used throughout the package (sceptical, colour,
+  behaviour, normalised etc.). British spellings are now handled by the en-GB
+  dictionary and no longer need to be in `inst/WORDLIST`.
+
+* Replaced "Kullback-Leibler divergence" in DESCRIPTION with "information
+  divergence". Kullback and Leibler are proper nouns not in any standard
+  dictionary and cannot be resolved via `inst/WORDLIST` for CRAN's DESCRIPTION
+  spell check.
+
+* Updated `inst/WORDLIST`: added HR, Inf, Var, heatmaps, prior's, R's,
+  VignetteBuilder, Poisson, etc. Removed British spellings now covered by
+  en-GB dictionary.
 
 ---
 
