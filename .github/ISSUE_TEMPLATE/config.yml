@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://ndohpenngit.github.io/bayprior/
+    about: Full function reference, vignettes, and cheat sheet
+  - name: Shiny app
+    url: https://npenn.shinyapps.io/bayprior/
+    about: Try the live interactive app
+  - name: R-package-devel mailing list
+    url: https://stat.ethz.ch/mailman/listinfo/r-package-devel
+    about: General R package development questions
