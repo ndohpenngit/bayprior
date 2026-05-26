@@ -1,13 +1,13 @@
-# bayprior <img src="man/figures/logo.png" align="right" height="139" alt="bayprior logo" />
+# bayprior <img src="man/figures/logo.png" align="right" height="195" alt="bayprior logo" />
 
-[![CRAN status](https://www.r-pkg.org/badges/version/bayprior?color=green)](https://CRAN.R-project.org/package=bayprior)
+<!-- [![CRAN status](https://www.r-pkg.org/badges/version/bayprior?color=green)](https://CRAN.R-project.org/package=bayprior)
 [![downloads](https://cranlogs.r-pkg.org/badges/bayprior)](https://CRAN.R-project.org/package=bayprior)
-[![downloads](https://cranlogs.r-pkg.org/badges/grand-total/bayprior)](https://CRAN.R-project.org/package=bayprior)
+[![downloads](https://cranlogs.r-pkg.org/badges/grand-total/bayprior)](https://CRAN.R-project.org/package=bayprior) -->
 [![R CMD check](https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml)
 [![codecov](https://codecov.io/gh/ndohpenngit/bayprior/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ndohpenngit/bayprior)
 [![Live app](https://img.shields.io/badge/Live_App-shinyapps.io-blueviolet?logo=shiny)](https://npenn.shinyapps.io/bayprior/)
 
-***Structured Bayesian prior elicitation, conflict diagnostics, and regulatory reporting for clinical trials.***
+***Bayesian prior elicitation, conflict diagnostics, and regulatory reporting for clinical trials.***
 
 ---
 
