@@ -213,6 +213,8 @@ browseVignettes("bayprior")
 
 ## Documentation
 
+[![Documentation](https://img.shields.io/badge/documentation-bayprior-blue?logo=quarto&logoColor=white)](https://ndohpenngit.github.io/bayprior/)
+
 Full **[documentation](https://ndohpenngit.github.io/bayprior/)** — vignettes, function reference, changelog, and cheat sheet.
 
 ---
