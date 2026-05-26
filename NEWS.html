@@ -162,13 +162,17 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#bayprior-0.2.10" id="toc-bayprior-0.2.10" class="nav-link active" data-scroll-target="#bayprior-0.2.10">bayprior 0.2.10</a>
+  <li><a href="#bayprior-0.2.11" id="toc-bayprior-0.2.11" class="nav-link active" data-scroll-target="#bayprior-0.2.11">bayprior 0.2.11</a>
+  <ul class="collapse">
+  <li><a href="#cran-resubmission-fix" id="toc-cran-resubmission-fix" class="nav-link" data-scroll-target="#cran-resubmission-fix">CRAN resubmission fix</a></li>
+  </ul></li>
+  <li><a href="#bayprior-0.2.10" id="toc-bayprior-0.2.10" class="nav-link" data-scroll-target="#bayprior-0.2.10">bayprior 0.2.10</a>
   <ul class="collapse">
   <li><a href="#cran-resubmission-fixes" id="toc-cran-resubmission-fixes" class="nav-link" data-scroll-target="#cran-resubmission-fixes">CRAN resubmission fixes</a></li>
   </ul></li>
   <li><a href="#bayprior-0.2.9" id="toc-bayprior-0.2.9" class="nav-link" data-scroll-target="#bayprior-0.2.9">bayprior 0.2.9</a>
   <ul class="collapse">
-  <li><a href="#cran-resubmission-fix" id="toc-cran-resubmission-fix" class="nav-link" data-scroll-target="#cran-resubmission-fix">CRAN resubmission fix</a></li>
+  <li><a href="#cran-resubmission-fix-1" id="toc-cran-resubmission-fix-1" class="nav-link" data-scroll-target="#cran-resubmission-fix-1">CRAN resubmission fix</a></li>
   </ul></li>
   <li><a href="#bayprior-0.2.8" id="toc-bayprior-0.2.8" class="nav-link" data-scroll-target="#bayprior-0.2.8">bayprior 0.2.8</a>
   <ul class="collapse">
@@ -243,6 +247,16 @@ ul.task-list li input[type="checkbox"] {
 
 
 
+<section id="bayprior-0.2.11" class="level1">
+<h1>bayprior 0.2.11</h1>
+<section id="cran-resubmission-fix" class="level2">
+<h2 class="anchored" data-anchor-id="cran-resubmission-fix">CRAN resubmission fix</h2>
+<ul>
+<li>Corrected malformed <code>.Rbuildignore</code> pattern for <code>cran-comments.md</code>. The pattern <code>^^cran-comments\\.md$$</code> (double caret, double dollar) never matched the file, so it was included in every previous tarball. Fixed to the correct regex <code>^cran-comments\.md$</code> and verified absent from the v0.2.11 tarball.</li>
+</ul>
+<hr>
+</section>
+</section>
 <section id="bayprior-0.2.10" class="level1">
 <h1>bayprior 0.2.10</h1>
 <section id="cran-resubmission-fixes" class="level2">
@@ -257,8 +271,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="bayprior-0.2.9" class="level1">
 <h1>bayprior 0.2.9</h1>
-<section id="cran-resubmission-fix" class="level2">
-<h2 class="anchored" data-anchor-id="cran-resubmission-fix">CRAN resubmission fix</h2>
+<section id="cran-resubmission-fix-1" class="level2">
+<h2 class="anchored" data-anchor-id="cran-resubmission-fix-1">CRAN resubmission fix</h2>
 <ul>
 <li>Added ‘Kullback’ and ‘Leibler’ to <code>inst/WORDLIST</code>. These are proper nouns (the Kullback-Leibler divergence is named after statisticians Solomon Kullback and Richard Leibler) and are standard terminology in Bayesian statistics. Flagged as possibly misspelled by CRAN’s automated pre-check in v0.2.8.</li>
 </ul>
