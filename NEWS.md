@@ -1,3 +1,11 @@
+# bayprior 0.2.10
+
+## CRAN resubmission fix
+
+* Resolved spelling flag from CRAN's automated pre-check. Removed "Kullback-Leibler" from the DESCRIPTION file.
+
+---
+
 # bayprior 0.2.9
 
 ## CRAN resubmission fix
