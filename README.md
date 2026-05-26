@@ -1,28 +1,13 @@
-<p align="center">
-  <img src="man/figures/logo.png" width="150" style="margin-bottom: 10px;"/>
-  <h1 align="center">
-    bayprior: Bayesian Prior Elicitation for Clinical Trials
-    <br>
-    <a href="https://www.r-project.org/">
-      <img src="https://img.shields.io/badge/R-%3E=4.1.0-blue?logo=r&logoColor=white" alt="R version"/>
-    </a>
-    <a href="https://shiny.posit.co/">
-      <img src="https://img.shields.io/badge/Built%20with-Shiny-009999?logo=rstudio&logoColor=white" alt="Shiny"/>
-    </a>
-    <a href="https://thinkr-open.github.io/golem/">
-      <img src="https://img.shields.io/badge/Framework-golem-6C63FF?logo=r&logoColor=white" alt="golem"/>
-    </a>
-    <a href="https://github.com/ndohpenngit/bayprior/actions">
-      <img src="https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"/>
-    </a>
-    <a href="https://ndohpenngit.github.io/bayprior/">
-      <img src="https://img.shields.io/badge/docs-website-blue?logo=quarto&logoColor=white" alt="Docs"/>
-    </a>
-    <a href="https://npenn.shinyapps.io/bayprior/">
-      <img src="https://img.shields.io/badge/Live_App-bayprior-blueviolet?logo=shiny" alt="Live app"/>
-    </a>
-  </h1>
-</p>
+# bayprior <img src="man/figures/logo.png" align="right" height="139" alt="bayprior logo" />
+
+[![CRAN status](https://www.r-pkg.org/badges/version/bayprior?color=green)](https://CRAN.R-project.org/package=bayprior)
+[![downloads](https://cranlogs.r-pkg.org/badges/bayprior)](https://CRAN.R-project.org/package=bayprior)
+[![downloads](https://cranlogs.r-pkg.org/badges/grand-total/bayprior)](https://CRAN.R-project.org/package=bayprior)
+[![R CMD check](https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml)
+[![codecov](https://codecov.io/gh/ndohpenngit/bayprior/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ndohpenngit/bayprior)
+[![Live app](https://img.shields.io/badge/Live_App-shinyapps.io-blueviolet?logo=shiny)](https://npenn.shinyapps.io/bayprior/)
+
+***Structured Bayesian prior elicitation, conflict diagnostics, and regulatory reporting for clinical trials.***
 
 ---
 
@@ -56,8 +41,7 @@ previously addressing it.
 - **Build robust priors** — Sceptical, robust mixture, and calibrated power
   priors for regulatory sensitivity analyses.
 - **Generate regulatory reports** — Self-contained HTML, PDF, or Word (.docx)
-  prior justification reports aligned with FDA/EMA submission expectations,
-  rendered via Quarto.
+  prior justification reports rendered via Quarto.
 
 ---
 
@@ -67,13 +51,13 @@ previously addressing it.
 |---|---|---|---|
 | **Prior Elicitation** | Quantile matching, moment matching, SHELF roulette for Beta / Normal / Gamma / Log-Normal / **Exponential** / **Weibull** | Fitted density plot + parameter table | Structured expert prior elicitation |
 | **Expert Pooling** | Linear and logarithmic opinion pooling with support compatibility validation | Consensus density overlay + Bhattacharyya matrix | Aggregate multi-expert beliefs |
-| **Conflict Diagnostics** | Box p-value, surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, **Poisson**, and **survival** data | Prior–Likelihood–Posterior overlay | Detect prior misspecification |
+| **Conflict Diagnostics** | Box p-value, surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, **Poisson**, and **survival** data | Prior-Likelihood-Posterior overlay | Detect prior misspecification |
 | **Mahalanobis Check** | Two-endpoint multivariate conflict test | Chi-sq p-value + per-parameter z-scores | Co-primary endpoint trials |
 | **Sensitivity Analysis** | Hyperparameter grid over posterior mean, SD, CrI width, Pr(efficacy); independent data entry | Tornado plot + influence heatmap | Demonstrate robustness to regulators |
-| **Sceptical Prior** | Spiegelhalter–Freedman centred-at-null prior | Prior density + summary statistics | Conservative regulatory sensitivity |
+| **Sceptical Prior** | Spiegelhalter-Freedman centred-at-null prior | Prior density + summary statistics | Conservative regulatory sensitivity |
 | **Robust Mixture** | Schmidli et al. MAP robust mixture prior | Robust vs informative density overlay | Protection against misspecification |
-| **Power Prior** | Ibrahim–Chen calibrated borrowing weight via Bayes Factor | Calibration curves + optimal δ | Principled historical data borrowing |
-| **Export Report** | HTML / PDF / Word (.docx) prior justification document via Quarto | Regulatory-ready self-contained report | FDA/EMA submission documentation |
+| **Power Prior** | Ibrahim-Chen calibrated borrowing weight via Bayes Factor | Calibration curves + optimal delta | Principled historical data borrowing |
+| **Export Report** | HTML / PDF / Word (.docx) prior justification document via Quarto | Regulatory-ready self-contained report | Submission documentation |
 
 ---
 
@@ -83,7 +67,7 @@ previously addressing it.
 
 Three structured elicitation approaches are implemented.
 **Quantile matching** fits a parametric distribution to expert-specified
-probability–value pairs via numerical optimisation.
+probability-value pairs via numerical optimisation.
 **Moment matching** derives hyperparameters analytically from an expert-supplied
 mean and SD.
 The **SHELF roulette method** (Oakley & O'Hagan, 2010) lets the expert allocate
@@ -95,14 +79,11 @@ All three methods support six distribution families:
 | Family | Support | Typical use |
 |---|---|---|
 | **Beta** | (0, 1) | Response rates, proportions |
-| **Normal** | (−∞, ∞) | Mean differences, log odds ratios |
-| **Gamma** | (0, ∞) | Event rates, variances, survival times |
-| **Log-Normal** | (0, ∞) | Hazard ratios, PK parameters |
-| **Exponential** | (0, ∞) | Constant hazard rates, Poisson rate priors |
-| **Weibull** | (0, ∞) | Non-constant hazard survival times (OS, PFS) |
-
-Exponential priors support `"moments"`, `"rate"`, and `"quantile"` methods.
-Weibull priors support `"moments"`, `"params"`, and `"quantile"` methods.
+| **Normal** | (-Inf, Inf) | Mean differences, log odds ratios |
+| **Gamma** | (0, Inf) | Event rates, variances, survival times |
+| **Log-Normal** | (0, Inf) | Hazard ratios, PK parameters |
+| **Exponential** | (0, Inf) | Constant hazard rates, Poisson rate priors |
+| **Weibull** | (0, Inf) | Non-constant hazard survival times (OS, PFS) |
 
 ### Prior-Data Conflict Diagnostics
 
@@ -117,18 +98,10 @@ Four data types are supported:
 
 | Data type | Conjugate update | Typical endpoint |
 |---|---|---|
-| **Binary** (x events / n) | Beta–Binomial | Response rate, ORR |
-| **Continuous** (mean, SD, n) | Normal–Normal | Mean difference |
-| **Poisson / count** (events / exposure) | Gamma–Poisson | Adverse event rate |
-| **Survival** (events / follow-up time) | Gamma–Exponential | Hazard rate, OS, PFS |
-
-### Validation and Compatibility Checks
-
-bayprior includes a comprehensive validation layer:
-
-- **Prior–data compatibility** — warns when a prior family is atypical for the selected data type.
-- **Pooling compatibility** — blocks pooling of distributions with incompatible supports; warns for same-support cross-family pooling.
-- **Sensitivity compatibility** — warns for single-parameter families and cross-family mixture grids; blocks incompatible-support mixtures.
+| **Binary** (x events / n) | Beta-Binomial | Response rate, ORR |
+| **Continuous** (mean, SD, n) | Normal-Normal | Mean difference |
+| **Poisson / count** (events / exposure) | Gamma-Poisson | Adverse event rate |
+| **Survival** (events / follow-up time) | Gamma-Exponential | Hazard rate, OS, PFS |
 
 ### Sensitivity Analysis
 
@@ -144,52 +117,19 @@ The **robust mixture prior** (Schmidli et al., 2014) mixes the informative
 prior with a vague Normal component. The **sceptical prior**
 (Spiegelhalter & Freedman, 1994) is centred at the null treatment effect.
 The **power prior** (Ibrahim & Chen, 2000) down-weights historical data by
-δ ∈ (0, 1], calibrated to achieve a target Bayes Factor.
-
----
-
-## User Interface
-
-### Prior Elicitation Panel
-
-- **Distribution family:** Beta, Normal, Gamma, Log-Normal, Exponential, or Weibull
-- **Elicitation method:** Quantile matching, moment matching, or roulette
-- **Output reset:** Panel resets to placeholder on any input change; active
-  prior indicator stays on until a new prior is explicitly fitted
-- **Value boxes:** Prior mean, SD, and 95% CrI at a glance
-
-### Conflict Diagnostics Panel
-
-- **Data type:** Binary, continuous, Poisson/count, or survival
-- **Compatibility check:** Alert if prior family is atypical for chosen data type
-- **Diagnostic statistics:** Box p-value, surprise index, and overlap with colour-coded severity
-
-### Sensitivity Analysis Panel
-
-- **Independent data entry:** Own data type selector with auto-detection from prior family
-- **Analysis type:** "Posterior quantities" or "Credible interval" with CrI level slider
-- **Visualisations:** Tornado plot and interactive influence heatmap
-
-### Robust Priors Panel
-
-- **Robust mixture:** Vague weight slider
-- **Sceptical prior:** Family and strength selection
-- **Power prior:** Historical and current data entry; calibration curves
-
-### Report Export Panel
-
-- **Format:** HTML (self-contained), PDF (xelatex), or Word (.docx)
-- **All formats embed figures correctly**
-- **Single-click render and download**
+delta in (0, 1], calibrated to achieve a target Bayes Factor.
 
 ---
 
 ## Installation
 
-```r
-# Development version from GitHub:
-pak::pak("ndohpenngit/bayprior")
-```
+[![CRAN status](https://www.r-pkg.org/badges/version/bayprior?color=green)](https://CRAN.R-project.org/package=bayprior)
+[![codecov](https://codecov.io/gh/ndohpenngit/bayprior/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ndohpenngit/bayprior)
+
+| Type | Source | Command |
+|---|---|---|
+| Release | CRAN | `install.packages("bayprior")` |
+| Development | GitHub | `remotes::install_github("ndohpenngit/bayprior")` |
 
 > **PDF reports** require [Quarto CLI](https://quarto.org/docs/get-started/)
 > and a LaTeX installation:
@@ -197,8 +137,6 @@ pak::pak("ndohpenngit/bayprior")
 > ```r
 > install.packages("tinytex")
 > tinytex::install_tinytex()
-> # If PDF fails with missing package errors:
-> tinytex::tlmgr_install(c("tikzfill", "pgf", "tcolorbox", "environ", "pdfcol"))
 > ```
 
 ---
@@ -208,40 +146,21 @@ pak::pak("ndohpenngit/bayprior")
 ```r
 library(bayprior)
 
-# ── Elicit a Beta prior ───────────────────────────────────────────────────────
+# Elicit a Beta prior
 prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments",
                      label = "Response rate", expert_id = "Expert_1")
 plot(prior)
 
-# ── Elicit an Exponential prior (hazard rate) ─────────────────────────────────
-prior_hz <- elicit_exponential(mean = 0.05, method = "moments",
-                                label = "Hazard rate")
-plot(prior_hz)
-
-# ── Elicit a Weibull prior (OS in months) ─────────────────────────────────────
-prior_wb <- elicit_weibull(mean = 20, sd = 10, method = "moments",
-                            label = "OS (months)")
-plot(prior_wb)
-
-# ── Pool two experts ──────────────────────────────────────────────────────────
-e1  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1",
-                   label = "Response rate")
-e2  <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2",
-                   label = "Response rate")
+# Pool two experts
+e1  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
+e2  <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
 agg <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.6, 0.4))
 
-# ── Conflict diagnostics — binary data ────────────────────────────────────────
+# Conflict diagnostics
 cd <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
 print(cd)
 
-# ── Conflict diagnostics — Poisson / count data ───────────────────────────────
-pg <- elicit_gamma(mean = 0.15, sd = 0.06, method = "moments", label = "AE rate")
-prior_conflict(pg, list(type = "poisson", x = 12, n = 100))
-
-# ── Conflict diagnostics — survival data ──────────────────────────────────────
-prior_conflict(prior_hz, list(type = "survival", x = 20, n = 400))
-
-# ── Sensitivity analysis ──────────────────────────────────────────────────────
+# Sensitivity analysis
 sa <- sensitivity_grid(
   prior,
   data_summary = list(type = "binary", x = 18, n = 40),
@@ -251,12 +170,12 @@ sa <- sensitivity_grid(
 )
 plot_tornado(sa)
 
-# ── Robust prior ──────────────────────────────────────────────────────────────
+# Robust and sceptical priors
 rob  <- robust_prior(prior, vague_weight = 0.20)
 scep <- sceptical_prior(null_value = 0.20, family = "beta",
-                        strength = "moderate", label = "Response rate (sceptical)")
+                        strength = "moderate")
 
-# ── Generate regulatory report ────────────────────────────────────────────────
+# Generate regulatory report
 prior_report(
   prior           = prior,
   conflict        = cd,
@@ -269,7 +188,7 @@ prior_report(
   author          = "N.P., Biostatistician"
 )
 
-# ── Launch the Shiny app ──────────────────────────────────────────────────────
+# Launch the Shiny app
 run_app()
 ```
 
@@ -284,7 +203,7 @@ run_app()
 | `conflict-diagnostics` | All four data types; univariate and multivariate |
 | `sensitivity-analysis` | Grid sensitivity, tornado plots, CrI tracking |
 | `robust-priors` | Robust mixture, sceptical, and power priors |
-| `regulatory-reporting` | Report generation, FDA/EMA compliance checklist |
+| `regulatory-reporting` | Report generation and compliance checklist |
 
 ```r
 browseVignettes("bayprior")
@@ -294,22 +213,24 @@ browseVignettes("bayprior")
 
 ## Documentation
 
-Checkout the full **[documentation](https://ndohpenngit.github.io/bayprior/)** — vignettes, function reference, changelog, and cheat sheet.
+Full **[documentation](https://ndohpenngit.github.io/bayprior/)** — vignettes, function reference, changelog, and cheat sheet.
 
 ---
 
 ## Code of Conduct
 
-Please note that the bayprior project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
+Please note that the bayprior project is released with a
+[Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.
 
 ---
 
 ## References
 
 - O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts' Probabilities*. Wiley.
-- Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling and robustness. *JRSS-A*, 143, 383–430.
+- Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling and robustness. *JRSS-A*, 143, 383-430.
 - Oakley, J. E. & O'Hagan, A. (2010). *SHELF: the Sheffield Elicitation Framework*. University of Sheffield.
-- Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in clinical trials with historical control information. *Biometrics*, 70, 1023–1032.
-- Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for regression models. *Statistical Science*, 15, 46–60.
-- Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994). Bayesian approaches to randomized trials. *JRSS-A*, 157, 357–416.
+- Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in clinical trials with historical control information. *Biometrics*, 70, 1023-1032.
+- Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for regression models. *Statistical Science*, 15, 46-60.
+- Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994). Bayesian approaches to randomized trials. *JRSS-A*, 157, 357-416.
 - FDA (2026). *Draft Guidance: Bayesian Statistical Methods for Drug and Biological Products*.
