@@ -41,10 +41,82 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, any::covr, any::spelling, any::DT
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+      # ── CRAN quality checks (ubuntu release only) ──────────────────────────
+      # These run only once (not across all OS/R combinations) to keep CI fast.
+      # They catch the exact issues that caused repeated CRAN pre-check failures.
+
+      - name: Check R files for non-ASCII characters
+        if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release'
+        shell: Rscript {0}
+        run: |
+          files <- list.files("R", pattern = "\\.R$", full.names = TRUE)
+          bad <- Filter(Negate(is.null), lapply(files, function(f) {
+            lines <- readLines(f, warn = FALSE)
+            hits  <- which(grepl("[^\x01-\x7F]", lines))
+            if (length(hits)) list(file = basename(f), lines = hits)
+          }))
+          if (length(bad)) {
+            for (x in bad)
+              message("Non-ASCII in ", x$file, " at lines: ",
+                      paste(x$lines, collapse = ", "))
+            stop("Non-ASCII characters found in R source files.\n",
+                 "These break CRAN LaTeX PDF generation.\n",
+                 "Replace: em dash -> --, infinity -> Inf, ",
+                 "curly quotes -> straight quotes.")
+          }
+          message("PASS: all ", length(files), " R files are ASCII-clean.")
+
+      - name: Spelling check
+        if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release'
+        shell: Rscript {0}
+        run: |
+          errors <- spelling::spell_check_package(use_wordlist = TRUE)
+          if (nrow(errors) > 0) {
+            print(errors)
+            stop("Spelling errors found.\n",
+                 "Run spelling::update_wordlist() locally to add new terms ",
+                 "to inst/WORDLIST, then commit.")
+          }
+          message("PASS: no spelling errors.")
+
+      - name: Verify build/ not excluded from tarball
+        if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release'
+        shell: Rscript {0}
+        run: |
+          # build/vignette.rds is the prebuilt vignette index CRAN checks for.
+          # Excluding build/ from .Rbuildignore removes it from the tarball and
+          # causes: "Package has a VignetteBuilder field but no prebuilt vignette index."
+          rbi <- readLines(".Rbuildignore", warn = FALSE)
+          if (any(grepl("build", rbi))) {
+            matching <- rbi[grepl("build", rbi)]
+            message("WARNING: .Rbuildignore contains 'build' pattern(s):")
+            message(paste(" ", matching, collapse = "\n"))
+            stop("^build$ must NOT be in .Rbuildignore.\n",
+                 "build/vignette.rds is the prebuilt vignette index.\n",
+                 "Remove the build exclusion before releasing.")
+          }
+          message("PASS: build/ is not excluded from tarball.")
+
+      - name: Upload coverage to Codecov
+        if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release'
+        shell: Rscript {0}
+        run: |
+          covr::codecov(
+            line_exclusions = c(
+              "R/app_server.R",     "R/app_ui.R",        "R/run_app.R",
+              "R/prior_report.R",   "R/mod_elicitation.R","R/mod_pooling.R",
+              "R/mod_conflict.R",   "R/mod_report.R",    "R/mod_robust_priors.R",
+              "R/mod_roulette.R",   "R/mod_sensitivity.R","R/mod_welcome.R"
+            ),
+            token = Sys.getenv("CODECOV_TOKEN")
+          )
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
