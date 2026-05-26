@@ -37,6 +37,7 @@ Var
 VignetteBuilder
 YAML
 cdot
+codecov
 df
 etc
 frac
@@ -62,5 +63,3 @@ sd
 shinyapps
 shinydashboard
 tikzfill
-xelatex
-δ

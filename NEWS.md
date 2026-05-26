@@ -1,3 +1,14 @@
+# bayprior 0.2.11
+
+## CRAN resubmission fix
+
+* Corrected malformed `.Rbuildignore` pattern for `cran-comments.md`.
+  The pattern `^^cran-comments\\.md$$` (double caret, double dollar)
+  never matched the file, so it was included in every previous tarball.
+  Fixed to the correct regex `^cran-comments\.md$` and verified absent from the v0.2.11 tarball.
+
+---
+
 # bayprior 0.2.10
 
 ## CRAN resubmission fixes
