@@ -37,6 +37,7 @@ Var
 VignetteBuilder
 YAML
 cdot
+codecov
 df
 etc
 frac
@@ -56,11 +57,10 @@ poisson
 prior's
 propto
 reactives
+regex
 renv
 roxygen
 sd
 shinyapps
 shinydashboard
 tikzfill
-xelatex
-δ
