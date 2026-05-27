@@ -45,14 +45,20 @@
 
 ### CRAN submission (after PR is merged to main)
 
-- [ ] Download the verified tarball from the `cran-submission-tarball`
-      CI artifact (Actions tab -> pre-release checks run -> Artifacts)
-- [ ] Run final verification locally:
+### CRAN submission (after PR is merged to main)
+
+- [ ] Build the submission tarball from Terminal (NOT devtools):
+```bash
+      R CMD build bayprior
+```
+- [ ] Verify tarball before uploading:
       `tar -tzf bayprior_x.x.x.tar.gz | grep "build/vignette"`
       Must show: `bayprior/build/vignette.rds`
+      `tar -tzf bayprior_x.x.x.tar.gz | grep cran-comments`
+      Must return NOTHING
 - [ ] Upload at https://cran.r-project.org/submit.html
       **Do NOT use `devtools::submit_cran()` -- it rebuilds the tarball
-      and may not preserve the correct build environment**
+      and loses the correct build environment**
 - [ ] Click the confirmation link in the email within 1 hour
 - [ ] Commit and push `CRAN-SUBMISSION` file:
       `git add CRAN-SUBMISSION && git commit -m "chore: submit vX.X.X to CRAN"`
