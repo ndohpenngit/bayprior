@@ -1,0 +1,76 @@
+name: CRAN submission issue
+description: Track a CRAN pre-check rejection or reviewer feedback
+title: "[CRAN]: v"
+labels: ["CRAN"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to track issues raised by CRAN's automated pre-check
+        or by a human reviewer. See `cran-comments.md` for submission history.
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: "e.g. 0.2.11"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source of issue
+      options:
+        - CRAN automated pre-check (Windows)
+        - CRAN automated pre-check (Debian)
+        - CRAN human reviewer
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - ERROR -- blocks submission
+        - WARNING -- blocks submission
+        - NOTE -- informational, may require fix
+    validations:
+      required: true
+
+  - type: textarea
+    id: message
+    attributes:
+      label: CRAN message
+      description: Paste the exact message from the pre-check email or check log.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Root cause
+    validations:
+      required: false
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: Fix applied
+      description: What was changed to resolve this?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Resolution checklist
+      options:
+        - label: Fix identified
+        - label: Fix applied and committed
+        - label: devtools::check(cran = TRUE) -- 0 errors 0 warnings
+        - label: build/vignette.rds present in tarball
+        - label: cran-comments.md updated
+        - label: Version bumped and resubmitted

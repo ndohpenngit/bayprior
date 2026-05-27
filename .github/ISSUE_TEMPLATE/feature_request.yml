@@ -1,0 +1,79 @@
+name: Feature request
+description: Suggest a new feature or enhancement for bayprior
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement to bayprior.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which area of the package does this relate to?
+      options:
+        - Prior elicitation (new family or method)
+        - Expert pooling
+        - Conflict diagnostics (new metric or data type)
+        - Sensitivity analysis
+        - Robust / Sceptical / Power priors
+        - Report generation
+        - Shiny app UI/UX
+        - New exported R function
+        - Documentation / vignette
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What gap or limitation does this feature address?
+      placeholder: Currently bayprior does not support...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to see added or changed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example usage (if applicable)
+      description: Show how you would use this feature in R code.
+      render: r
+      placeholder: |
+        # Proposed API:
+        prior <- elicit_new_family(...)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: regulatory
+    attributes:
+      label: Regulatory relevance
+      description: Is this feature motivated by a regulatory guideline?
+      options:
+        - Yes -- FDA guidance
+        - Yes -- EMA / ICH guidance
+        - Yes -- other guideline
+        - No -- general statistical practice
+        - Not applicable
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Relevant papers, guidelines, or existing implementations.
+    validations:
+      required: false
