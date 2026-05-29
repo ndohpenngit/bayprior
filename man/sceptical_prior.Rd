@@ -38,8 +38,8 @@ prior approach and the FDA-recommended "enthusiastic vs sceptical" prior
 sensitivity pair.
 }
 \details{
-For a Normal family, the sceptical prior is centred at \code{null_value} with
-SD calibrated to the \code{strength} argument:
+For a Normal family, the sceptical prior is centred at \code{null_value}
+with SD calibrated to the \code{strength} argument:
 \itemize{
 \item \code{weak}:     SD = 1.0 (vague half-normal)
 \item \code{moderate}: SD = 0.5 (2-SD departure from null has ~5\% prior probability)

@@ -14,7 +14,8 @@ calibrate_power_prior(
 )
 }
 \arguments{
-\item{historical_data}{Named list: \code{type}, \code{x}, \code{n}, optionally \code{sd}.}
+\item{historical_data}{Named list: \code{type}, \code{x}, \code{n},
+optionally \code{sd}.}
 
 \item{current_data}{Named list (same structure as \code{historical_data}).}
 
@@ -25,10 +26,21 @@ calibrate_power_prior(
 \item{delta_grid}{Numeric vector of \eqn{\delta} values. Default
 \code{seq(0.05, 1.0, by = 0.05)}.}
 
-\item{method}{Character. \code{"bayes_factor"} (default) or \code{"compatibility"}.}
+\item{method}{Character. \code{"bayes_factor"} (default) or
+\code{"compatibility"}.}
 }
 \value{
-A list of class \code{bayprior_power_prior}.
+A list of class \code{bayprior_power_prior} with components:
+\describe{
+\item{delta_opt}{Optimal power prior weight selected by the chosen method.}
+\item{delta_grid}{The grid of delta values evaluated.}
+\item{bf_grid}{Bayes Factor at each delta value.}
+\item{compatibility_grid}{Box p-value at each delta value.}
+\item{results}{Data frame with all diagnostic metrics across the grid.}
+\item{power_prior}{A \code{bayprior} object updated with the optimal delta.}
+\item{target_bf}{The target Bayes Factor supplied by the user.}
+\item{method}{The calibration method used.}
+}
 }
 \description{
 Selects the power prior weight \eqn{\delta \in (0,1)} that down-weights
