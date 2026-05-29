@@ -36,9 +36,11 @@ Sys
 Var
 VignetteBuilder
 YAML
+biom
 cdot
 codecov
 df
+doi
 etc
 frac
 ggplot
@@ -63,4 +65,5 @@ roxygen
 sd
 shinyapps
 shinydashboard
+ss
 tikzfill
