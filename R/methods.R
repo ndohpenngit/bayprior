@@ -2,6 +2,10 @@
 #'
 #' @param x A `bayprior` object.
 #' @param ... Ignored.
+#' @return Invisibly returns the input \code{bayprior} object. Called
+#'   for its side effect of printing a formatted summary of the prior
+#'   distribution including family, parameters, mean, SD, and 95\%
+#'   credible interval.
 #' @export
 print.bayprior <- function(x, ...) {
   cli::cli_h1("bayprior: {x$label}")
@@ -63,6 +67,10 @@ summary.bayprior <- function(object, ...) {
 #'
 #' @param x A `bayprior_conflict` object.
 #' @param ... Ignored.
+#' @return Invisibly returns the input \code{bayprior_conflict} object.
+#'   Called for its side effect of printing conflict diagnostic statistics
+#'   including Box p-value, surprise index, information divergence,
+#'   Bhattacharyya overlap, and colour-coded conflict severity.
 #' @export
 print.bayprior_conflict <- function(x, ...) {
   cli::cli_h1("Prior-Data Conflict Diagnostics")
