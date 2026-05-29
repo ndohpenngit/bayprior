@@ -121,8 +121,13 @@ conflict_mahalanobis <- function(prior_means,
 
 #' Print method for multivariate conflict objects
 #'
-#' @param x A `bayprior_conflict_mv` object.
+#' @param x A \code{bayprior_conflict_mv} object.
 #' @param ... Ignored.
+#' @return Invisibly returns the input \code{bayprior_conflict_mv} object.
+#'   Called for its side effect of printing a formatted summary of the
+#'   multivariate Mahalanobis conflict check, including the Mahalanobis
+#'   distance, chi-squared p-value, conflict flag, per-parameter marginal
+#'   z-scores, and an interpretation string.
 #' @export
 print.bayprior_conflict_mv <- function(x, ...) {
   cli::cli_h1("Multivariate Prior-Data Conflict (Mahalanobis)")
@@ -145,16 +150,16 @@ print.bayprior_conflict_mv <- function(x, ...) {
 #' hyperparameter grid. This directly answers the regulatory question:
 #' "Does the CrI change materially under plausible alternative priors?"
 #'
-#' @param prior       A `bayprior` object (reference prior).
-#' @param data_summary Named list as for `prior_conflict()`.
+#' @param prior       A \code{bayprior} object (reference prior).
+#' @param data_summary Named list as for \code{prior_conflict()}.
 #' @param param_grid  Named list of numeric vectors (1 or 2 parameters).
-#' @param cri_level   Numeric in (0, 1). Credible level. Default `0.95`.
-#' @param threshold   Numeric. Efficacy threshold for `Pr(theta > threshold)`.
-#'   Default `NULL` (skips probability computation).
+#' @param cri_level   Numeric in (0, 1). Credible level. Default \code{0.95}.
+#' @param threshold   Numeric. Efficacy threshold for \code{Pr(theta > threshold)}.
+#'   Default \code{NULL} (skips probability computation).
 #'
-#' @return A `bayprior_sensitivity` object (same class as `sensitivity_grid`)
-#'   with additional columns `cri_lower`, `cri_upper`, `cri_width` in the
-#'   result grid.
+#' @return A \code{bayprior_sensitivity} object (same class as
+#'   \code{sensitivity_grid}) with additional columns \code{cri_lower},
+#'   \code{cri_upper}, and \code{cri_width} in the result grid.
 #'
 #' @examples
 #' prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
@@ -258,6 +263,6 @@ sensitivity_cri <- function(prior,
       cri_level        = cri_level,
       prior            = prior
     ),
-    class = "bayprior_sensitivity"   # reuse existing class -> reuse plot methods
+    class = "bayprior_sensitivity"
   )
 }

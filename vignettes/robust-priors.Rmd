@@ -86,7 +86,7 @@ A higher vague weight makes the prior more diffuse and reduces its influence
 on the posterior:
 
 ```{r robust-weights, fig.height = 4}
-par(mfrow = c(1, 1))
+oldpar <- par(mfrow = c(1, 1))
 weights <- c(0.10, 0.20, 0.30, 0.50)
 cols    <- c("#185FA5", "#1D9E75", "#D85A30", "#888780")
 
@@ -108,6 +108,7 @@ legend("topright",
        lwd    = 2,
        lty    = c(1, 2, 3, 4, 5),
        bty    = "n", cex = 0.8)
+par(oldpar)       
 ```
 
 ## Vague SD Multiplier

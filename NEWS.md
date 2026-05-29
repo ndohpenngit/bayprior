@@ -1,3 +1,34 @@
+# bayprior 0.2.12
+
+## CRAN reviewer fixes (v0.2.11 review)
+
+* Wrapped software name in single quotes in DESCRIPTION: 'Shiny', per CRAN
+  policy on package and software name formatting.
+
+* Added six methodology references to DESCRIPTION in CRAN-required format
+  (authors, year, doi/ISBN): O'Hagan et al. (2006), Box (1980), Oakley and
+  O'Hagan (2010), Schmidli et al. (2014), Ibrahim and Chen (2000),
+  Spiegelhalter et al. (1994).
+
+* Added `\value` documentation tag to four exported print methods:
+  `print.bayprior()`, `print.bayprior_conflict()`,
+  `print.bayprior_conflict_mv()`, and `print.bayprior_power_prior()`.
+  Each documents that the function returns the input object invisibly,
+  called for its side effect of printing a formatted summary.
+
+* Restored `par()` settings after use in the robust-priors vignette.
+  The `par(oldpar)` call was incorrectly placed before the `for` loop
+  and `legend()`. Moved to after all plotting operations, per CRAN policy.
+
+* Removed `LICENSE` file and `| file LICENSE` from DESCRIPTION. The GPL-3
+  licence does not require an additional file.
+
+* Updated `inst/WORDLIST`: added `biom`, `doi`, and `ss` — fragments
+  extracted by the spell checker from DOI strings in the DESCRIPTION
+  references field.
+
+---
+
 # bayprior 0.2.11
 
 ## CRAN resubmission fix

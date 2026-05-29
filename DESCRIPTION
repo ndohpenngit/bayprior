@@ -1,6 +1,6 @@
 Package: bayprior
 Title: Bayesian Prior Elicitation and Diagnostics for Clinical Trials
-Version: 0.2.11
+Version: 0.2.12
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0003-9054-465X"))
@@ -11,9 +11,15 @@ Description: A toolkit for constructing, validating, and justifying Bayesian pri
   diagnostics including the Box p-value, surprise index, information
   divergence, and Mahalanobis distance, sensitivity analyses with tornado
   and influence heatmap plots, sceptical, robust, and power priors, and
-  automated prior justification reports. Includes a fully modular Shiny
+  automated prior justification reports. Includes a fully modular 'Shiny'
   application for interactive use.
-License: GPL-3 | file LICENSE
+  Methods based on O'Hagan et al. (2006, ISBN:9780470029886),
+  Box (1980) <doi:10.2307/2982063>,
+  Oakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,
+  Schmidli et al. (2014) <doi:10.1111/biom.12242>,
+  Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>,
+  Spiegelhalter et al. (1994) <doi:10.2307/2983527>.
+License: GPL-3
 URL: https://github.com/ndohpenngit/bayprior
 BugReports: https://github.com/ndohpenngit/bayprior/issues
 Depends:

@@ -35,9 +35,9 @@ sensitivity_cri(
 at each grid point if supplied.}
 }
 \value{
-A \code{bayprior_sensitivity} object (same class as \code{sensitivity_grid})
-with additional columns \code{cri_lower}, \code{cri_upper}, \code{cri_width} in the
-result grid.
+A \code{bayprior_sensitivity} object (same class as
+\code{sensitivity_grid}) with additional columns \code{cri_lower},
+\code{cri_upper}, and \code{cri_width} in the result grid.
 
 An object of class \code{bayprior_sensitivity} whose grid contains
 columns \code{cri_lower}, \code{cri_upper}, and \code{cri_width}, plus

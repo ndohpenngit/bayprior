@@ -11,6 +11,12 @@
 
 \item{...}{Ignored.}
 }
+\value{
+Invisibly returns the input \code{bayprior_conflict} object.
+Called for its side effect of printing conflict diagnostic statistics
+including Box p-value, surprise index, information divergence,
+Bhattacharyya overlap, and colour-coded conflict severity.
+}
 \description{
 Print method for bayprior_conflict objects
 }

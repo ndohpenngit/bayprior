@@ -12,8 +12,8 @@
 \item{...}{Ignored.}
 }
 \value{
-A \code{ggplot} object, or a list of two ggplots if patchwork is not
-installed.
+A \code{ggplot} object, or a list of two ggplots if 'patchwork' is
+not installed.
 }
 \description{
 Plot calibration curve for power prior weight selection

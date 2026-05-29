@@ -8,26 +8,26 @@
 #'
 #' @param null_value Numeric. The null treatment effect (e.g. 0 for a mean
 #'   difference, 1 for a hazard ratio, 0.5 for a response-rate difference).
-#'   For `family = "beta"`, must be strictly in (0, 1).
-#' @param family     Character. Distribution family. One of `"normal"`,
-#'   `"beta"`, `"lognormal"`.
+#'   For \code{family = "beta"}, must be strictly in (0, 1).
+#' @param family     Character. Distribution family. One of \code{"normal"},
+#'   \code{"beta"}, \code{"lognormal"}.
 #' @param strength   Character. How concentrated the prior is around the null:
-#'   `"weak"`, `"moderate"` (default), or `"strong"`.
+#'   \code{"weak"}, \code{"moderate"} (default), or \code{"strong"}.
 #' @param label      Character. Description of the quantity.
 #' @param expert_id  Character. Identifier for provenance.
 #'
-#' @return A `bayprior` object tagged with `prior_type = "sceptical"`.
+#' @return A \code{bayprior} object tagged with \code{prior_type = "sceptical"}.
 #'
 #' @details
-#' For a Normal family, the sceptical prior is centred at `null_value` with
-#' SD calibrated to the `strength` argument:
+#' For a Normal family, the sceptical prior is centred at \code{null_value}
+#' with SD calibrated to the \code{strength} argument:
 #' \itemize{
-#'   \item `weak`:     SD = 1.0 (vague half-normal)
-#'   \item `moderate`: SD = 0.5 (2-SD departure from null has ~5% prior probability)
-#'   \item `strong`:   SD = 0.25 (very concentrated at null)
+#'   \item \code{weak}:     SD = 1.0 (vague half-normal)
+#'   \item \code{moderate}: SD = 0.5 (2-SD departure from null has ~5% prior probability)
+#'   \item \code{strong}:   SD = 0.25 (very concentrated at null)
 #' }
 #'
-#' For `family = "beta"`, `null_value` must be in (0, 1).
+#' For \code{family = "beta"}, \code{null_value} must be in (0, 1).
 #'
 #' @references
 #' Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994).
@@ -55,9 +55,6 @@ sceptical_prior <- function(null_value = 0,
   family   <- match.arg(family)
   strength <- match.arg(strength)
 
-  # FIX: validate null_value for Beta family up front rather than letting
-  # elicit_beta() produce a cryptic "mean must be in (0,1)" error when the
-  # user passes null_value = 0 (e.g. a mean difference) with family = "beta".
   if (family == "beta") {
     if (!is.numeric(null_value) || null_value <= 0 || null_value >= 1) {
       rlang::abort(paste0(
@@ -86,7 +83,7 @@ sceptical_prior <- function(null_value = 0,
                                expert_id = expert_id,
                                label     = label)
 
-  } else {  # beta -- null_value already validated above
+  } else {
     sd_map <- c(weak = 0.15, moderate = 0.08, strong = 0.04)
     prior  <- elicit_beta(mean      = null_value,
                           sd        = sd_map[strength],
@@ -109,16 +106,16 @@ sceptical_prior <- function(null_value = 0,
 #' (Schmidli et al., 2014). This protects against prior misspecification by
 #' ensuring the posterior is not dominated by a conflicting informative prior.
 #'
-#' @param informative A `bayprior` object representing the informative
+#' @param informative A \code{bayprior} object representing the informative
 #'   component (e.g. an elicited or historical prior).
 #' @param vague_weight Numeric in (0, 1). Weight assigned to the vague
-#'   (diffuse) component. Default `0.20` (80% informative, 20% vague).
+#'   (diffuse) component. Default \code{0.20} (80% informative, 20% vague).
 #' @param vague_sd    Numeric. SD of the vague Normal component (on the
-#'   natural scale). If `NULL`, defaults to 10x the informative prior's SD.
+#'   natural scale). If \code{NULL}, defaults to 10x the informative prior's SD.
 #' @param label       Character. Label for the robust prior.
 #'
-#' @return A `bayprior` object with `dist = "mixture"` and
-#'   `prior_type = "robust"`.
+#' @return A \code{bayprior} object with \code{dist = "mixture"} and
+#'   \code{prior_type = "robust"}.
 #'
 #' @details
 #' The vague component is always a \strong{Normal distribution} centred at
@@ -128,24 +125,7 @@ sceptical_prior <- function(null_value = 0,
 #' analytically. For any other informative prior family (Beta, Gamma,
 #' Log-Normal, Exponential, Weibull), the components have \emph{different
 #' distribution families}, and the mixture density is \strong{computed
-#' numerically}. A warning is issued in this case:
-#'
-#' \preformatted{
-#'   "Components have different distribution families.
-#'    Mixture densities computed numerically."
-#' }
-#'
-#' This is expected behaviour, not an error. The numerical approximation is
-#' generally accurate in the body of the distribution but may be less reliable
-#' at the extreme tails. For proportion endpoints, the mixture is still defined
-#' on (0, 1) because the informative Beta prior constrains the support. For
-#' unbounded endpoints, use a Normal informative prior to avoid the numerical
-#' approximation.
-#'
-#' The \strong{mixture mean and SD} in \code{fit_summary} are computed in
-#' closed form from the component means, SDs, and weights regardless of
-#' family. The density values (used for plotting) are approximated numerically
-#' when families differ.
+#' numerically}. A warning is issued in this case.
 #'
 #' @references
 #' Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in
@@ -157,11 +137,6 @@ sceptical_prior <- function(null_value = 0,
 #'                              method = "moments", label = "Response rate")
 #' robust      <- robust_prior(informative, vague_weight = 0.20)
 #' plot(robust)
-#'
-#' # With a Beta informative prior -- density computed numerically
-#' beta_inf <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
-#' robust_b <- suppressWarnings(robust_prior(beta_inf, vague_weight = 0.20))
-#' plot(robust_b)
 #'
 #' @importFrom rlang abort
 #' @export
@@ -179,7 +154,6 @@ robust_prior <- function(informative,
 
   inf_mean <- informative$fit_summary$mean
   inf_sd   <- informative$fit_summary$sd
-  # Use base-R null check rather than %||% to avoid any import dependency here
   if (is.null(vague_sd)) vague_sd <- 10 * inf_sd
 
   vague <- elicit_normal(
@@ -207,15 +181,27 @@ robust_prior <- function(informative,
 #' Selects the power prior weight \eqn{\delta \in (0,1)} that down-weights
 #' historical data before incorporating it into the current analysis.
 #'
-#' @param historical_data Named list: `type`, `x`, `n`, optionally `sd`.
-#' @param current_data Named list (same structure as `historical_data`).
-#' @param base_prior A `bayprior` object (usually a vague prior).
-#' @param target_bf Numeric. Target Bayes Factor. Default `3`.
+#' @param historical_data Named list: \code{type}, \code{x}, \code{n},
+#'   optionally \code{sd}.
+#' @param current_data Named list (same structure as \code{historical_data}).
+#' @param base_prior A \code{bayprior} object (usually a vague prior).
+#' @param target_bf Numeric. Target Bayes Factor. Default \code{3}.
 #' @param delta_grid Numeric vector of \eqn{\delta} values. Default
-#'   `seq(0.05, 1.0, by = 0.05)`.
-#' @param method Character. `"bayes_factor"` (default) or `"compatibility"`.
+#'   \code{seq(0.05, 1.0, by = 0.05)}.
+#' @param method Character. \code{"bayes_factor"} (default) or
+#'   \code{"compatibility"}.
 #'
-#' @return A list of class `bayprior_power_prior`.
+#' @return A list of class \code{bayprior_power_prior} with components:
+#'   \describe{
+#'     \item{delta_opt}{Optimal power prior weight selected by the chosen method.}
+#'     \item{delta_grid}{The grid of delta values evaluated.}
+#'     \item{bf_grid}{Bayes Factor at each delta value.}
+#'     \item{compatibility_grid}{Box p-value at each delta value.}
+#'     \item{results}{Data frame with all diagnostic metrics across the grid.}
+#'     \item{power_prior}{A \code{bayprior} object updated with the optimal delta.}
+#'     \item{target_bf}{The target Bayes Factor supplied by the user.}
+#'     \item{method}{The calibration method used.}
+#'   }
 #'
 #' @references
 #' Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for
@@ -263,8 +249,6 @@ calibrate_power_prior <- function(historical_data,
 
     bf <- tryCatch({
       raw_bf <- .marginal_bf(pp, base_prior, current_data)
-      # Cap at 1e6 to avoid display overflow (e.g. 10^148 from
-      # tight-prior + compatible data). BF > 1e6 = "decisive" by any scale.
       min(raw_bf, 1e6, na.rm = TRUE)
     }, error = function(e) NA_real_)
 
@@ -315,8 +299,12 @@ calibrate_power_prior <- function(historical_data,
 
 #' Print method for bayprior_power_prior objects
 #'
-#' @param x A `bayprior_power_prior` object.
+#' @param x A \code{bayprior_power_prior} object.
 #' @param ... Ignored.
+#' @return Invisibly returns the input \code{bayprior_power_prior} object.
+#'   Called for its side effect of printing a formatted summary of the power
+#'   prior calibration, including the calibration method, target Bayes Factor,
+#'   optimal delta weight, and the mean and SD of the resulting power prior.
 #' @export
 print.bayprior_power_prior <- function(x, ...) {
   cli::cli_h1("Power Prior Calibration")
@@ -332,14 +320,12 @@ print.bayprior_power_prior <- function(x, ...) {
 
 #' Plot calibration curve for power prior weight selection
 #'
-#' @param x A `bayprior_power_prior` object.
+#' @param x A \code{bayprior_power_prior} object.
 #' @param ... Ignored.
-#' @return A `ggplot` object, or a list of two ggplots if patchwork is not
-#'   installed.
+#' @return A \code{ggplot} object, or a list of two ggplots if 'patchwork' is
+#'   not installed.
 #' @export
 plot.bayprior_power_prior <- function(x, ...) {
-  # Local NULL bindings silence R CMD CHECK notes for bare aes() column names.
-  # These are also declared in R/globals.R via utils::globalVariables().
   delta <- bayes_factor <- box_pvalue <- NULL
 
   res       <- x$results
@@ -374,9 +360,6 @@ plot.bayprior_power_prior <- function(x, ...) {
     ) +
     ggplot2::theme_minimal(base_size = 12)
 
-  # FIX: patchwork is in Suggests (not Imports) so must be guarded.
-  # Use patchwork::wrap_plots() rather than the `/` operator so the call is
-  # explicit and won't generate a CMD CHECK note.
   if (requireNamespace("patchwork", quietly = TRUE)) {
     patchwork::wrap_plots(p1, p2, ncol = 1)
   } else {
@@ -398,7 +381,6 @@ plot.bayprior_power_prior <- function(x, ...) {
     rlang::abort(glue::glue("`delta` must be in (0, 1]; got {delta}."))
   }
 
-  # -- Beta / binary ------------------------------------------------------------
   if (base_prior$dist == "beta" && type == "binary") {
     a_new <- base_prior$params$alpha + delta * x
     b_new <- base_prior$params$beta  + delta * (n - x)
@@ -407,7 +389,6 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # -- Normal -------------------------------------------------------------------
   if (base_prior$dist == "normal") {
     obs_mean  <- x
     obs_se    <- (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
@@ -422,7 +403,6 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # -- Gamma / continuous or Poisson -------------------------------------------------------
   if (base_prior$dist == "gamma" &&
       type %in% c("continuous", "poisson")) {
     x_sum     <- hist_data$x_sum %||% (x * n)
@@ -433,7 +413,6 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # -- Log-normal ---------------------------------------------------------------
   if (base_prior$dist == "lognormal") {
     log_obs_mean <- if (isTRUE(hist_data$log_scale)) x else log(x)
     raw_sd       <- hist_data$sd %||% base_prior$fit_summary$sd
@@ -450,7 +429,6 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  # -- Mixture ------------------------------------------------------------------
   if (base_prior$dist == "mixture") {
     components <- base_prior$components
     weights    <- base_prior$weights
@@ -534,7 +512,7 @@ plot.bayprior_power_prior <- function(x, ...) {
   obs_se   <- if (type == "binary") {
     sqrt(obs_mean * (1 - obs_mean) / n)
   } else if (type == "poisson") {
-    sqrt(obs_mean / n)   # Poisson SE: sqrt(rate / n)
+    sqrt(obs_mean / n)
   } else {
     (current_data$sd %||% power_prior$fit_summary$sd) / sqrt(n)
   }
