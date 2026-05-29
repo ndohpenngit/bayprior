@@ -11,6 +11,12 @@
 
 \item{...}{Ignored.}
 }
+\value{
+Invisibly returns the input \code{bayprior_power_prior} object.
+Called for its side effect of printing a formatted summary of the power
+prior calibration, including the calibration method, target Bayes Factor,
+optimal delta weight, and the mean and SD of the resulting power prior.
+}
 \description{
 Print method for bayprior_power_prior objects
 }

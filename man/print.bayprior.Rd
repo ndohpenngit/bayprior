@@ -11,6 +11,12 @@
 
 \item{...}{Ignored.}
 }
+\value{
+Invisibly returns the input \code{bayprior} object. Called
+for its side effect of printing a formatted summary of the prior
+distribution including family, parameters, mean, SD, and 95\\%
+credible interval.
+}
 \description{
 Print method for bayprior objects
 }

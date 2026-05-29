@@ -11,6 +11,13 @@
 
 \item{...}{Ignored.}
 }
+\value{
+Invisibly returns the input \code{bayprior_conflict_mv} object.
+Called for its side effect of printing a formatted summary of the
+multivariate Mahalanobis conflict check, including the Mahalanobis
+distance, chi-squared p-value, conflict flag, per-parameter marginal
+z-scores, and an interpretation string.
+}
 \description{
 Print method for multivariate conflict objects
 }
