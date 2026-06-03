@@ -5,6 +5,7 @@ toc: false
 
 <img src="man/figures/logo.png" align="right" height="195" alt="bayprior logo"/>
 
+[![CRAN status](https://www.r-pkg.org/badges/version/bayprior)](https://CRAN.R-project.org/package=bayprior)
 [![R CMD check](https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml)
 [![codecov](https://codecov.io/gh/ndohpenngit/bayprior/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ndohpenngit/bayprior)
 [![Live app](https://img.shields.io/badge/Live_App-shinyapps.io-blueviolet?logo=shiny)](https://npenn.shinyapps.io/bayprior/)
@@ -132,9 +133,6 @@ delta in (0, 1], calibrated to achieve a target Bayes Factor.
 ---
 
 ## Installation
-
-[![CRAN status](https://www.r-pkg.org/badges/version/bayprior?color=green)](https://CRAN.R-project.org/package=bayprior)
-[![codecov](https://codecov.io/gh/ndohpenngit/bayprior/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ndohpenngit/bayprior)
 
 | Type | Source | Command |
 |---|---|---|
