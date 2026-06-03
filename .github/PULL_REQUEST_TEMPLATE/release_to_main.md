@@ -21,29 +21,15 @@
 
 - [ ] `DESCRIPTION` version bumped (`usethis::use_version()`)
 - [ ] `NEWS.md` updated -- new version heading with all changes
-- [ ] No spell-check traps in DESCRIPTION:
-      - No regulatory body abbreviations (write "European Medicines Agency"
-        not "EMA")
-      - All statistical proper nouns spelled out in full AND added to
-        inst/WORDLIST (e.g. "Kullback-Leibler" requires both "Kullback" and
-        "Leibler" in WORDLIST -- they are proper nouns, not misspellings)
-      - Run `spelling::spell_check_package()` locally after any DESCRIPTION
-        change to catch flags before CI does
-- [ ] No Unicode characters (`--` not em dash, `Inf` not infinity symbol,
-      straight quotes not curly quotes)
+- [ ] No spell-check traps:
+      - Run `spelling::spell_check_package()` locally after any hange to catch flags before CI does
 - [ ] `inst/WORDLIST` updated for any new terms via
-      `spelling::update_wordlist()`. Check especially:
-      - Author surnames in references (O'Hagan, Kullback, Leibler, etc.)
-      - Statistical method names (Mahalanobis, Bhattacharyya, etc.)
-      - Package/tool names (golem, shinydashboard, etc.)
-      - Acronyms used inside R source or Rd files (not DESCRIPTION)
+      `spelling::update_wordlist()`. 
 - [ ] `^build$` is NOT in `.Rbuildignore` -- this excludes
       `build/vignette.rds` which is the prebuilt vignette index
       CRAN checks for. Removing it causes the persistent NOTE:
       "Package has a VignetteBuilder field but no prebuilt vignette index"
 - [ ] `cran-comments.md` updated to reflect current check results
-
-### CRAN submission (after PR is merged to main)
 
 ### CRAN submission (after PR is merged to main)
 
@@ -57,9 +43,6 @@
       `tar -tzf bayprior_x.x.x.tar.gz | grep cran-comments`
       Must return NOTHING
 - [ ] Upload at https://cran.r-project.org/submit.html
-      **Do NOT use `devtools::submit_cran()` -- it rebuilds the tarball
-      and loses the correct build environment**
-- [ ] Click the confirmation link in the email within 1 hour
 - [ ] Commit and push `CRAN-SUBMISSION` file:
       `git add CRAN-SUBMISSION && git commit -m "chore: submit vX.X.X to CRAN"`
 

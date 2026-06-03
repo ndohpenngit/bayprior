@@ -33,3 +33,4 @@
 ^^CODE_OF_CONDUCT\\.md$$
 ^CODE_OF_CONDUCT\.md$
 ^cran-comments\.md$
+^\.rscignore$
