@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/ndohpenngit/bayprior/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ndohpenngit/bayprior)
 [![Live app](https://img.shields.io/badge/Live_App-shinyapps.io-blueviolet?logo=shiny)](https://npenn.shinyapps.io/bayprior/)
 
-***Bayesian prior elicitation, conflict diagnostics, and regulatory reporting for clinical trials.***
+***Structured Bayesian prior elicitation, conflict diagnostics, and regulatory reporting.***
 
 ---
 
