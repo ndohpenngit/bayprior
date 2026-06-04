@@ -21,7 +21,7 @@ fig-cap-location: bottom
 </a>
 </p>
 
-***Bayesian prior elicitation, conflict diagnostics, and regulatory reporting for clinical trials.***
+***Structured Bayesian prior elicitation, conflict diagnostics, and regulatory reporting.***
 
 ---
 
