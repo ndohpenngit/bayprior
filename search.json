@@ -508,7 +508,7 @@
     "href": "index.html#installation",
     "title": "bayprior",
     "section": "Installation",
-    "text": "Installation\n \n\n\n\n\n\n\n\n\nType\nSource\nCommand\n\n\n\n\nRelease\nCRAN\ninstall.packages(\"bayprior\")\n\n\nDevelopment\nGitHub\nremotes::install_github(\"ndohpenngit/bayprior\")\n\n\n\n\nPDF reports require Quarto CLI and a LaTeX installation:\ninstall.packages(\"tinytex\")\ntinytex::install_tinytex()"
+    "text": "Installation\n\n\n\n\n\n\n\n\nType\nSource\nCommand\n\n\n\n\nRelease\nCRAN\ninstall.packages(\"bayprior\")\n\n\nDevelopment\nGitHub\nremotes::install_github(\"ndohpenngit/bayprior\")\n\n\n\n\nPDF reports require Quarto CLI and a LaTeX installation:\ninstall.packages(\"tinytex\")\ntinytex::install_tinytex()"
   },
   {
     "objectID": "index.html#quick-start",
