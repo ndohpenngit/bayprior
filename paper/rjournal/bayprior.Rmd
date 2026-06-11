@@ -207,8 +207,7 @@ rate has a 25\% chance of being below 0.20, a 60\% chance of being below
 
 ```{r elicitation-quantile}
 prior_qm <- elicit_beta(
-  probs     = c(0.25, 0.60, 0.80),
-  quantiles = c(0.20, 0.35, 0.50),
+  quantiles = c(`0.25` = 0.20, `0.60` = 0.35, `0.80` = 0.50),
   method    = "quantile",
   label     = "Response rate (quantile)",
   expert_id = "Expert_1"
@@ -455,12 +454,56 @@ package is designed to be used alongside existing analysis packages
 replacing them: bayprior handles the prior specification phase, and
 established packages handle the posterior computation.
 
-Several limitations apply. The multivariate Mahalanobis check is currently
-limited to bivariate (k = 2) endpoints; extension to k $\geq$ 3 is
-planned. Survival power priors require numerical integration and are not
-yet implemented. The robust mixture prior uses a Normal vague component
-regardless of the informative prior family; for Beta informative priors,
-the mixture density is computed numerically rather than analytically.
+## Regulatory Alignment
+
+The FDA's 2026 draft guidance on Bayesian methods [@FDA2026] identifies
+three recurring expectations for prior specification in regulatory
+submissions: (i) the prior should be derived through a documented,
+reproducible procedure rather than selected post hoc; (ii) the sensitivity
+of trial conclusions to the prior should be demonstrated across a range of
+plausible alternatives, including at least one conservative ("sceptical")
+specification; and (iii) the full justification should be presented in a
+form a non-specialist reviewer can follow as part of the statistical
+analysis plan. \CRANpkg{bayprior} addresses each of these directly:
+structured elicitation and pooling provide the documented derivation, the
+sensitivity and robust/sceptical/power prior modules provide the required
+range of alternatives, and the regulatory reporting module produces the
+reviewer-facing document.
+
+This alignment is similarly relevant under the ICH E9(R1) estimands
+framework, where the prior for the treatment effect parameter must be
+justified with respect to the targeted estimand, and under EMA reflection
+papers on extrapolation and Bayesian borrowing, which place particular
+emphasis on prior-data conflict assessment when historical or external data
+are incorporated. The conflict diagnostics in \CRANpkg{bayprior} -- the Box
+predictive p-value, surprise index, information divergence, and
+Bhattacharyya overlap -- provide this assessment in closed form for
+conjugate prior families, without requiring a fitted model.
+
+## Shiny Application
+
+The bundled Shiny application mirrors the package's six modules as
+separate panels, allowing a biostatistician without R programming
+experience to perform the same elicitation, pooling, conflict, sensitivity,
+robust prior, and reporting workflow interactively. Each panel produces the
+same plots and summary statistics as the corresponding R function, and the
+final regulatory report can be downloaded directly from the application.
+The application is hosted at \url{https://npenn.shinyapps.io/bayprior/}
+and can be launched locally via `run_app()`.
+
+## Limitations
+
+Several limitations apply to the current release (v0.2.12). The
+multivariate Mahalanobis check is currently limited to bivariate (k = 2)
+endpoints; extension to k $\geq$ 3 co-primary endpoints is planned for a
+future release. Survival power priors require numerical integration over
+the partial likelihood and are not yet implemented; calibrated power priors
+are currently available for binary, continuous, Poisson, and log-normal
+data types. The robust mixture prior uses a Normal vague component
+regardless of the informative prior family; for Beta, Gamma, and other
+non-Normal informative priors, the resulting mixture density is computed
+numerically rather than analytically, which is accurate in the body of the
+distribution but may be less reliable in the extreme tails.
 
 Future development includes survival power priors, k $\geq$ 3 endpoint
 Mahalanobis conflict, and interoperability with \CRANpkg{RBesT} for MAP
