@@ -1,0 +1,490 @@
+---
+title: "bayprior: Structured Bayesian Prior Elicitation, Conflict Diagnostics, and Regulatory Reporting"
+date: "`r Sys.Date()`"
+abstract: >
+  Bayesian clinical trials require a well-specified prior distribution, yet
+  no unified R tool previously addressed the full workflow of prior
+  construction, validation, and regulatory justification. We introduce
+  bayprior, an R package and Shiny application that implements structured
+  expert elicitation via quantile matching, moment matching, and the SHELF
+  roulette method across six distribution families; linear and logarithmic
+  expert opinion pooling with Bhattacharyya agreement diagnostics;
+  prior-data conflict assessment using the Box p-value, surprise index,
+  information divergence, Bhattacharyya overlap, and multivariate
+  Mahalanobis distance; hyperparameter sensitivity analysis with tornado
+  and influence heatmap visualisations; and robust, sceptical, and power
+  prior alternatives. A regulatory reporting module generates
+  self-contained HTML, PDF, or Word documents aligned with FDA and EMA
+  guidance on Bayesian methods. The package is demonstrated on a synthetic
+  oncology Phase II trial. bayprior is available on CRAN and includes a
+  fully modular Shiny application for interactive use.
+draft: true
+author:
+  - name: Ndoh Penn
+    affiliation: Independent Researcher
+    address:
+    - Brussels, Belgium
+    url: https://github.com/ndohpenngit
+    orcid: 0009-0003-9054-465X
+    email: ndohpenn9@gmail.com
+type: package
+output:
+  rjtools::rjournal_article:
+    self_contained: yes
+    toc: no
+bibliography: RJreferences.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width  = 7,
+  fig.height = 4.5,
+  out.width  = "100%",
+  comment    = "#>"
+)
+library(bayprior)
+```
+
+# Introduction
+
+Bayesian statistical methods are increasingly used in clinical trial design
+and analysis, offering flexible incorporation of prior knowledge and natural
+uncertainty quantification [@FDA2026]. However, the widespread adoption of
+Bayesian methods in regulatory settings requires that prior distributions be
+not only well-chosen but also transparently documented and demonstrably robust.
+The FDA's 2026 draft guidance on Bayesian methods [@FDA2026] explicitly
+requires sponsors to demonstrate that trial conclusions hold under
+sensitivity analyses over the prior specification, yet provides no
+methodological framework for how this should be done.
+
+In practice, prior specification often proceeds informally. Analysts may
+elicit a prior from clinical literature or expert opinion without a
+structured procedure, assess prior-data conflict informally by visual
+inspection, and document the justification in narrative form. This approach
+is difficult to reproduce and rarely satisfies regulatory reviewers who
+expect a systematic, auditable justification.
+
+Existing R packages for Bayesian clinical trials focus on posterior
+computation and adaptive design. \CRANpkg{RBesT} [@RBesT] implements
+robust meta-analytic-predictive priors for historical data borrowing.
+\CRANpkg{trialr} [@trialr] provides a range of adaptive trial designs
+via Stan. \CRANpkg{hdbayes} [@hdbayes] implements multiple historical
+data borrowing priors -- including power priors, normalised power priors,
+robust MAP priors, and commensurate priors -- for generalised linear
+models. None of these packages addresses the upstream problem of prior
+construction from expert knowledge, prior-data conflict assessment, or
+regulatory reporting.
+
+We introduce \CRANpkg{bayprior}, an R package and Shiny application that
+fills this gap by providing a complete prior justification workflow:
+structured expert elicitation, expert opinion pooling, prior-data conflict
+diagnostics, sensitivity analysis, robust and regulatory prior alternatives,
+and automated regulatory reporting. The package implements established
+statistical methodology [@OHagan2006; @Box1980; @Oakley2010; @Schmidli2014;
+@Ibrahim2000; @Spiegelhalter1994] in a unified, accessible framework
+suitable for both programmatic use and interactive exploration via the
+bundled Shiny application.
+
+# Related Software
+
+## Expert Elicitation
+
+The Sheffield Elicitation Framework [@Oakley2010] provides a structured
+approach to expert elicitation and is implemented in the R package
+\CRANpkg{SHELF} [@SHELF]. \CRANpkg{SHELF} supports elicitation from
+individual or multiple experts across a range of distribution families,
+with weighted linear pooling for aggregating multiple expert beliefs.
+\CRANpkg{bayprior} extends this with three programmatic elicitation
+methods (quantile matching, moment matching, and the roulette method)
+across six distribution families, adds logarithmic opinion pooling as
+a complement to linear pooling, and introduces quantitative agreement
+diagnostics via the Bhattacharyya coefficient for assessing
+inter-expert consistency before pooling.
+
+## Robust Priors and Historical Borrowing
+
+\CRANpkg{RBesT} [@RBesT] implements the robust meta-analytic-predictive
+(MAP) prior approach [@Schmidli2014] for incorporating historical control
+data. \CRANpkg{hdbayes} [@hdbayes] provides a broader range of historical
+borrowing methods, including power priors, normalised power priors,
+commensurate priors, and robust MAP priors, for generalised linear models
+via Stan. \CRANpkg{bayprior} provides the Schmidli robust mixture prior
+and calibrated power priors [@Ibrahim2000] as alternatives within the prior
+justification workflow, but focuses on prior specification and justification
+rather than historical data meta-analysis.
+
+## Prior Sensitivity and Conflict Diagnostics
+
+\CRANpkg{priorsense} [@priorsense] implements power-scaling sensitivity
+analysis for detecting prior-data conflict and likelihood noninformativity
+in fitted Stan models [@Kallioinen2023]. \CRANpkg{bayprior} addresses a
+complementary use case: closed-form conflict diagnostics for conjugate
+prior families at the prior specification stage, before any model is
+fitted, without requiring Stan. The two packages serve different points
+in the Bayesian workflow.
+
+## Scope Comparison
+
+Table \@ref(tab:pkg-comparison) summarises the scope of existing packages
+relative to \CRANpkg{bayprior}.
+
+```{r pkg-comparison, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Package     = c("SHELF", "RBesT", "trialr", "hdbayes",
+                    "priorsense", "bayprior"),
+    Elicitation = c("Yes",     "No",    "No",     "No",
+                    "No",       "Yes"),
+    Pooling     = c("Partial", "No",    "No",     "No",
+                    "No",       "Yes"),
+    Conflict    = c("No",      "No",    "No",     "No",
+                    "Yes",      "Yes"),
+    Sensitivity = c("No",      "No",    "No",     "No",
+                    "Yes",      "Yes"),
+    `Robust priors` = c("No",  "Yes",   "No",     "Yes",
+                        "No",   "Yes"),
+    Reporting   = c("No",      "No",    "No",     "No",
+                    "No",       "Yes"),
+    check.names = FALSE
+  ),
+  caption = "Scope comparison of R packages for Bayesian prior specification.
+             Partial: SHELF pooling supports linear pooling only.
+             priorsense conflict and sensitivity diagnostics require a
+             fitted Stan model.",
+  booktabs = TRUE
+)
+```
+
+# Package Overview
+
+\CRANpkg{bayprior} is built using the \CRANpkg{golem} [@golem] framework
+and provides both exported R functions for programmatic use and a modular
+Shiny application for interactive exploration. The package is available on
+CRAN and can be installed with:
+
+```{r install, eval=FALSE}
+install.packages("bayprior")
+
+# Or the development version from GitHub:
+remotes::install_github("ndohpenngit/bayprior")
+```
+
+The Shiny application can be launched with:
+
+```{r run-app, eval=FALSE}
+library(bayprior)
+run_app()
+```
+
+## Prior Elicitation
+
+\CRANpkg{bayprior} implements three structured elicitation approaches
+across six distribution families (Beta, Normal, Gamma, Log-Normal,
+Exponential, and Weibull).
+
+**Moment matching** derives hyperparameters analytically from an
+expert-supplied mean and standard deviation:
+
+```{r elicitation-moments}
+prior <- elicit_beta(
+  mean      = 0.35,
+  sd        = 0.10,
+  method    = "moments",
+  label     = "Response rate",
+  expert_id = "Expert_1"
+)
+print(prior)
+```
+
+**Quantile matching** fits the distribution numerically to expert-specified
+probability--value pairs, accommodating asymmetric beliefs that moment
+matching cannot capture. For example, an expert who believes the response
+rate has a 25\% chance of being below 0.20, a 60\% chance of being below
+0.35, and an 80\% chance of being below 0.50:
+
+```{r elicitation-quantile}
+prior_qm <- elicit_beta(
+  probs     = c(0.25, 0.60, 0.80),
+  quantiles = c(0.20, 0.35, 0.50),
+  method    = "quantile",
+  label     = "Response rate (quantile)",
+  expert_id = "Expert_1"
+)
+```
+
+```{r elicitation-plot, fig.cap="Beta prior elicited by moment matching (mean = 0.35, SD = 0.10). Shaded region shows the 95\\% credible interval."}
+plot(prior)
+```
+
+The fitted distribution, parameter estimates, and a 95\% credible interval
+are displayed automatically. All six families share a common API, so
+`elicit_beta()` can be replaced with `elicit_normal()`, `elicit_gamma()`,
+`elicit_lognormal()`, `elicit_exponential()`, or `elicit_weibull()` with
+identical syntax.
+
+## Expert Pooling
+
+Multiple expert priors can be aggregated using linear or logarithmic
+opinion pooling [@OHagan2006]. Linear pooling takes the weighted average
+of the densities; logarithmic pooling takes the weighted geometric mean.
+
+```{r pooling}
+e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments",
+                  label = "Response rate", expert_id = "Expert_1")
+e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments",
+                  label = "Response rate", expert_id = "Expert_2")
+
+consensus <- aggregate_experts(
+  priors  = list(E1 = e1, E2 = e2),
+  weights = c(0.5, 0.5),
+  method  = "linear"
+)
+print(consensus)
+```
+
+Agreement between experts is quantified by the Bhattacharyya coefficient
+[@Bhattacharyya1943], which measures distributional overlap on a scale from
+0 (no overlap) to 1 (identical distributions). This provides an objective
+basis for assessing whether pooling is appropriate.
+
+## Prior-Data Conflict Diagnostics
+
+Prior-data conflict occurs when the observed data is implausible under the
+prior predictive distribution [@Box1980]. \CRANpkg{bayprior} computes four
+complementary conflict metrics:
+
+- **Prior predictive p-value** [@Box1980]: the probability of observing
+  data at least as extreme as the observed data under the prior predictive
+  distribution.
+- **Surprise index**: the standardised distance between the prior mean and
+  the observed data, expressed in prior standard deviation units.
+- **Information divergence**: the Kullback-Leibler divergence from the
+  prior to the normalised likelihood.
+- **Bhattacharyya overlap**: the distributional overlap between the prior
+  and normalised likelihood.
+
+```{r conflict}
+interim <- list(type = "binary", x = 18, n = 40)
+cd <- prior_conflict(prior, interim)
+print(cd)
+```
+
+Four data types are supported: binary (Beta-Binomial conjugate),
+continuous (Normal-Normal), Poisson/count (Gamma-Poisson), and survival
+(Gamma-Exponential).
+
+For co-primary endpoints, multivariate conflict can be assessed using the
+Mahalanobis distance [@Mahalanobis1936]:
+
+```{r conflict-mv}
+pm   <- c(0.35, 0.60)
+pcov <- matrix(c(0.010, 0.003, 0.003, 0.015), 2, 2)
+om   <- c(0.52, 0.58)
+ocov <- matrix(c(2e-4, 4e-5, 4e-5, 2e-4), 2, 2)
+
+mv <- conflict_mahalanobis(pm, pcov, om, ocov,
+                           labels = c("Response rate", "OS rate"))
+print(mv)
+```
+
+## Sensitivity Analysis
+
+The sensitivity module evaluates posterior conclusions across a
+hyperparameter grid, answering the regulatory question: does the
+treatment benefit conclusion change materially under plausible alternative
+priors?
+
+```{r sensitivity, fig.cap="Tornado plot showing the influence of prior hyperparameters on the posterior mean. Parameters are ranked by their marginal influence."}
+sa <- sensitivity_grid(
+  prior        = prior,
+  data_summary = interim,
+  param_grid   = list(
+    alpha = seq(1, 8, by = 0.5),
+    beta  = seq(2, 20, by = 1)
+  ),
+  target    = c("posterior_mean", "prob_efficacy"),
+  threshold = 0.30
+)
+plot_tornado(sa)
+```
+
+The `sensitivity_cri()` function tracks credible interval width
+specifically -- a quantity directly relevant to the precision of treatment
+effect estimates in regulatory submissions.
+
+## Robust, Sceptical, and Power Priors
+
+\CRANpkg{bayprior} provides three alternative prior types for regulatory
+sensitivity analyses.
+
+**Robust mixture prior** [@Schmidli2014]: mixes the informative prior with
+a vague component, protecting against prior misspecification:
+
+```{r robust}
+rob <- robust_prior(prior, vague_weight = 0.20)
+plot(rob)
+```
+
+**Sceptical prior** [@Spiegelhalter1994]: centred at the null value of
+the treatment effect, representing a conservative regulatory stance:
+
+```{r sceptical}
+scep <- sceptical_prior(
+  null_value = 0.20,
+  family     = "beta",
+  strength   = "moderate",
+  label      = "Response rate (sceptical)"
+)
+```
+
+**Power prior** [@Ibrahim2000]: down-weights historical data by a factor
+$\delta \in (0, 1]$ calibrated to achieve a target Bayes Factor:
+
+```{r power-prior}
+base  <- elicit_beta(mean = 0.50, sd = 0.20, method = "moments",
+                     label = "Response rate")
+calib <- calibrate_power_prior(
+  historical_data = list(type = "binary", x = 12, n = 40),
+  current_data    = list(type = "binary", x = 18, n = 50),
+  base_prior      = base,
+  target_bf       = 3
+)
+print(calib)
+```
+
+## Regulatory Reporting
+
+A single call to `prior_report()` generates a self-contained prior
+justification document in HTML, PDF, or Word format:
+
+```{r report, eval=FALSE}
+prior_report(
+  prior           = prior,
+  conflict        = cd,
+  sensitivity     = sa,
+  robust_prior    = rob,
+  sceptical_prior = scep,
+  output_format   = "html",
+  trial_name      = "TRIAL-001",
+  sponsor         = "Example Pharma Ltd",
+  author          = "N.P., Biostatistician"
+)
+```
+
+The generated report includes parameter summary tables, all diagnostic
+plots, a compliance checklist aligned with the FDA 2026 draft guidance
+[@FDA2026], and a structured prior justification narrative.
+
+# Case Study: TRIAL-001
+
+We demonstrate the complete \CRANpkg{bayprior} workflow on TRIAL-001, a
+synthetic oncology Phase II trial with a binary response rate endpoint.
+The target response rate is 30\% (null hypothesis) versus an expected
+rate of 40\% (alternative hypothesis).
+
+## Expert Elicitation and Pooling
+
+Two clinical experts independently specified Beta priors for the response
+rate. Expert 1 (conservative) placed a mean of 0.30 with SD of 0.08;
+Expert 2 (optimistic) placed a mean of 0.42 with SD of 0.10. Equal weights
+were assigned on the basis of comparable seniority.
+
+```{r trial-elicitation}
+e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments",
+                  label = "Response rate", expert_id = "Expert_1")
+e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments",
+                  label = "Response rate", expert_id = "Expert_2")
+
+pool <- aggregate_experts(list(E1 = e1, E2 = e2),
+                          weights = c(0.5, 0.5),
+                          method  = "linear")
+print(pool)
+```
+
+The Bhattacharyya coefficient between the two expert distributions
+indicated substantial agreement, supporting the use of equal-weight
+pooling. The consensus prior had a mean of
+`r round(pool$fit_summary$mean, 3)` and SD of
+`r round(pool$fit_summary$sd, 3)`.
+
+## Conflict Diagnostics at Interim
+
+At the pre-specified interim analysis, 18 responses were observed in
+40 patients (observed rate: 45\%).
+
+```{r trial-conflict}
+interim_data <- list(type = "binary", x = 18, n = 40)
+cd_trial <- prior_conflict(pool, interim_data)
+print(cd_trial)
+```
+
+The Box p-value was above the 0.10 threshold, indicating no evidence of
+prior-data conflict. The posterior distribution updated the consensus prior
+towards the observed data as expected.
+
+## Regulatory Sensitivity Pair
+
+Following FDA guidance recommendations, we computed an enthusiastic-sceptical
+prior sensitivity pair:
+
+```{r trial-sensitivity-pair}
+scep_trial <- sceptical_prior(null_value = 0.20, family = "beta",
+                              strength = "moderate",
+                              label = "Response rate (sceptical)")
+
+cd_scep <- prior_conflict(scep_trial, interim_data)
+
+cat("Conflict severity (consensus): ",
+    cd_trial$conflict_severity, "\n")
+cat("Conflict severity (sceptical):",
+    cd_scep$conflict_severity, "\n")
+```
+
+Conclusions were consistent across both priors, supporting regulatory
+robustness.
+
+# Discussion
+
+\CRANpkg{bayprior} provides a structured workflow for prior justification
+that addresses a practical gap in the Bayesian clinical trial toolkit. The
+package is designed to be used alongside existing analysis packages
+(\CRANpkg{RBesT}, \CRANpkg{rstanarm}, \CRANpkg{brms}) rather than
+replacing them: bayprior handles the prior specification phase, and
+established packages handle the posterior computation.
+
+Several limitations apply. The multivariate Mahalanobis check is currently
+limited to bivariate (k = 2) endpoints; extension to k $\geq$ 3 is
+planned. Survival power priors require numerical integration and are not
+yet implemented. The robust mixture prior uses a Normal vague component
+regardless of the informative prior family; for Beta informative priors,
+the mixture density is computed numerically rather than analytically.
+
+Future development includes survival power priors, k $\geq$ 3 endpoint
+Mahalanobis conflict, and interoperability with \CRANpkg{RBesT} for MAP
+prior workflows. A companion paper in Pharmaceutical Statistics
+(forthcoming) provides a methodological treatment of the conflict
+diagnostic framework and a regulatory alignment assessment against the
+FDA 2026 draft guidance and ICH E9(R1).
+
+# Summary
+
+\CRANpkg{bayprior} provides an integrated R tool for the complete prior
+justification workflow in Bayesian clinical trials, combining structured
+expert elicitation, opinion pooling, conjugate conflict diagnostics,
+hyperparameter sensitivity analysis, robust prior alternatives, and
+regulatory reporting in a single package. The package is available on CRAN:
+
+```{r install-cran, eval=FALSE}
+install.packages("bayprior")
+```
+
+The full documentation and vignettes are available at
+\url{https://ndohpenngit.github.io/bayprior/}. A live Shiny application
+is hosted at \url{https://npenn.shinyapps.io/bayprior/}.
+
+```{r citation, echo=FALSE}
+cat(format(citation("bayprior"), style = "text"), sep = "\n")
+```
