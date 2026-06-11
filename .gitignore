@@ -28,3 +28,11 @@ vignettes/*_files/
 vignettes/*.html
 vignettes/*.html
 /doc/
+
+# R Journal paper build artifacts
+paper/rjournal/*.html
+paper/rjournal/*.tex
+paper/rjournal/*.log
+paper/rjournal/*.knit.md
+paper/rjournal/RJwrapper.*
+paper/rjournal/bayprior.R
