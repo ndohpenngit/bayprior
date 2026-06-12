@@ -36,6 +36,13 @@ bibliography: RJreferences.bib
 ---
 
 ```{r setup, include=FALSE}
+# cli detects RStudio/Positron via this env var to decide whether to render
+# styled output (cli_h1, cli_ul, cli_li, etc). The callr subprocess used by
+# rmarkdown::render() does not inherit it, causing print.bayprior() and
+# related cli-based print methods to produce no visible output. Setting it
+# manually restores the same rendering path used in interactive sessions.
+Sys.setenv(RSTUDIO = "1")
+
 knitr::opts_chunk$set(
   echo    = TRUE,
   warning = FALSE,
@@ -196,7 +203,27 @@ prior <- elicit_beta(
   label     = "Response rate",
   expert_id = "Expert_1"
 )
-print(prior)
+```
+
+```{r prior-table, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Quantity = c("Distribution", "alpha", "beta", "Method", "Expert",
+                  "Mean (SD)", "95% CrI"),
+    Value = c(
+      toupper(prior$dist),
+      round(prior$params$alpha, 4),
+      round(prior$params$beta, 4),
+      paste(prior$method, "elicitation"),
+      prior$expert_id,
+      paste0(round(prior$fit_summary$mean, 4), " (",
+             round(prior$fit_summary$sd, 4), ")"),
+      paste0("[", round(prior$fit_summary$q025, 4), ", ",
+             round(prior$fit_summary$q975, 4), "]")
+    )
+  ),
+  caption = "Elicited Beta prior for the response rate (moment matching)."
+)
 ```
 
 **Quantile matching** fits the distribution numerically to expert-specified
@@ -241,13 +268,30 @@ consensus <- aggregate_experts(
   weights = c(0.5, 0.5),
   method  = "linear"
 )
-print(consensus)
 ```
 
-Agreement between experts is quantified by the Bhattacharyya coefficient
-[@Bhattacharyya1943], which measures distributional overlap on a scale from
-0 (no overlap) to 1 (identical distributions). This provides an objective
-basis for assessing whether pooling is appropriate.
+```{r consensus-table, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Quantity = c("Distribution", "Components", "Weights", "Mean (SD)"),
+    Value = c(
+      toupper(consensus$dist),
+      length(consensus$components),
+      paste(round(consensus$weights, 3), collapse = ", "),
+      paste0(round(consensus$fit_summary$mean, 4), " (",
+             round(consensus$fit_summary$sd, 4), ")")
+    )
+  ),
+  caption = "Consensus prior from linear pooling of two experts."
+)
+```
+
+Agreement between experts can be quantified by the Bhattacharyya
+coefficient [@Bhattacharyya1943], which measures distributional overlap on
+a scale from 0 (no overlap) to 1 (identical distributions). A coefficient
+close to 1 supports pooling; a low coefficient indicates the experts'
+beliefs are largely non-overlapping, in which case pooling may obscure
+a genuine disagreement that should be reported separately.
 
 ## Prior-Data Conflict Diagnostics
 
@@ -268,7 +312,25 @@ complementary conflict metrics:
 ```{r conflict}
 interim <- list(type = "binary", x = 18, n = 40)
 cd <- prior_conflict(prior, interim)
-print(cd)
+```
+
+```{r cd-table, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Diagnostic = c("Box's p-value", "Surprise index", "KL divergence",
+                    "Bhattacharyya overlap", "Conflict severity",
+                    "Recommendation"),
+    Value = c(
+      round(cd$box_pvalue, 4),
+      round(cd$surprise_index, 4),
+      round(cd$kl_prior_likelihood, 4),
+      round(cd$overlap, 4),
+      toupper(cd$conflict_severity),
+      cd$recommendation
+    )
+  ),
+  caption = "Prior-data conflict diagnostics for the response rate prior."
+)
 ```
 
 Four data types are supported: binary (Beta-Binomial conjugate),
@@ -286,7 +348,23 @@ ocov <- matrix(c(2e-4, 4e-5, 4e-5, 2e-4), 2, 2)
 
 mv <- conflict_mahalanobis(pm, pcov, om, ocov,
                            labels = c("Response rate", "OS rate"))
-print(mv)
+```
+
+```{r mv-table, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Diagnostic = c("Mahalanobis D", "Chi-sq p-value (df=2)", "Conflict flag",
+                    paste("z -", names(mv$marginal_z)), "Interpretation"),
+    Value = c(
+      round(mv$mahal_distance, 4),
+      round(mv$pvalue, 4),
+      as.character(mv$conflict_flag),
+      round(mv$marginal_z, 3),
+      mv$interpretation
+    )
+  ),
+  caption = "Multivariate Mahalanobis conflict check for two co-primary endpoints."
+)
 ```
 
 ## Sensitivity Analysis
@@ -351,7 +429,23 @@ calib <- calibrate_power_prior(
   base_prior      = base,
   target_bf       = 3
 )
-print(calib)
+```
+
+```{r calib-table, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Quantity = c("Method", "Target BF", "Optimal delta",
+                  "Power prior mean", "Power prior SD"),
+    Value = c(
+      calib$method,
+      calib$target_bf,
+      calib$delta_opt,
+      round(calib$power_prior$fit_summary$mean, 4),
+      round(calib$power_prior$fit_summary$sd, 4)
+    )
+  ),
+  caption = "Power prior calibration via Bayes Factor."
+)
 ```
 
 ## Regulatory Reporting
@@ -400,12 +494,27 @@ e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments",
 pool <- aggregate_experts(list(E1 = e1, E2 = e2),
                           weights = c(0.5, 0.5),
                           method  = "linear")
-print(pool)
 ```
 
-The Bhattacharyya coefficient between the two expert distributions
-indicated substantial agreement, supporting the use of equal-weight
-pooling. The consensus prior had a mean of
+```{r pool-table, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Quantity = c("Distribution", "Components", "Weights", "Mean (SD)"),
+    Value = c(
+      toupper(pool$dist),
+      length(pool$components),
+      paste(round(pool$weights, 3), collapse = ", "),
+      paste0(round(pool$fit_summary$mean, 4), " (",
+             round(pool$fit_summary$sd, 4), ")")
+    )
+  ),
+  caption = "Consensus prior pooled from two clinical experts (TRIAL-001)."
+)
+```
+
+The two expert distributions overlap substantially (means 0.30 and
+0.42 with comparable SDs of 0.08 and 0.10), supporting the use of
+equal-weight linear pooling. The consensus prior had a mean of
 `r round(pool$fit_summary$mean, 3)` and SD of
 `r round(pool$fit_summary$sd, 3)`.
 
@@ -417,7 +526,25 @@ At the pre-specified interim analysis, 18 responses were observed in
 ```{r trial-conflict}
 interim_data <- list(type = "binary", x = 18, n = 40)
 cd_trial <- prior_conflict(pool, interim_data)
-print(cd_trial)
+```
+
+```{r cdtrial-table, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Diagnostic = c("Box's p-value", "Surprise index", "KL divergence",
+                    "Bhattacharyya overlap", "Conflict severity",
+                    "Recommendation"),
+    Value = c(
+      round(cd_trial$box_pvalue, 4),
+      round(cd_trial$surprise_index, 4),
+      round(cd_trial$kl_prior_likelihood, 4),
+      round(cd_trial$overlap, 4),
+      toupper(cd_trial$conflict_severity),
+      cd_trial$recommendation
+    )
+  ),
+  caption = "Prior-data conflict diagnostics at the TRIAL-001 interim analysis."
+)
 ```
 
 The Box p-value was above the 0.10 threshold, indicating no evidence of
@@ -488,8 +615,9 @@ experience to perform the same elicitation, pooling, conflict, sensitivity,
 robust prior, and reporting workflow interactively. Each panel produces the
 same plots and summary statistics as the corresponding R function, and the
 final regulatory report can be downloaded directly from the application.
-The application is hosted at \url{https://npenn.shinyapps.io/bayprior/}
-and can be launched locally via `run_app()`.
+The application is hosted at
+<https://npenn.shinyapps.io/bayprior/> and can be launched locally
+via `run_app()`.
 
 ## Limitations
 
@@ -525,8 +653,8 @@ install.packages("bayprior")
 ```
 
 The full documentation and vignettes are available at
-\url{https://ndohpenngit.github.io/bayprior/}. A live Shiny application
-is hosted at \url{https://npenn.shinyapps.io/bayprior/}.
+<https://ndohpenngit.github.io/bayprior/>. A live Shiny application
+is hosted at <https://npenn.shinyapps.io/bayprior/>.
 
 ```{r citation, echo=FALSE}
 cat(format(citation("bayprior"), style = "text"), sep = "\n")
