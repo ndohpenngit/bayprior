@@ -2,22 +2,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Ndoh Penn">
-<meta name="dcterms.date" content="2026-05-27">
+<meta name="dcterms.date" content="2026-07-29">
 
 <title>Prior Elicitation Methods – bayprior</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -77,10 +80,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-6033a600180109c3731f6a886c29932c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-189549ecd294ed9837df383a4b42e31c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -110,7 +113,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -288,7 +291,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 27, 2026</p>
+      <p class="date">July 29, 2026</p>
     </div>
   </div>
   
@@ -372,8 +375,18 @@ window.Quarto = {
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span>,</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"ORR (treatment arm)"</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_q)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_q)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_q)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: ORR (treatment arm) --
+• Distribution : BETA
+• Parameters   : alpha = 2.6338, beta = 5.589
+• Method       : quantile elicitation
+• Expert       : Expert_1
+• Mean (SD)    : 0.3203 (0.1536)
+• 95% CrI      : [0.0708, 0.6514]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_q)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -386,14 +399,24 @@ window.Quarto = {
 <section id="moment-matching" class="level2">
 <h2 class="anchored" data-anchor-id="moment-matching">Moment Matching</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>prior_m <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.30</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="fl">0.10</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"ORR (treatment arm)"</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_m)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>prior_m <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.30</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="fl">0.10</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"ORR (treatment arm)"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_m)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: ORR (treatment arm) --
+• Distribution : BETA
+• Parameters   : alpha = 6, beta = 14
+• Method       : moments elicitation
+• Expert       : Expert_1
+• Mean (SD)    : 0.3 (0.1)
+• 95% CrI      : [0.1258, 0.512]</code></pre>
+</div>
 </div>
 <p>Moment matching solves analytically: <span class="math display">\[\alpha = \mu \left(\frac{\mu(1-\mu)}{\sigma^2} - 1\right), \quad
 \beta = (1-\mu)\left(\frac{\mu(1-\mu)}{\sigma^2} - 1\right)\]</span></p>
@@ -403,11 +426,11 @@ window.Quarto = {
 <section id="normal-prior-continuous-endpoints" class="level1">
 <h1>Normal Prior (Continuous Endpoints)</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>prior_lor <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.025"</span> <span class="ot">=</span> <span class="sc">-</span><span class="fl">0.50</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.20</span>, <span class="st">"0.975"</span> <span class="ot">=</span> <span class="fl">0.90</span>),</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Log odds ratio"</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_lor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>prior_lor <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.025"</span> <span class="ot">=</span> <span class="sc">-</span><span class="fl">0.50</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.20</span>, <span class="st">"0.975"</span> <span class="ot">=</span> <span class="fl">0.90</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Log odds ratio"</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_lor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -417,11 +440,11 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>prior_md <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fl">0.0</span>, <span class="at">sd =</span> <span class="fl">0.5</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"Mean difference (sceptical)"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_md)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>prior_md <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fl">0.0</span>, <span class="at">sd =</span> <span class="fl">0.5</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"Mean difference (sceptical)"</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_md)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -436,11 +459,11 @@ window.Quarto = {
 <h1>Gamma Prior (Rate and Count Endpoints)</h1>
 <p>The Gamma distribution is the conjugate prior for Poisson and exponential likelihoods — a natural choice for event rate priors.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>prior_os <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="dv">18</span>, <span class="at">sd =</span> <span class="dv">6</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"Median OS (months)"</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_os)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>prior_os <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="dv">18</span>, <span class="at">sd =</span> <span class="dv">6</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"Median OS (months)"</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_os)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -450,11 +473,21 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>prior_rate <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="dv">5</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="dv">10</span>),</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Event rate (per 100 patient-years)"</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_rate)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>prior_rate <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="dv">5</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="dv">10</span>),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Event rate (per 100 patient-years)"</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_rate)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: Event rate (per 100 patient-years) --
+• Distribution : GAMMA
+• Parameters   : shape = 2.9153, rate = 0.5201
+• Method       : quantile elicitation
+• Expert       : Expert_1
+• Mean (SD)    : 5.6052 (3.2829)
+• 95% CrI      : [1.1199, 13.6315]</code></pre>
+</div>
 </div>
 <p><span class="math display">\[\text{mean} = \frac{\text{shape}}{\text{rate}}, \quad
 \text{SD} = \frac{\sqrt{\text{shape}}}{\text{rate}}\]</span></p>
@@ -463,11 +496,11 @@ window.Quarto = {
 <section id="log-normal-prior-hazard-ratios" class="level1">
 <h1>Log-Normal Prior (Hazard Ratios)</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>prior_hr <span class="ot">&lt;-</span> <span class="fu">elicit_lognormal</span>(</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.05"</span> <span class="ot">=</span> <span class="fl">0.40</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.70</span>, <span class="st">"0.95"</span> <span class="ot">=</span> <span class="fl">1.20</span>),</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard ratio (treatment vs control)"</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>prior_hr <span class="ot">&lt;-</span> <span class="fu">elicit_lognormal</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.05"</span> <span class="ot">=</span> <span class="fl">0.40</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.70</span>, <span class="st">"0.95"</span> <span class="ot">=</span> <span class="fl">1.20</span>),</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard ratio (treatment vs control)"</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -477,11 +510,21 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>prior_pk <span class="ot">&lt;-</span> <span class="fu">elicit_lognormal</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="dv">25</span>, <span class="at">sd =</span> <span class="dv">10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"AUC (ng/mL*h)"</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_pk)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>prior_pk <span class="ot">&lt;-</span> <span class="fu">elicit_lognormal</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="dv">25</span>, <span class="at">sd =</span> <span class="dv">10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"AUC (ng/mL*h)"</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_pk)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: AUC (ng/mL*h) --
+• Distribution : LOGNORMAL
+• Parameters   : meanlog = 3.1447, sdlog = 0.3853
+• Method       : moments elicitation
+• Expert       : Expert_1
+• Mean (SD)    : 25 (10)
+• 95% CrI      : [10.9089, 49.39]</code></pre>
+</div>
 </div>
 <hr>
 </section>
@@ -492,15 +535,25 @@ window.Quarto = {
 <section id="method-moments" class="level2">
 <h2 class="anchored" data-anchor-id="method-moments">Method: moments</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mean hazard rate 0.05 =&gt; mean survival 1/0.05 = 20 months</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>prior_hz <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.05</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard rate (constant)"</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hz)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hz)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mean hazard rate 0.05 =&gt; mean survival 1/0.05 = 20 months</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>prior_hz <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.05</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard rate (constant)"</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hz)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: Hazard rate (constant) --
+• Distribution : EXPONENTIAL
+• Parameters   : rate = 20
+• Method       : moments elicitation
+• Expert       : Expert_1
+• Mean (SD)    : 0.05 (0.05)
+• 95% CrI      : [0.0013, 0.1844]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hz)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -514,25 +567,45 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="method-rate">Method: rate</h2>
 <p>Direct rate specification (= <span class="math inline">\(\lambda\)</span>):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>prior_ae <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">rate   =</span> <span class="fl">0.12</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"rate"</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"AE rate per person-year"</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_ae)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>prior_ae <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">rate   =</span> <span class="fl">0.12</span>,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"rate"</span>,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"AE rate per person-year"</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_ae)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: AE rate per person-year --
+• Distribution : EXPONENTIAL
+• Parameters   : rate = 0.12
+• Method       : rate elicitation
+• Expert       : Expert
+• Mean (SD)    : 8.3333 (8.3333)
+• 95% CrI      : [0.211, 30.7407]</code></pre>
+</div>
 </div>
 </section>
 <section id="method-quantile" class="level2">
 <h2 class="anchored" data-anchor-id="method-quantile">Method: quantile</h2>
 <p>Fit the rate from expert-specified quantiles:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>prior_hz_q <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.25"</span> <span class="ot">=</span> <span class="fl">0.02</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.05</span>, <span class="st">"0.75"</span> <span class="ot">=</span> <span class="fl">0.10</span>),</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard rate"</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hz_q)</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hz_q)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>prior_hz_q <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.25"</span> <span class="ot">=</span> <span class="fl">0.02</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.05</span>, <span class="st">"0.75"</span> <span class="ot">=</span> <span class="fl">0.10</span>),</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"quantile"</span>,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Hazard rate"</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hz_q)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: Hazard rate --
+• Distribution : EXPONENTIAL
+• Parameters   : rate = 14.0345
+• Method       : quantile elicitation
+• Expert       : Expert
+• Mean (SD)    : 0.0713 (0.0713)
+• 95% CrI      : [0.0018, 0.2628]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_hz_q)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -586,15 +659,25 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="method-moments-1">Method: moments</h2>
 <p>Specify prior mean and SD — bayprior solves for shape and scale via Nelder-Mead optimisation:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>prior_wb <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="dv">20</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="dv">10</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"OS (months)"</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb)</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>prior_wb <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="dv">20</span>,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="dv">10</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"OS (months)"</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Expert_1"</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: OS (months) --
+• Distribution : WEIBULL
+• Parameters   : shape = 2.1014, scale = 22.5813
+• Method       : moments elicitation
+• Expert       : Expert_1
+• Mean (SD)    : 20 (9.9999)
+• 95% CrI      : [3.9262, 42.0265]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -608,15 +691,25 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="method-params">Method: params</h2>
 <p>Direct shape and scale specification:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># k=2: linearly increasing hazard</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>prior_wb2 <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">shape  =</span> <span class="dv">2</span>,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">scale  =</span> <span class="dv">20</span>,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"params"</span>,</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"PFS (months) — increasing hazard"</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb2)</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># k=2: linearly increasing hazard</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>prior_wb2 <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">shape  =</span> <span class="dv">2</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">scale  =</span> <span class="dv">20</span>,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"params"</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"PFS (months) — increasing hazard"</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: PFS (months) — increasing hazard --
+• Distribution : WEIBULL
+• Parameters   : shape = 2, scale = 20
+• Method       : params elicitation
+• Expert       : Expert
+• Mean (SD)    : 17.7245 (9.265)
+• 95% CrI      : [3.1823, 38.4129]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -629,13 +722,23 @@ window.Quarto = {
 <section id="method-quantile-1" class="level2">
 <h2 class="anchored" data-anchor-id="method-quantile-1">Method: quantile</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>prior_wb3 <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="dv">5</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="dv">18</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="dv">40</span>),</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"OS (months)"</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb3)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>prior_wb3 <span class="ot">&lt;-</span> <span class="fu">elicit_weibull</span>(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="dv">5</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="dv">18</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="dv">40</span>),</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"quantile"</span>,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"OS (months)"</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_wb3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: OS (months) --
+• Distribution : WEIBULL
+• Parameters   : shape = 1.4822, scale = 22.8859
+• Method       : quantile elicitation
+• Expert       : Expert
+• Mean (SD)    : 20.6908 (14.2043)
+• 95% CrI      : [1.9159, 55.2137]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_wb3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -655,14 +758,24 @@ window.Quarto = {
 <h1>Roulette Method</h1>
 <p>The interactive chip-allocation method for clinical experts unfamiliar with probability distributions. In the Shiny app this is fully interactive; programmatically:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>prior_rou <span class="ot">&lt;-</span> <span class="fu">elicit_roulette</span>(</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">chips  =</span> <span class="fu">c</span>(<span class="dv">0</span>L, <span class="dv">1</span>L, <span class="dv">3</span>L, <span class="dv">7</span>L, <span class="dv">9</span>L, <span class="dv">7</span>L, <span class="dv">4</span>L, <span class="dv">2</span>L, <span class="dv">1</span>L, <span class="dv">1</span>L),</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.1</span>),</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="st">"beta"</span>,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"Response rate"</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_rou)</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_rou)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>prior_rou <span class="ot">&lt;-</span> <span class="fu">elicit_roulette</span>(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">chips  =</span> <span class="fu">c</span>(<span class="dv">0</span>L, <span class="dv">1</span>L, <span class="dv">3</span>L, <span class="dv">7</span>L, <span class="dv">9</span>L, <span class="dv">7</span>L, <span class="dv">4</span>L, <span class="dv">2</span>L, <span class="dv">1</span>L, <span class="dv">1</span>L),</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.1</span>),</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="st">"beta"</span>,</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">label  =</span> <span class="st">"Response rate"</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_rou)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: Response rate --
+• Distribution : BETA
+• Parameters   : alpha = 3.0457, beta = 3.7685
+• Method       : quantile elicitation
+• Expert       : Expert_1
+• Mean (SD)    : 0.447 (0.1779)
+• 95% CrI      : [0.1269, 0.7962]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prior_rou)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -678,20 +791,20 @@ window.Quarto = {
 <section id="linear-pooling" class="level2">
 <h2 class="anchored" data-anchor-id="linear-pooling">Linear Pooling</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>e1 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"Oncologist_1"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>e2 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.35</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"Oncologist_2"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>e3 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="fl">0.15</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.30</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="fl">0.52</span>),</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Statistician"</span>, <span class="at">label =</span> <span class="st">"ORR"</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>consensus <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">priors  =</span> <span class="fu">list</span>(<span class="at">Oncologist_1 =</span> e1, <span class="at">Oncologist_2 =</span> e2, <span class="at">Statistician =</span> e3),</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.40</span>, <span class="fl">0.35</span>, <span class="fl">0.25</span>),</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">method  =</span> <span class="st">"linear"</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(consensus)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>e1 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"Oncologist_1"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>e2 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.35</span>, <span class="at">sd =</span> <span class="fl">0.10</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"Oncologist_2"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>e3 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="st">"0.10"</span> <span class="ot">=</span> <span class="fl">0.15</span>, <span class="st">"0.50"</span> <span class="ot">=</span> <span class="fl">0.30</span>, <span class="st">"0.90"</span> <span class="ot">=</span> <span class="fl">0.52</span>),</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Statistician"</span>, <span class="at">label =</span> <span class="st">"ORR"</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>consensus <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">priors  =</span> <span class="fu">list</span>(<span class="at">Oncologist_1 =</span> e1, <span class="at">Oncologist_2 =</span> e2, <span class="at">Statistician =</span> e3),</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.40</span>, <span class="fl">0.35</span>, <span class="fl">0.25</span>),</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">method  =</span> <span class="st">"linear"</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(consensus)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -705,16 +818,24 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="pooling-compatibility">Pooling Compatibility</h2>
 <p>bayprior validates compatibility before pooling. Priors with <strong>incompatible supports</strong> (e.g.&nbsp;Beta + Normal) are blocked with an error. Same-support cross-family pooling (e.g.&nbsp;Gamma + Exponential) proceeds with a warning noting that sensitivity analysis will use the dominant component’s parameters.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Same positive support — allowed (Gamma + Exponential)</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>g1   <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(<span class="at">mean =</span> <span class="dv">5</span>, <span class="at">sd =</span> <span class="dv">2</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">expert_id =</span> <span class="st">"E1"</span>, <span class="at">label =</span> <span class="st">"Rate"</span>)</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>exp1 <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(<span class="at">mean =</span> <span class="fl">0.2</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                            <span class="at">expert_id =</span> <span class="st">"E2"</span>, <span class="at">label =</span> <span class="st">"Rate"</span>)</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>pool_pos <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">priors  =</span> <span class="fu">list</span>(<span class="at">E1 =</span> g1, <span class="at">E2 =</span> exp1),</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(pool_pos)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Same positive support — allowed (Gamma + Exponential)</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>g1   <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(<span class="at">mean =</span> <span class="dv">5</span>, <span class="at">sd =</span> <span class="dv">2</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">expert_id =</span> <span class="st">"E1"</span>, <span class="at">label =</span> <span class="st">"Rate"</span>)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>exp1 <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(<span class="at">mean =</span> <span class="fl">0.2</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>                            <span class="at">expert_id =</span> <span class="st">"E2"</span>, <span class="at">label =</span> <span class="st">"Rate"</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>pool_pos <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">priors  =</span> <span class="fu">list</span>(<span class="at">E1 =</span> g1, <span class="at">E2 =</span> exp1),</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(pool_pos)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+-- bayprior: Linear pooled consensus prior --
+• Distribution : MIXTURE
+• Components   : 2
+• Weights      : 0.5, 0.5
+• Mean         : 2.6</code></pre>
+</div>
 </div>
 <hr>
 </section>
@@ -723,7 +844,7 @@ window.Quarto = {
 <h1>Prior Object Structure</h1>
 <p>All <code>elicit_*()</code> functions return a <code>"bayprior"</code> S3 object:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(prior_q, <span class="at">max.level =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(prior_q, <span class="at">max.level =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>List of 7
  $ dist       : chr "beta"
