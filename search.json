@@ -2,184 +2,163 @@
   {
     "objectID": "NEWS.html",
     "href": "NEWS.html",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "",
-    "text": "Wrapped software name in single quotes in DESCRIPTION: ‘Shiny’, per CRAN policy on package and software name formatting.\nAdded six methodology references to DESCRIPTION in CRAN-required format (authors, year, doi/ISBN): O’Hagan et al. (2006), Box (1980), Oakley and O’Hagan (2010), Schmidli et al. (2014), Ibrahim and Chen (2000), Spiegelhalter et al. (1994).\nAdded \\value documentation tag to four exported print methods: print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior(). Each documents that the function returns the input object invisibly, called for its side effect of printing a formatted summary.\nRestored par() settings after use in the robust-priors vignette. The par(oldpar) call was incorrectly placed before the for loop and legend(). Moved to after all plotting operations, per CRAN policy.\nRemoved LICENSE file and | file LICENSE from DESCRIPTION. The GPL-3 licence does not require an additional file.\nUpdated inst/WORDLIST: added biom, doi, and ss — fragments extracted by the spell checker from DOI strings in the DESCRIPTION references field."
+    "text": "Fixed print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior() producing no output when called inside rmarkdown::render(), knitr vignettes, or any non-interactive R subprocess (e.g. callr::r()). Root cause: cli output functions detect the rendering environment via the RSTUDIO / POSITRON environment variables, which are absent in callr subprocesses spawned by rmarkdown::render(). All four print methods now route output through internal .bp_* helpers that fall back to plain cat() when no IDE or real terminal is detected, while preserving full cli styled output in interactive sessions (#40).\n\n\n\n\n\nAdded tests/testthat/test-print-methods.R – 28 tests covering all four print.bayprior* methods and all six .bp_* internal helpers in non-interactive (callr-like) contexts, and the as_prior() constructor.\nExpanded test-aggregation.R – added logarithmic pooling tests for Beta, Gamma, and Log-Normal families; added Bhattacharyya agreement tests for close vs distant expert pairs; added three-expert logarithmic pooling.\nExpanded test-conflict.R – added conflict_mahalanobis() edge cases (no-conflict, severe conflict, custom alpha, default labels); added print.bayprior_conflict_mv() non-interactive context test.\nExpanded test-elicitation.R – added elicit_exponential() rate method; added elicit_weibull() params method; added elicit_mixture() normal component and three-component tests; added .validate_quantiles() error path coverage.\nExpanded test-robust.R – added .power_prior_update() tests for Normal, Gamma-Poisson, Gamma-continuous, and Log-Normal data types; added mixture prior power update tests; added delta=1 full borrowing boundary test.\nExpanded test-sensitivity.R – added Normal-Normal, Gamma-Poisson, Poisson, and survival data type tests for sensitivity_grid() and sensitivity_cri(); added plot_sensitivity() with posterior_sd and prob_efficacy targets; added 80% vs 95% CrI width comparison.\nExpanded test-plots-snapshots.R – added functional tests for plot.bayprior_conflict() and plot_sensitivity() with cri_width and prob_efficacy targets.\nOverall non-Shiny test coverage increased from ~74% to 81.7% (excluding Shiny modules, which require shinytest2 and are covered separately)."
+  },
+  {
+    "objectID": "NEWS.html#bug-fixes",
+    "href": "NEWS.html#bug-fixes",
+    "title": "bayprior 0.3.0",
+    "section": "",
+    "text": "Fixed print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior() producing no output when called inside rmarkdown::render(), knitr vignettes, or any non-interactive R subprocess (e.g. callr::r()). Root cause: cli output functions detect the rendering environment via the RSTUDIO / POSITRON environment variables, which are absent in callr subprocesses spawned by rmarkdown::render(). All four print methods now route output through internal .bp_* helpers that fall back to plain cat() when no IDE or real terminal is detected, while preserving full cli styled output in interactive sessions (#40)."
+  },
+  {
+    "objectID": "NEWS.html#tests",
+    "href": "NEWS.html#tests",
+    "title": "bayprior 0.3.0",
+    "section": "",
+    "text": "Added tests/testthat/test-print-methods.R – 28 tests covering all four print.bayprior* methods and all six .bp_* internal helpers in non-interactive (callr-like) contexts, and the as_prior() constructor.\nExpanded test-aggregation.R – added logarithmic pooling tests for Beta, Gamma, and Log-Normal families; added Bhattacharyya agreement tests for close vs distant expert pairs; added three-expert logarithmic pooling.\nExpanded test-conflict.R – added conflict_mahalanobis() edge cases (no-conflict, severe conflict, custom alpha, default labels); added print.bayprior_conflict_mv() non-interactive context test.\nExpanded test-elicitation.R – added elicit_exponential() rate method; added elicit_weibull() params method; added elicit_mixture() normal component and three-component tests; added .validate_quantiles() error path coverage.\nExpanded test-robust.R – added .power_prior_update() tests for Normal, Gamma-Poisson, Gamma-continuous, and Log-Normal data types; added mixture prior power update tests; added delta=1 full borrowing boundary test.\nExpanded test-sensitivity.R – added Normal-Normal, Gamma-Poisson, Poisson, and survival data type tests for sensitivity_grid() and sensitivity_cri(); added plot_sensitivity() with posterior_sd and prob_efficacy targets; added 80% vs 95% CrI width comparison.\nExpanded test-plots-snapshots.R – added functional tests for plot.bayprior_conflict() and plot_sensitivity() with cri_width and prob_efficacy targets.\nOverall non-Shiny test coverage increased from ~74% to 81.7% (excluding Shiny modules, which require shinytest2 and are covered separately)."
   },
   {
     "objectID": "NEWS.html#cran-reviewer-fixes-v0.2.11-review",
     "href": "NEWS.html#cran-reviewer-fixes-v0.2.11-review",
-    "title": "bayprior 0.2.12",
-    "section": "",
-    "text": "Wrapped software name in single quotes in DESCRIPTION: ‘Shiny’, per CRAN policy on package and software name formatting.\nAdded six methodology references to DESCRIPTION in CRAN-required format (authors, year, doi/ISBN): O’Hagan et al. (2006), Box (1980), Oakley and O’Hagan (2010), Schmidli et al. (2014), Ibrahim and Chen (2000), Spiegelhalter et al. (1994).\nAdded \\value documentation tag to four exported print methods: print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior(). Each documents that the function returns the input object invisibly, called for its side effect of printing a formatted summary.\nRestored par() settings after use in the robust-priors vignette. The par(oldpar) call was incorrectly placed before the for loop and legend(). Moved to after all plotting operations, per CRAN policy.\nRemoved LICENSE file and | file LICENSE from DESCRIPTION. The GPL-3 licence does not require an additional file.\nUpdated inst/WORDLIST: added biom, doi, and ss — fragments extracted by the spell checker from DOI strings in the DESCRIPTION references field."
+    "title": "bayprior 0.3.0",
+    "section": "CRAN reviewer fixes (v0.2.11 review)",
+    "text": "CRAN reviewer fixes (v0.2.11 review)\n\nWrapped software name in single quotes in DESCRIPTION: ‘Shiny’, per CRAN policy on package and software name formatting.\nAdded six methodology references to DESCRIPTION in CRAN-required format (authors, year, doi/ISBN): O’Hagan et al. (2006), Box (1980), Oakley and O’Hagan (2010), Schmidli et al. (2014), Ibrahim and Chen (2000), Spiegelhalter et al. (1994).\nAdded \\value documentation tag to four exported print methods: print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior(). Each documents that the function returns the input object invisibly, called for its side effect of printing a formatted summary.\nRestored par() settings after use in the robust-priors vignette. The par(oldpar) call was incorrectly placed before the for loop and legend(). Moved to after all plotting operations, per CRAN policy.\nRemoved LICENSE file and | file LICENSE from DESCRIPTION. The GPL-3 licence does not require an additional file.\nUpdated inst/WORDLIST: added biom, doi, and ss – fragments extracted by the spell checker from DOI strings in the DESCRIPTION references field."
   },
   {
     "objectID": "NEWS.html#cran-resubmission-fix",
     "href": "NEWS.html#cran-resubmission-fix",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "CRAN resubmission fix",
     "text": "CRAN resubmission fix\n\nCorrected malformed .Rbuildignore pattern for cran-comments.md. The pattern ^^cran-comments\\\\.md$$ (double caret, double dollar) never matched the file, so it was included in every previous tarball. Fixed to the correct regex ^cran-comments\\.md$ and verified absent from the v0.2.11 tarball."
   },
   {
     "objectID": "NEWS.html#cran-resubmission-fixes",
     "href": "NEWS.html#cran-resubmission-fixes",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "CRAN resubmission fixes",
     "text": "CRAN resubmission fixes\n\nSwitched Language from en-US to en-GB in DESCRIPTION to correctly reflect the British English used throughout the package (sceptical, colour, behaviour, normalised etc.). British spellings are now handled by the en-GB dictionary and no longer need to be in inst/WORDLIST.\nReplaced “Kullback-Leibler divergence” in DESCRIPTION with “information divergence”. Kullback and Leibler are proper nouns not in any standard dictionary and cannot be resolved via inst/WORDLIST for CRAN’s DESCRIPTION spell check.\nUpdated inst/WORDLIST: added HR, Inf, Var, heatmaps, prior’s, R’s, VignetteBuilder, Poisson, etc. Removed British spellings now covered by en-GB dictionary."
   },
   {
     "objectID": "NEWS.html#cran-resubmission-fix-1",
     "href": "NEWS.html#cran-resubmission-fix-1",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "CRAN resubmission fix",
     "text": "CRAN resubmission fix\n\nAdded ‘Kullback’ and ‘Leibler’ to inst/WORDLIST. These are proper nouns (the Kullback-Leibler divergence is named after statisticians Solomon Kullback and Richard Leibler) and are standard terminology in Bayesian statistics. Flagged as possibly misspelled by CRAN’s automated pre-check in v0.2.8."
   },
   {
     "objectID": "NEWS.html#cran-resubmission-fixes-1",
     "href": "NEWS.html#cran-resubmission-fixes-1",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "CRAN resubmission fixes",
     "text": "CRAN resubmission fixes\n\nResolved the persistent “Package has a VignetteBuilder field but no prebuilt vignette index” NOTE that appeared across v0.2.4–v0.2.7. Root cause: ^build$ was incorrectly added to .Rbuildignore, which excluded build/vignette.rds from the tarball. This file is generated by R CMD build during vignette processing and is the exact file R CMD check looks for (tools/R/QC.R). Removing ^build$ from .Rbuildignore resolves the note permanently.\nRevised Description field in DESCRIPTION to remove all regulatory body references and abbreviations. The description now describes what the software does. Regulatory context is retained in vignettes and README."
   },
   {
     "objectID": "NEWS.html#cran-resubmission-fixes-2",
     "href": "NEWS.html#cran-resubmission-fixes-2",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "CRAN resubmission fixes",
     "text": "CRAN resubmission fixes\n\nResolve EMA in DESCRIPTION. The EMA acronym (European Medicines Agency) was flagged as a possible misspelling in the DESCRIPTION file, causing a CRAN resubmission WARNING.\nUpdated inst/WORDLIST."
   },
   {
     "objectID": "NEWS.html#cran-resubmission-fixes-3",
     "href": "NEWS.html#cran-resubmission-fixes-3",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "CRAN resubmission fixes",
     "text": "CRAN resubmission fixes\n\nUpdated inst/WORDLIST to include all package-specific terms flagged by the spelling checker, and package infrastructure terms (golem, shinydashboard, knitr, pandoc). Resolved spelling.Rout vs spelling.Rout.save mismatch in tests.\nChanged Language field in DESCRIPTION from en-US to en-GB to reflect the package’s consistent use of British English spelling throughout documentation and vignettes (sceptical, colour, behaviour, centred).\nAdded prebuilt vignette index (inst/doc/index.html) to resolve the “no prebuilt vignette index” NOTE reported by CRAN’s automated pre-check on Windows and Debian."
   },
   {
     "objectID": "NEWS.html#cran-resubmission-fixes-4",
     "href": "NEWS.html#cran-resubmission-fixes-4",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "CRAN resubmission fixes",
     "text": "CRAN resubmission fixes\n\nRemoved all Unicode characters from R source files that caused LaTeX PDF generation errors on CRAN’s Windows and Debian build servers. Affected characters: U+2014 em dash (replaced with –), U+2212 Unicode minus (replaced with -), U+221E infinity (replaced with Inf), U+2019/U+2018 curly quotes (replaced with ’), and others. All replacements made in comments and roxygen documentation only – no functional code changed.\nAdded inst/WORDLIST declaring package-specific acronyms (EMA, FDA, CrI, MAP, Mahalanobis, Bhattacharyya, SHELF, PFS, PK) that were flagged as possibly misspelled in the DESCRIPTION file.\nRebuilt prebuilt vignette index via devtools::build_vignettes() to resolve the “no prebuilt vignette index” NOTE."
   },
   {
     "objectID": "NEWS.html#documentation-ux",
     "href": "NEWS.html#documentation-ux",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "Documentation & UX",
-    "text": "Documentation & UX\n\nrobust_prior() — added @details section explaining that the vague component is always Normal, making cross-family mixtures (e.g. Beta + Normal) structurally inevitable for non-Normal informative priors. Clarifies that mixture mean and SD are always computed in closed form; only the density (used for plotting) is approximated numerically. Updated @examples to include a Beta informative prior case with suppressWarnings().\nelicit_mixture() — added @details section documenting the same numerical density approximation behaviour at the lower level where mixtures are first constructed. Notes that suppressWarnings() should only be used after verifying the mixture is appropriate, not as a blanket silence.\nRobust Mixture density plot — warning redirected from console to UI. The “Components have different distribution families. Mixture densities computed numerically.” warning is now intercepted and surfaced as an amber showNotification() in the Shiny app rather than printed to the R console. The warning is informative — it signals numerical approximation rather than closed-form density computation — and should be visible to the analyst. Previously it was suppressed entirely, which was not ideal."
+    "text": "Documentation & UX\n\nrobust_prior() – added @details section explaining that the vague component is always Normal, making cross-family mixtures (e.g. Beta + Normal) structurally inevitable for non-Normal informative priors.\nelicit_mixture() – added @details section documenting the numerical density approximation behaviour at the lower level where mixtures are first constructed.\nRobust Mixture density plot warning redirected from console to UI. The “Components have different distribution families. Mixture densities computed numerically.” warning is now surfaced as an amber showNotification() in the Shiny app."
   },
   {
     "objectID": "NEWS.html#new-features",
     "href": "NEWS.html#new-features",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "New features",
-    "text": "New features\n\nPoisson data type in Power Prior Calibration — the power prior module now supports Poisson/count endpoints alongside Binary and Continuous. Uses the Gamma-Poisson conjugate update (same closed-form formula as Gamma-continuous).\nPrior-data compatibility warning in Power Prior — an amber alert now appears when the active prior family is incompatible with the selected data type (e.g. Normal prior with binary data, Beta prior with Poisson data), guiding users to re-elicit with an appropriate family before calibrating.\nMahalanobis module limitations documented — the Multivariate Conflict Setup panel now shows an inline note clarifying that the test assumes multivariate Normal summary statistics, that proportion/HR endpoints should be entered on the log-odds/log scale, and that k &gt; 2 endpoints are a planned extension."
+    "text": "New features\n\nPoisson data type in Power Prior Calibration.\nPrior-data compatibility warning in Power Prior module.\nMahalanobis module limitations documented inline."
   },
   {
     "objectID": "NEWS.html#architecture",
     "href": "NEWS.html#architecture",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "Architecture",
-    "text": "Architecture\n\nbase_prior reactive — introduced shared$base_prior (written only by elicitation and pooling) alongside active_prior() (written by all modules). Sensitivity analysis, Robust Mixture, and Power Prior reset observers now watch base_prior() instead of active_prior(), eliminating the self-invalidation loop that wiped results immediately after they were produced.\nRobust mixture compounding SD bug fixed — the robust prior fit handler now always uses base_prior() as the informative component. Previously, repeated clicks used the previous robust mixture as the input, causing the vague SD to compound exponentially across clicks."
+    "text": "Architecture\n\nIntroduced shared$base_prior reactive to eliminate the self-invalidation loop that wiped sensitivity/robust/power prior results immediately after they were produced.\nFixed robust mixture compounding SD bug – repeated clicks no longer compound the vague SD exponentially."
   },
   {
-    "objectID": "NEWS.html#tests",
-    "href": "NEWS.html#tests",
-    "title": "bayprior 0.2.12",
+    "objectID": "NEWS.html#tests-1",
+    "href": "NEWS.html#tests-1",
+    "title": "bayprior 0.3.0",
     "section": "Tests",
-    "text": "Tests\n\nAdded tests/testthat/test-robust.R — 33 tests covering robust_prior(), sceptical_prior() (all three families and strength levels), calibrate_power_prior() (all methods and data types), elicit_exponential(), elicit_weibull(), plot.bayprior_power_prior(), and print.bayprior_power_prior().\nAdded tests/testthat/test-validation.R — 10 tests covering all four functions in validation_utils.R.\nAdded skip_on_ci() to all shinytest2 Chromote tests to prevent 30-second timeout failures in non-interactive and CI environments."
-  },
-  {
-    "objectID": "NEWS.html#documentation",
-    "href": "NEWS.html#documentation",
-    "title": "bayprior 0.2.12",
-    "section": "Documentation",
-    "text": "Documentation\n\nAdded @details to conflict_mahalanobis() documenting the multivariate Normal assumption, required scale transformations for proportion and HR endpoints, and the bivariate (k = 2) limitation."
+    "text": "Tests\n\nAdded tests/testthat/test-robust.R (33 tests).\nAdded tests/testthat/test-validation.R (10 tests).\nAdded skip_on_ci() to all shinytest2 Chromote tests."
   },
   {
     "objectID": "NEWS.html#ux-improvements",
     "href": "NEWS.html#ux-improvements",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "UX improvements",
-    "text": "UX improvements\n\nThree-state auto theme — theme now cycles Auto → Dark → Light on toggle. In Auto mode the app follows the OS prefers-color-scheme setting, which most operating systems tie to time of day. The button label shows the active state and whether it is following the OS or set manually (e.g. Auto (dark), Dark (manual)). Switching back to Auto removes the stored preference and resumes OS tracking.\nDisabled downstream buttons — analysis buttons (Run Diagnostics, Run Sensitivity Analysis, Build robust/sceptical/power prior, Compute consensus prior) are now greyed out with a not-allowed cursor when no prior has been fitted. Hovering shows the tooltip “Fit a prior in Prior Elicitation first”. Buttons re-enable immediately when a prior is fitted. The Mahalanobis Conflict Setup button is intentionally excluded as it does not require an elicited prior.\nPrior summary card in sidebar — the active prior badge now shows a mini stats table with Mean, SD, and 95% CrI (where available) below the distribution family and label. Updates reactively on every prior change. Mixture priors show Mean and SD only (no closed-form CrI).\nDiagnostic tooltips — each conflict value box (Box p-value, Surprise index, Overlap coefficient) now has an info icon that displays a plain- language explanation on hover, useful for non-statistician stakeholders."
-  },
-  {
-    "objectID": "NEWS.html#bug-fixes",
-    "href": "NEWS.html#bug-fixes",
-    "title": "bayprior 0.2.12",
-    "section": "Bug fixes",
-    "text": "Bug fixes\n\nAccepted updated plot snapshots for plot_tornado() and plot_sensitivity() following the axis label formatting change in v0.2.1 (snake_case -&gt; title case)."
-  },
-  {
-    "objectID": "NEWS.html#documentation-1",
-    "href": "NEWS.html#documentation-1",
-    "title": "bayprior 0.2.12",
-    "section": "Documentation",
-    "text": "Documentation\n\nSensitivity plot labels updated in plot_tornado() and plot_sensitivity() package functions directly (not just the Shiny layer), so label formatting applies when functions are called from R as well as in the app."
+    "text": "UX improvements\n\nThree-state auto theme (Auto / Dark / Light) following OS preference.\nDisabled downstream buttons when no prior has been fitted.\nPrior summary card in sidebar showing Mean, SD, and 95% CrI.\nDiagnostic tooltips on conflict value boxes."
   },
   {
     "objectID": "NEWS.html#ux-improvements-1",
     "href": "NEWS.html#ux-improvements-1",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "UX improvements",
-    "text": "UX improvements\n\nWelcome tab now shows an SVG workflow diagram of all six analytical steps with colour-coded boxes and arrows.\nSidebar menu items now show a green glowing dot when each step is complete (elicitation, pooling, conflict, sensitivity, robust priors).\nExport Report compliance checklist is now fully reactive — items update live with colour-coded icons (green check, amber minus, red X) and a ready/not- ready summary alert.\nPackage version (bayprior vX.X.X) now displayed in the sidebar footer."
+    "text": "UX improvements\n\nWelcome tab SVG workflow diagram.\nSidebar completion indicators (green glowing dot per completed step).\nExport Report compliance checklist is fully reactive.\nPackage version displayed in sidebar footer."
   },
   {
     "objectID": "NEWS.html#deployment-fixes",
     "href": "NEWS.html#deployment-fixes",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "Deployment fixes",
-    "text": "Deployment fixes\n\nRemoved pkgload::load_all() from app.R — it was a development-only line that caused startup failure on shinyapps.io.\nAdded renv::snapshot(type = \"explicit\") to deployment workflow to prevent dev tools (pkgload, pkgbuild, callr, desc) from entering renv.lock."
-  },
-  {
-    "objectID": "NEWS.html#documentation-2",
-    "href": "NEWS.html#documentation-2",
-    "title": "bayprior 0.2.12",
-    "section": "Documentation",
-    "text": "Documentation\n\nInformation boxes on Welcome tab updated: Distributions 4 → 6, Conflict diagnostics → Data types (Binary · Continuous · Poisson · Survival)."
+    "text": "Deployment fixes\n\nRemoved pkgload::load_all() from app.R.\nAdded renv::snapshot(type = \"explicit\") to deployment workflow."
   },
   {
     "objectID": "NEWS.html#new-features-1",
     "href": "NEWS.html#new-features-1",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "New features",
-    "text": "New features\n\nAdded elicit_exponential() — elicits an Exponential(rate) prior for constant hazard rates and Poisson rate priors. Supports \"moments\" (mean to rate), \"rate\" (direct), and \"quantile\" (1D optimisation) methods. The Exponential distribution is conjugate for Poisson and survival data via Gamma-Poisson/Exponential updating.\nAdded elicit_weibull() — elicits a Weibull(shape, scale) prior for non-constant hazard survival times (OS, PFS). Supports \"moments\" (2D Nelder-Mead), \"params\" (direct shape and scale), and \"quantile\" (2D Nelder-Mead) methods. Posteriors are approximated via Normal matching.\nAdded \"poisson\" data type to prior_conflict(), sensitivity_grid(), and sensitivity_cri(). Supports count/adverse-event-rate endpoints: list(type = \"poisson\", x = 12, n = 100) (events / person-time). Conjugate update: Gamma(shape + x, rate + n).\nAdded \"survival\" data type to prior_conflict(), sensitivity_grid(), and sensitivity_cri(). Supports OS/PFS hazard rate endpoints: list(type = \"survival\", x = 20, n = 400) (events / total follow-up time). Conjugate update: Gamma(shape + x, rate + n) (Gamma-Exponential).\nAdded density and x-range support for Exponential and Weibull distributions in plot.bayprior(). Previously these distributions rendered blank density plots; they now display correctly.\nAdded comprehensive validation layer across all modules:\n\n.check_prior_data_compat() — warns when a prior family is atypical for the chosen data type (e.g. Beta prior + Poisson data).\n.check_pooling_compat() — blocks pooling of distributions with incompatible supports (e.g. Beta + Normal); warns for same-support cross-family pooling (e.g. Gamma + Exponential).\n.check_sensitivity_compat() — warns for single-parameter families (Exponential) and cross-family mixtures; blocks incompatible-support mixture sensitivity.\n.validation_alert() — renders Bootstrap alert boxes for inline UI feedback in the Shiny app.\n\nSensitivity analysis is now fully independent of conflict diagnostics. The Sensitivity Analysis module has its own data entry UI (data type selector, events/n for binary, mean/SD/n for continuous, events/exposure for Poisson, events/follow-up for survival) that auto-populates the correct type from the active prior family. Previously, running conflict diagnostics was required before sensitivity analysis could proceed.\nAll Shiny modules now reset outputs automatically on input change, preventing stale results from being displayed alongside new inputs. Each module uses observeEvent(list(...)) watching all its relevant inputs to reset result reactives immediately. The active prior sidebar indicator is preserved during elicitation input changes (only the density plot and parameter table reset; shared$current_prior is retained until a new prior is explicitly fitted)."
+    "text": "New features\n\nelicit_exponential() – Exponential(rate) prior for hazard rates and Poisson rate priors. Supports moments, rate, and quantile methods.\nelicit_weibull() – Weibull(shape, scale) prior for survival times. Supports moments, params, and quantile methods.\n\"poisson\" and \"survival\" data types in prior_conflict(), sensitivity_grid(), and sensitivity_cri().\nDensity and x-range support for Exponential and Weibull in plot.bayprior().\nComprehensive validation layer: .check_prior_data_compat(), .check_pooling_compat(), .check_sensitivity_compat(), .validation_alert().\nSensitivity analysis fully independent of conflict diagnostics.\nAll Shiny modules reset outputs automatically on input change."
   },
   {
     "objectID": "NEWS.html#bug-fixes-1",
     "href": "NEWS.html#bug-fixes-1",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "Bug fixes",
-    "text": "Bug fixes\n\nFixed prior_report() producing blank figures in Word (.docx) reports. knitr was writing absolute figure paths to the markdown; pandoc could not resolve them. Fixed by using fig.path = \"figures/\" (relative) with base.dir = tmp_dir for docx/pdf, and knitr::image_uri for HTML.\nFixed prior_report() failing for PDF with “tikzfill.image.sty not found”. Added tinytex::tlmgr_install() recommendation in documentation. The default-image-extension: pdf Quarto default is now overridden to png via YAML injection in the pre-executed markdown.\nFixed mixture prior hyperparameters section in prior_report.qmd rendering as literal markdown (## Hyperparameters not available) rather than as formatted text. Added #| results: asis to the fitted-params chunk and updated to show a component summary table for mixture priors.\nFixed mod_conflict_mahal.R containing a stale duplicate definition of mod_conflict_ui that was overriding the correct 4-choice version in mod_conflict.R (files sourced alphabetically, mahal comes after conflict). Removed the duplicate; mod_conflict_mahal.R now only contains mod_mahal_ui and mod_mahal_server."
-  },
-  {
-    "objectID": "NEWS.html#documentation-3",
-    "href": "NEWS.html#documentation-3",
-    "title": "bayprior 0.2.12",
-    "section": "Documentation",
-    "text": "Documentation\n\nUpdated bayprior-package.R to document all six distribution families, all four data types for conflict diagnostics and sensitivity, and the new validation functions.\nUpdated all six vignettes to cover Exponential and Weibull elicitation, Poisson and survival conflict diagnostics, independent sensitivity data entry, and the output reset behaviour.\nUpdated README with new badges, six-family distribution table, four-data-type conflict table, and updated Quick Start examples."
+    "text": "Bug fixes\n\nFixed prior_report() blank figures in Word reports.\nFixed prior_report() PDF “tikzfill.image.sty not found” error.\nFixed mixture prior hyperparameters section rendering as literal markdown.\nFixed mod_conflict_mahal.R stale duplicate definition of mod_conflict_ui."
   },
   {
     "objectID": "NEWS.html#bug-fixes-2",
     "href": "NEWS.html#bug-fixes-2",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "Bug fixes",
-    "text": "Bug fixes\n\nFixed prior_report() failing on remote platforms (shinyapps.io, Posit Connect) due to Quarto spawning a subprocess that could not find the bayprior package. The report now uses a two-step approach: knitr::knit() executes all R code in the current session, then quarto::quarto_render(execute = FALSE) handles formatting via pandoc only. No R subprocess is spawned in the second step (#1).\nFixed mod_sensitivity: sensitivity analysis no longer requires conflict diagnostics to have been run first. The module now has its own data entry UI (data type, events/n for binary; mean/SD/n for continuous) that auto-selects the correct type based on the prior family (Beta → binary, others → continuous). Previously the fallback always used type = \"continuous\", causing conjugate updating to fail for Beta priors and returning NA for all grid evaluations.\nFixed “Using data from Conflict Diagnostics” label appearing even when no conflict diagnostics had been run. The label is now generated inside renderUI conditionally on shared$conflict.\nFixed non-ASCII characters (─, —) in R/app_ui.R causing an R CMD check WARNING. All box-drawing and em-dash characters replaced with ASCII equivalents.\nFixed prior_report() missing @param documentation for prior_plot, overlay_plot, tornado_plot, and heatmap_plot, causing an R CMD check WARNING about undocumented arguments."
+    "text": "Bug fixes\n\nFixed prior_report() failing on remote platforms due to Quarto spawning a subprocess that could not find the bayprior package.\nFixed mod_sensitivity always using type = \"continuous\" regardless of prior family.\nFixed non-ASCII characters in R/app_ui.R causing R CMD check WARNING.\nFixed prior_report() missing @param documentation for plot arguments."
   },
   {
     "objectID": "NEWS.html#new-features-2",
     "href": "NEWS.html#new-features-2",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "New features",
-    "text": "New features\n\nAdded robust_prior, sceptical_prior, power_prior, robust_plot, sceptical_plot, and power_plot arguments to prior_report(). When supplied, robust and sensitivity priors appear as a dedicated section in the report with parameter tables and density plots. The compliance checklist row “Robust / sceptical prior computed” is automatically marked Complete.\nAdded bayprior hex logo to the Shiny app header and browser favicon. Logo is served from inst/app/www/favicon.png."
+    "text": "New features\n\nAdded robust, sceptical, and power prior arguments to prior_report().\nAdded bayprior hex logo to Shiny app header and browser favicon."
   },
   {
     "objectID": "NEWS.html#initial-release",
     "href": "NEWS.html#initial-release",
-    "title": "bayprior 0.2.12",
+    "title": "bayprior 0.3.0",
     "section": "Initial release",
-    "text": "Initial release\n\nPrior Elicitation\n\nQuantile matching, moment matching, and SHELF roulette for Beta, Normal, Gamma, and Log-Normal families\nelicit_beta(), elicit_normal(), elicit_gamma(), elicit_lognormal(), elicit_roulette(), elicit_mixture()\n\n\n\nExpert Pooling\n\nLinear and logarithmic pooling with Bhattacharyya agreement diagnostics\naggregate_experts()\n\n\n\nConflict Diagnostics\n\nBox p-value, surprise index, KL divergence, Bhattacharyya overlap\nMultivariate Mahalanobis distance for co-primary endpoints\nprior_conflict(), conflict_mahalanobis()\n\n\n\nSensitivity Analysis\n\nPosterior quantity grid and credible interval sensitivity with tornado plots and influence heatmaps\nsensitivity_grid(), sensitivity_cri()\n\n\n\nRobust Priors\n\nRobust mixture prior (Schmidli et al., 2014): robust_prior()\nSceptical prior (Spiegelhalter & Freedman, 1994): sceptical_prior()\nCalibrated power prior (Ibrahim & Chen, 2000): calibrate_power_prior()\n\n\n\nReporting\n\nHTML, PDF, and Word prior justification reports via Quarto: prior_report()\nFDA/EMA regulatory compliance checklist\n\n\n\nDocumentation\n\nAdded Quarto GitHub Pages documentation site at https://ndohpenngit.github.io/bayprior/ with six rendered vignettes, a Changelog page, and a Cheat Sheet. Site auto-rebuilds on every push to main via GitHub Actions.\nUpdated all six vignettes to document new prior_report() arguments, the sensitivity analysis CrI toggle, and the robust priors report integration.\nUpdated README.md with live app badge, and Documentation section linking to the GitHub Pages site.\n\n\n\nApp\n\nFull interactive Shiny application: run_app()\nDark/light mode toggle with localStorage persistence\nbayprior hex logo in header and browser tab"
+    "text": "Initial release\n\nPrior elicitation: elicit_beta(), elicit_normal(), elicit_gamma(), elicit_lognormal(), elicit_roulette(), elicit_mixture().\nExpert pooling: aggregate_experts() with Bhattacharyya diagnostics.\nConflict diagnostics: prior_conflict(), conflict_mahalanobis().\nSensitivity analysis: sensitivity_grid(), sensitivity_cri().\nRobust priors: robust_prior(), sceptical_prior(), calibrate_power_prior().\nReporting: prior_report() (HTML, PDF, Word).\nShiny application: run_app().\nGitHub Pages documentation site."
   },
   {
     "objectID": "vignettes/robust-priors.html",
@@ -263,7 +242,7 @@
     "href": "vignettes/robust-priors.html#calibrating-delta",
     "title": "Robust, Sceptical, and Power Priors",
     "section": "Calibrating \\(\\delta\\)",
-    "text": "Calibrating \\(\\delta\\)\ncalibrate_power_prior() selects \\(\\delta\\) to achieve a target Bayes Factor between the historical-data-informed prior and the current likelihood — ensuring the historical data is incorporated only to the extent it is compatible with current data:\n\nbase &lt;- elicit_beta(\n  mean   = 0.50,\n  sd     = 0.20,\n  method = \"moments\",\n  label  = \"Response rate\"\n)\n\ncalib &lt;- calibrate_power_prior(\n  historical_data = list(type = \"binary\", x = 12, n = 40),\n  current_data    = list(type = \"binary\", x = 18, n = 50),\n  base_prior      = base,\n  target_bf       = 3,\n  delta_grid      = seq(0.05, 1.0, by = 0.05),\n  method          = \"bayes_factor\"\n)\nprint(calib)\n#&gt; \n#&gt; -- Power Prior Calibration --\n#&gt; • Method          : bayes_factor\n#&gt; • Target BF       : 3\n#&gt; • Optimal delta   : 0.05\n#&gt; • Power prior mean: 0.4448\n#&gt; • Power prior SD  : 0.173\n\n\nplot(calib)\n\n\n\n\n\n\n\n\nThe calibration curves show:\n\nTop panel: Bayes Factor vs \\(\\delta\\). The dashed red line is the target BF; the dotted green line marks the optimal \\(\\delta\\).\nBottom panel: Box p-value vs \\(\\delta\\). Values below 0.05 indicate conflict at that weight."
+    "text": "Calibrating \\(\\delta\\)\ncalibrate_power_prior() selects \\(\\delta\\) to achieve a target Bayes Factor between the historical-data-informed prior and the current likelihood — ensuring the historical data is incorporated only to the extent it is compatible with current data:\n\nbase &lt;- elicit_beta(\n  mean   = 0.50,\n  sd     = 0.20,\n  method = \"moments\",\n  label  = \"Response rate\"\n)\n\ncalib &lt;- calibrate_power_prior(\n  historical_data = list(type = \"binary\", x = 12, n = 40),\n  current_data    = list(type = \"binary\", x = 18, n = 50),\n  base_prior      = base,\n  target_bf       = 3,\n  delta_grid      = seq(0.05, 1.0, by = 0.05),\n  method          = \"bayes_factor\"\n)\nprint(calib)\n\n\nplot(calib)\n\n\n\n\n\n\n\n\nThe calibration curves show:\n\nTop panel: Bayes Factor vs \\(\\delta\\). The dashed red line is the target BF; the dotted green line marks the optimal \\(\\delta\\).\nBottom panel: Box p-value vs \\(\\delta\\). Values below 0.05 indicate conflict at that weight."
   },
   {
     "objectID": "vignettes/robust-priors.html#compatibility-method",
@@ -277,7 +256,7 @@
     "href": "vignettes/robust-priors.html#power-prior-for-other-families",
     "title": "Robust, Sceptical, and Power Priors",
     "section": "Power Prior for Other Families",
-    "text": "Power Prior for Other Families\nPower prior updating is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors. For a Normal prior with continuous historical data:\n\nbase_norm &lt;- elicit_normal(\n  mean = 0.0, sd = 0.5,\n  method = \"moments\", label = \"Mean difference\"\n)\n\ncalib_norm &lt;- calibrate_power_prior(\n  historical_data = list(type = \"continuous\", x = 0.35, sd = 0.3, n = 60),\n  current_data    = list(type = \"continuous\", x = 0.42, sd = 0.3, n = 80),\n  base_prior      = base_norm,\n  target_bf       = 3,\n  delta_grid      = seq(0.05, 1.0, by = 0.10),\n  method          = \"bayes_factor\"\n)\nprint(calib_norm)\n#&gt; \n#&gt; -- Power Prior Calibration --\n#&gt; • Method          : bayes_factor\n#&gt; • Target BF       : 3\n#&gt; • Optimal delta   : 0.95\n#&gt; • Power prior mean: 0.3478\n#&gt; • Power prior SD  : 0.0396"
+    "text": "Power Prior for Other Families\nPower prior updating is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors. For a Normal prior with continuous historical data:\n\nbase_norm &lt;- elicit_normal(\n  mean = 0.0, sd = 0.5,\n  method = \"moments\", label = \"Mean difference\"\n)\n\ncalib_norm &lt;- calibrate_power_prior(\n  historical_data = list(type = \"continuous\", x = 0.35, sd = 0.3, n = 60),\n  current_data    = list(type = \"continuous\", x = 0.42, sd = 0.3, n = 80),\n  base_prior      = base_norm,\n  target_bf       = 3,\n  delta_grid      = seq(0.05, 1.0, by = 0.10),\n  method          = \"bayes_factor\"\n)\nprint(calib_norm)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html",
@@ -305,35 +284,35 @@
     "href": "vignettes/prior-elicitation.html#quantile-matching",
     "title": "Prior Elicitation Methods",
     "section": "Quantile Matching",
-    "text": "Quantile Matching\n\nprior_q &lt;- elicit_beta(\n  quantiles = c(\"0.05\" = 0.10, \"0.50\" = 0.30, \"0.95\" = 0.60),\n  expert_id = \"Expert_1\",\n  label     = \"ORR (treatment arm)\"\n)\nprint(prior_q)\n\n\n-- bayprior: ORR (treatment arm) --\n• Distribution : BETA\n• Parameters   : alpha = 2.6338, beta = 5.589\n• Method       : quantile elicitation\n• Expert       : Expert_1\n• Mean (SD)    : 0.3203 (0.1536)\n• 95% CrI      : [0.0708, 0.6514]\n\nplot(prior_q)"
+    "text": "Quantile Matching\n\nprior_q &lt;- elicit_beta(\n  quantiles = c(\"0.05\" = 0.10, \"0.50\" = 0.30, \"0.95\" = 0.60),\n  expert_id = \"Expert_1\",\n  label     = \"ORR (treatment arm)\"\n)\nprint(prior_q)\nplot(prior_q)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#moment-matching",
     "href": "vignettes/prior-elicitation.html#moment-matching",
     "title": "Prior Elicitation Methods",
     "section": "Moment Matching",
-    "text": "Moment Matching\n\nprior_m &lt;- elicit_beta(\n  mean      = 0.30,\n  sd        = 0.10,\n  method    = \"moments\",\n  expert_id = \"Expert_1\",\n  label     = \"ORR (treatment arm)\"\n)\nprint(prior_m)\n\n\n-- bayprior: ORR (treatment arm) --\n• Distribution : BETA\n• Parameters   : alpha = 6, beta = 14\n• Method       : moments elicitation\n• Expert       : Expert_1\n• Mean (SD)    : 0.3 (0.1)\n• 95% CrI      : [0.1258, 0.512]\n\n\nMoment matching solves analytically: \\[\\alpha = \\mu \\left(\\frac{\\mu(1-\\mu)}{\\sigma^2} - 1\\right), \\quad\n\\beta = (1-\\mu)\\left(\\frac{\\mu(1-\\mu)}{\\sigma^2} - 1\\right)\\]"
+    "text": "Moment Matching\n\nprior_m &lt;- elicit_beta(\n  mean      = 0.30,\n  sd        = 0.10,\n  method    = \"moments\",\n  expert_id = \"Expert_1\",\n  label     = \"ORR (treatment arm)\"\n)\nprint(prior_m)\n\nMoment matching solves analytically: \\[\\alpha = \\mu \\left(\\frac{\\mu(1-\\mu)}{\\sigma^2} - 1\\right), \\quad\n\\beta = (1-\\mu)\\left(\\frac{\\mu(1-\\mu)}{\\sigma^2} - 1\\right)\\]"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-moments",
     "href": "vignettes/prior-elicitation.html#method-moments",
     "title": "Prior Elicitation Methods",
     "section": "Method: moments",
-    "text": "Method: moments\n\n# Mean hazard rate 0.05 =&gt; mean survival 1/0.05 = 20 months\nprior_hz &lt;- elicit_exponential(\n  mean      = 0.05,\n  method    = \"moments\",\n  label     = \"Hazard rate (constant)\",\n  expert_id = \"Expert_1\"\n)\nprint(prior_hz)\n\n\n-- bayprior: Hazard rate (constant) --\n• Distribution : EXPONENTIAL\n• Parameters   : rate = 20\n• Method       : moments elicitation\n• Expert       : Expert_1\n• Mean (SD)    : 0.05 (0.05)\n• 95% CrI      : [0.0013, 0.1844]\n\nplot(prior_hz)"
+    "text": "Method: moments\n\n# Mean hazard rate 0.05 =&gt; mean survival 1/0.05 = 20 months\nprior_hz &lt;- elicit_exponential(\n  mean      = 0.05,\n  method    = \"moments\",\n  label     = \"Hazard rate (constant)\",\n  expert_id = \"Expert_1\"\n)\nprint(prior_hz)\nplot(prior_hz)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-rate",
     "href": "vignettes/prior-elicitation.html#method-rate",
     "title": "Prior Elicitation Methods",
     "section": "Method: rate",
-    "text": "Method: rate\nDirect rate specification (= \\(\\lambda\\)):\n\nprior_ae &lt;- elicit_exponential(\n  rate   = 0.12,\n  method = \"rate\",\n  label  = \"AE rate per person-year\"\n)\nprint(prior_ae)\n\n\n-- bayprior: AE rate per person-year --\n• Distribution : EXPONENTIAL\n• Parameters   : rate = 0.12\n• Method       : rate elicitation\n• Expert       : Expert\n• Mean (SD)    : 8.3333 (8.3333)\n• 95% CrI      : [0.211, 30.7407]"
+    "text": "Method: rate\nDirect rate specification (= \\(\\lambda\\)):\n\nprior_ae &lt;- elicit_exponential(\n  rate   = 0.12,\n  method = \"rate\",\n  label  = \"AE rate per person-year\"\n)\nprint(prior_ae)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-quantile",
     "href": "vignettes/prior-elicitation.html#method-quantile",
     "title": "Prior Elicitation Methods",
     "section": "Method: quantile",
-    "text": "Method: quantile\nFit the rate from expert-specified quantiles:\n\nprior_hz_q &lt;- elicit_exponential(\n  quantiles = c(\"0.25\" = 0.02, \"0.50\" = 0.05, \"0.75\" = 0.10),\n  method    = \"quantile\",\n  label     = \"Hazard rate\"\n)\nprint(prior_hz_q)\n\n\n-- bayprior: Hazard rate --\n• Distribution : EXPONENTIAL\n• Parameters   : rate = 14.0345\n• Method       : quantile elicitation\n• Expert       : Expert\n• Mean (SD)    : 0.0713 (0.0713)\n• 95% CrI      : [0.0018, 0.2628]\n\nplot(prior_hz_q)"
+    "text": "Method: quantile\nFit the rate from expert-specified quantiles:\n\nprior_hz_q &lt;- elicit_exponential(\n  quantiles = c(\"0.25\" = 0.02, \"0.50\" = 0.05, \"0.75\" = 0.10),\n  method    = \"quantile\",\n  label     = \"Hazard rate\"\n)\nprint(prior_hz_q)\nplot(prior_hz_q)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#conjugate-update",
@@ -347,21 +326,21 @@
     "href": "vignettes/prior-elicitation.html#method-moments-1",
     "title": "Prior Elicitation Methods",
     "section": "Method: moments",
-    "text": "Method: moments\nSpecify prior mean and SD — bayprior solves for shape and scale via Nelder-Mead optimisation:\n\nprior_wb &lt;- elicit_weibull(\n  mean      = 20,\n  sd        = 10,\n  method    = \"moments\",\n  label     = \"OS (months)\",\n  expert_id = \"Expert_1\"\n)\nprint(prior_wb)\n\n\n-- bayprior: OS (months) --\n• Distribution : WEIBULL\n• Parameters   : shape = 2.1014, scale = 22.5813\n• Method       : moments elicitation\n• Expert       : Expert_1\n• Mean (SD)    : 20 (9.9999)\n• 95% CrI      : [3.9262, 42.0265]\n\nplot(prior_wb)"
+    "text": "Method: moments\nSpecify prior mean and SD — bayprior solves for shape and scale via Nelder-Mead optimisation:\n\nprior_wb &lt;- elicit_weibull(\n  mean      = 20,\n  sd        = 10,\n  method    = \"moments\",\n  label     = \"OS (months)\",\n  expert_id = \"Expert_1\"\n)\nprint(prior_wb)\nplot(prior_wb)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-params",
     "href": "vignettes/prior-elicitation.html#method-params",
     "title": "Prior Elicitation Methods",
     "section": "Method: params",
-    "text": "Method: params\nDirect shape and scale specification:\n\n# k=2: linearly increasing hazard\nprior_wb2 &lt;- elicit_weibull(\n  shape  = 2,\n  scale  = 20,\n  method = \"params\",\n  label  = \"PFS (months) — increasing hazard\"\n)\nprint(prior_wb2)\n\n\n-- bayprior: PFS (months) — increasing hazard --\n• Distribution : WEIBULL\n• Parameters   : shape = 2, scale = 20\n• Method       : params elicitation\n• Expert       : Expert\n• Mean (SD)    : 17.7245 (9.265)\n• 95% CrI      : [3.1823, 38.4129]\n\nplot(prior_wb2)"
+    "text": "Method: params\nDirect shape and scale specification:\n\n# k=2: linearly increasing hazard\nprior_wb2 &lt;- elicit_weibull(\n  shape  = 2,\n  scale  = 20,\n  method = \"params\",\n  label  = \"PFS (months) — increasing hazard\"\n)\nprint(prior_wb2)\nplot(prior_wb2)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-quantile-1",
     "href": "vignettes/prior-elicitation.html#method-quantile-1",
     "title": "Prior Elicitation Methods",
     "section": "Method: quantile",
-    "text": "Method: quantile\n\nprior_wb3 &lt;- elicit_weibull(\n  quantiles = c(\"0.10\" = 5, \"0.50\" = 18, \"0.90\" = 40),\n  method    = \"quantile\",\n  label     = \"OS (months)\"\n)\nprint(prior_wb3)\n\n\n-- bayprior: OS (months) --\n• Distribution : WEIBULL\n• Parameters   : shape = 1.4822, scale = 22.8859\n• Method       : quantile elicitation\n• Expert       : Expert\n• Mean (SD)    : 20.6908 (14.2043)\n• 95% CrI      : [1.9159, 55.2137]\n\nplot(prior_wb3)"
+    "text": "Method: quantile\n\nprior_wb3 &lt;- elicit_weibull(\n  quantiles = c(\"0.10\" = 5, \"0.50\" = 18, \"0.90\" = 40),\n  method    = \"quantile\",\n  label     = \"OS (months)\"\n)\nprint(prior_wb3)\nplot(prior_wb3)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#posterior-approximation-note",
@@ -382,7 +361,7 @@
     "href": "vignettes/prior-elicitation.html#pooling-compatibility",
     "title": "Prior Elicitation Methods",
     "section": "Pooling Compatibility",
-    "text": "Pooling Compatibility\nbayprior validates compatibility before pooling. Priors with incompatible supports (e.g. Beta + Normal) are blocked with an error. Same-support cross-family pooling (e.g. Gamma + Exponential) proceeds with a warning noting that sensitivity analysis will use the dominant component’s parameters.\n\n# Same positive support — allowed (Gamma + Exponential)\ng1   &lt;- elicit_gamma(mean = 5, sd = 2, method = \"moments\",\n                     expert_id = \"E1\", label = \"Rate\")\nexp1 &lt;- elicit_exponential(mean = 0.2, method = \"moments\",\n                            expert_id = \"E2\", label = \"Rate\")\npool_pos &lt;- aggregate_experts(\n  priors  = list(E1 = g1, E2 = exp1),\n  weights = c(0.5, 0.5)\n)\nprint(pool_pos)\n\n\n-- bayprior: Linear pooled consensus prior --\n• Distribution : MIXTURE\n• Components   : 2\n• Weights      : 0.5, 0.5\n• Mean         : 2.6"
+    "text": "Pooling Compatibility\nbayprior validates compatibility before pooling. Priors with incompatible supports (e.g. Beta + Normal) are blocked with an error. Same-support cross-family pooling (e.g. Gamma + Exponential) proceeds with a warning noting that sensitivity analysis will use the dominant component’s parameters.\n\n# Same positive support — allowed (Gamma + Exponential)\ng1   &lt;- elicit_gamma(mean = 5, sd = 2, method = \"moments\",\n                     expert_id = \"E1\", label = \"Rate\")\nexp1 &lt;- elicit_exponential(mean = 0.2, method = \"moments\",\n                            expert_id = \"E2\", label = \"Rate\")\npool_pos &lt;- aggregate_experts(\n  priors  = list(E1 = g1, E2 = exp1),\n  weights = c(0.5, 0.5)\n)\nprint(pool_pos)"
   },
   {
     "objectID": "vignettes/bayprior-introduction.html",
@@ -396,14 +375,14 @@
     "href": "vignettes/bayprior-introduction.html#beta-prior-binary-endpoints",
     "title": "Introduction to bayprior",
     "section": "Beta Prior (Binary Endpoints)",
-    "text": "Beta Prior (Binary Endpoints)\nThe Beta distribution is the natural conjugate prior for a binary response rate \\(\\theta \\in (0, 1)\\). elicit_beta() supports two elicitation methods.\n\nQuantile Matching\nThe expert specifies quantiles directly — for example: “I believe the true response rate has a 5% chance of being below 10%, a median of around 30%, and a 95% chance of being below 60%.”\n\nlibrary(bayprior)\n\nprior_q &lt;- elicit_beta(\n  quantiles = c(\"0.05\" = 0.10, \"0.50\" = 0.30, \"0.95\" = 0.60),\n  expert_id = \"Expert_1\",\n  label     = \"Response rate (treatment arm)\"\n)\nprint(prior_q)\n#&gt; \n#&gt; -- bayprior: Response rate (treatment arm) --\n#&gt; • Distribution : BETA\n#&gt; • Parameters   : alpha = 2.6338, beta = 5.589\n#&gt; • Method       : quantile elicitation\n#&gt; • Expert       : Expert_1\n#&gt; • Mean (SD)    : 0.3203 (0.1536)\n#&gt; • 95% CrI      : [0.0708, 0.6514]\n\n\n\nMoment Matching\nAlternatively, elicit the prior mean and standard deviation directly:\n\nprior_m &lt;- elicit_beta(\n  mean      = 0.30,\n  sd        = 0.10,\n  method    = \"moments\",\n  expert_id = \"Expert_1\",\n  label     = \"Response rate (treatment arm)\"\n)\nplot(prior_m)\n\n\n\n\n\n\n\n\nThe shaded region shows the 95% credible interval and the dashed vertical line marks the prior mean."
+    "text": "Beta Prior (Binary Endpoints)\nThe Beta distribution is the natural conjugate prior for a binary response rate \\(\\theta \\in (0, 1)\\). elicit_beta() supports two elicitation methods.\n\nQuantile Matching\nThe expert specifies quantiles directly — for example: “I believe the true response rate has a 5% chance of being below 10%, a median of around 30%, and a 95% chance of being below 60%.”\n\nlibrary(bayprior)\n\nprior_q &lt;- elicit_beta(\n  quantiles = c(\"0.05\" = 0.10, \"0.50\" = 0.30, \"0.95\" = 0.60),\n  expert_id = \"Expert_1\",\n  label     = \"Response rate (treatment arm)\"\n)\nprint(prior_q)\n\n\n\nMoment Matching\nAlternatively, elicit the prior mean and standard deviation directly:\n\nprior_m &lt;- elicit_beta(\n  mean      = 0.30,\n  sd        = 0.10,\n  method    = \"moments\",\n  expert_id = \"Expert_1\",\n  label     = \"Response rate (treatment arm)\"\n)\nplot(prior_m)\n\n\n\n\n\n\n\n\nThe shaded region shows the 95% credible interval and the dashed vertical line marks the prior mean."
   },
   {
     "objectID": "vignettes/bayprior-introduction.html#normal-prior-continuous-endpoints",
     "href": "vignettes/bayprior-introduction.html#normal-prior-continuous-endpoints",
     "title": "Introduction to bayprior",
     "section": "Normal Prior (Continuous Endpoints)",
-    "text": "Normal Prior (Continuous Endpoints)\nFor continuous quantities such as mean differences or log odds ratios:\n\nprior_nor &lt;- elicit_normal(\n  quantiles = c(\"0.025\" = -0.5, \"0.50\" = 0.20, \"0.975\" = 0.90),\n  label     = \"Log odds ratio\"\n)\nprint(prior_nor)\n#&gt; \n#&gt; -- bayprior: Log odds ratio --\n#&gt; • Distribution : NORMAL\n#&gt; • Parameters   : mu = 0.2, sigma = 0.3571\n#&gt; • Method       : quantile elicitation\n#&gt; • Expert       : Expert_1\n#&gt; • Mean (SD)    : 0.2 (0.3571)\n#&gt; • 95% CrI      : [-0.5, 0.9]"
+    "text": "Normal Prior (Continuous Endpoints)\nFor continuous quantities such as mean differences or log odds ratios:\n\nprior_nor &lt;- elicit_normal(\n  quantiles = c(\"0.025\" = -0.5, \"0.50\" = 0.20, \"0.975\" = 0.90),\n  label     = \"Log odds ratio\"\n)\nprint(prior_nor)"
   },
   {
     "objectID": "vignettes/bayprior-introduction.html#gamma-prior-rate-count-endpoints",
@@ -424,14 +403,14 @@
     "href": "vignettes/bayprior-introduction.html#roulette-method",
     "title": "Introduction to bayprior",
     "section": "Roulette Method",
-    "text": "Roulette Method\nThe roulette method (Oakley & O’Hagan, 2010) converts chip allocations across pre-defined bins into a parametric prior via quantile matching. It is available interactively through the Shiny app and programmatically here:\n\nprior_rou &lt;- elicit_roulette(\n  chips  = c(0L, 2L, 5L, 8L, 5L, 2L, 1L),\n  breaks = seq(0, 0.7, by = 0.1),\n  family = \"beta\",\n  label  = \"Response rate\"\n)\nprint(prior_rou)\n#&gt; \n#&gt; -- bayprior: Response rate --\n#&gt; • Distribution : BETA\n#&gt; • Parameters   : alpha = 4.1188, beta = 9.0184\n#&gt; • Method       : quantile elicitation\n#&gt; • Expert       : Expert_1\n#&gt; • Mean (SD)    : 0.3135 (0.1234)\n#&gt; • 95% CrI      : [0.1038, 0.5768]"
+    "text": "Roulette Method\nThe roulette method (Oakley & O’Hagan, 2010) converts chip allocations across pre-defined bins into a parametric prior via quantile matching. It is available interactively through the Shiny app and programmatically here:\n\nprior_rou &lt;- elicit_roulette(\n  chips  = c(0L, 2L, 5L, 8L, 5L, 2L, 1L),\n  breaks = seq(0, 0.7, by = 0.1),\n  family = \"beta\",\n  label  = \"Response rate\"\n)\nprint(prior_rou)"
   },
   {
     "objectID": "vignettes/bayprior-introduction.html#linear-pooling",
     "href": "vignettes/bayprior-introduction.html#linear-pooling",
     "title": "Introduction to bayprior",
     "section": "Linear Pooling",
-    "text": "Linear Pooling\nLinear pooling produces a weighted mixture of the individual priors. It is the most common approach in clinical trial settings (externally Bayesian):\n\np1 &lt;- elicit_beta(mean = 0.25, sd = 0.08, method = \"moments\",\n                  expert_id = \"E1\", label = \"Response rate\")\np2 &lt;- elicit_beta(mean = 0.35, sd = 0.10, method = \"moments\",\n                  expert_id = \"E2\", label = \"Response rate\")\np3 &lt;- elicit_beta(mean = 0.30, sd = 0.09, method = \"moments\",\n                  expert_id = \"E3\", label = \"Response rate\")\n\nconsensus &lt;- aggregate_experts(\n  priors  = list(E1 = p1, E2 = p2, E3 = p3),\n  weights = c(0.40, 0.30, 0.30),\n  method  = \"linear\"\n)\nprint(consensus)\n#&gt; \n#&gt; -- bayprior: Linear pooled consensus prior --\n#&gt; • Distribution : MIXTURE\n#&gt; • Components   : 3\n#&gt; • Weights      : 0.4, 0.3, 0.3\n#&gt; • Mean         : 0.295\nplot(consensus)\n\n\n\n\n\n\n\n\naggregate_experts() automatically computes pairwise Bhattacharyya coefficients and warns when expert disagreement is substantial."
+    "text": "Linear Pooling\nLinear pooling produces a weighted mixture of the individual priors. It is the most common approach in clinical trial settings (externally Bayesian):\n\np1 &lt;- elicit_beta(mean = 0.25, sd = 0.08, method = \"moments\",\n                  expert_id = \"E1\", label = \"Response rate\")\np2 &lt;- elicit_beta(mean = 0.35, sd = 0.10, method = \"moments\",\n                  expert_id = \"E2\", label = \"Response rate\")\np3 &lt;- elicit_beta(mean = 0.30, sd = 0.09, method = \"moments\",\n                  expert_id = \"E3\", label = \"Response rate\")\n\nconsensus &lt;- aggregate_experts(\n  priors  = list(E1 = p1, E2 = p2, E3 = p3),\n  weights = c(0.40, 0.30, 0.30),\n  method  = \"linear\"\n)\nprint(consensus)\nplot(consensus)\n\n\n\n\n\n\n\n\naggregate_experts() automatically computes pairwise Bhattacharyya coefficients and warns when expert disagreement is substantial."
   },
   {
     "objectID": "vignettes/bayprior-introduction.html#manual-mixture-construction",
@@ -543,7 +522,7 @@
     "href": "vignettes/conflict-diagnostics.html#binary-data",
     "title": "Prior-Data Conflict Diagnostics",
     "section": "Binary Data",
-    "text": "Binary Data\n\nprior &lt;- elicit_beta(\n  mean = 0.30, sd = 0.10, method = \"moments\",\n  label = \"Response rate\"\n)\n\n\n# No-conflict: data consistent with prior\ncd_none &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 13, n = 40),\n  alpha        = 0.05\n)\nprint(cd_none)\n\n\n-- Prior-Data Conflict Diagnostics --\n   Prior: Response rate \n\n• Box's p-value       : 0.8408\n• Surprise index      : 0.2009\n• KL divergence       : 0.1683\n• Overlap coefficient : 0.9682\n• Conflict severity   : NONE\n\n!  No evidence of prior-data conflict (Box p = 0.841). The prior appears consistent with the observed data. \n\n\n\n# Mild conflict\ncd_mild &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 20, n = 40)\n)\nprint(cd_mild)\n\n\n-- Prior-Data Conflict Diagnostics --\n   Prior: Response rate \n\n• Box's p-value       : 0.1167\n• Surprise index      : 1.5689\n• KL divergence       : 3.265\n• Overlap coefficient : 0.5331\n• Conflict severity   : NONE\n\n!  No evidence of prior-data conflict (Box p = 0.117). The prior appears consistent with the observed data. \n\n\n\n# Severe conflict\ncd_severe &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 35, n = 40)\n)\nprint(cd_severe)\n\n\n-- Prior-Data Conflict Diagnostics --\n   Prior: Response rate \n\n• Box's p-value       : 0\n• Surprise index      : 5.0954\n• KL divergence       : 61.1374\n• Overlap coefficient : 0.0014\n• Conflict severity   : SEVERE\n\n!  Severe prior-data conflict detected (Box p = 0, surprise = 5.1). Re-elicitation or use of a robust/sceptical prior is strongly recommended."
+    "text": "Binary Data\n\nprior &lt;- elicit_beta(\n  mean = 0.30, sd = 0.10, method = \"moments\",\n  label = \"Response rate\"\n)\n\n\n# No-conflict: data consistent with prior\ncd_none &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 13, n = 40),\n  alpha        = 0.05\n)\nprint(cd_none)\n\n\n# Mild conflict\ncd_mild &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 20, n = 40)\n)\nprint(cd_mild)\n\n\n# Severe conflict\ncd_severe &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 35, n = 40)\n)\nprint(cd_severe)"
   },
   {
     "objectID": "vignettes/conflict-diagnostics.html#boxs-prior-predictive-p-value",
