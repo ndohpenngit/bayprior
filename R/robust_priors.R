@@ -307,13 +307,12 @@ calibrate_power_prior <- function(historical_data,
 #'   optimal delta weight, and the mean and SD of the resulting power prior.
 #' @export
 print.bayprior_power_prior <- function(x, ...) {
-  cli::cli_h1("Power Prior Calibration")
-  cli::cli_ul()
-  cli::cli_li("Method       : {x$method}")
-  cli::cli_li("Target BF    : {x$target_bf}")
-  cli::cli_li("Optimal delta: {x$delta_opt}")
-  cli::cli_li("Power prior mean: {round(x$power_prior$fit_summary$mean, 4)}")
-  cli::cli_li("Power prior SD  : {round(x$power_prior$fit_summary$sd,   4)}")
+  .bp_h1("Power Prior Calibration")
+  .bp_li("Method          : ", x$method)
+  .bp_li("Target BF       : ", x$target_bf)
+  .bp_li("Optimal delta   : ", x$delta_opt)
+  .bp_li("Power prior mean: ", round(x$power_prior$fit_summary$mean, 4))
+  .bp_li("Power prior SD  : ", round(x$power_prior$fit_summary$sd,   4))
   invisible(x)
 }
 

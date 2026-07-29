@@ -8,29 +8,27 @@
 #'   credible interval.
 #' @export
 print.bayprior <- function(x, ...) {
-  cli::cli_h1("bayprior: {x$label}")
-  cli::cli_ul()
-  cli::cli_li("Distribution : {toupper(x$dist)}")
-
+  .bp_h1(paste0("bayprior: ", x$label))
   if (x$dist != "mixture" && x$dist != "log_pool") {
     param_str <- paste(
       names(x$params),
       round(unlist(x$params), 4),
       sep = " = ", collapse = ", "
     )
-    cli::cli_li("Parameters   : {param_str}")
-    cli::cli_li("Method       : {x$method} elicitation")
-    cli::cli_li("Expert       : {x$expert_id}")
+    .bp_li("Distribution : ", toupper(x$dist))
+    .bp_li("Parameters   : ", param_str)
+    .bp_li("Method       : ", paste(x$method, "elicitation"))
+    .bp_li("Expert       : ", x$expert_id)
     s <- x$fit_summary
-    cli::cli_li("Mean (SD)    : {round(s$mean, 4)} ({round(s$sd, 4)})")
+    .bp_li("Mean (SD)    : ", paste0(round(s$mean, 4), " (", round(s$sd, 4), ")"))
     if (!is.null(s$q025)) {
-      cli::cli_li("95% CrI      : [{round(s$q025, 4)}, {round(s$q975, 4)}]")
+      .bp_li("95% CrI      : ", paste0("[", round(s$q025, 4), ", ", round(s$q975, 4), "]"))
     }
   } else {
-    cli::cli_li("Components   : {length(x$components)}")
-    w_str <- paste(round(x$weights, 3), collapse = ", ")
-    cli::cli_li("Weights      : {w_str}")
-    cli::cli_li("Mean         : {round(x$fit_summary$mean, 4)}")
+    .bp_li("Distribution : ", toupper(x$dist))
+    .bp_li("Components   : ", length(x$components))
+    .bp_li("Weights      : ", paste(round(x$weights, 3), collapse = ", "))
+    .bp_li("Mean         : ", round(x$fit_summary$mean, 4))
   }
   invisible(x)
 }
@@ -73,23 +71,17 @@ summary.bayprior <- function(object, ...) {
 #'   Bhattacharyya overlap, and colour-coded conflict severity.
 #' @export
 print.bayprior_conflict <- function(x, ...) {
-  cli::cli_h1("Prior-Data Conflict Diagnostics")
-  cli::cli_h2("Prior: {x$prior$label}")
-
-  sev_col <- switch(x$conflict_severity,
-    none   = cli::col_green,
-    mild   = cli::col_yellow,
-    severe = cli::col_red
-  )
+  .bp_h1("Prior-Data Conflict Diagnostics")
+  .bp_h2(paste0("Prior: ", x$prior$label))
   cat("\n")
-  cli::cli_ul()
-  cli::cli_li("Box's p-value       : {round(x$box_pvalue, 4)}")
-  cli::cli_li("Surprise index      : {round(x$surprise_index, 4)}")
-  cli::cli_li("KL divergence       : {round(x$kl_prior_likelihood, 4)}")
-  cli::cli_li("Overlap coefficient : {round(x$overlap, 4)}")
-  cli::cli_li("Conflict severity   : {sev_col(toupper(x$conflict_severity))}")
+  .bp_li("Box's p-value       : ", round(x$box_pvalue, 4))
+  .bp_li("Surprise index      : ", round(x$surprise_index, 4))
+  .bp_li("KL divergence       : ", round(x$kl_prior_likelihood, 4))
+  .bp_li("Overlap coefficient : ", round(x$overlap, 4))
+  sev_label <- toupper(x$conflict_severity)
+  .bp_li("Conflict severity   : ", sev_label)
   cat("\n")
-  cli::cli_alert_warning("{x$recommendation}")
+  .bp_alert(x$recommendation)
   invisible(x)
 }
 
@@ -116,4 +108,65 @@ as_prior <- function(dist, params, label = "Prior", expert_id = "Literature") {
   dist <- match.arg(dist, c("beta", "normal", "gamma"))
   .make_bayprior(dist, params, method = "direct", expert_id = expert_id,
                  label = label, input = params)
+}
+
+
+# -- Internal print helpers ----------------------------------------------------
+# Use cli when running interactively (IDE/terminal), fall back to plain cat()
+# in non-interactive contexts (rmarkdown::render, callr subprocesses, etc.)
+
+.bp_use_cli <- function() {
+  # cli works reliably when RSTUDIO or POSITRON env var is set (IDE sessions),
+  # or when stdout is a genuine terminal (isatty). Falls back to cat() otherwise.
+  ide  <- nchar(Sys.getenv("RSTUDIO")) > 0 || nchar(Sys.getenv("POSITRON")) > 0
+  tty  <- isatty(stdout())
+  ide || tty
+}
+
+.bp_h1 <- function(txt) {
+  if (.bp_use_cli()) {
+    cli::cli_h1(txt)
+  } else {
+    cat("\n--", txt, "--\n")
+  }
+}
+
+.bp_h2 <- function(txt) {
+  if (.bp_use_cli()) {
+    cli::cli_h2(txt)
+  } else {
+    cat("  ", txt, "\n")
+  }
+}
+
+.bp_li <- function(label, value) {
+  if (.bp_use_cli()) {
+    cli::cli_li(paste0(label, value))
+  } else {
+    cat(paste0("\u2022 ", label, value, "\n"))
+  }
+}
+
+.bp_alert <- function(txt) {
+  if (.bp_use_cli()) {
+    cli::cli_alert_warning(txt)
+  } else {
+    cat("! ", txt, "\n")
+  }
+}
+
+.bp_alert_info <- function(txt) {
+  if (.bp_use_cli()) {
+    cli::cli_alert_info(txt)
+  } else {
+    cat("i ", txt, "\n")
+  }
+}
+
+.bp_alert_success <- function(txt) {
+  if (.bp_use_cli()) {
+    cli::cli_alert_success(txt)
+  } else {
+    cat("v ", txt, "\n")
+  }
 }
