@@ -113,3 +113,44 @@ test_that("plot.bayprior_robust snapshot", {
   rob <- suppressWarnings(robust_prior(inf, vague_weight = 0.20, label = "Robust"))
   vdiffr::expect_doppelganger("plot-robust-prior", plot(rob))
 })
+
+# -- Functional (non-snapshot) plot tests -------------------------------------
+
+test_that("plot.bayprior_conflict: returns ggplot or list", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments",
+                       label = "Response rate")
+  cd    <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
+  p     <- plot(cd)
+  expect_true(inherits(p, "gg") || inherits(p, "patchwork") || is.list(p))
+})
+
+test_that("plot.bayprior_conflict: severe conflict case runs", {
+  prior <- elicit_beta(mean = 0.10, sd = 0.03, method = "moments")
+  cd    <- prior_conflict(prior, list(type = "binary", x = 38, n = 40))
+  expect_no_error(plot(cd))
+})
+
+test_that("plot_sensitivity: prob_efficacy target works", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  sa    <- sensitivity_grid(
+    prior,
+    data_summary = list(type = "binary", x = 14, n = 40),
+    param_grid   = list(alpha = seq(1, 4, 1), beta = seq(2, 8, 2)),
+    target       = "prob_efficacy",
+    threshold    = 0.30
+  )
+  gp <- plot_sensitivity(sa, target = "prob_efficacy")
+  expect_s3_class(gp, "gg")
+})
+
+test_that("plot_sensitivity: cri_width target works", {
+  prior  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  cri_sa <- sensitivity_cri(
+    prior,
+    data_summary = list(type = "binary", x = 14, n = 40),
+    param_grid   = list(alpha = seq(1, 4, 1), beta = seq(2, 8, 2)),
+    cri_level    = 0.95
+  )
+  gp <- plot_sensitivity(cri_sa, target = "cri_width")
+  expect_s3_class(gp, "gg")
+})

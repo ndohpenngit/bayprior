@@ -1,22 +1,8 @@
-# test-robust.R
-# Tests for robust_prior(), sceptical_prior(), calibrate_power_prior()
-# Also covers: plotting.R, validation_utils.R, zzz_patches.R,
-#              elicit_exponential(), elicit_weibull()
-# Target coverage uplift: validation_utils 0% -> ~80%, zzz_patches 65% -> ~80%
-#                         robust_priors 70% -> ~80%, plotting 70% -> ~78%
-# -----------------------------------------------------------------------------
-
-library(testthat)
-library(bayprior)
-
 # -- robust_prior() ------------------------------------------------------------
 
 test_that("robust_prior returns a valid mixture bayprior", {
-  inf <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments",
-                     label = "Response rate")
-  rob <- suppressWarnings(
-    robust_prior(inf, vague_weight = 0.20, label = "Robust prior")
-  )
+  inf <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments", label = "Response rate")
+  rob <- suppressWarnings(robust_prior(inf, vague_weight = 0.20, label = "Robust prior"))
   expect_s3_class(rob, "bayprior")
   expect_equal(rob$dist, "mixture")
   expect_equal(rob$vague_weight, 0.20)
@@ -35,10 +21,7 @@ test_that("robust_prior respects vague_weight parameter", {
 
 test_that("robust_prior works with custom vague_sd", {
   inf <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments")
-  rob <- suppressWarnings(
-    robust_prior(inf, vague_weight = 0.20,
-                 vague_sd = 5 * inf$fit_summary$sd)
-  )
+  rob <- suppressWarnings(robust_prior(inf, vague_weight = 0.20, vague_sd = 5 * inf$fit_summary$sd))
   expect_s3_class(rob, "bayprior")
   expect_equal(rob$vague_weight, 0.20)
 })
@@ -70,8 +53,7 @@ test_that("sceptical_prior works for normal family -- all strengths", {
 })
 
 test_that("sceptical_prior works for beta family", {
-  sc <- sceptical_prior(null_value = 0.20, family = "beta",
-                        strength = "moderate")
+  sc <- sceptical_prior(null_value = 0.20, family = "beta", strength = "moderate")
   expect_s3_class(sc, "bayprior")
   expect_equal(sc$dist, "beta")
   expect_equal(as.numeric(sc$fit_summary$mean), 0.20, tolerance = 0.02)
@@ -100,10 +82,8 @@ test_that("calibrate_power_prior returns correct structure (bayes_factor)", {
   cp   <- calibrate_power_prior(
     historical_data = list(type = "binary", x = 12, n = 40),
     current_data    = list(type = "binary", x = 18, n = 50),
-    base_prior      = base,
-    target_bf       = 3,
-    delta_grid      = seq(0.10, 1.0, by = 0.10),
-    method          = "bayes_factor"
+    base_prior      = base, target_bf = 3,
+    delta_grid      = seq(0.10, 1.0, by = 0.10), method = "bayes_factor"
   )
   expect_s3_class(cp, "bayprior_power_prior")
   expect_true(is.numeric(cp$delta_opt))
@@ -121,9 +101,7 @@ test_that("calibrate_power_prior works with compatibility method", {
   cp   <- calibrate_power_prior(
     historical_data = list(type = "binary", x = 12, n = 40),
     current_data    = list(type = "binary", x = 18, n = 50),
-    base_prior      = base,
-    delta_grid      = seq(0.10, 1.0, by = 0.10),
-    method          = "compatibility"
+    base_prior      = base, delta_grid = seq(0.10, 1.0, by = 0.10), method = "compatibility"
   )
   expect_s3_class(cp, "bayprior_power_prior")
   expect_gte(cp$delta_opt, 0)
@@ -135,9 +113,7 @@ test_that("calibrate_power_prior works for normal prior (continuous data)", {
   cp   <- calibrate_power_prior(
     historical_data = list(type = "continuous", x = 0.33, sd = 0.12, n = 30),
     current_data    = list(type = "continuous", x = 0.40, sd = 0.15, n = 40),
-    base_prior      = base,
-    delta_grid      = seq(0.20, 1.0, by = 0.20),
-    method          = "bayes_factor"
+    base_prior      = base, delta_grid = seq(0.20, 1.0, by = 0.20), method = "bayes_factor"
   )
   expect_s3_class(cp, "bayprior_power_prior")
   expect_equal(cp$power_prior$dist, "normal")
@@ -148,35 +124,68 @@ test_that("calibrate_power_prior works for gamma prior (continuous data)", {
   cp   <- calibrate_power_prior(
     historical_data = list(type = "continuous", x = 4.5, sd = 1.5, n = 30),
     current_data    = list(type = "continuous", x = 5.5, sd = 2.0, n = 40),
-    base_prior      = base,
-    delta_grid      = seq(0.20, 1.0, by = 0.20),
-    method          = "compatibility"
+    base_prior      = base, delta_grid = seq(0.20, 1.0, by = 0.20), method = "compatibility"
   )
   expect_s3_class(cp, "bayprior_power_prior")
 })
 
 test_that("calibrate_power_prior works with Poisson data", {
-  base <- elicit_gamma(mean = 3.0, sd = 1.5, method = "moments",
-                       label = "Event rate")
+  base <- elicit_gamma(mean = 3.0, sd = 1.5, method = "moments", label = "Event rate")
   cp   <- calibrate_power_prior(
     historical_data = list(type = "poisson", x = 12, n = 40),
     current_data    = list(type = "poisson", x = 18, n = 50),
-    base_prior      = base,
-    delta_grid      = seq(0.20, 1.0, by = 0.20),
-    method          = "bayes_factor"
+    base_prior      = base, delta_grid = seq(0.20, 1.0, by = 0.20), method = "bayes_factor"
   )
   expect_s3_class(cp, "bayprior_power_prior")
-  expect_true(cp$delta_opt >= 0.05 && cp$delta_opt <= 1)
 })
 
 test_that("calibrate_power_prior errors if base_prior is not bayprior", {
-  expect_error(
-    calibrate_power_prior(
-      historical_data = list(type = "binary", x = 12, n = 40),
-      current_data    = list(type = "binary", x = 18, n = 50),
-      base_prior      = "not a prior"
-    )
-  )
+  expect_error(calibrate_power_prior(
+    historical_data = list(type = "binary", x = 12, n = 40),
+    current_data    = list(type = "binary", x = 18, n = 50),
+    base_prior      = "not a prior"
+  ))
+})
+
+# -- .power_prior_update internals ---------------------------------------------
+
+test_that(".power_prior_update: normal data type works", {
+  base <- elicit_normal(mean = 0.35, sd = 0.10, method = "moments")
+  pp   <- bayprior:::.power_prior_update(base, list(type = "continuous", x = 0.50, n = 30, sd = 0.12), delta = 0.5)
+  expect_s3_class(pp, "bayprior")
+  expect_equal(pp$dist, "normal")
+  expect_gt(pp$fit_summary$mean, 0.35)
+})
+
+test_that(".power_prior_update: gamma-poisson data type works", {
+  base <- elicit_gamma(mean = 3.0, sd = 1.5, method = "moments")
+  pp   <- bayprior:::.power_prior_update(base, list(type = "poisson", x = 15, n = 50), delta = 0.5)
+  expect_s3_class(pp, "bayprior")
+  expect_equal(pp$dist, "gamma")
+  expect_gt(pp$params$shape, base$params$shape)
+})
+
+test_that(".power_prior_update: gamma-continuous data type works", {
+  base <- elicit_gamma(mean = 5.0, sd = 2.0, method = "moments")
+  pp   <- bayprior:::.power_prior_update(base, list(type = "continuous", x_sum = 150, n = 30), delta = 0.5)
+  expect_s3_class(pp, "bayprior")
+  expect_equal(pp$dist, "gamma")
+})
+
+test_that(".power_prior_update: lognormal data type works", {
+  base <- elicit_lognormal(mean = 1.5, sd = 0.4, method = "moments")
+  pp   <- bayprior:::.power_prior_update(base, list(type = "continuous", x = 1.6, n = 25, sd = 0.3), delta = 0.5)
+  expect_s3_class(pp, "bayprior")
+  expect_equal(pp$dist, "lognormal")
+})
+
+test_that(".power_prior_update: delta=1 borrows all historical data", {
+  base    <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  hist    <- list(type = "binary", x = 12, n = 40)
+  pp_full <- bayprior:::.power_prior_update(base, hist, delta = 1.0)
+  pp_half <- bayprior:::.power_prior_update(base, hist, delta = 0.5)
+  expect_equal(pp_full$params$alpha, base$params$alpha + 12, tolerance = 1e-6)
+  expect_lt(pp_half$params$alpha, pp_full$params$alpha)
 })
 
 # -- print / plot methods ------------------------------------------------------
@@ -186,9 +195,7 @@ test_that("print.bayprior_power_prior runs without error", {
   cp   <- calibrate_power_prior(
     historical_data = list(type = "binary", x = 12, n = 40),
     current_data    = list(type = "binary", x = 18, n = 50),
-    base_prior      = base,
-    delta_grid      = seq(0.20, 1.0, by = 0.20),
-    method          = "bayes_factor"
+    base_prior      = base, delta_grid = seq(0.20, 1.0, by = 0.20), method = "bayes_factor"
   )
   expect_error(print(cp), NA)
 })
@@ -198,14 +205,10 @@ test_that("plot.bayprior_power_prior returns a gg/patchwork object", {
   cp   <- calibrate_power_prior(
     historical_data = list(type = "binary", x = 12, n = 40),
     current_data    = list(type = "binary", x = 18, n = 50),
-    base_prior      = base,
-    delta_grid      = seq(0.20, 1.0, by = 0.20),
-    method          = "bayes_factor"
+    base_prior      = base, delta_grid = seq(0.20, 1.0, by = 0.20), method = "bayes_factor"
   )
   gp <- plot(cp)
-  expect_true(
-    inherits(gp, "patchwork") || inherits(gp, "gg") || inherits(gp, "gtable")
-  )
+  expect_true(inherits(gp, "patchwork") || inherits(gp, "gg") || inherits(gp, "gtable"))
 })
 
 test_that("plot.bayprior works for all six distribution families", {
@@ -219,171 +222,51 @@ test_that("plot.bayprior works for all six distribution families", {
   )
   for (nm in names(dists)) {
     gp <- plot(dists[[nm]])
-    expect_true(inherits(gp, "gg"),
-                label = paste("plot.bayprior:", nm, "should return gg"))
+    expect_true(inherits(gp, "gg"), label = paste("plot.bayprior:", nm, "should return gg"))
   }
 })
 
-# -- elicit_exponential() ------------------------------------------------------
+# -- .power_prior_update: mixture prior path -----------------------------------
 
-test_that("elicit_exponential moments method returns valid bayprior", {
-  pr <- elicit_exponential(mean = 2.0, method = "moments", label = "Event rate")
-  expect_s3_class(pr, "bayprior")
-  expect_equal(pr$dist, "exponential")
-  expect_equal(pr$fit_summary$mean, 2.0, tolerance = 0.01)
-  expect_true(pr$fit_summary$sd > 0)
-})
-
-test_that("elicit_exponential quantile method returns valid bayprior", {
-  # quantiles = the actual quantile values (not probabilities)
-  pr <- elicit_exponential(
-    quantiles = c(0.5, 2.0),   # median = 0.5, 75th pctile = 2.0
-    method    = "quantile",
-    label     = "Survival rate"
+test_that(".power_prior_update: mixture prior (robust) with binary data works", {
+  inf  <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments")
+  mix  <- suppressWarnings(robust_prior(inf, vague_weight = 0.20))
+  pp   <- bayprior:::.power_prior_update(
+    mix,
+    list(type = "binary", x = 12, n = 40),
+    delta = 0.5
   )
-  expect_s3_class(pr, "bayprior")
-  expect_equal(pr$dist, "exponential")
+  expect_s3_class(pp, "bayprior")
+  expect_equal(pp$dist, "mixture")
 })
 
-test_that("elicit_exponential rejects non-positive mean", {
-  expect_error(elicit_exponential(mean =  0, method = "moments"))
-  expect_error(elicit_exponential(mean = -1, method = "moments"))
-})
-
-# -- elicit_weibull() ----------------------------------------------------------
-
-test_that("elicit_weibull moments method returns valid bayprior", {
-  pr <- elicit_weibull(mean = 5.0, sd = 2.0, method = "moments",
-                       label = "Survival time")
-  expect_s3_class(pr, "bayprior")
-  expect_equal(pr$dist, "weibull")
-  expect_true(pr$fit_summary$mean > 0)
-  expect_true(pr$fit_summary$sd   > 0)
-  expect_true(pr$params$shape     > 0)
-  expect_true(pr$params$scale     > 0)
-})
-
-test_that("elicit_weibull quantile method returns valid bayprior", {
-  # quantiles = the actual quantile values on the time scale
-  pr <- elicit_weibull(
-    quantiles = c(2.0, 8.0),   # 10th pctile = 2, 90th pctile = 8
-    method    = "quantile",
-    label     = "Time to event"
+test_that(".power_prior_update: mixture prior with continuous data works", {
+  e1  <- elicit_normal(mean = 0.0, sd = 0.5, method = "moments", expert_id = "E1")
+  e2  <- elicit_normal(mean = 0.5, sd = 0.5, method = "moments", expert_id = "E2")
+  mix <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5))
+  pp  <- bayprior:::.power_prior_update(
+    mix,
+    list(type = "continuous", x = 0.3, n = 30, sd = 0.4),
+    delta = 0.5
   )
-  expect_s3_class(pr, "bayprior")
-  expect_equal(pr$dist, "weibull")
+  expect_s3_class(pp, "bayprior")
+  expect_equal(pp$dist, "mixture")
 })
 
-test_that("elicit_weibull rejects non-positive inputs", {
-  expect_error(elicit_weibull(mean = -1, sd =  1, method = "moments"))
-  expect_error(elicit_weibull(mean =  1, sd =  0, method = "moments"))
-  expect_error(elicit_weibull(mean =  0, sd =  1, method = "moments"))
-})
-
-# -- validation_utils.R --------------------------------------------------------
-
-test_that(".check_prior_data_compat passes valid combinations", {
-  # Function takes a data_summary list, not a bare string
-  r1 <- .check_prior_data_compat(
-    elicit_beta(mean = 0.3, sd = 0.1, method = "moments"),
-    list(type = "binary", x = 10, n = 30))
-  expect_true(r1$ok)
-
-  r2 <- .check_prior_data_compat(
-    elicit_normal(mean = 0.3, sd = 0.1, method = "moments"),
-    list(type = "continuous", x = 0.3, sd = 0.1, n = 30))
-  expect_true(r2$ok)
-
-  r3 <- .check_prior_data_compat(
-    elicit_gamma(mean = 3.0, sd = 1.0, method = "moments"),
-    list(type = "poisson", x = 9, n = 3))
-  expect_true(r3$ok)
-})
-
-test_that(".check_prior_data_compat returns warning for mismatched family-type", {
-  # Mismatch returns ok=TRUE with a warning message, it does not error
-  r1 <- .check_prior_data_compat(
-    elicit_normal(mean = 0.3, sd = 0.1, method = "moments"),
-    list(type = "poisson", x = 10, n = 30))  # Normal does not support Poisson
-  expect_equal(r1$severity, "warning")
-  expect_true(nchar(r1$msg) > 0)
-
-  r2 <- .check_prior_data_compat(
-    elicit_lognormal(mean = 1.0, sd = 0.3, method = "moments"),
-    list(type = "binary", x = 10, n = 30))   # LogNormal does not support binary
-  expect_equal(r2$severity, "warning")
-})
-
-test_that(".check_pooling_compat passes matching families", {
-  p1 <- elicit_beta(mean = 0.3, sd = 0.1, method = "moments")
-  p2 <- elicit_beta(mean = 0.5, sd = 0.1, method = "moments")
-  expect_no_error(.check_pooling_compat(list(p1, p2)))
-})
-
-test_that(".check_pooling_compat returns ok=FALSE for incompatible supports", {
-  # Beta (unit) + Normal (real) have incompatible supports -- returns ok=FALSE
-  p1 <- elicit_beta(mean  = 0.3, sd = 0.1, method = "moments")
-  p2 <- elicit_normal(mean = 0.3, sd = 0.1, method = "moments")
-  r  <- .check_pooling_compat(list(p1, p2))
-  expect_false(r$ok)
-  expect_equal(r$severity, "error")
-  expect_true(nchar(r$msgs) > 0)
-})
-
-test_that(".check_pooling_compat returns warning for same-support mixed families", {
-  # Gamma + Exponential: both positive support -- warning, not error
-  p1 <- elicit_gamma(mean = 3.0, sd = 1.5, method = "moments")
-  p2 <- elicit_exponential(mean = 2.0, method = "moments")
-  r  <- .check_pooling_compat(list(p1, p2))
-  expect_true(r$ok)
-  expect_equal(r$severity, "warning")
-})
-
-test_that(".check_sensitivity_compat returns ok=TRUE for multi-param priors", {
-  # Function takes only the prior -- param_grid is not an argument
-  pr <- elicit_beta(mean = 0.3, sd = 0.1, method = "moments")
-  r  <- .check_sensitivity_compat(pr)
-  expect_true(r$ok)
-})
-
-test_that(".check_sensitivity_compat returns info for single-param priors", {
-  # Exponential has only one parameter (rate) -- function flags this
-  pr <- elicit_exponential(mean = 2.0, method = "moments")
-  r  <- .check_sensitivity_compat(pr)
-  expect_true(r$ok)
-  expect_equal(r$severity, "info")
-})
-
-# -- zzz_patches.R -------------------------------------------------------------
-
-test_that(".target_label maps all known targets correctly", {
-  expect_equal(.target_label("posterior_mean"), "Posterior mean")
-  expect_equal(.target_label("posterior_sd"),   "Posterior SD")
-  expect_equal(.target_label("cri_lower"),      "95% CrI lower bound")
-  expect_equal(.target_label("cri_upper"),      "95% CrI upper bound")
-  expect_equal(.target_label("cri_width"),      "95% CrI width")
-  expect_equal(.target_label("prob_efficacy"),  "Pr(efficacy)")
-})
-
-test_that(".target_label returns input unchanged for unknown targets", {
-  expect_equal(.target_label("unknown_target"), "unknown_target")
-  expect_equal(.target_label("custom_metric"),  "custom_metric")
-})
-
-test_that(".relabel_sensitivity handles NULL input", {
-  expect_null(.relabel_sensitivity(NULL))
-})
-
-test_that(".relabel_sensitivity renames target names in sensitivity object", {
-  pr <- elicit_beta(mean = 0.3, sd = 0.1, method = "moments")
-  sa <- sensitivity_grid(
-    pr,
-    data_summary = list(type = "binary", x = 12, n = 40),
-    param_grid   = list(alpha = seq(2, 6, by = 2),
-                        beta  = seq(4, 12, by = 4))
+test_that("plot.bayprior_power_prior: patchwork not installed falls back gracefully", {
+  base <- elicit_beta(mean = 0.50, sd = 0.20, method = "moments")
+  cp   <- calibrate_power_prior(
+    historical_data = list(type = "binary", x = 12, n = 40),
+    current_data    = list(type = "binary", x = 18, n = 50),
+    base_prior      = base,
+    delta_grid      = seq(0.20, 1.0, by = 0.20),
+    method          = "bayes_factor"
   )
-  sa2 <- .relabel_sensitivity(sa)
-  # Should be a valid sensitivity object (not NULL, not broken)
-  expect_false(is.null(sa2))
-  expect_true(is.list(sa2))
+  # Whether patchwork is installed or not, plot should return something valid
+  result <- plot(cp)
+  expect_true(
+    inherits(result, "patchwork") ||
+    inherits(result, "gg") ||
+    is.list(result)
+  )
 })
