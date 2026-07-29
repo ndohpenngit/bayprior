@@ -263,7 +263,7 @@
     "href": "vignettes/robust-priors.html#calibrating-delta",
     "title": "Robust, Sceptical, and Power Priors",
     "section": "Calibrating \\(\\delta\\)",
-    "text": "Calibrating \\(\\delta\\)\ncalibrate_power_prior() selects \\(\\delta\\) to achieve a target Bayes Factor between the historical-data-informed prior and the current likelihood — ensuring the historical data is incorporated only to the extent it is compatible with current data:\n\nbase &lt;- elicit_beta(\n  mean   = 0.50,\n  sd     = 0.20,\n  method = \"moments\",\n  label  = \"Response rate\"\n)\n\ncalib &lt;- calibrate_power_prior(\n  historical_data = list(type = \"binary\", x = 12, n = 40),\n  current_data    = list(type = \"binary\", x = 18, n = 50),\n  base_prior      = base,\n  target_bf       = 3,\n  delta_grid      = seq(0.05, 1.0, by = 0.05),\n  method          = \"bayes_factor\"\n)\nprint(calib)\n\n\nplot(calib)\n\n\n\n\n\n\n\n\nThe calibration curves show:\n\nTop panel: Bayes Factor vs \\(\\delta\\). The dashed red line is the target BF; the dotted green line marks the optimal \\(\\delta\\).\nBottom panel: Box p-value vs \\(\\delta\\). Values below 0.05 indicate conflict at that weight."
+    "text": "Calibrating \\(\\delta\\)\ncalibrate_power_prior() selects \\(\\delta\\) to achieve a target Bayes Factor between the historical-data-informed prior and the current likelihood — ensuring the historical data is incorporated only to the extent it is compatible with current data:\n\nbase &lt;- elicit_beta(\n  mean   = 0.50,\n  sd     = 0.20,\n  method = \"moments\",\n  label  = \"Response rate\"\n)\n\ncalib &lt;- calibrate_power_prior(\n  historical_data = list(type = \"binary\", x = 12, n = 40),\n  current_data    = list(type = \"binary\", x = 18, n = 50),\n  base_prior      = base,\n  target_bf       = 3,\n  delta_grid      = seq(0.05, 1.0, by = 0.05),\n  method          = \"bayes_factor\"\n)\nprint(calib)\n#&gt; \n#&gt; -- Power Prior Calibration --\n#&gt; • Method          : bayes_factor\n#&gt; • Target BF       : 3\n#&gt; • Optimal delta   : 0.05\n#&gt; • Power prior mean: 0.4448\n#&gt; • Power prior SD  : 0.173\n\n\nplot(calib)\n\n\n\n\n\n\n\n\nThe calibration curves show:\n\nTop panel: Bayes Factor vs \\(\\delta\\). The dashed red line is the target BF; the dotted green line marks the optimal \\(\\delta\\).\nBottom panel: Box p-value vs \\(\\delta\\). Values below 0.05 indicate conflict at that weight."
   },
   {
     "objectID": "vignettes/robust-priors.html#compatibility-method",
@@ -277,7 +277,7 @@
     "href": "vignettes/robust-priors.html#power-prior-for-other-families",
     "title": "Robust, Sceptical, and Power Priors",
     "section": "Power Prior for Other Families",
-    "text": "Power Prior for Other Families\nPower prior updating is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors. For a Normal prior with continuous historical data:\n\nbase_norm &lt;- elicit_normal(\n  mean = 0.0, sd = 0.5,\n  method = \"moments\", label = \"Mean difference\"\n)\n\ncalib_norm &lt;- calibrate_power_prior(\n  historical_data = list(type = \"continuous\", x = 0.35, sd = 0.3, n = 60),\n  current_data    = list(type = \"continuous\", x = 0.42, sd = 0.3, n = 80),\n  base_prior      = base_norm,\n  target_bf       = 3,\n  delta_grid      = seq(0.05, 1.0, by = 0.10),\n  method          = \"bayes_factor\"\n)\nprint(calib_norm)"
+    "text": "Power Prior for Other Families\nPower prior updating is supported for Beta, Normal, Gamma, Log-Normal, and Mixture priors. For a Normal prior with continuous historical data:\n\nbase_norm &lt;- elicit_normal(\n  mean = 0.0, sd = 0.5,\n  method = \"moments\", label = \"Mean difference\"\n)\n\ncalib_norm &lt;- calibrate_power_prior(\n  historical_data = list(type = \"continuous\", x = 0.35, sd = 0.3, n = 60),\n  current_data    = list(type = \"continuous\", x = 0.42, sd = 0.3, n = 80),\n  base_prior      = base_norm,\n  target_bf       = 3,\n  delta_grid      = seq(0.05, 1.0, by = 0.10),\n  method          = \"bayes_factor\"\n)\nprint(calib_norm)\n#&gt; \n#&gt; -- Power Prior Calibration --\n#&gt; • Method          : bayes_factor\n#&gt; • Target BF       : 3\n#&gt; • Optimal delta   : 0.95\n#&gt; • Power prior mean: 0.3478\n#&gt; • Power prior SD  : 0.0396"
   },
   {
     "objectID": "vignettes/prior-elicitation.html",
@@ -305,35 +305,35 @@
     "href": "vignettes/prior-elicitation.html#quantile-matching",
     "title": "Prior Elicitation Methods",
     "section": "Quantile Matching",
-    "text": "Quantile Matching\n\nprior_q &lt;- elicit_beta(\n  quantiles = c(\"0.05\" = 0.10, \"0.50\" = 0.30, \"0.95\" = 0.60),\n  expert_id = \"Expert_1\",\n  label     = \"ORR (treatment arm)\"\n)\nprint(prior_q)\nplot(prior_q)"
+    "text": "Quantile Matching\n\nprior_q &lt;- elicit_beta(\n  quantiles = c(\"0.05\" = 0.10, \"0.50\" = 0.30, \"0.95\" = 0.60),\n  expert_id = \"Expert_1\",\n  label     = \"ORR (treatment arm)\"\n)\nprint(prior_q)\n\n\n-- bayprior: ORR (treatment arm) --\n• Distribution : BETA\n• Parameters   : alpha = 2.6338, beta = 5.589\n• Method       : quantile elicitation\n• Expert       : Expert_1\n• Mean (SD)    : 0.3203 (0.1536)\n• 95% CrI      : [0.0708, 0.6514]\n\nplot(prior_q)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#moment-matching",
     "href": "vignettes/prior-elicitation.html#moment-matching",
     "title": "Prior Elicitation Methods",
     "section": "Moment Matching",
-    "text": "Moment Matching\n\nprior_m &lt;- elicit_beta(\n  mean      = 0.30,\n  sd        = 0.10,\n  method    = \"moments\",\n  expert_id = \"Expert_1\",\n  label     = \"ORR (treatment arm)\"\n)\nprint(prior_m)\n\nMoment matching solves analytically: \\[\\alpha = \\mu \\left(\\frac{\\mu(1-\\mu)}{\\sigma^2} - 1\\right), \\quad\n\\beta = (1-\\mu)\\left(\\frac{\\mu(1-\\mu)}{\\sigma^2} - 1\\right)\\]"
+    "text": "Moment Matching\n\nprior_m &lt;- elicit_beta(\n  mean      = 0.30,\n  sd        = 0.10,\n  method    = \"moments\",\n  expert_id = \"Expert_1\",\n  label     = \"ORR (treatment arm)\"\n)\nprint(prior_m)\n\n\n-- bayprior: ORR (treatment arm) --\n• Distribution : BETA\n• Parameters   : alpha = 6, beta = 14\n• Method       : moments elicitation\n• Expert       : Expert_1\n• Mean (SD)    : 0.3 (0.1)\n• 95% CrI      : [0.1258, 0.512]\n\n\nMoment matching solves analytically: \\[\\alpha = \\mu \\left(\\frac{\\mu(1-\\mu)}{\\sigma^2} - 1\\right), \\quad\n\\beta = (1-\\mu)\\left(\\frac{\\mu(1-\\mu)}{\\sigma^2} - 1\\right)\\]"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-moments",
     "href": "vignettes/prior-elicitation.html#method-moments",
     "title": "Prior Elicitation Methods",
     "section": "Method: moments",
-    "text": "Method: moments\n\n# Mean hazard rate 0.05 =&gt; mean survival 1/0.05 = 20 months\nprior_hz &lt;- elicit_exponential(\n  mean      = 0.05,\n  method    = \"moments\",\n  label     = \"Hazard rate (constant)\",\n  expert_id = \"Expert_1\"\n)\nprint(prior_hz)\nplot(prior_hz)"
+    "text": "Method: moments\n\n# Mean hazard rate 0.05 =&gt; mean survival 1/0.05 = 20 months\nprior_hz &lt;- elicit_exponential(\n  mean      = 0.05,\n  method    = \"moments\",\n  label     = \"Hazard rate (constant)\",\n  expert_id = \"Expert_1\"\n)\nprint(prior_hz)\n\n\n-- bayprior: Hazard rate (constant) --\n• Distribution : EXPONENTIAL\n• Parameters   : rate = 20\n• Method       : moments elicitation\n• Expert       : Expert_1\n• Mean (SD)    : 0.05 (0.05)\n• 95% CrI      : [0.0013, 0.1844]\n\nplot(prior_hz)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-rate",
     "href": "vignettes/prior-elicitation.html#method-rate",
     "title": "Prior Elicitation Methods",
     "section": "Method: rate",
-    "text": "Method: rate\nDirect rate specification (= \\(\\lambda\\)):\n\nprior_ae &lt;- elicit_exponential(\n  rate   = 0.12,\n  method = \"rate\",\n  label  = \"AE rate per person-year\"\n)\nprint(prior_ae)"
+    "text": "Method: rate\nDirect rate specification (= \\(\\lambda\\)):\n\nprior_ae &lt;- elicit_exponential(\n  rate   = 0.12,\n  method = \"rate\",\n  label  = \"AE rate per person-year\"\n)\nprint(prior_ae)\n\n\n-- bayprior: AE rate per person-year --\n• Distribution : EXPONENTIAL\n• Parameters   : rate = 0.12\n• Method       : rate elicitation\n• Expert       : Expert\n• Mean (SD)    : 8.3333 (8.3333)\n• 95% CrI      : [0.211, 30.7407]"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-quantile",
     "href": "vignettes/prior-elicitation.html#method-quantile",
     "title": "Prior Elicitation Methods",
     "section": "Method: quantile",
-    "text": "Method: quantile\nFit the rate from expert-specified quantiles:\n\nprior_hz_q &lt;- elicit_exponential(\n  quantiles = c(\"0.25\" = 0.02, \"0.50\" = 0.05, \"0.75\" = 0.10),\n  method    = \"quantile\",\n  label     = \"Hazard rate\"\n)\nprint(prior_hz_q)\nplot(prior_hz_q)"
+    "text": "Method: quantile\nFit the rate from expert-specified quantiles:\n\nprior_hz_q &lt;- elicit_exponential(\n  quantiles = c(\"0.25\" = 0.02, \"0.50\" = 0.05, \"0.75\" = 0.10),\n  method    = \"quantile\",\n  label     = \"Hazard rate\"\n)\nprint(prior_hz_q)\n\n\n-- bayprior: Hazard rate --\n• Distribution : EXPONENTIAL\n• Parameters   : rate = 14.0345\n• Method       : quantile elicitation\n• Expert       : Expert\n• Mean (SD)    : 0.0713 (0.0713)\n• 95% CrI      : [0.0018, 0.2628]\n\nplot(prior_hz_q)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#conjugate-update",
@@ -347,21 +347,21 @@
     "href": "vignettes/prior-elicitation.html#method-moments-1",
     "title": "Prior Elicitation Methods",
     "section": "Method: moments",
-    "text": "Method: moments\nSpecify prior mean and SD — bayprior solves for shape and scale via Nelder-Mead optimisation:\n\nprior_wb &lt;- elicit_weibull(\n  mean      = 20,\n  sd        = 10,\n  method    = \"moments\",\n  label     = \"OS (months)\",\n  expert_id = \"Expert_1\"\n)\nprint(prior_wb)\nplot(prior_wb)"
+    "text": "Method: moments\nSpecify prior mean and SD — bayprior solves for shape and scale via Nelder-Mead optimisation:\n\nprior_wb &lt;- elicit_weibull(\n  mean      = 20,\n  sd        = 10,\n  method    = \"moments\",\n  label     = \"OS (months)\",\n  expert_id = \"Expert_1\"\n)\nprint(prior_wb)\n\n\n-- bayprior: OS (months) --\n• Distribution : WEIBULL\n• Parameters   : shape = 2.1014, scale = 22.5813\n• Method       : moments elicitation\n• Expert       : Expert_1\n• Mean (SD)    : 20 (9.9999)\n• 95% CrI      : [3.9262, 42.0265]\n\nplot(prior_wb)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-params",
     "href": "vignettes/prior-elicitation.html#method-params",
     "title": "Prior Elicitation Methods",
     "section": "Method: params",
-    "text": "Method: params\nDirect shape and scale specification:\n\n# k=2: linearly increasing hazard\nprior_wb2 &lt;- elicit_weibull(\n  shape  = 2,\n  scale  = 20,\n  method = \"params\",\n  label  = \"PFS (months) — increasing hazard\"\n)\nprint(prior_wb2)\nplot(prior_wb2)"
+    "text": "Method: params\nDirect shape and scale specification:\n\n# k=2: linearly increasing hazard\nprior_wb2 &lt;- elicit_weibull(\n  shape  = 2,\n  scale  = 20,\n  method = \"params\",\n  label  = \"PFS (months) — increasing hazard\"\n)\nprint(prior_wb2)\n\n\n-- bayprior: PFS (months) — increasing hazard --\n• Distribution : WEIBULL\n• Parameters   : shape = 2, scale = 20\n• Method       : params elicitation\n• Expert       : Expert\n• Mean (SD)    : 17.7245 (9.265)\n• 95% CrI      : [3.1823, 38.4129]\n\nplot(prior_wb2)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#method-quantile-1",
     "href": "vignettes/prior-elicitation.html#method-quantile-1",
     "title": "Prior Elicitation Methods",
     "section": "Method: quantile",
-    "text": "Method: quantile\n\nprior_wb3 &lt;- elicit_weibull(\n  quantiles = c(\"0.10\" = 5, \"0.50\" = 18, \"0.90\" = 40),\n  method    = \"quantile\",\n  label     = \"OS (months)\"\n)\nprint(prior_wb3)\nplot(prior_wb3)"
+    "text": "Method: quantile\n\nprior_wb3 &lt;- elicit_weibull(\n  quantiles = c(\"0.10\" = 5, \"0.50\" = 18, \"0.90\" = 40),\n  method    = \"quantile\",\n  label     = \"OS (months)\"\n)\nprint(prior_wb3)\n\n\n-- bayprior: OS (months) --\n• Distribution : WEIBULL\n• Parameters   : shape = 1.4822, scale = 22.8859\n• Method       : quantile elicitation\n• Expert       : Expert\n• Mean (SD)    : 20.6908 (14.2043)\n• 95% CrI      : [1.9159, 55.2137]\n\nplot(prior_wb3)"
   },
   {
     "objectID": "vignettes/prior-elicitation.html#posterior-approximation-note",
@@ -382,7 +382,7 @@
     "href": "vignettes/prior-elicitation.html#pooling-compatibility",
     "title": "Prior Elicitation Methods",
     "section": "Pooling Compatibility",
-    "text": "Pooling Compatibility\nbayprior validates compatibility before pooling. Priors with incompatible supports (e.g. Beta + Normal) are blocked with an error. Same-support cross-family pooling (e.g. Gamma + Exponential) proceeds with a warning noting that sensitivity analysis will use the dominant component’s parameters.\n\n# Same positive support — allowed (Gamma + Exponential)\ng1   &lt;- elicit_gamma(mean = 5, sd = 2, method = \"moments\",\n                     expert_id = \"E1\", label = \"Rate\")\nexp1 &lt;- elicit_exponential(mean = 0.2, method = \"moments\",\n                            expert_id = \"E2\", label = \"Rate\")\npool_pos &lt;- aggregate_experts(\n  priors  = list(E1 = g1, E2 = exp1),\n  weights = c(0.5, 0.5)\n)\nprint(pool_pos)"
+    "text": "Pooling Compatibility\nbayprior validates compatibility before pooling. Priors with incompatible supports (e.g. Beta + Normal) are blocked with an error. Same-support cross-family pooling (e.g. Gamma + Exponential) proceeds with a warning noting that sensitivity analysis will use the dominant component’s parameters.\n\n# Same positive support — allowed (Gamma + Exponential)\ng1   &lt;- elicit_gamma(mean = 5, sd = 2, method = \"moments\",\n                     expert_id = \"E1\", label = \"Rate\")\nexp1 &lt;- elicit_exponential(mean = 0.2, method = \"moments\",\n                            expert_id = \"E2\", label = \"Rate\")\npool_pos &lt;- aggregate_experts(\n  priors  = list(E1 = g1, E2 = exp1),\n  weights = c(0.5, 0.5)\n)\nprint(pool_pos)\n\n\n-- bayprior: Linear pooled consensus prior --\n• Distribution : MIXTURE\n• Components   : 2\n• Weights      : 0.5, 0.5\n• Mean         : 2.6"
   },
   {
     "objectID": "vignettes/bayprior-introduction.html",
@@ -396,14 +396,14 @@
     "href": "vignettes/bayprior-introduction.html#beta-prior-binary-endpoints",
     "title": "Introduction to bayprior",
     "section": "Beta Prior (Binary Endpoints)",
-    "text": "Beta Prior (Binary Endpoints)\nThe Beta distribution is the natural conjugate prior for a binary response rate \\(\\theta \\in (0, 1)\\). elicit_beta() supports two elicitation methods.\n\nQuantile Matching\nThe expert specifies quantiles directly — for example: “I believe the true response rate has a 5% chance of being below 10%, a median of around 30%, and a 95% chance of being below 60%.”\n\nlibrary(bayprior)\n\nprior_q &lt;- elicit_beta(\n  quantiles = c(\"0.05\" = 0.10, \"0.50\" = 0.30, \"0.95\" = 0.60),\n  expert_id = \"Expert_1\",\n  label     = \"Response rate (treatment arm)\"\n)\nprint(prior_q)\n\n\n\nMoment Matching\nAlternatively, elicit the prior mean and standard deviation directly:\n\nprior_m &lt;- elicit_beta(\n  mean      = 0.30,\n  sd        = 0.10,\n  method    = \"moments\",\n  expert_id = \"Expert_1\",\n  label     = \"Response rate (treatment arm)\"\n)\nplot(prior_m)\n\n\n\n\n\n\n\n\nThe shaded region shows the 95% credible interval and the dashed vertical line marks the prior mean."
+    "text": "Beta Prior (Binary Endpoints)\nThe Beta distribution is the natural conjugate prior for a binary response rate \\(\\theta \\in (0, 1)\\). elicit_beta() supports two elicitation methods.\n\nQuantile Matching\nThe expert specifies quantiles directly — for example: “I believe the true response rate has a 5% chance of being below 10%, a median of around 30%, and a 95% chance of being below 60%.”\n\nlibrary(bayprior)\n\nprior_q &lt;- elicit_beta(\n  quantiles = c(\"0.05\" = 0.10, \"0.50\" = 0.30, \"0.95\" = 0.60),\n  expert_id = \"Expert_1\",\n  label     = \"Response rate (treatment arm)\"\n)\nprint(prior_q)\n#&gt; \n#&gt; -- bayprior: Response rate (treatment arm) --\n#&gt; • Distribution : BETA\n#&gt; • Parameters   : alpha = 2.6338, beta = 5.589\n#&gt; • Method       : quantile elicitation\n#&gt; • Expert       : Expert_1\n#&gt; • Mean (SD)    : 0.3203 (0.1536)\n#&gt; • 95% CrI      : [0.0708, 0.6514]\n\n\n\nMoment Matching\nAlternatively, elicit the prior mean and standard deviation directly:\n\nprior_m &lt;- elicit_beta(\n  mean      = 0.30,\n  sd        = 0.10,\n  method    = \"moments\",\n  expert_id = \"Expert_1\",\n  label     = \"Response rate (treatment arm)\"\n)\nplot(prior_m)\n\n\n\n\n\n\n\n\nThe shaded region shows the 95% credible interval and the dashed vertical line marks the prior mean."
   },
   {
     "objectID": "vignettes/bayprior-introduction.html#normal-prior-continuous-endpoints",
     "href": "vignettes/bayprior-introduction.html#normal-prior-continuous-endpoints",
     "title": "Introduction to bayprior",
     "section": "Normal Prior (Continuous Endpoints)",
-    "text": "Normal Prior (Continuous Endpoints)\nFor continuous quantities such as mean differences or log odds ratios:\n\nprior_nor &lt;- elicit_normal(\n  quantiles = c(\"0.025\" = -0.5, \"0.50\" = 0.20, \"0.975\" = 0.90),\n  label     = \"Log odds ratio\"\n)\nprint(prior_nor)"
+    "text": "Normal Prior (Continuous Endpoints)\nFor continuous quantities such as mean differences or log odds ratios:\n\nprior_nor &lt;- elicit_normal(\n  quantiles = c(\"0.025\" = -0.5, \"0.50\" = 0.20, \"0.975\" = 0.90),\n  label     = \"Log odds ratio\"\n)\nprint(prior_nor)\n#&gt; \n#&gt; -- bayprior: Log odds ratio --\n#&gt; • Distribution : NORMAL\n#&gt; • Parameters   : mu = 0.2, sigma = 0.3571\n#&gt; • Method       : quantile elicitation\n#&gt; • Expert       : Expert_1\n#&gt; • Mean (SD)    : 0.2 (0.3571)\n#&gt; • 95% CrI      : [-0.5, 0.9]"
   },
   {
     "objectID": "vignettes/bayprior-introduction.html#gamma-prior-rate-count-endpoints",
@@ -424,14 +424,14 @@
     "href": "vignettes/bayprior-introduction.html#roulette-method",
     "title": "Introduction to bayprior",
     "section": "Roulette Method",
-    "text": "Roulette Method\nThe roulette method (Oakley & O’Hagan, 2010) converts chip allocations across pre-defined bins into a parametric prior via quantile matching. It is available interactively through the Shiny app and programmatically here:\n\nprior_rou &lt;- elicit_roulette(\n  chips  = c(0L, 2L, 5L, 8L, 5L, 2L, 1L),\n  breaks = seq(0, 0.7, by = 0.1),\n  family = \"beta\",\n  label  = \"Response rate\"\n)\nprint(prior_rou)"
+    "text": "Roulette Method\nThe roulette method (Oakley & O’Hagan, 2010) converts chip allocations across pre-defined bins into a parametric prior via quantile matching. It is available interactively through the Shiny app and programmatically here:\n\nprior_rou &lt;- elicit_roulette(\n  chips  = c(0L, 2L, 5L, 8L, 5L, 2L, 1L),\n  breaks = seq(0, 0.7, by = 0.1),\n  family = \"beta\",\n  label  = \"Response rate\"\n)\nprint(prior_rou)\n#&gt; \n#&gt; -- bayprior: Response rate --\n#&gt; • Distribution : BETA\n#&gt; • Parameters   : alpha = 4.1188, beta = 9.0184\n#&gt; • Method       : quantile elicitation\n#&gt; • Expert       : Expert_1\n#&gt; • Mean (SD)    : 0.3135 (0.1234)\n#&gt; • 95% CrI      : [0.1038, 0.5768]"
   },
   {
     "objectID": "vignettes/bayprior-introduction.html#linear-pooling",
     "href": "vignettes/bayprior-introduction.html#linear-pooling",
     "title": "Introduction to bayprior",
     "section": "Linear Pooling",
-    "text": "Linear Pooling\nLinear pooling produces a weighted mixture of the individual priors. It is the most common approach in clinical trial settings (externally Bayesian):\n\np1 &lt;- elicit_beta(mean = 0.25, sd = 0.08, method = \"moments\",\n                  expert_id = \"E1\", label = \"Response rate\")\np2 &lt;- elicit_beta(mean = 0.35, sd = 0.10, method = \"moments\",\n                  expert_id = \"E2\", label = \"Response rate\")\np3 &lt;- elicit_beta(mean = 0.30, sd = 0.09, method = \"moments\",\n                  expert_id = \"E3\", label = \"Response rate\")\n\nconsensus &lt;- aggregate_experts(\n  priors  = list(E1 = p1, E2 = p2, E3 = p3),\n  weights = c(0.40, 0.30, 0.30),\n  method  = \"linear\"\n)\nprint(consensus)\nplot(consensus)\n\n\n\n\n\n\n\n\naggregate_experts() automatically computes pairwise Bhattacharyya coefficients and warns when expert disagreement is substantial."
+    "text": "Linear Pooling\nLinear pooling produces a weighted mixture of the individual priors. It is the most common approach in clinical trial settings (externally Bayesian):\n\np1 &lt;- elicit_beta(mean = 0.25, sd = 0.08, method = \"moments\",\n                  expert_id = \"E1\", label = \"Response rate\")\np2 &lt;- elicit_beta(mean = 0.35, sd = 0.10, method = \"moments\",\n                  expert_id = \"E2\", label = \"Response rate\")\np3 &lt;- elicit_beta(mean = 0.30, sd = 0.09, method = \"moments\",\n                  expert_id = \"E3\", label = \"Response rate\")\n\nconsensus &lt;- aggregate_experts(\n  priors  = list(E1 = p1, E2 = p2, E3 = p3),\n  weights = c(0.40, 0.30, 0.30),\n  method  = \"linear\"\n)\nprint(consensus)\n#&gt; \n#&gt; -- bayprior: Linear pooled consensus prior --\n#&gt; • Distribution : MIXTURE\n#&gt; • Components   : 3\n#&gt; • Weights      : 0.4, 0.3, 0.3\n#&gt; • Mean         : 0.295\nplot(consensus)\n\n\n\n\n\n\n\n\naggregate_experts() automatically computes pairwise Bhattacharyya coefficients and warns when expert disagreement is substantial."
   },
   {
     "objectID": "vignettes/bayprior-introduction.html#manual-mixture-construction",
@@ -543,7 +543,7 @@
     "href": "vignettes/conflict-diagnostics.html#binary-data",
     "title": "Prior-Data Conflict Diagnostics",
     "section": "Binary Data",
-    "text": "Binary Data\n\nprior &lt;- elicit_beta(\n  mean = 0.30, sd = 0.10, method = \"moments\",\n  label = \"Response rate\"\n)\n\n\n# No-conflict: data consistent with prior\ncd_none &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 13, n = 40),\n  alpha        = 0.05\n)\nprint(cd_none)\n\n\n# Mild conflict\ncd_mild &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 20, n = 40)\n)\nprint(cd_mild)\n\n\n# Severe conflict\ncd_severe &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 35, n = 40)\n)\nprint(cd_severe)"
+    "text": "Binary Data\n\nprior &lt;- elicit_beta(\n  mean = 0.30, sd = 0.10, method = \"moments\",\n  label = \"Response rate\"\n)\n\n\n# No-conflict: data consistent with prior\ncd_none &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 13, n = 40),\n  alpha        = 0.05\n)\nprint(cd_none)\n\n\n-- Prior-Data Conflict Diagnostics --\n   Prior: Response rate \n\n• Box's p-value       : 0.8408\n• Surprise index      : 0.2009\n• KL divergence       : 0.1683\n• Overlap coefficient : 0.9682\n• Conflict severity   : NONE\n\n!  No evidence of prior-data conflict (Box p = 0.841). The prior appears consistent with the observed data. \n\n\n\n# Mild conflict\ncd_mild &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 20, n = 40)\n)\nprint(cd_mild)\n\n\n-- Prior-Data Conflict Diagnostics --\n   Prior: Response rate \n\n• Box's p-value       : 0.1167\n• Surprise index      : 1.5689\n• KL divergence       : 3.265\n• Overlap coefficient : 0.5331\n• Conflict severity   : NONE\n\n!  No evidence of prior-data conflict (Box p = 0.117). The prior appears consistent with the observed data. \n\n\n\n# Severe conflict\ncd_severe &lt;- prior_conflict(\n  prior        = prior,\n  data_summary = list(type = \"binary\", x = 35, n = 40)\n)\nprint(cd_severe)\n\n\n-- Prior-Data Conflict Diagnostics --\n   Prior: Response rate \n\n• Box's p-value       : 0\n• Surprise index      : 5.0954\n• KL divergence       : 61.1374\n• Overlap coefficient : 0.0014\n• Conflict severity   : SEVERE\n\n!  Severe prior-data conflict detected (Box p = 0, surprise = 5.1). Re-elicitation or use of a robust/sceptical prior is strongly recommended."
   },
   {
     "objectID": "vignettes/conflict-diagnostics.html#boxs-prior-predictive-p-value",
