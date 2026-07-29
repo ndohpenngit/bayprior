@@ -4,9 +4,9 @@
   "platform": "4.4.2",
   "metadata": {
     "appmode": "shiny",
-    "primary_rmd": null,
-    "primary_html": null,
-    "content_category": null,
+    "primary_rmd": {},
+    "primary_html": {},
+    "content_category": {},
     "has_parameters": false
   },
   "environment": {
@@ -324,8 +324,11 @@
       }
     },
     "bayprior": {
-      "Source": "CRAN",
-      "Repository": "https://cran.rstudio.com",
+      "Source": "GitHub",
+      "GithubUsername": "ndohpenngit",
+      "GithubRepo": "bayprior",
+      "GithubRef": "main",
+      "GithubSha1": "e969f45482e6d2cd66b456c5af4bd3c67c17b187",
       "description": {
         "Package": "bayprior",
         "Title": "Bayesian Prior Elicitation and Diagnostics for Clinical Trials",
@@ -4701,5 +4704,5 @@
       "checksum": "864f4627c07ab18947fb5d272fddd65d"
     }
   },
-  "users": null
+  "users": {}
 }
