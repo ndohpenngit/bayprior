@@ -3,7 +3,7 @@
 [![CRAN status](https://www.r-pkg.org/badges/version/bayprior)](https://CRAN.R-project.org/package=bayprior)
 [![R CMD check](https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ndohpenngit/bayprior/actions/workflows/R-CMD-check.yaml)
 [![codecov](https://codecov.io/gh/ndohpenngit/bayprior/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ndohpenngit/bayprior)
-[![Live app](https://img.shields.io/badge/Live_App-shinyapps.io-blueviolet?logo=shiny)](https://npenn.shinyapps.io/bayprior/)
+[![Live App](https://img.shields.io/badge/Shiny-Live_App-blue?logo=r)](https://ndohpenn-bayprior.share.connect.posit.cloud)
 
 ***Structured Bayesian prior elicitation, conflict diagnostics, and regulatory reporting.***
 
