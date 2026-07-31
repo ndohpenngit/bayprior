@@ -4,9 +4,9 @@
   "platform": "4.4.2",
   "metadata": {
     "appmode": "shiny",
-    "primary_rmd": {},
-    "primary_html": {},
-    "content_category": {},
+    "primary_rmd": null,
+    "primary_html": null,
+    "content_category": null,
     "has_parameters": false
   },
   "environment": {
@@ -324,31 +324,34 @@
       }
     },
     "bayprior": {
-      "Source": "GitHub",
-      "GithubUsername": "ndohpenngit",
-      "GithubRepo": "bayprior",
-      "GithubRef": "main",
-      "GithubSha1": "e969f45482e6d2cd66b456c5af4bd3c67c17b187",
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
       "description": {
         "Package": "bayprior",
         "Title": "Bayesian Prior Elicitation and Diagnostics for Clinical Trials",
         "Version": "0.3.0",
-        "Authors@R": "person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\ncomment = c(ORCID = \"0009-0003-9054-465X\"))",
-        "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\nin clinical trial settings. Implements expert elicitation via quantile\nmatching, the roulette method, and moment matching across six distribution\nfamilies, linear and logarithmic expert pooling, prior-data conflict\ndiagnostics including the Box p-value, surprise index, information\ndivergence, and Mahalanobis distance, sensitivity analyses with tornado\nand influence heatmap plots, sceptical, robust, and power priors, and\nautomated prior justification reports. Includes a fully modular 'Shiny'\napplication for interactive use.\nMethods based on O'Hagan et al. (2006, ISBN:9780470029886),\nBox (1980) <doi:10.2307/2982063>,\nOakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\nSchmidli et al. (2014) <doi:10.1111/biom.12242>,\nIbrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\nSpiegelhalter et al. (1994) <doi:10.2307/2983527>.",
+        "Authors@R": "\n    person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0009-0003-9054-465X\"))",
+        "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\n  in clinical trial settings. Implements expert elicitation via quantile\n  matching, the roulette method, and moment matching across six distribution\n  families, linear and logarithmic expert pooling, prior-data conflict\n  diagnostics including the Box p-value, surprise index, information\n  divergence, and Mahalanobis distance, sensitivity analyses with tornado\n  and influence heatmap plots, sceptical, robust, and power priors, and\n  automated prior justification reports. Includes a fully modular 'Shiny'\n  application for interactive use.\n  Methods based on O'Hagan et al. (2006, ISBN:9780470029886),\n  Box (1980) <doi:10.2307/2982063>,\n  Oakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\n  Schmidli et al. (2014) <doi:10.1111/biom.12242>,\n  Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\n  Spiegelhalter et al. (1994) <doi:10.2307/2983527>.",
         "License": "GPL-3",
         "URL": "https://github.com/ndohpenngit/bayprior",
         "BugReports": "https://github.com/ndohpenngit/bayprior/issues",
         "Depends": "R (>= 4.1.0)",
-        "Imports": "cli (>= 3.6.0),\nconfig (>= 0.3.1),\ndplyr (>= 1.1.0),\nDT (>= 0.27),\nggplot2 (>= 3.4.0),\nglue (>= 1.6.2),\ngolem (>= 0.4.1),\nplotly (>= 4.10.1),\npurrr (>= 1.0.0),\nrlang (>= 1.2.0),\nshiny (>= 1.7.4),\nshinycssloaders (>= 1.0.0),\nshinydashboard (>= 0.7.2),\nshinyjs (>= 2.1.0),\nshinyWidgets (>= 0.7.6),\nstats",
-        "Suggests": "htmlwidgets (>= 1.5.4),\nknitr (>= 1.40),\npatchwork (>= 1.1.0),\nquarto (>= 1.4),\nrmarkdown (>= 2.20),\nshinytest2 (>= 0.3.1),\nspelling (>= 2.2.0),\ntestthat (>= 3.0.0),\nvdiffr (>= 1.0.0),\nwithr (>= 2.5.0)",
+        "Imports": "cli (>= 3.6.0), config (>= 0.3.1), dplyr (>= 1.1.0), DT (>=\n0.27), ggplot2 (>= 3.4.0), glue (>= 1.6.2), golem (>= 0.4.1),\nplotly (>= 4.10.1), purrr (>= 1.0.0), rlang (>= 1.2.0), shiny\n(>= 1.7.4), shinycssloaders (>= 1.0.0), shinydashboard (>=\n0.7.2), shinyjs (>= 2.1.0), shinyWidgets (>= 0.7.6), stats",
+        "Suggests": "htmlwidgets (>= 1.5.4), knitr (>= 1.40), patchwork (>=\n1.1.0), quarto (>= 1.4), rmarkdown (>= 2.20), shinytest2 (>=\n0.3.1), spelling (>= 2.2.0), testthat (>= 3.0.0), vdiffr (>=\n1.0.0), withr (>= 2.5.0)",
         "VignetteBuilder": "knitr",
         "Config/Needs/vignettes": "knitr, rmarkdown",
         "Config/testthat/edition": "3",
         "Encoding": "UTF-8",
         "Language": "en-GB",
-        "Roxygen": "list(markdown = TRUE)",
         "RoxygenNote": "7.3.3",
-        "SystemRequirements": "Quarto CLI (>= 1.5, https://quarto.org)"
+        "SystemRequirements": "Quarto CLI (>= 1.5, https://quarto.org)",
+        "NeedsCompilation": "no",
+        "Packaged": "2026-07-30 13:03:47 UTC; ndohpenn",
+        "Author": "Ndoh Penn [aut, cre] (ORCID: <https://orcid.org/0009-0003-9054-465X>)",
+        "Maintainer": "Ndoh Penn <ndohpenn9@gmail.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2026-07-30 15:20:02 UTC",
+        "Built": "R 4.4.2; ; 2026-07-31 15:38:02 UTC; unix"
       }
     },
     "brew": {
@@ -4380,7 +4383,7 @@
       "checksum": "d41d8cd98f00b204e9800998ecf8427e"
     },
     ".Rbuildignore": {
-      "checksum": "9f840fba61eeed8fcf5f7add987214a9"
+      "checksum": "680582527d4d56dd630f3ac464505e6a"
     },
     "app.R": {
       "checksum": "7d37328408a952250717c26713fee3b7"
@@ -4522,9 +4525,6 @@
     },
     "NAMESPACE": {
       "checksum": "560844d5307d8719898d304d4a81c671"
-    },
-    "paper/rjournal/.Rbuildignore": {
-      "checksum": "ea461959c153088e60da0dd28ec7fb8e"
     },
     "paper/rjournal/bayprior.html": {
       "checksum": "361921b7202651739ad2ecf4a4aab9de"
@@ -4704,5 +4704,5 @@
       "checksum": "864f4627c07ab18947fb5d272fddd65d"
     }
   },
-  "users": {}
+  "users": null
 }
