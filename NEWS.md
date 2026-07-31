@@ -3,50 +3,11 @@
 ## Bug fixes
 
 * Fixed `print.bayprior()`, `print.bayprior_conflict()`,
-  `print.bayprior_conflict_mv()`, and `print.bayprior_power_prior()` producing
-  no output when called inside `rmarkdown::render()`, `knitr` vignettes, or
-  any non-interactive R subprocess (e.g. `callr::r()`). Root cause: `cli`
-  output functions detect the rendering environment via the `RSTUDIO` /
-  `POSITRON` environment variables, which are absent in `callr` subprocesses
-  spawned by `rmarkdown::render()`. All four print methods now route output
-  through internal `.bp_*` helpers that fall back to plain `cat()` when no
-  IDE or real terminal is detected, while preserving full `cli` styled output
-  in interactive sessions (#40).
-
-## Tests
-
-* Added `tests/testthat/test-print-methods.R` -- 28 tests covering all four
-  `print.bayprior*` methods and all six `.bp_*` internal helpers in
-  non-interactive (`callr`-like) contexts, and the `as_prior()` constructor.
-
-* Expanded `test-aggregation.R` -- added logarithmic pooling tests for Beta,
-  Gamma, and Log-Normal families; added Bhattacharyya agreement tests for
-  close vs distant expert pairs; added three-expert logarithmic pooling.
-
-* Expanded `test-conflict.R` -- added `conflict_mahalanobis()` edge cases
-  (no-conflict, severe conflict, custom alpha, default labels); added
-  `print.bayprior_conflict_mv()` non-interactive context test.
-
-* Expanded `test-elicitation.R` -- added `elicit_exponential()` rate method;
-  added `elicit_weibull()` params method; added `elicit_mixture()` normal
-  component and three-component tests; added `.validate_quantiles()` error
-  path coverage.
-
-* Expanded `test-robust.R` -- added `.power_prior_update()` tests for Normal,
-  Gamma-Poisson, Gamma-continuous, and Log-Normal data types; added mixture
-  prior power update tests; added delta=1 full borrowing boundary test.
-
-* Expanded `test-sensitivity.R` -- added Normal-Normal, Gamma-Poisson,
-  Poisson, and survival data type tests for `sensitivity_grid()` and
-  `sensitivity_cri()`; added `plot_sensitivity()` with `posterior_sd` and
-  `prob_efficacy` targets; added 80% vs 95% CrI width comparison.
-
-* Expanded `test-plots-snapshots.R` -- added functional tests for
-  `plot.bayprior_conflict()` and `plot_sensitivity()` with `cri_width` and
-  `prob_efficacy` targets.
-
-* Overall non-Shiny test coverage increased from ~74% to 81.7% (excluding
-  Shiny modules, which require `shinytest2` and are covered separately).
+  `print.bayprior_conflict_mv()`, and `print.bayprior_power_prior()`
+  producing no output when called inside `rmarkdown::render()`, knitr
+  vignettes, or any non-interactive R subprocess (e.g. `callr::r()`).
+  Output now renders correctly in both interactive and non-interactive
+  sessions (#40).
 
 ---
 
