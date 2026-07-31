@@ -168,7 +168,6 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#bayprior-0.3.0" id="toc-bayprior-0.3.0" class="nav-link active" data-scroll-target="#bayprior-0.3.0">bayprior 0.3.0</a>
   <ul class="collapse">
   <li><a href="#bug-fixes" id="toc-bug-fixes" class="nav-link" data-scroll-target="#bug-fixes">Bug fixes</a></li>
-  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests">Tests</a></li>
   </ul></li>
   <li><a href="#bayprior-0.2.12" id="toc-bayprior-0.2.12" class="nav-link" data-scroll-target="#bayprior-0.2.12">bayprior 0.2.12</a>
   <ul class="collapse">
@@ -210,7 +209,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
   <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a></li>
-  <li><a href="#tests-1" id="toc-tests-1" class="nav-link" data-scroll-target="#tests-1">Tests</a></li>
+  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests">Tests</a></li>
   </ul></li>
   <li><a href="#bayprior-0.2.2" id="toc-bayprior-0.2.2" class="nav-link" data-scroll-target="#bayprior-0.2.2">bayprior 0.2.2</a>
   <ul class="collapse">
@@ -249,20 +248,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="bug-fixes" class="level2">
 <h2 class="anchored" data-anchor-id="bug-fixes">Bug fixes</h2>
 <ul>
-<li>Fixed <code>print.bayprior()</code>, <code>print.bayprior_conflict()</code>, <code>print.bayprior_conflict_mv()</code>, and <code>print.bayprior_power_prior()</code> producing no output when called inside <code>rmarkdown::render()</code>, <code>knitr</code> vignettes, or any non-interactive R subprocess (e.g.&nbsp;<code>callr::r()</code>). Root cause: <code>cli</code> output functions detect the rendering environment via the <code>RSTUDIO</code> / <code>POSITRON</code> environment variables, which are absent in <code>callr</code> subprocesses spawned by <code>rmarkdown::render()</code>. All four print methods now route output through internal <code>.bp_*</code> helpers that fall back to plain <code>cat()</code> when no IDE or real terminal is detected, while preserving full <code>cli</code> styled output in interactive sessions (#40).</li>
-</ul>
-</section>
-<section id="tests" class="level2">
-<h2 class="anchored" data-anchor-id="tests">Tests</h2>
-<ul>
-<li><p>Added <code>tests/testthat/test-print-methods.R</code> – 28 tests covering all four <code>print.bayprior*</code> methods and all six <code>.bp_*</code> internal helpers in non-interactive (<code>callr</code>-like) contexts, and the <code>as_prior()</code> constructor.</p></li>
-<li><p>Expanded <code>test-aggregation.R</code> – added logarithmic pooling tests for Beta, Gamma, and Log-Normal families; added Bhattacharyya agreement tests for close vs distant expert pairs; added three-expert logarithmic pooling.</p></li>
-<li><p>Expanded <code>test-conflict.R</code> – added <code>conflict_mahalanobis()</code> edge cases (no-conflict, severe conflict, custom alpha, default labels); added <code>print.bayprior_conflict_mv()</code> non-interactive context test.</p></li>
-<li><p>Expanded <code>test-elicitation.R</code> – added <code>elicit_exponential()</code> rate method; added <code>elicit_weibull()</code> params method; added <code>elicit_mixture()</code> normal component and three-component tests; added <code>.validate_quantiles()</code> error path coverage.</p></li>
-<li><p>Expanded <code>test-robust.R</code> – added <code>.power_prior_update()</code> tests for Normal, Gamma-Poisson, Gamma-continuous, and Log-Normal data types; added mixture prior power update tests; added delta=1 full borrowing boundary test.</p></li>
-<li><p>Expanded <code>test-sensitivity.R</code> – added Normal-Normal, Gamma-Poisson, Poisson, and survival data type tests for <code>sensitivity_grid()</code> and <code>sensitivity_cri()</code>; added <code>plot_sensitivity()</code> with <code>posterior_sd</code> and <code>prob_efficacy</code> targets; added 80% vs 95% CrI width comparison.</p></li>
-<li><p>Expanded <code>test-plots-snapshots.R</code> – added functional tests for <code>plot.bayprior_conflict()</code> and <code>plot_sensitivity()</code> with <code>cri_width</code> and <code>prob_efficacy</code> targets.</p></li>
-<li><p>Overall non-Shiny test coverage increased from ~74% to 81.7% (excluding Shiny modules, which require <code>shinytest2</code> and are covered separately).</p></li>
+<li>Fixed <code>print.bayprior()</code>, <code>print.bayprior_conflict()</code>, <code>print.bayprior_conflict_mv()</code>, and <code>print.bayprior_power_prior()</code> producing no output when called inside <code>rmarkdown::render()</code>, knitr vignettes, or any non-interactive R subprocess (e.g.&nbsp;<code>callr::r()</code>). Output now renders correctly in both interactive and non-interactive sessions (#40).</li>
 </ul>
 <hr>
 </section>
@@ -389,8 +375,8 @@ ul.task-list li input[type="checkbox"] {
 <li><p>Fixed robust mixture compounding SD bug – repeated clicks no longer compound the vague SD exponentially.</p></li>
 </ul>
 </section>
-<section id="tests-1" class="level2">
-<h2 class="anchored" data-anchor-id="tests-1">Tests</h2>
+<section id="tests" class="level2">
+<h2 class="anchored" data-anchor-id="tests">Tests</h2>
 <ul>
 <li>Added <code>tests/testthat/test-robust.R</code> (33 tests).</li>
 <li>Added <code>tests/testthat/test-validation.R</code> (10 tests).</li>

@@ -4,21 +4,14 @@
     "href": "NEWS.html",
     "title": "bayprior 0.3.0",
     "section": "",
-    "text": "Fixed print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior() producing no output when called inside rmarkdown::render(), knitr vignettes, or any non-interactive R subprocess (e.g. callr::r()). Root cause: cli output functions detect the rendering environment via the RSTUDIO / POSITRON environment variables, which are absent in callr subprocesses spawned by rmarkdown::render(). All four print methods now route output through internal .bp_* helpers that fall back to plain cat() when no IDE or real terminal is detected, while preserving full cli styled output in interactive sessions (#40).\n\n\n\n\n\nAdded tests/testthat/test-print-methods.R – 28 tests covering all four print.bayprior* methods and all six .bp_* internal helpers in non-interactive (callr-like) contexts, and the as_prior() constructor.\nExpanded test-aggregation.R – added logarithmic pooling tests for Beta, Gamma, and Log-Normal families; added Bhattacharyya agreement tests for close vs distant expert pairs; added three-expert logarithmic pooling.\nExpanded test-conflict.R – added conflict_mahalanobis() edge cases (no-conflict, severe conflict, custom alpha, default labels); added print.bayprior_conflict_mv() non-interactive context test.\nExpanded test-elicitation.R – added elicit_exponential() rate method; added elicit_weibull() params method; added elicit_mixture() normal component and three-component tests; added .validate_quantiles() error path coverage.\nExpanded test-robust.R – added .power_prior_update() tests for Normal, Gamma-Poisson, Gamma-continuous, and Log-Normal data types; added mixture prior power update tests; added delta=1 full borrowing boundary test.\nExpanded test-sensitivity.R – added Normal-Normal, Gamma-Poisson, Poisson, and survival data type tests for sensitivity_grid() and sensitivity_cri(); added plot_sensitivity() with posterior_sd and prob_efficacy targets; added 80% vs 95% CrI width comparison.\nExpanded test-plots-snapshots.R – added functional tests for plot.bayprior_conflict() and plot_sensitivity() with cri_width and prob_efficacy targets.\nOverall non-Shiny test coverage increased from ~74% to 81.7% (excluding Shiny modules, which require shinytest2 and are covered separately)."
+    "text": "Fixed print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior() producing no output when called inside rmarkdown::render(), knitr vignettes, or any non-interactive R subprocess (e.g. callr::r()). Output now renders correctly in both interactive and non-interactive sessions (#40)."
   },
   {
     "objectID": "NEWS.html#bug-fixes",
     "href": "NEWS.html#bug-fixes",
     "title": "bayprior 0.3.0",
     "section": "",
-    "text": "Fixed print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior() producing no output when called inside rmarkdown::render(), knitr vignettes, or any non-interactive R subprocess (e.g. callr::r()). Root cause: cli output functions detect the rendering environment via the RSTUDIO / POSITRON environment variables, which are absent in callr subprocesses spawned by rmarkdown::render(). All four print methods now route output through internal .bp_* helpers that fall back to plain cat() when no IDE or real terminal is detected, while preserving full cli styled output in interactive sessions (#40)."
-  },
-  {
-    "objectID": "NEWS.html#tests",
-    "href": "NEWS.html#tests",
-    "title": "bayprior 0.3.0",
-    "section": "",
-    "text": "Added tests/testthat/test-print-methods.R – 28 tests covering all four print.bayprior* methods and all six .bp_* internal helpers in non-interactive (callr-like) contexts, and the as_prior() constructor.\nExpanded test-aggregation.R – added logarithmic pooling tests for Beta, Gamma, and Log-Normal families; added Bhattacharyya agreement tests for close vs distant expert pairs; added three-expert logarithmic pooling.\nExpanded test-conflict.R – added conflict_mahalanobis() edge cases (no-conflict, severe conflict, custom alpha, default labels); added print.bayprior_conflict_mv() non-interactive context test.\nExpanded test-elicitation.R – added elicit_exponential() rate method; added elicit_weibull() params method; added elicit_mixture() normal component and three-component tests; added .validate_quantiles() error path coverage.\nExpanded test-robust.R – added .power_prior_update() tests for Normal, Gamma-Poisson, Gamma-continuous, and Log-Normal data types; added mixture prior power update tests; added delta=1 full borrowing boundary test.\nExpanded test-sensitivity.R – added Normal-Normal, Gamma-Poisson, Poisson, and survival data type tests for sensitivity_grid() and sensitivity_cri(); added plot_sensitivity() with posterior_sd and prob_efficacy targets; added 80% vs 95% CrI width comparison.\nExpanded test-plots-snapshots.R – added functional tests for plot.bayprior_conflict() and plot_sensitivity() with cri_width and prob_efficacy targets.\nOverall non-Shiny test coverage increased from ~74% to 81.7% (excluding Shiny modules, which require shinytest2 and are covered separately)."
+    "text": "Fixed print.bayprior(), print.bayprior_conflict(), print.bayprior_conflict_mv(), and print.bayprior_power_prior() producing no output when called inside rmarkdown::render(), knitr vignettes, or any non-interactive R subprocess (e.g. callr::r()). Output now renders correctly in both interactive and non-interactive sessions (#40)."
   },
   {
     "objectID": "NEWS.html#cran-reviewer-fixes-v0.2.11-review",
@@ -98,8 +91,8 @@
     "text": "Architecture\n\nIntroduced shared$base_prior reactive to eliminate the self-invalidation loop that wiped sensitivity/robust/power prior results immediately after they were produced.\nFixed robust mixture compounding SD bug – repeated clicks no longer compound the vague SD exponentially."
   },
   {
-    "objectID": "NEWS.html#tests-1",
-    "href": "NEWS.html#tests-1",
+    "objectID": "NEWS.html#tests",
+    "href": "NEWS.html#tests",
     "title": "bayprior 0.3.0",
     "section": "Tests",
     "text": "Tests\n\nAdded tests/testthat/test-robust.R (33 tests).\nAdded tests/testthat/test-validation.R (10 tests).\nAdded skip_on_ci() to all shinytest2 Chromote tests."
