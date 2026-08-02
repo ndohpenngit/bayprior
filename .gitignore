@@ -8,10 +8,6 @@
 /*.Rcheck/
 *.tar.gz
 
-# renv
-renv/library/
-renv/staging/
-
 # Misc
 rsconnect/
 .DS_Store
@@ -29,10 +25,5 @@ vignettes/*.html
 vignettes/*.html
 /doc/
 
-# R Journal paper build artifacts
-paper/rjournal/*.html
-paper/rjournal/*.tex
-paper/rjournal/*.log
-paper/rjournal/*.knit.md
-paper/rjournal/RJwrapper.*
-paper/rjournal/bayprior.R
+**/*.quarto_ipynb
+CRAN-SUBMISSION

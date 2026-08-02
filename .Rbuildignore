@@ -34,3 +34,6 @@
 ^CODE_OF_CONDUCT\.md$
 ^cran-comments\.md$
 ^\.rscignore$
+^manifest\.json$
+^paper$
+^CRAN-SUBMISSION$

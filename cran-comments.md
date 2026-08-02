@@ -1,34 +1,28 @@
+## Resubmission
+
+This is a resubmission. bayprior was first accepted on CRAN as v0.2.12.
+This submission (v0.3.0) contains the following changes since v0.2.12:
+
+* Fixed `print.bayprior*` methods producing no output in non-interactive
+  R sessions (e.g. inside `rmarkdown::render()`, `callr::r()`, knitr
+  vignettes).
+
+* Expanded test suite coverage (excluding Shiny
+  modules).
+
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 1 notes
 
-* NOTE: 'unable to verify current time'
-  Transient macOS clock issue. Not package-related.
-
-## Resubmission (v0.2.12)
-
-Fixes from v0.2.11 human reviewer (CRAN team, 27 May 2026):
-
-1. Wrapped software name in single quotes in DESCRIPTION: 'Shiny'.
-
-2. Added methodology references to DESCRIPTION in CRAN-required
-   format (authors, year, doi/ISBN)
-
-3. Added \value documentation tag to four exported print methods:
-   print.bayprior(), print.bayprior_conflict(),
-   print.bayprior_conflict_mv(), and print.bayprior_power_prior().
-
-4. Restored par() settings after use in the robust-priors vignette.
-
-5. Removed LICENSE file and | file LICENSE from DESCRIPTION.
-
-6. Updated inst/WORDLIST.
+* checking for future file timestamps -- unable to verify current time.
+   Not package-related.
 
 ## Test environments
 
-* macOS 26.5 aarch64, R 4.4.2 (local)
-* devtools::check(cran = TRUE): 0 errors | 0 warnings | 1 note
+* macOS aarch64, R 4.4.2 (local)
+* Windows R-devel via devtools::check_win_devel()
+* ubuntu-latest (release, devel, oldrel) via GitHub Actions
 
 ## Downstream dependencies
 
-New submission. No downstream dependencies.
+There are no downstream dependencies.
