@@ -130,15 +130,14 @@ conflict_mahalanobis <- function(prior_means,
 #'   z-scores, and an interpretation string.
 #' @export
 print.bayprior_conflict_mv <- function(x, ...) {
-  cli::cli_h1("Multivariate Prior-Data Conflict (Mahalanobis)")
-  cli::cli_ul()
-  cli::cli_li("Mahalanobis D : {round(x$mahal_distance, 4)}")
-  cli::cli_li("Chi-sq p-value: {round(x$pvalue, 4)} (df = {x$df})")
-  cli::cli_li("Conflict flag : {x$conflict_flag}")
+  .bp_h1("Multivariate Prior-Data Conflict (Mahalanobis)")
+  .bp_li("Mahalanobis D : ", round(x$mahal_distance, 4))
+  .bp_li("Chi-sq p-value: ", paste0(round(x$pvalue, 4), " (df = ", x$df, ")"))
+  .bp_li("Conflict flag : ", x$conflict_flag)
   cat("\nMarginal z-scores per parameter:\n")
   print(round(x$marginal_z, 3))
   cat("\n")
-  cli::cli_alert_info("{x$interpretation}")
+  .bp_alert_info(x$interpretation)
   invisible(x)
 }
 

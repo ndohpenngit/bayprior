@@ -1,11 +1,11 @@
 citHeader("To cite bayprior in publications use:")
 
 bibentry(
-  bibtype  = "Manual",
-  title    = meta$Title,
-  author   = person("Ndoh", "Penn"),
-  year     = format(Sys.Date(), "%Y"),
-  note     = sprintf("R package version %s", meta$Version),
-  url      = "https://github.com/ndohpenngit/bayprior",
-  key      = "bayprior2026"
+  bibtype = "Manual",
+  key     = "bayprior2026",
+  title   = paste0("{bayprior}: ", meta$Title),
+  author  = person("Ndoh", "Penn"),
+  year    = format(Sys.Date(), "%Y"),
+  note    = paste("R package version", meta$Version),
+  url     = "https://CRAN.R-project.org/package=bayprior"
 )
