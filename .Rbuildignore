@@ -36,3 +36,4 @@
 ^\.rscignore$
 ^manifest\.json$
 ^paper$
+^CRAN-SUBMISSION$

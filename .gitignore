@@ -8,10 +8,6 @@
 /*.Rcheck/
 *.tar.gz
 
-# renv
-renv/library/
-renv/staging/
-
 # Misc
 rsconnect/
 .DS_Store
@@ -31,3 +27,4 @@ doc/
 /doc/
 
 **/*.quarto_ipynb
+CRAN-SUBMISSION
