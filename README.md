@@ -16,11 +16,12 @@ designed for biostatisticians and clinical researchers to implement
 **Bayesian Prior Elicitation, Conflict Diagnostics, and Sensitivity Analysis**
 for clinical trials.
 
-The package addresses the upstream problem that existing Bayesian trial
-packages (`trialr`, `RBesT`, `hdbayes`) largely ignore: *how do you construct,
-validate, and justify your prior to a regulator?* The FDA's 2026 draft guidance
-on Bayesian methods makes this a live, urgent need — with no unified R tool
-previously addressing it.
+**bayprior** focuses on a specific stage of the Bayesian trial workflow:
+*how do you construct, validate, and justify your prior to a regulator?*
+It brings structured elicitation, prior-data conflict diagnostics, and
+regulatory report generation together in one integrated workflow. The FDA's
+2026 draft guidance on Bayesian methods makes this a growing area of focus
+for biostatisticians.
 
 **bayprior** enables users to:
 
@@ -124,7 +125,7 @@ delta in (0, 1], calibrated to achieve a target Bayes Factor.
 | Type | Source | Command |
 |---|---|---|
 | Release | CRAN | `install.packages("bayprior")` |
-| Development | GitHub | `remotes::install_github("ndohpenngit/bayprior")` |
+| Development | GitHub | `pak::pak("ndohpenngit/bayprior")` |
 
 > **PDF reports** require [Quarto CLI](https://quarto.org/docs/get-started/)
 > and a LaTeX installation:
@@ -230,4 +231,4 @@ By contributing to this project, you agree to abide by its terms.
 - Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in clinical trials with historical control information. *Biometrics*, 70, 1023-1032.
 - Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for regression models. *Statistical Science*, 15, 46-60.
 - Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994). Bayesian approaches to randomized trials. *JRSS-A*, 157, 357-416.
-- FDA (2026). *Draft Guidance: Bayesian Statistical Methods for Drug and Biological Products*.
+- U.S. Food and Drug Administration (2026). *Use of Bayesian Methodology in Clinical Trials of Drug and Biological Products* (Draft Guidance for Industry).
