@@ -23,8 +23,36 @@ _includes/
 vignettes/*_files/
 vignettes/*.html
 vignettes/*.html
-doc/
 /doc/
 
 **/*.quarto_ipynb
 CRAN-SUBMISSION
+
+ 
+# -- Paper rendering artifacts (R Journal / arXiv) ------------------------
+paper/**/*.log
+paper/**/*.aux
+paper/**/*.out
+paper/**/*.toc
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.knit.md
+paper/**/*.utf8.md
+paper/**/*_files/
+paper/**/RJwrapper.tex
+paper/**/RJwrapper.pdf
+paper/**/RJwrapper.log
+ 
+# R Journal folder: purled/rendered output derived from bayprior.Rmd
+paper/rjournal/bayprior.R
+paper/rjournal/bayprior.tex
+paper/rjournal/bayprior.html
+paper/rjournal/bayprior.pdf
+paper/rjournal/bayprior.log
+ 
+# arXiv folder: rendered output derived from bayprior_arxiv.Rmd
+paper/arxiv/bayprior_arxiv.R
+paper/arxiv/bayprior_arxiv.tex
+paper/arxiv/bayprior_arxiv.html
+paper/arxiv/bayprior_arxiv.pdf
+paper/arxiv/bayprior_arxiv.log

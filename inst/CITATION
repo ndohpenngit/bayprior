@@ -1,3 +1,5 @@
+citHeader("To cite bayprior in publications use:")
+
 bibentry(
   bibtype = "Manual",
   key     = "bayprior2026",
