@@ -1,3 +1,35 @@
+# bayprior 0.3.1
+
+## Documentation improvements
+
+* Corrected the title of the FDA's 2026 draft guidance as cited throughout
+  the package documentation, vignettes, Shiny app, and regulatory report
+  template. The guidance is titled "Use of Bayesian Methodology in
+  Clinical Trials of Drug and Biological Products."
+
+* Updated the EMA reference in the regulatory report, Shiny app, and
+  vignettes to reflect the agency's current published position: a 2026
+  concept paper proposing the development of guidance on Bayesian methods
+  (EMA/CHMP/1813/2026), with the full reflection paper expected in
+  2027-2028.
+
+* Corrected the FDA guidance section references in the
+  `regulatory-reporting` vignette's compliance-checklist table to match
+  the guidance document's structure (Sections V.A, V.C, V.D, V.F, and
+  VIII.B).
+
+* Clarified attribution of the sceptical prior and the enthusiastic/
+  sceptical sensitivity pairing to Spiegelhalter & Freedman (1994).
+
+* Removed an inaccurate cross-reference to ICH E9(R1) in the
+  `sensitivity-analysis` vignette; ICH E9(R1) addresses estimands and
+  intercurrent events rather than prior specification.
+
+* Aligned the package website overview (`index.qmd`) with the README's
+  description of related packages.
+
+---
+
 # bayprior 0.3.0
 
 ## Bug fixes

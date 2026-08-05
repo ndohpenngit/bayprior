@@ -5,8 +5,9 @@
 #' Elicit a Beta prior via quantile matching or moment matching
 #'
 #' Fits a Beta(alpha, beta) distribution to expert-specified quantiles or
-#' moments. Implements the structured elicitation framework recommended in
-#' the SHELF methodology and FDA guidance on Bayesian clinical trials.
+#' moments. Implements the structured elicitation framework of the SHELF
+#' methodology, supporting the documented, reproducible prior derivation
+#' called for in the FDA's 2026 draft guidance on Bayesian methods.
 #'
 #' @param quantiles Named numeric vector of quantile specifications, e.g.
 #'   \code{c("0.05" = 0.1, "0.50" = 0.3, "0.95" = 0.6)}. At least two

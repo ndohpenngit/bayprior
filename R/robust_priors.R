@@ -3,8 +3,8 @@
 #' Generates a sceptical prior that places most mass at or near the null
 #' value of the treatment effect, representing a conservative stance for
 #' regulatory submissions. Implements the Spiegelhalter-Freedman sceptical
-#' prior approach and the FDA-recommended "enthusiastic vs sceptical" prior
-#' sensitivity pair.
+#' prior approach, commonly paired with an enthusiastic prior as a
+#' sensitivity-analysis pair in regulatory submissions.
 #'
 #' @param null_value Numeric. The null treatment effect (e.g. 0 for a mean
 #'   difference, 1 for a hazard ratio, 0.5 for a response-rate difference).

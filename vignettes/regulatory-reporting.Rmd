@@ -29,15 +29,25 @@ library(bayprior)
 
 # Regulatory Context
 
-The FDA Draft Guidance on Bayesian Statistical Methods for Drug and Biological
-Products (2026) and the EMA Reflection Paper on Bayesian Statistics both
-require that Bayesian prior distributions used in confirmatory clinical trials
-be:
+The FDA's 2026 draft guidance, *Use of Bayesian Methodology in Clinical
+Trials of Drug and Biological Products*, calls for Bayesian prior
+distributions used in confirmatory clinical trials to be:
 
 1. **Explicitly specified** — family, hyperparameters, and elicitation method
 2. **Justified** — documented basis (expert opinion, historical data, or both)
 3. **Conflict-checked** — evidence that prior and data are compatible
 4. **Sensitivity-tested** — conclusions hold under plausible alternative priors
+
+The EMA has not yet published guidance specific to Bayesian methods: as of
+2026, a concept paper proposing the development of a reflection paper on
+the use of Bayesian methods in clinical development (EMA/CHMP/1813/2026)
+has been released for consultation, with the draft reflection paper itself
+not expected until 2027 and final publication in 2028. Separately, EMA's
+existing reflection paper on extrapolation in paediatric drug development
+already requires sponsors incorporating external or historical data to
+quantify the prior's influence relative to the observed data and to
+investigate the resulting Type I error properties — themes consistent
+with points 2-4 above.
 5. **Pre-specified** — agreed with regulators before unblinding
 
 `prior_report()` generates a self-contained document addressing all five
@@ -197,10 +207,10 @@ kable(data.frame(
     "Regulatory report generated"
   ),
   `FDA Guidance Section` = c(
-    "Section IV.B", "Section IV.B", "Section IV.B",
-    "Section IV.B", "Section IV.C", "Section IV.C",
-    "Section IV.D", "Section IV.D", "Section IV.D",
-    "Section IV.D", "Section IV.E"
+    "Section V.A", "Section V.A", "Section V.D",
+    "Section V.A", "Section V.D", "Section VIII.B",
+    "Section V.F", "Section V.F", "Section V.F",
+    "Section V.C", "Section VIII"
   ),
   check.names = FALSE
 ), align = "ll")
@@ -272,11 +282,11 @@ Before submitting a bayprior report to a regulatory agency:
 
 # References
 
-FDA (2026). *Draft Guidance for Industry: Bayesian Statistical Methods for
-Drug and Biological Products*.
+FDA (2026). *Use of Bayesian Methodology in Clinical Trials of Drug and
+Biological Products* (Draft Guidance for Industry).
 
-EMA (2023). *Reflection Paper on the Use of Bayesian Statistics in the
-Evaluation of Medicinal Products*.
+EMA (2026). *Concept Paper for the Development of a Reflection Paper on
+the Use of Bayesian Methods in Clinical Development* (EMA/CHMP/1813/2026).
 
 O'Hagan, A. et al. (2006). *Uncertain Judgements: Eliciting Experts'
 Probabilities*. Wiley.

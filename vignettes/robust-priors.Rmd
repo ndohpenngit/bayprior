@@ -138,9 +138,9 @@ conservative regulator who is sceptical of a treatment effect. It is centred at
 the null value of the treatment effect with width calibrated to a chosen
 strength of scepticism.
 
-This is the FDA's recommended sensitivity prior for trials using informative
-priors: the trial conclusions should hold even under a prior that places most
-mass at "no effect."
+This sensitivity prior follows Spiegelhalter and Freedman's (1994) approach
+for trials using informative priors: the trial conclusions should hold even
+under a prior that places most mass at "no effect."
 
 ## Normal Family (Mean Differences, Log Odds Ratios)
 
@@ -210,8 +210,9 @@ plot(sc_hr)
 
 ## Enthusiastic vs Sceptical Pair
 
-The FDA recommends presenting conclusions under both an enthusiastic prior
-(favouring treatment benefit) and a sceptical prior:
+A common regulatory sensitivity practice is to present conclusions under both
+an enthusiastic prior (favouring treatment benefit) and a sceptical prior,
+following Spiegelhalter and Freedman (1994):
 
 ```{r enthusiastic-sceptical}
 enthusiastic <- elicit_beta(
@@ -338,7 +339,7 @@ kable(data.frame(
     "Mild conflict detected",
     "Severe conflict detected",
     "Historical data available",
-    "FDA enthusiastic/sceptical pair required"
+    "Enthusiastic/sceptical pair for sensitivity analysis"
   ),
   `Recommended prior` = c(
     "Robust mixture (w = 0.20)",

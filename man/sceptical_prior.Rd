@@ -34,8 +34,8 @@ A \code{bayprior} object tagged with \code{prior_type = "sceptical"}.
 Generates a sceptical prior that places most mass at or near the null
 value of the treatment effect, representing a conservative stance for
 regulatory submissions. Implements the Spiegelhalter-Freedman sceptical
-prior approach and the FDA-recommended "enthusiastic vs sceptical" prior
-sensitivity pair.
+prior approach, commonly paired with an enthusiastic prior as a
+sensitivity-analysis pair in regulatory submissions.
 }
 \details{
 For a Normal family, the sceptical prior is centred at \code{null_value}
