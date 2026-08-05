@@ -254,14 +254,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="regulatory-context" class="level1">
 <h1>Regulatory Context</h1>
-<p>The FDA Draft Guidance on Bayesian Statistical Methods for Drug and Biological Products (2026) and the EMA Reflection Paper on Bayesian Statistics both require that Bayesian prior distributions used in confirmatory clinical trials be:</p>
+<p>The FDA’s 2026 draft guidance, <em>Use of Bayesian Methodology in Clinical Trials of Drug and Biological Products</em>, calls for Bayesian prior distributions used in confirmatory clinical trials to be:</p>
 <ol type="1">
 <li><strong>Explicitly specified</strong> — family, hyperparameters, and elicitation method</li>
 <li><strong>Justified</strong> — documented basis (expert opinion, historical data, or both)</li>
 <li><strong>Conflict-checked</strong> — evidence that prior and data are compatible</li>
 <li><strong>Sensitivity-tested</strong> — conclusions hold under plausible alternative priors</li>
-<li><strong>Pre-specified</strong> — agreed with regulators before unblinding</li>
 </ol>
+<p>The EMA has not yet published guidance specific to Bayesian methods: as of 2026, a concept paper proposing the development of a reflection paper on the use of Bayesian methods in clinical development (EMA/CHMP/1813/2026) has been released for consultation, with the draft reflection paper itself not expected until 2027 and final publication in 2028. Separately, EMA’s existing reflection paper on extrapolation in paediatric drug development already requires sponsors incorporating external or historical data to quantify the prior’s influence relative to the observed data and to investigate the resulting Type I error properties — themes consistent with points 2-4 above. 5. <strong>Pre-specified</strong> — agreed with regulators before unblinding</p>
 <p><code>prior_report()</code> generates a self-contained document addressing all five requirements.</p>
 <hr>
 </section>
@@ -408,10 +408,10 @@ will be repeated using the sceptical prior as a co-primary analysis."</code></pr
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Regulatory report generated"</span></span>
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  ),</span>
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">FDA Guidance Section</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Section IV.B"</span>, <span class="st">"Section IV.B"</span>, <span class="st">"Section IV.B"</span>,</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Section IV.B"</span>, <span class="st">"Section IV.C"</span>, <span class="st">"Section IV.C"</span>,</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Section IV.D"</span>, <span class="st">"Section IV.D"</span>, <span class="st">"Section IV.D"</span>,</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Section IV.D"</span>, <span class="st">"Section IV.E"</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Section V.A"</span>, <span class="st">"Section V.A"</span>, <span class="st">"Section V.D"</span>,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Section V.A"</span>, <span class="st">"Section V.D"</span>, <span class="st">"Section VIII.B"</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Section V.F"</span>, <span class="st">"Section V.F"</span>, <span class="st">"Section V.F"</span>,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Section V.C"</span>, <span class="st">"Section VIII"</span></span>
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  ),</span>
 <span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span></span>
 <span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>), <span class="at">align =</span> <span class="st">"ll"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -426,47 +426,47 @@ will be repeated using the sceptical prior as a co-primary analysis."</code></pr
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Prior elicitation method documented</td>
-<td style="text-align: left;">Section IV.B</td>
+<td style="text-align: left;">Section V.A</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Distribution family and parameters specified</td>
-<td style="text-align: left;">Section IV.B</td>
+<td style="text-align: left;">Section V.A</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Expert / source of prior identified</td>
-<td style="text-align: left;">Section IV.B</td>
+<td style="text-align: left;">Section V.D</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Prior density plot provided</td>
-<td style="text-align: left;">Section IV.B</td>
+<td style="text-align: left;">Section V.A</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Prior-data conflict assessed</td>
-<td style="text-align: left;">Section IV.C</td>
+<td style="text-align: left;">Section V.D</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Conflict diagnostic statistics reported</td>
-<td style="text-align: left;">Section IV.C</td>
+<td style="text-align: left;">Section VIII.B</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Sensitivity analysis performed</td>
-<td style="text-align: left;">Section IV.D</td>
+<td style="text-align: left;">Section V.F</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Sensitivity visualisations provided</td>
-<td style="text-align: left;">Section IV.D</td>
+<td style="text-align: left;">Section V.F</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Alternative priors considered</td>
-<td style="text-align: left;">Section IV.D</td>
+<td style="text-align: left;">Section V.F</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Robust / sceptical prior computed</td>
-<td style="text-align: left;">Section IV.D</td>
+<td style="text-align: left;">Section V.C</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Regulatory report generated</td>
-<td style="text-align: left;">Section IV.E</td>
+<td style="text-align: left;">Section VIII</td>
 </tr>
 </tbody>
 </table>
@@ -548,8 +548,8 @@ Sensitivity Analysis → Robust Priors → Export Report</code></pre>
 </section>
 <section id="references" class="level1">
 <h1>References</h1>
-<p>FDA (2026). <em>Draft Guidance for Industry: Bayesian Statistical Methods for Drug and Biological Products</em>.</p>
-<p>EMA (2023). <em>Reflection Paper on the Use of Bayesian Statistics in the Evaluation of Medicinal Products</em>.</p>
+<p>FDA (2026). <em>Use of Bayesian Methodology in Clinical Trials of Drug and Biological Products</em> (Draft Guidance for Industry).</p>
+<p>EMA (2026). <em>Concept Paper for the Development of a Reflection Paper on the Use of Bayesian Methods in Clinical Development</em> (EMA/CHMP/1813/2026).</p>
 <p>O’Hagan, A. et al.&nbsp;(2006). <em>Uncertain Judgements: Eliciting Experts’ Probabilities</em>. Wiley.</p>
 <p>Spiegelhalter, D. J. &amp; Freedman, L. S. (1994). Bayesian approaches to clinical trials. <em>JRSS-A</em>, 157, 357–416.</p>
 

@@ -439,7 +439,7 @@ window.Quarto = {
 <section id="concept-1" class="level2">
 <h2 class="anchored" data-anchor-id="concept-1">Concept</h2>
 <p>The sceptical prior (Spiegelhalter &amp; Freedman, 1994) represents the view of a conservative regulator who is sceptical of a treatment effect. It is centred at the null value of the treatment effect with width calibrated to a chosen strength of scepticism.</p>
-<p>This is the FDA’s recommended sensitivity prior for trials using informative priors: the trial conclusions should hold even under a prior that places most mass at “no effect.”</p>
+<p>This sensitivity prior follows Spiegelhalter and Freedman’s (1994) approach for trials using informative priors: the trial conclusions should hold even under a prior that places most mass at “no effect.”</p>
 </section>
 <section id="normal-family-mean-differences-log-odds-ratios" class="level2">
 <h2 class="anchored" data-anchor-id="normal-family-mean-differences-log-odds-ratios">Normal Family (Mean Differences, Log Odds Ratios)</h2>
@@ -551,7 +551,7 @@ window.Quarto = {
 </section>
 <section id="enthusiastic-vs-sceptical-pair" class="level2">
 <h2 class="anchored" data-anchor-id="enthusiastic-vs-sceptical-pair">Enthusiastic vs Sceptical Pair</h2>
-<p>The FDA recommends presenting conclusions under both an enthusiastic prior (favouring treatment benefit) and a sceptical prior:</p>
+<p>A common regulatory sensitivity practice is to present conclusions under both an enthusiastic prior (favouring treatment benefit) and a sceptical prior, following Spiegelhalter and Freedman (1994):</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>enthusiastic <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fl">0.45</span>, <span class="at">sd =</span> <span class="fl">0.08</span>,</span>
@@ -687,7 +687,7 @@ window.Quarto = {
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Mild conflict detected"</span>,</span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Severe conflict detected"</span>,</span>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Historical data available"</span>,</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"FDA enthusiastic/sceptical pair required"</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Enthusiastic/sceptical pair for sensitivity analysis"</span></span>
 <span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  ),</span>
 <span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Recommended prior</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(</span>
 <span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Robust mixture (w = 0.20)"</span>,</span>
@@ -701,8 +701,8 @@ window.Quarto = {
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 54%">
-<col style="width: 45%">
+<col style="width: 60%">
+<col style="width: 39%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -728,7 +728,7 @@ window.Quarto = {
 <td style="text-align: left;">Power prior (calibrated)</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">FDA enthusiastic/sceptical pair required</td>
+<td style="text-align: left;">Enthusiastic/sceptical pair for sensitivity analysis</td>
 <td style="text-align: left;">Sceptical prior as second arm</td>
 </tr>
 </tbody>
