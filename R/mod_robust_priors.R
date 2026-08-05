@@ -9,8 +9,8 @@ mod_sceptical_ui <- function(id) {
       title = tagList(icon("scale-balanced"), " Sceptical Prior"),
       tags$small(class = "text-muted",
         "Centred at the null value of the treatment effect. Implements the
-         Spiegelhalter-Freedman (1994) approach recommended as a regulatory
-         sensitivity analysis companion."),
+         Spiegelhalter-Freedman (1994) approach, a well-established
+         sensitivity analysis companion to an informative prior."),
       tags$br(), tags$br(),
       selectInput(ns("family"), "Distribution family",
         choices = c("Normal"     = "normal",

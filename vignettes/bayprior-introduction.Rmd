@@ -29,10 +29,11 @@ knitr::opts_chunk$set(
 # Overview
 
 **bayprior** is an R package for principled Bayesian prior elicitation,
-conflict detection, and sensitivity analysis in clinical trials. It implements
-the structured methodology recommended in the FDA Draft Guidance on Bayesian
-Statistical Methods (2026) and the SHELF elicitation framework
-(O'Hagan et al., 2006).
+conflict detection, and sensitivity analysis in clinical trials. It supports
+the documented, systematic prior construction process called for in the
+FDA's 2026 draft guidance, *Use of Bayesian Methodology in Clinical Trials
+of Drug and Biological Products*, and implements the SHELF elicitation
+framework (O'Hagan et al., 2006).
 
 The core analytical workflow is:
 
