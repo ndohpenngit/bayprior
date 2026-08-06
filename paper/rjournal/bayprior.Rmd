@@ -70,10 +70,10 @@ and analysis, offering flexible incorporation of prior knowledge and natural
 uncertainty quantification [@FDA2026]. However, the widespread adoption of
 Bayesian methods in regulatory settings requires that prior distributions be
 not only well-chosen but also transparently documented and demonstrably robust.
-The FDA's 2026 draft guidance on Bayesian methods [@FDA2026] explicitly
-requires sponsors to demonstrate that trial conclusions hold under
-sensitivity analyses over the prior specification, yet provides no
-methodological framework for how this should be done.
+The FDA's 2026 draft guidance on Bayesian methods [@FDA2026] calls for
+sponsors to demonstrate that trial conclusions hold under sensitivity
+analyses over the prior specification, but does not prescribe specific
+software tools or diagnostics for doing so.
 
 In practice, prior specification often proceeds informally. Analysts may
 elicit a prior from clinical literature or expert opinion without a
@@ -265,8 +265,15 @@ identical syntax.
 ## Expert Pooling
 
 Multiple expert priors can be aggregated using linear or logarithmic
-opinion pooling [@OHagan2006]. Linear pooling takes the weighted average
-of the densities; logarithmic pooling takes the weighted geometric mean.
+opinion pooling [@OHagan2006]. Linear pooling takes the weighted mixture
+of the densities, $\pi(\theta) = \sum_k w_k \pi_k(\theta)$; logarithmic
+pooling takes the weighted geometric mean, $\pi(\theta) \propto
+\prod_k \pi_k(\theta)^{w_k}$. For linear pooling, the consensus mean and
+SD are computed exactly from the component means/SDs and weights, without
+numerical integration:
+$$\text{mean} = \sum_k w_k \bar{x}_k, \qquad
+  \text{var} = \sum_k w_k \left(s_k^2 + \bar{x}_k^2\right) - \text{mean}^2$$
+No closed-form SD exists for logarithmic pooling in general.
 
 ```{r pooling}
 e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments",
@@ -507,10 +514,12 @@ plots, a compliance checklist aligned with the FDA 2026 draft guidance
 
 # Case study: TRIAL-001
 
-We demonstrate the complete \CRANpkg{bayprior} workflow on TRIAL-001, a
+We demonstrate the \CRANpkg{bayprior} workflow end to end on TRIAL-001, a
 synthetic oncology Phase II trial with a binary response rate endpoint.
 The target response rate is 30\% (null hypothesis) versus an expected
-rate of 40\% (alternative hypothesis).
+rate of 40\% (alternative hypothesis). TRIAL-001 is single-arm with no
+historical control data, so the power prior module is not demonstrated
+here; a worked example appears in the Package overview section above.
 
 ## Expert Elicitation and Pooling
 
@@ -556,11 +565,15 @@ equal-weight linear pooling. The consensus prior had a mean of
 ## Conflict Diagnostics at Interim
 
 At the pre-specified interim analysis, 18 responses were observed in
-40 patients (observed rate: 45\%).
+40 patients (observed rate: 45\%). Following common practice for Box's
+prior predictive check, a significance threshold of $\alpha = 0.05$ was
+pre-specified: a Box p-value below this threshold would indicate evidence
+of prior-data conflict warranting reassessment of the prior. This is the
+default threshold in `prior_conflict()`.
 
 ```{r trial-conflict}
 interim_data <- list(type = "binary", x = 18, n = 40)
-cd_trial <- prior_conflict(pool, interim_data)
+cd_trial <- prior_conflict(pool, interim_data, alpha = 0.05)
 ```
 
 ```{r cdtrial-table, echo=FALSE}
@@ -586,30 +599,102 @@ knitr::kable(
   kableExtra::kable_styling(latex_options = "hold_position")
 ```
 
-The Box p-value was above the 0.10 threshold, indicating no evidence of
-prior-data conflict. The posterior distribution updated the consensus prior
-towards the observed data as expected.
+The Box p-value was above the pre-specified 0.05 threshold, indicating no
+evidence of prior-data conflict. The posterior distribution updated the
+consensus prior towards the observed data as expected.
 
-## Regulatory Sensitivity Pair
+## Enthusiastic and Sceptical Priors
 
-Following FDA guidance recommendations, we computed an enthusiastic-sceptical
-prior sensitivity pair:
+A common regulatory sensitivity practice, following Spiegelhalter and
+Freedman (1994), is to present conclusions under both an enthusiastic
+prior (favouring treatment benefit) and a sceptical prior (centred at the
+null), alongside the consensus prior already assessed above:
 
 ```{r trial-sensitivity-pair}
+enth_trial <- elicit_beta(mean = 0.45, sd = 0.08, method = "moments",
+                          label = "Response rate (enthusiastic)")
 scep_trial <- sceptical_prior(null_value = 0.20, family = "beta",
                               strength = "moderate",
                               label = "Response rate (sceptical)")
 
-cd_scep <- prior_conflict(scep_trial, interim_data)
+cd_enth <- prior_conflict(enth_trial, interim_data, alpha = 0.05)
+cd_scep <- prior_conflict(scep_trial, interim_data, alpha = 0.05)
 
-cat("Conflict severity (consensus): ",
-    cd_trial$conflict_severity, "\n")
-cat("Conflict severity (sceptical):",
-    cd_scep$conflict_severity, "\n")
+cat("Conflict severity (consensus):    ", cd_trial$conflict_severity, "\n")
+cat("Conflict severity (enthusiastic): ", cd_enth$conflict_severity, "\n")
+cat("Conflict severity (sceptical):    ", cd_scep$conflict_severity, "\n")
 ```
 
-Conclusions were consistent across both priors, supporting regulatory
-robustness.
+Conclusions were consistent across all three priors, supporting the
+robustness of the trial's conclusions to reasonable variation in the
+prior specification.
+
+## Sensitivity Analysis
+
+Beyond comparing discrete alternative priors, the sensitivity module
+evaluates how the posterior conclusion changes continuously across a
+hyperparameter grid. Because the grid is defined over the hyperparameters
+of a single distribution family, `sensitivity_grid()` moment-matches a
+mixture (pooled) prior's actual blended mean and SD to a working Beta
+prior before gridding, rather than analysing a single expert's prior in
+isolation; a message reports the working prior used (here, mean
+$\approx$ 0.36, SD $\approx$ 0.11, reflecting both experts):
+
+```{r trial-sensitivity, fig.cap="Tornado plot for TRIAL-001: influence of the moment-matched pooled prior's Beta hyperparameters on the posterior mean, given the interim data."}
+sa_trial <- sensitivity_grid(
+  prior        = pool,
+  data_summary = interim_data,
+  param_grid   = list(
+    alpha = seq(3, 12, by = 1),
+    beta  = seq(6, 20, by = 1)
+  ),
+  target    = c("posterior_mean", "prob_efficacy"),
+  threshold = 0.30
+)
+plot_tornado(sa_trial)
+```
+
+The posterior mean and the probability of exceeding the 30\% efficacy
+threshold both remained stable across the explored hyperparameter range,
+indicating the trial's conclusion is not driven by fine details of the
+pooled prior's specification.
+
+## Robust Mixture Prior
+
+As a further regulatory sensitivity check, a robust mixture prior mixes
+the consensus prior with a vague component, bounding the influence any
+single prior specification can have on the posterior:
+
+```{r trial-robust}
+rob_trial <- robust_prior(pool, vague_weight = 0.20)
+cd_rob    <- prior_conflict(rob_trial, interim_data, alpha = 0.05)
+
+cat("Conflict severity (robust mixture):", cd_rob$conflict_severity, "\n")
+```
+
+The robust mixture prior showed the same conflict conclusion as the
+consensus, enthusiastic, and sceptical priors above.
+
+## Regulatory Report
+
+The full set of TRIAL-001 analyses -- the pooled prior, conflict
+diagnostics, sensitivity analysis, and robust and sceptical alternatives
+-- can be assembled into a single submission-ready document with one
+function call:
+
+```{r trial-report, eval=FALSE}
+prior_report(
+  prior           = pool,
+  conflict        = cd_trial,
+  sensitivity     = sa_trial,
+  robust_prior    = rob_trial,
+  sceptical_prior = scep_trial,
+  output_format   = "html",
+  trial_name      = "TRIAL-001",
+  sponsor         = "Example Pharma Ltd",
+  author          = "N.P., Biostatistician"
+)
+```
 
 # Discussion
 
@@ -662,7 +747,7 @@ locally via `run_app()`.
 
 ## Limitations
 
-Several limitations apply to the current release (v0.3.0). The
+Several limitations apply to the current release (v0.3.1). The
 multivariate Mahalanobis check is currently limited to bivariate (k = 2)
 endpoints; extension to k $\geq$ 3 co-primary endpoints is planned for a
 future release. Survival power priors require numerical integration over
@@ -672,14 +757,18 @@ data types. The robust mixture prior uses a Normal vague component
 regardless of the informative prior family; for Beta, Gamma, and other
 non-Normal informative priors, the resulting mixture density is computed
 numerically rather than analytically, which is accurate in the body of the
-distribution but may be less reliable in the extreme tails.
+distribution but may be less reliable in the extreme tails. Sensitivity
+grids over mixture priors moment-match the pooled mean and SD to a
+working prior in the dominant component's family (Beta, Normal, Gamma, or
+Log-Normal); families without a mean/SD parameterisation (Exponential,
+Weibull) fall back to the dominant component alone, with a warning.
 
 Future development includes survival power priors, k $\geq$ 3 endpoint
 Mahalanobis conflict, and interoperability with \CRANpkg{RBesT} for MAP
 prior workflows. A companion paper in Pharmaceutical Statistics
 (in preparation) provides a methodological treatment of the conflict
 diagnostic framework and a regulatory alignment assessment against the
-FDA 2026 draft guidance and ICH E9(R1).
+FDA 2026 draft guidance.
 
 # Summary
 
