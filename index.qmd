@@ -38,7 +38,7 @@ This complements the existing R ecosystem for Bayesian trial design and
 historical-data borrowing by bringing structured elicitation, prior-data
 conflict diagnostics, and regulatory report generation together in one
 integrated workflow. The FDA's 2026 draft guidance on Bayesian methods
-makes this a growing area of focus for biostatisticians.
+makes this a growing area of focus.
 
 **bayprior** enables users to:
 
