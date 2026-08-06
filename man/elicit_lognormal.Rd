@@ -38,6 +38,14 @@ Fits a Log-Normal distribution to expert-specified quantiles or moments.
 Appropriate for positive-valued quantities such as hazard ratios, fold
 changes, median survival times, or PK parameters.
 }
+\details{
+For \code{method = "moments"}, the mean and SD (on the original,
+untransformed scale) are matched to the Log-Normal's own
+\code{meanlog}/\code{sdlog} parameterisation via
+\deqn{\text{sdlog} = \sqrt{\log\left(1 + \frac{s^2}{\bar{x}^2}\right)},
+      \quad
+      \text{meanlog} = \log(\bar{x}) - \frac{\text{sdlog}^2}{2}}
+}
 \examples{
 prior <- elicit_lognormal(
   quantiles = c("0.05" = 0.40, "0.50" = 0.70, "0.95" = 1.20),

@@ -49,6 +49,19 @@ moments. Implements the structured elicitation framework of the SHELF
 methodology, supporting the documented, reproducible prior derivation
 called for in the FDA's 2026 draft guidance on Bayesian methods.
 }
+\details{
+For \code{method = "moments"}, the mean and SD are matched analytically
+to the Beta family using the standard method-of-moments identities:
+\deqn{\alpha = \bar{x}\left(\frac{\bar{x}(1-\bar{x})}{s^2} - 1\right),
+      \quad
+      \beta = (1-\bar{x})\left(\frac{\bar{x}(1-\bar{x})}{s^2} - 1\right)}
+where \eqn{\bar{x}} is \code{mean} and \eqn{s} is \code{sd}. This requires
+\eqn{s^2 < \bar{x}(1-\bar{x})}; an SD too large for the given mean implies
+a negative \eqn{\alpha} or \eqn{\beta} and raises an error. For
+\code{method = "quantile"}, \eqn{\alpha} and \eqn{\beta} are instead found
+numerically by minimising squared error between the fitted quantiles and
+the expert-specified quantiles.
+}
 \examples{
 # Expert believes response rate is ~30\%, with 90\% CI of [10\%, 60\%]
 prior <- elicit_beta(

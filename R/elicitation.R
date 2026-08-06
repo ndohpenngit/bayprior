@@ -18,6 +18,19 @@
 #'   \code{"moments"}.
 #' @param expert_id Character. Identifier for this expert's elicitation.
 #' @param label Character. Description of the quantity being elicited.
+#'
+#' @details
+#' For \code{method = "moments"}, the mean and SD are matched analytically
+#' to the Beta family using the standard method-of-moments identities:
+#' \deqn{\alpha = \bar{x}\left(\frac{\bar{x}(1-\bar{x})}{s^2} - 1\right),
+#'       \quad
+#'       \beta = (1-\bar{x})\left(\frac{\bar{x}(1-\bar{x})}{s^2} - 1\right)}
+#' where \eqn{\bar{x}} is \code{mean} and \eqn{s} is \code{sd}. This requires
+#' \eqn{s^2 < \bar{x}(1-\bar{x})}; an SD too large for the given mean implies
+#' a negative \eqn{\alpha} or \eqn{\beta} and raises an error. For
+#' \code{method = "quantile"}, \eqn{\alpha} and \eqn{\beta} are instead found
+#' numerically by minimising squared error between the fitted quantiles and
+#' the expert-specified quantiles.
 #' @param tol Numeric. Optimisation tolerance. Default \code{1e-6}.
 #'
 #' @return An object of class \code{bayprior} with components:
@@ -104,6 +117,11 @@ elicit_beta <- function(quantiles = NULL,
 #' @param label Character. Quantity description.
 #' @param tol Numeric. Optimisation tolerance.
 #'
+#' @details
+#' For \code{method = "moments"}, the Normal is parameterised directly by
+#' its mean and SD, so matching is exact with no transformation required:
+#' \eqn{\mu = \bar{x}}, \eqn{\sigma = s}.
+#'
 #' @return An object of class \code{bayprior}.
 #'
 #' @examples
@@ -162,6 +180,12 @@ elicit_normal <- function(quantiles = NULL,
 #' @param expert_id Character. Expert identifier.
 #' @param label Character. Quantity description.
 #' @param tol Numeric. Optimisation tolerance.
+#'
+#' @details
+#' For \code{method = "moments"}, mean and SD are matched to the Gamma's
+#' shape-rate parameterisation via
+#' \deqn{\text{shape} = \left(\frac{\bar{x}}{s}\right)^2, \quad
+#'       \text{rate} = \frac{\bar{x}}{s^2}}
 #'
 #' @return An object of class \code{bayprior}.
 #'
@@ -229,6 +253,14 @@ elicit_gamma <- function(quantiles = NULL,
 #' @param expert_id Character. Expert identifier.
 #' @param label    Character. Quantity description.
 #' @param tol      Numeric. Optimisation tolerance.
+#'
+#' @details
+#' For \code{method = "moments"}, the mean and SD (on the original,
+#' untransformed scale) are matched to the Log-Normal's own
+#' \code{meanlog}/\code{sdlog} parameterisation via
+#' \deqn{\text{sdlog} = \sqrt{\log\left(1 + \frac{s^2}{\bar{x}^2}\right)},
+#'       \quad
+#'       \text{meanlog} = \log(\bar{x}) - \frac{\text{sdlog}^2}{2}}
 #'
 #' @return An object of class \code{bayprior} with \code{dist = "lognormal"}.
 #'

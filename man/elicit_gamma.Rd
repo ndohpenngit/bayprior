@@ -35,6 +35,12 @@ An object of class \code{bayprior}.
 \description{
 Elicit a Gamma prior via quantile matching or moment matching
 }
+\details{
+For \code{method = "moments"}, mean and SD are matched to the Gamma's
+shape-rate parameterisation via
+\deqn{\text{shape} = \left(\frac{\bar{x}}{s}\right)^2, \quad
+      \text{rate} = \frac{\bar{x}}{s^2}}
+}
 \examples{
 prior <- elicit_gamma(
   mean   = 5, sd = 2,
