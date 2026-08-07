@@ -310,3 +310,76 @@ test_that("plot_sensitivity: posterior_sd target heatmap works", {
   gp <- plot_sensitivity(sa, target = "posterior_sd")
   expect_true(inherits(gp, "gg") || inherits(gp, "patchwork"))
 })
+
+test_that("sensitivity_grid moment-matches a linearly pooled mixture prior", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments",
+                    expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments",
+                    expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+
+  # Ties in which.max(c(0.5, 0.5)) resolve to the first component; if the
+  # old dominant-component-only fallback were still in effect, the grid
+  # would silently reflect E1 alone (mean 0.30) rather than the pool's
+  # actual blended mean (~0.36-0.37). Confirm the working prior instead
+  # reflects the pooled mean by checking that a grid centred on the
+  # pooled mean does not raise all its mass at the low end typical of E1.
+  expect_message(
+    sa <- sensitivity_grid(
+      prior        = pool,
+      data_summary = list(type = "binary", x = 18, n = 40),
+      param_grid   = list(alpha = seq(5, 15, by = 1),
+                          beta  = seq(15, 30, by = 1)),
+      target       = "posterior_mean"
+    ),
+    "moment-matched working prior"
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+  expect_true(nrow(sa$grid) > 0)
+})
+
+test_that("sensitivity_grid falls back to dominant component and warns
+           when a mixture family cannot be moment-matched", {
+  e1 <- elicit_exponential(rate = 2, method = "rate", expert_id = "E1")
+  e2 <- elicit_exponential(rate = 3, method = "rate", expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+
+  expect_warning(
+    sa <- sensitivity_grid(
+      prior        = pool,
+      data_summary = list(type = "survival", x = 12, n = 40),
+      param_grid   = list(rate = seq(1, 5, by = 0.5)),
+      target       = "posterior_mean"
+    ),
+    "Falling back to the dominant component"
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+})
+
+test_that("sensitivity_grid does not error on a logarithmically pooled
+           prior, whose fit_summary$sd is NULL", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments",
+                    expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments",
+                    expert_id = "E2")
+  pool_log <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                                method = "logarithmic")
+  expect_true(is.null(pool_log$fit_summary$sd))
+
+  # This previously crashed with "argument is of length zero" because
+  # is.na(NULL) inside the working_prior if() condition returns a
+  # zero-length logical rather than FALSE.
+  expect_no_error(
+    suppressWarnings(suppressMessages(
+      sensitivity_grid(
+        prior        = pool_log,
+        data_summary = list(type = "binary", x = 18, n = 40),
+        param_grid   = list(alpha = seq(5, 15, by = 1),
+                            beta  = seq(15, 30, by = 1)),
+        target       = "posterior_mean"
+      )
+    ))
+  )
+})

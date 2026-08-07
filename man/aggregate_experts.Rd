@@ -45,12 +45,19 @@ disagreement.
 weighted mixture \eqn{\pi(\theta) = \sum_k w_k \pi_k(\theta)}. This is
 the most commonly used approach in clinical trial settings (O'Hagan et al.,
 2006). The resulting prior always lies within the convex hull of individual
-expert priors.
+expert priors. The mixture's summary mean and SD (in \code{$fit_summary},
+used e.g. by \code{\link{sensitivity_grid}} to derive a working prior) are
+computed exactly from the component means/SDs and weights, without
+numerical integration:
+\deqn{\text{mean} = \sum_k w_k \bar{x}_k, \quad
+      \text{var} = \sum_k w_k \left(s_k^2 + \bar{x}_k^2\right) - \text{mean}^2}
 
 \strong{Logarithmic pooling} (internally Bayesian): The consensus density is
 proportional to \eqn{\prod_k \pi_k(\theta)^{w_k}}, which produces a
 sharper consensus when experts agree, but can be severely influenced by
-outlying expert opinions.
+outlying expert opinions. Unlike linear pooling, no closed-form summary
+SD exists for the pooled density in general; \code{$fit_summary$sd} is
+\code{NULL} for logarithmically-pooled priors.
 }
 \examples{
 p1 <- elicit_beta(mean = 0.25, sd = 0.08, method = "moments", expert_id = "E1",
