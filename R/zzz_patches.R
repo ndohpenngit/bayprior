@@ -95,7 +95,20 @@
   p
 }
 # Returns list(x, y) of grid points and density values for plotting.
-.density_grid <- function(prior, n_grid = 500) {
+#' Determine an appropriate (lo, hi) support range for a prior (internal)
+#'
+#' Shared per-family range logic, used by both \code{.density_grid()} (for
+#' plotting) and \code{.bc_coef()} (for numerical Bhattacharyya integration).
+#' Uses exact 0.001/0.999 quantiles where available (lognormal, gamma,
+#' exponential, weibull), \code{[0, 1]} for beta, and
+#' \code{fit_summary$q025/q975 \%||\% mean +/- 4*sd} as a general fallback
+#' (normal, and any family without a dedicated branch). Non-negative-support
+#' families have \code{lo} clamped to \code{1e-6}.
+#'
+#' @param prior A \code{bayprior} object.
+#' @return A list with numeric elements \code{lo} and \code{hi}.
+#' @keywords internal
+.prior_range <- function(prior) {
 
   if (prior$dist == "lognormal") {
     lo <- stats::qlnorm(0.001, prior$params$meanlog, prior$params$sdlog)
@@ -124,7 +137,7 @@
     lo_vals <- sapply(summaries, function(s) s$q025 %||% (s$mean - 4 * s$sd))
     hi_vals <- sapply(summaries, function(s) s$q975 %||% (s$mean + 4 * s$sd))
 
-    # FIX: Filter to finite values before calling min/max. When all components
+    # Filter to finite values before calling min/max. When all components
     # have NULL or NA summaries, sapply() returns an all-NA vector and
     # min/max emit "no non-missing arguments; returning Inf/-Inf".
     lo_vals <- lo_vals[is.finite(lo_vals)]
@@ -147,14 +160,19 @@
     hi <- s$q975 %||% (s$mean + 4 * s$sd)
   }
 
-  # FIX: Only clamp lo to 1e-6 for distributions with non-negative support.
+  # Only clamp lo to 1e-6 for distributions with non-negative support.
   # Clamping Normal priors silently drops the left tail and produces misleading
   # density plots for negative-valued parameters (e.g. log odds ratios).
   if (prior$dist %in% c("beta", "gamma", "lognormal", "exponential", "weibull")) {
     lo <- max(lo, 1e-6)
   }
 
-  x <- seq(lo, hi, length.out = n_grid)
+  list(lo = lo, hi = hi)
+}
+
+.density_grid <- function(prior, n_grid = 500) {
+  range <- .prior_range(prior)
+  x <- seq(range$lo, range$hi, length.out = n_grid)
   list(x = x, y = .eval_density_vec(prior, x))
 }
 
