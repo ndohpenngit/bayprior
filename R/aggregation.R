@@ -24,18 +24,27 @@
 #'   }
 #'
 #' @details
-#' **Linear pooling** (externally Bayesian): The consensus density is a
-#' weighted mixture \eqn{\pi(\theta) = \sum_k w_k \pi_k(\theta)}. This is
-#' the most commonly used approach in clinical trial settings (O'Hagan et al.,
-#' 2006). The resulting prior always lies within the convex hull of individual
-#' expert priors. The mixture's summary mean and SD (in \code{$fit_summary},
-#' used e.g. by \code{\link{sensitivity_grid}} to derive a working prior) are
+#' **Linear pooling** satisfies the marginalization property (McConway,
+#' 1981): pooling a joint distribution and then marginalising gives the
+#' same result as marginalising each expert's distribution first and then
+#' pooling. The consensus density is a weighted mixture
+#' \eqn{\pi(\theta) = \sum_k w_k \pi_k(\theta)}. This is the most commonly
+#' used approach in clinical trial settings (O'Hagan et al., 2006). The
+#' resulting prior always lies within the convex hull of individual expert
+#' priors. The mixture's summary mean and SD (in \code{$fit_summary}, used
+#' e.g. by \code{\link{sensitivity_grid}} to derive a working prior) are
 #' computed exactly from the component means/SDs and weights, without
 #' numerical integration:
 #' \deqn{\text{mean} = \sum_k w_k \bar{x}_k, \quad
 #'       \text{var} = \sum_k w_k \left(s_k^2 + \bar{x}_k^2\right) - \text{mean}^2}
 #'
-#' **Logarithmic pooling** (internally Bayesian): The consensus density is
+#' **Logarithmic pooling** satisfies external Bayesianity (Genest, Weerahandi
+#' & Zidek, 1984): pooling experts' priors and then updating on data gives
+#' the same result as updating each expert's prior individually and then
+#' pooling the posteriors -- pooling and Bayesian updating commute. This is
+#' in fact the \emph{only} pooling operator with this property (Genest,
+#' McConway & Schervish, 1986); no pooling method can satisfy both external
+#' Bayesianity and marginalization simultaneously. The consensus density is
 #' proportional to \eqn{\prod_k \pi_k(\theta)^{w_k}}, which produces a
 #' sharper consensus when experts agree, but can be severely influenced by
 #' outlying expert opinions. Unlike linear pooling, no closed-form summary
@@ -45,6 +54,16 @@
 #' @references
 #' O'Hagan, A., et al. (2006). *Uncertain Judgements: Eliciting Experts'
 #' Probabilities*. Wiley.
+#'
+#' McConway, K. J. (1981). Marginalization and linear opinion pools.
+#' *Journal of the American Statistical Association*, 76(374), 410-414.
+#'
+#' Genest, C., Weerahandi, S., & Zidek, J. V. (1984). Aggregating opinions
+#' through logarithmic pooling. *Theory and Decision*, 17(1), 61-70.
+#'
+#' Genest, C., McConway, K. J., & Schervish, M. J. (1986). Characterization
+#' of externally Bayesian pooling operators. *The Annals of Statistics*,
+#' 14(2), 487-501.
 #'
 #' @examples
 #' p1 <- elicit_beta(mean = 0.25, sd = 0.08, method = "moments", expert_id = "E1",
@@ -160,27 +179,29 @@ aggregate_experts <- function(priors,
               0.5 * (lbeta(a1, b1) + lbeta(a2, b2))
     return(exp(log_bc))
   }
-  # Numerical fallback
-  grid <- seq(.Machine$double.eps, 1 - .Machine$double.eps, length.out = 1000)
-  d1   <- .eval_density(p1, grid)
-  d2   <- .eval_density(p2, grid)
+  # Numerical fallback -- uses .eval_density_vec() (zzz_patches.R), which
+  # covers all six elicitable families plus mixtures. A previous local
+  # duplicate here (.eval_density()) covered only beta/normal/gamma/mixture
+  # with no default case, so switch() silently returned NULL for lognormal,
+  # exponential, or weibull priors -- causing sum(sqrt(NULL * NULL)) to
+  # evaluate to 0 and falsely report complete disagreement for any such
+  # pair, regardless of actual similarity.
+  #
+  # The integration grid must also span both priors' actual support --
+  # previously hardcoded to (0, 1), correct only for Beta. For gamma,
+  # lognormal, exponential, or weibull priors (positive real line, often
+  # far from [0, 1]), a unit-interval grid would capture essentially none
+  # of their probability mass and produce a near-zero BC regardless of the
+  # priors' real similarity. .prior_range() (zzz_patches.R) is reused here,
+  # unioning both priors' ranges, so the grid covers wherever either prior's
+  # mass actually lies.
+  r1 <- .prior_range(p1)
+  r2 <- .prior_range(p2)
+  grid <- seq(min(r1$lo, r2$lo), max(r1$hi, r2$hi), length.out = 1000)
+  d1   <- .eval_density_vec(p1, grid)
+  d2   <- .eval_density_vec(p2, grid)
   dx   <- diff(range(grid)) / (length(grid) - 1)
   sum(sqrt(d1 * d2)) * dx
-}
-
-.eval_density <- function(prior, x) {
-  switch(prior$dist,
-    beta   = stats::dbeta(x, prior$params$alpha, prior$params$beta),
-    normal = stats::dnorm(x, prior$params$mu, prior$params$sigma),
-    gamma  = stats::dgamma(x, prior$params$shape, prior$params$rate),
-    mixture = {
-      d <- numeric(length(x))
-      for (i in seq_along(prior$components)) {
-        d <- d + prior$weights[i] * .eval_density(prior$components[[i]], x)
-      }
-      d
-    }
-  )
 }
 
 .log_pool <- function(priors, weights) {
