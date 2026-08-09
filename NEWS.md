@@ -39,6 +39,8 @@
 
 ---
 
+# bayprior 0.3.1
+
 ## Documentation improvements
 
 * Corrected the title of the FDA's 2026 draft guidance as cited throughout
