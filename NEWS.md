@@ -1,3 +1,44 @@
+# bayprior 0.3.2
+
+## Bug fixes
+
+* `sensitivity_grid()` and `sensitivity_cri()` now moment-match a mixture
+  prior's actual pooled mean and SD to a working prior, instead of
+  silently analyzing only the dominant component by weight. Under equal
+  or near-equal expert weights, this previously meant the sensitivity
+  grid could reflect a single expert's prior without any indication that
+  other experts' input had been dropped. A message now reports the
+  working prior used; a warning is issued if the mixture's family cannot
+  be moment-matched from mean/SD (Exponential, Weibull), in which case
+  the dominant-component fallback is used and clearly identified.
+
+* Fixed the pairwise Bhattacharyya agreement coefficient
+  (`aggregate_experts()`) silently reporting near-total disagreement for
+  any pair of experts using Lognormal, Exponential, or Weibull priors
+  (or Gamma, via a related integration-range issue), regardless of how
+  similar their actual priors were. This always triggered the "substantial
+  expert disagreement" warning for these families.
+
+* Fixed `plot()` on a `bayprior_conflict` object erroring for any prior
+  other than Beta (Normal, Gamma, Lognormal, Exponential, Weibull), and
+  the plotted x-axis range being incorrectly clamped to [0, 1] regardless
+  of the prior's actual support.
+
+* Removed a duplicate, dead definition of `sensitivity_cri()` that had
+  fallen out of sync with the version actually in use; the live version
+  had the same mixture-handling issue described above, now fixed.
+
+* Fixed a crash (`argument is of length zero`) in mixture-handling logic
+  when called on a logarithmically-pooled prior, whose `fit_summary$sd`
+  is `NULL` by design.
+
+* `sensitivity_grid()`'s Shiny UI parameter-range defaults now use the
+  same working-prior logic as the underlying function, so the interface's
+  suggested ranges no longer risk diverging from what is actually
+  analyzed.
+
+---
+
 # bayprior 0.3.1
 
 ## Documentation improvements

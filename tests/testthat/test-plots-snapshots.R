@@ -130,6 +130,44 @@ test_that("plot.bayprior_conflict: severe conflict case runs", {
   expect_no_error(plot(cd))
 })
 
+test_that("plot.bayprior_conflict works for a Normal prior (continuous data)
+           -- previously errored: hardcoded stats::dbeta(grid, p$alpha, p$beta)
+           assumed Beta, but p$alpha/p$beta are NULL for Normal priors", {
+  prior <- elicit_normal(mean = 0.5, sd = 0.2, method = "moments",
+                         label = "Mean difference")
+  cd    <- prior_conflict(prior, list(type = "continuous", x = 0.6, n = 40, sd = 0.3))
+  expect_no_error(plot(cd))
+})
+
+test_that("plot.bayprior_conflict works for a Gamma prior (poisson data)
+           -- previously errored the same way as the Normal case above", {
+  prior <- elicit_gamma(mean = 3.0, sd = 1.0, method = "moments",
+                        label = "Event rate")
+  cd    <- prior_conflict(prior, list(type = "poisson", x = 15, n = 40))
+  expect_no_error(plot(cd))
+})
+
+test_that("plot.bayprior_conflict works for a Lognormal prior
+           -- also previously errored the same way", {
+  prior <- elicit_lognormal(mean = 1.5, sd = 0.5, method = "moments",
+                            label = "Hazard ratio")
+  cd    <- prior_conflict(prior, list(type = "continuous", x = 1.8, n = 40, sd = 0.6))
+  expect_no_error(plot(cd))
+})
+
+test_that("plot.bayprior_conflict x-axis range is not clamped to [0, 1]
+           for a prior whose actual support extends well past it", {
+  prior <- elicit_gamma(mean = 20, sd = 5, method = "moments",
+                        label = "Survival time")
+  cd    <- prior_conflict(prior, list(type = "survival", x = 12, n = 40))
+  p     <- plot(cd)
+  # Previously hardcoded to min(1, ...): the x-axis would have been
+  # incorrectly truncated to [0, 1], nowhere near this prior's actual mass.
+  built <- ggplot2::ggplot_build(p)
+  x_range <- built$layout$panel_params[[1]]$x.range
+  expect_gt(x_range[2], 1)
+})
+
 test_that("plot_sensitivity: prob_efficacy target works", {
   prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
   sa    <- sensitivity_grid(

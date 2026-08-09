@@ -214,14 +214,16 @@ plot.bayprior <- function(x, ...) {
 
 #' @export
 plot.bayprior_conflict <- function(x, ...) {
-  grid <- seq(
-    max(0, x$prior_mean - 5 * x$prior_sd),
-    min(1, x$prior_mean + 5 * x$prior_sd),
-    length.out = 500
-  )
+  # Previously hardcoded to Beta: stats::dbeta(grid, p$alpha, p$beta) would
+  # error for any other family (p$alpha/p$beta are NULL for Normal, Gamma,
+  # Lognormal, Exponential, Weibull priors), and the grid range was clamped
+  # to (0, 1) regardless of family, which is wrong even for a Normal prior
+  # with negative support (e.g. a log-odds-ratio prior). Uses the same
+  # family-aware helpers as the rest of the package's plotting instead.
+  range_p <- .prior_range(x$prior)
+  grid    <- seq(range_p$lo, range_p$hi, length.out = 500)
 
-  p   <- x$prior$params
-  pri <- stats::dbeta(grid, p$alpha, p$beta)
+  pri <- .eval_density_vec(x$prior, grid)
 
   lik <- stats::dnorm(grid, mean = x$obs_mean, sd = x$obs_se)
   lik <- lik / max(lik) * max(pri)

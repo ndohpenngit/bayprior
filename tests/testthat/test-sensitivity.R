@@ -383,3 +383,24 @@ test_that("sensitivity_grid does not error on a logarithmically pooled
     ))
   )
 })
+
+test_that("sensitivity_cri moment-matches a linearly pooled mixture prior
+           (previously discarded non-dominant components, matching the
+           sensitivity_grid bug found and fixed separately)", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments", expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments", expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+
+  expect_message(
+    cri_sa <- sensitivity_cri(
+      prior        = pool,
+      data_summary = list(type = "binary", x = 18, n = 40),
+      param_grid   = list(alpha = seq(3, 12, by = 1), beta = seq(6, 20, by = 1)),
+      cri_level    = 0.95
+    ),
+    "moment-matched working prior"
+  )
+  expect_s3_class(cri_sa, "bayprior_sensitivity")
+  expect_true("cri_width" %in% names(cri_sa$grid))
+})

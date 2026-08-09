@@ -1,3 +1,4 @@
+Bayesianity
 Bhattacharyya
 CHMP
 CMD
@@ -11,6 +12,7 @@ EMA's
 Eiser
 Estimands
 Garthwaite
+Genest
 Gravestock
 Gsteiger
 HR
@@ -20,6 +22,7 @@ Inf
 JRSS
 Kullback
 Leibler
+McConway
 Nelder
 Neuenschwander
 O'Hagan
@@ -33,16 +36,22 @@ Rakow
 Rightarrow
 Roychoudhury
 SDs
+Schervish
 Schmidli
 Spiegelhalter
 Sys
 Var
 VignetteBuilder
+Weerahandi
+Zidek
+analyzed
+analyzing
 biom
 cdot
 codecov
 df
 doi
+erroring
 estimands
 etc
 frac
@@ -66,3 +75,4 @@ shinydashboard
 ss
 tikzfill
 var
+weibull

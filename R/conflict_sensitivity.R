@@ -493,6 +493,12 @@ sensitivity_grid <- function(prior,
 #' @param threshold    Optional numeric. Computes \code{Pr(theta > threshold)}
 #'   at each grid point if supplied.
 #'
+#' @details
+#' As with \code{\link{sensitivity_grid}}, when \code{prior} is a mixture,
+#' a single-family working prior is derived via \code{.mixture_working_prior()}
+#' -- moment-matching the mixture's pooled mean/SD to the dominant
+#' component's family -- rather than analysing the dominant component alone.
+#'
 #' @return An object of class \code{bayprior_sensitivity} whose grid contains
 #'   columns \code{cri_lower}, \code{cri_upper}, and \code{cri_width}, plus
 #'   optionally \code{posterior_mean}, \code{posterior_sd}, and
@@ -525,12 +531,11 @@ sensitivity_cri <- function(prior,
   alpha_lo <- (1 - cri_level) / 2
   alpha_hi <- 1 - alpha_lo
 
-  # Use dominant component as working prior for mixture priors
-  working_prior <- if (prior$dist == "mixture") {
-    prior$components[[which.max(prior$weights)]]
-  } else {
-    prior
-  }
+  # Moment-match a mixture prior's pooled mean/SD to a working prior in the
+  # dominant component's family (see .mixture_working_prior() for details
+  # and the same fix applied to sensitivity_grid()), rather than discarding
+  # all but the dominant component.
+  working_prior <- .mixture_working_prior(prior)
 
   # Remap generic param names (e.g. "param1", "param2") to prior param names
   prior_param_names <- names(working_prior$params)
@@ -848,74 +853,4 @@ sensitivity_cri <- function(prior,
   rlang::abort(glue::glue(
     "Conjugate update not implemented for dist='{prior$dist}' with type='{type}'."
   ))
-}
-
-
-# -- Density helpers (shared with zzz_patches.R -- defined here as fallback) ---
-
-.density_grid <- function(prior, n_grid = 500) {
-
-  if (prior$dist == "lognormal") {
-    lo <- stats::qlnorm(0.001, prior$params$meanlog, prior$params$sdlog)
-    hi <- stats::qlnorm(0.999, prior$params$meanlog, prior$params$sdlog)
-  } else if (prior$dist == "gamma") {
-    lo <- stats::qgamma(0.001, prior$params$shape, prior$params$rate)
-    hi <- stats::qgamma(0.999, prior$params$shape, prior$params$rate)
-  } else if (prior$dist == "beta") {
-    lo <- 0; hi <- 1
-  } else if (prior$dist == "mixture") {
-    summaries <- lapply(prior$components, function(p) p$fit_summary)
-
-    lo_vals <- sapply(summaries, function(s) s$q025 %||% (s$mean - 4 * s$sd))
-    hi_vals <- sapply(summaries, function(s) s$q975 %||% (s$mean + 4 * s$sd))
-
-    # Filter to finite values before calling min/max. When all components
-    # have NULL or NA summaries, sapply() returns a vector of NAs and
-    # min/max emit "no non-missing arguments to min; returning Inf", which
-    # then propagates to seq() -> .eval_density_vec -> the Plotly colorscale.
-    lo_vals <- lo_vals[is.finite(lo_vals)]
-    hi_vals <- hi_vals[is.finite(hi_vals)]
-
-    if (length(lo_vals) == 0 || length(hi_vals) == 0) {
-      rlang::abort(
-        "Cannot determine density range for mixture prior: all component ",
-        "fit_summary values are NULL or NA. Ensure every mixture component ",
-        "has a valid fit_summary with mean and sd."
-      )
-    }
-
-    lo <- min(lo_vals)
-    hi <- max(hi_vals)
-  } else {
-    s  <- prior$fit_summary
-    lo <- s$q025 %||% (s$mean - 4 * s$sd)
-    hi <- s$q975 %||% (s$mean + 4 * s$sd)
-  }
-
-  # Only clamp lo to 1e-6 for distributions with non-negative support (beta,
-  # gamma, lognormal). Clamping Normal priors silently drops the left tail
-  # and produces misleading density plots for negative-valued parameters.
-  if (prior$dist %in% c("beta", "gamma", "lognormal")) {
-    lo <- max(lo, 1e-6)
-  }
-
-  x  <- seq(lo, hi, length.out = n_grid)
-  list(x = x, y = .eval_density_vec(prior, x))
-}
-
-.eval_density_vec <- function(prior, x) {
-  switch(prior$dist,
-    beta      = stats::dbeta(x, prior$params$alpha, prior$params$beta),
-    normal    = stats::dnorm(x, prior$params$mu,    prior$params$sigma),
-    gamma     = stats::dgamma(x, prior$params$shape, prior$params$rate),
-    lognormal = stats::dlnorm(x, prior$params$meanlog, prior$params$sdlog),
-    mixture   = {
-      d <- numeric(length(x))
-      for (i in seq_along(prior$components)) {
-        d <- d + prior$weights[i] * .eval_density_vec(prior$components[[i]], x)
-      }
-      d
-    },
-    rep(NA_real_, length(x))
-  )
 }
