@@ -850,7 +850,55 @@ sensitivity_cri <- function(prior,
     ))
   }
 
-  rlang::abort(glue::glue(
-    "Conjugate update not implemented for dist='{prior$dist}' with type='{type}'."
+  # -- Generic fallback: Normal approximation ----------------------------------
+  # No exact conjugate formula exists for this prior/data-type pairing (e.g.
+  # a Beta prior with continuous data -- Beta is conjugate to Binomial, not
+  # to a continuous likelihood). Previously this aborted, which contradicted
+  # the compatibility warning shown to users elsewhere in the package, which
+  # explicitly states the analysis will "proceed using a Normal
+  # approximation." Generalises the same approach already used for Weibull
+  # above (and the same approximation prior_conflict() uses for its
+  # diagnostics): approximate both prior and likelihood as Normal via the
+  # prior's fit_summary, and return a Normal posterior. This keeps the
+  # promised approximation behaviour consistent between the numeric
+  # diagnostics and any posterior-dependent plot or downstream computation,
+  # including each component of a mixture prior.
+  prior_mean <- prior$fit_summary$mean
+  prior_sd   <- prior$fit_summary$sd
+
+  if (is.null(prior_mean) || is.null(prior_sd) ||
+      is.na(prior_mean)  || is.na(prior_sd)) {
+    rlang::abort(glue::glue(
+      "Conjugate update not implemented for dist='{prior$dist}' with ",
+      "type='{type}', and no fit_summary mean/SD is available for a ",
+      "Normal-approximation fallback."
+    ))
+  }
+
+  if (type %in% c("poisson", "survival")) {
+    obs_mean <- x / n
+    obs_se   <- sqrt(x) / n
+  } else if (type == "binary") {
+    obs_mean <- x / n
+    obs_se   <- sqrt(obs_mean * (1 - obs_mean) / n)
+  } else {
+    obs_mean <- x
+    obs_se   <- (data_summary$sd %||% prior_sd) / sqrt(n)
+  }
+  obs_se <- max(obs_se, 1e-8)
+
+  prior_var <- prior_sd^2
+  lik_var   <- obs_se^2
+  post_var  <- 1 / (1 / prior_var + 1 / lik_var)
+  post_mean <- post_var * (prior_mean / prior_var + obs_mean / lik_var)
+
+  rlang::inform(glue::glue(
+    "No exact conjugate update exists for dist='{prior$dist}' with ",
+    "type='{type}'; approximated the posterior as Normal(mean = ",
+    "{round(post_mean, 4)}, sd = {round(sqrt(post_var), 4)})."
   ))
+
+  .make_bayprior("normal", list(mu = post_mean, sigma = sqrt(post_var)),
+                 "posterior (normal approximation)", prior$expert_id,
+                 prior$label, list())
 }
