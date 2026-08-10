@@ -24,13 +24,47 @@ plot_prior_likelihood <- function(prior,
   n    <- data_summary$n
   x    <- data_summary$x
 
-  grid    <- .density_grid(prior, n_grid)$x
+  # Determine the likelihood's location before building the grid, so the
+  # grid can span both the prior's range and the likelihood's range (see
+  # note below on why this matters). Binary is exempt: both the Beta
+  # likelihood and the typical Beta prior are inherently confined to
+  # [0, 1], so there is no clipping risk to guard against there.
+  if (type %in% c("poisson", "survival")) {
+    lik_obs_mean <- x / n
+    lik_obs_se   <- max(sqrt(x) / n, 1e-8)
+  } else if (type != "binary") {
+    lik_obs_mean <- x
+    lik_obs_se   <- max((data_summary$sd %||% NA_real_) / sqrt(n), 1e-8)
+  }
+
+  range_p <- .prior_range(prior)
+  if (type == "binary") {
+    grid <- seq(range_p$lo, range_p$hi, length.out = n_grid)
+  } else {
+    # Union with the likelihood's range -- not just the prior's. This plot
+    # exists specifically to visualise prior-vs-data agreement/conflict;
+    # using only the prior's range meant that in a genuinely severe
+    # conflict (likelihood far from the prior), the likelihood curve could
+    # fall partly or entirely outside the plotted range and be silently
+    # clipped by ggplot2 -- hiding the exact scenario this plot exists to
+    # surface.
+    lik_lo <- lik_obs_mean - 4 * lik_obs_se
+    lik_hi <- lik_obs_mean + 4 * lik_obs_se
+    grid   <- seq(min(range_p$lo, lik_lo), max(range_p$hi, lik_hi),
+                  length.out = n_grid)
+  }
+
   prior_d <- .eval_density_vec(prior, grid)
 
+  # Likelihood curve shape depends on data type. Binary has an exact
+  # Beta-Binomial shape; poisson/survival and continuous need distinct
+  # Normal-approximation parameters -- poisson/survival's "x" is an event
+  # count, not a rate, and has no data_summary$sd field at all (only
+  # continuous data collects one), so these cannot share a branch.
   if (type == "binary") {
     lik_d <- stats::dbeta(grid, x + 1, n - x + 1)
   } else {
-    lik_d <- stats::dnorm(grid, x, data_summary$sd / sqrt(n))
+    lik_d <- stats::dnorm(grid, lik_obs_mean, lik_obs_se)
   }
   lik_d <- lik_d / max(lik_d) * max(prior_d)
 
@@ -220,8 +254,19 @@ plot.bayprior_conflict <- function(x, ...) {
   # to (0, 1) regardless of family, which is wrong even for a Normal prior
   # with negative support (e.g. a log-odds-ratio prior). Uses the same
   # family-aware helpers as the rest of the package's plotting instead.
-  range_p <- .prior_range(x$prior)
-  grid    <- seq(range_p$lo, range_p$hi, length.out = 500)
+  # The grid must span both the prior's range and the likelihood's range --
+  # not just the prior's. This plot exists specifically to visualise
+  # prior-data conflict; using only the prior's range meant that in a
+  # genuinely severe conflict (likelihood far from the prior), the
+  # likelihood curve could fall partly or entirely outside the plotted
+  # range and be silently clipped by ggplot2 -- hiding the exact scenario
+  # this plot is meant to surface.
+  range_p  <- .prior_range(x$prior)
+  lik_lo   <- x$obs_mean - 4 * x$obs_se
+  lik_hi   <- x$obs_mean + 4 * x$obs_se
+  grid_lo  <- min(range_p$lo, lik_lo)
+  grid_hi  <- max(range_p$hi, lik_hi)
+  grid     <- seq(grid_lo, grid_hi, length.out = 500)
 
   pri <- .eval_density_vec(x$prior, grid)
 
