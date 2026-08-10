@@ -156,13 +156,20 @@ test_that("plot.bayprior_conflict works for a Lognormal prior
 })
 
 test_that("plot.bayprior_conflict x-axis range is not clamped to [0, 1]
-           for a prior whose actual support extends well past it", {
+           for a prior whose actual support extends well past it, and the
+           likelihood curve is not silently clipped when its location
+           differs substantially from the prior's own range", {
   prior <- elicit_gamma(mean = 20, sd = 5, method = "moments",
                         label = "Survival time")
   cd    <- prior_conflict(prior, list(type = "survival", x = 12, n = 40))
-  p     <- plot(cd)
-  # Previously hardcoded to min(1, ...): the x-axis would have been
-  # incorrectly truncated to [0, 1], nowhere near this prior's actual mass.
+  # Previously the grid only spanned the prior's own range; since this
+  # plot's specific purpose is visualising prior-vs-data conflict, a
+  # likelihood far from the prior (as here: hazard rate ~0.3, prior on a
+  # survival-time scale of ~20) would fall outside that range and be
+  # silently dropped by ggplot2 with a "removed rows" warning -- hiding
+  # exactly the conflict the plot exists to show. The grid should now
+  # union both ranges, so no rows are dropped.
+  expect_no_warning(p <- plot(cd))
   built <- ggplot2::ggplot_build(p)
   x_range <- built$layout$panel_params[[1]]$x.range
   expect_gt(x_range[2], 1)
@@ -191,4 +198,38 @@ test_that("plot_sensitivity: cri_width target works", {
   )
   gp <- plot_sensitivity(cri_sa, target = "cri_width")
   expect_s3_class(gp, "gg")
+})
+
+test_that("plot_prior_likelihood centres the Poisson likelihood curve at the
+           event rate (x/n), not the raw event count -- previously used
+           dnorm(grid, x, data_summary$sd / sqrt(n)) for this type, where x
+           is a count (e.g. 12) rather than a rate, and data_summary$sd is
+           never collected for Poisson/survival data in the Shiny app,
+           making the curve badly mislocated", {
+  prior <- elicit_beta(mean = 0.353, sd = 0.138, method = "moments",
+                       label = "Linear pooled consensus prior")
+  p <- plot_prior_likelihood(
+    prior,
+    list(type = "poisson", x = 12, n = 100),  # rate = 0.12
+    show_posterior = TRUE
+  )
+  built <- ggplot2::ggplot_build(p)
+
+  # The likelihood curve's peak should sit near the true rate (0.12), not
+  # near the raw count (12) or anywhere close to it.
+  df <- built$plot$data
+  lik_df <- df[df$source == "Likelihood (scaled)", ]
+  peak_x <- lik_df$theta[which.max(lik_df$density)]
+  expect_lt(abs(peak_x - 0.12), 0.05)
+})
+
+test_that("plot_prior_likelihood works for survival data the same way as poisson", {
+  prior <- elicit_gamma(mean = 20, sd = 5, method = "moments",
+                        label = "Survival time")
+  expect_no_error(
+    suppressMessages(
+      plot_prior_likelihood(prior, list(type = "survival", x = 15, n = 200),
+                            show_posterior = TRUE)
+    )
+  )
 })
