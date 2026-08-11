@@ -26,7 +26,7 @@ test_that("prior_conflict returns correct structure (binary, no conflict)", {
 
 test_that("prior_conflict detects severe conflict", {
   prior <- elicit_beta(mean = 0.30, sd = 0.05, method = "moments")
-  # Observe 38/40 = 95% — far from prior mean of 30%
+  # Observe 38/40 = 95% -- far from prior mean of 30%
   cd <- prior_conflict(prior, list(type = "binary", x = 38, n = 40))
 
   expect_true(cd$conflict_flag)
@@ -62,7 +62,7 @@ test_that("prior_conflict custom alpha changes flag threshold", {
 test_that("print.bayprior_conflict runs without error", {
   prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
   cd    <- prior_conflict(prior, list(type = "binary", x = 12, n = 40))
-  # print should not error — cli output goes to stderr so we just check no error
+  # print should not error -- cli output goes to stderr so we just check no error
   expect_error(print(cd), NA)
 })
 
@@ -112,7 +112,7 @@ test_that("conflict_mahalanobis detects conflict when means are far apart", {
 })
 
 
-# ── Additional coverage ──────────────────────────────────────────────────────
+# -- Additional coverage ------------------------------------------------------
 
 test_that("print.bayprior_conflict does not error for all severities", {
   prior <- elicit_beta(mean=0.30, sd=0.05, method="moments")
@@ -124,7 +124,7 @@ test_that("print.bayprior_conflict does not error for all severities", {
   expect_error(print(cd_sev), NA)
 })
 
-# ── Robust priors coverage ────────────────────────────────────────────────────
+# -- Robust priors coverage ----------------------------------------------------
 
 test_that("plot_prior_likelihood without posterior returns ggplot", {
   prior <- elicit_beta(mean=0.30, sd=0.10, method="moments")
