@@ -19,10 +19,37 @@
   similar their actual priors were. This always triggered the "substantial
   expert disagreement" warning for these families.
 
+* Fixed `plot()` on a `bayprior_conflict` object and `plot_prior_likelihood()`
+  silently clipping the likelihood curve when it falls substantially
+  outside the prior's own range. Both functions previously built their
+  plotting grid from the prior's range alone; since these plots exist
+  specifically to visualise prior-vs-data agreement or conflict, a
+  genuinely severe conflict (the case the plot is meant to surface) could
+  mean the likelihood curve was dropped from the visible range entirely.
+  The grid now spans both the prior's and the likelihood's range.
+
 * Fixed `plot()` on a `bayprior_conflict` object erroring for any prior
   other than Beta (Normal, Gamma, Lognormal, Exponential, Weibull), and
   the plotted x-axis range being incorrectly clamped to [0, 1] regardless
   of the prior's actual support.
+
+* Fixed `plot_prior_likelihood()`'s likelihood curve for Poisson/count and
+  survival data types being centred at the raw event count rather than
+  the event rate, and referencing an SD field that is never collected for
+  these data types (only continuous data has one). This affected the
+  "Prior-Likelihood-Posterior overlay" panel in the Shiny app's Conflict
+  Diagnostics tab for any Poisson or survival analysis.
+
+* Fixed `.conjugate_update()` aborting for any prior/data-type pairing
+  with no exact conjugate formula (e.g. a Beta prior with continuous
+  data), which contradicted the compatibility warning shown elsewhere in
+  the package promising the analysis would proceed via a Normal
+  approximation. Now falls back to a Normal-approximation posterior
+  instead, consistent with that promise. This also fixes the Shiny app's
+  "Prior-Likelihood-Posterior overlay" panel erroring ("Could not update
+  any mixture component with the supplied data") for a pooled mixture
+  prior with any component/data-type pairing lacking an exact conjugate
+  update.
 
 * Removed a duplicate, dead definition of `sensitivity_cri()` that had
   fallen out of sync with the version actually in use; the live version

@@ -16,12 +16,10 @@ fig-cap-location: bottom
 <a href="https://app.codecov.io/gh/ndohpenngit/bayprior">
   <img src="https://codecov.io/gh/ndohpenngit/bayprior/branch/main/graph/badge.svg" alt="codecov"/>
 </a>
-<a href="https://npenn.shinyapps.io/bayprior/">
-  <img src="https://img.shields.io/badge/Live_App-shinyapps.io-blueviolet?logo=shiny" alt="Live app"/>
+<a href="https://ndohpenn-bayprior.share.connect.posit.cloud">
+  <img src="https://img.shields.io/badge/Shiny-Live_App-blue?logo=r" alt="Live app"/>
 </a>
 </p>
-
-***Structured Bayesian prior elicitation, conflict diagnostics, and regulatory reporting.***
 
 ---
 

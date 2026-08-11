@@ -6,8 +6,16 @@
 #' prior approach, commonly paired with an enthusiastic prior as a
 #' sensitivity-analysis pair in regulatory submissions.
 #'
-#' @param null_value Numeric. The null treatment effect (e.g. 0 for a mean
-#'   difference, 1 for a hazard ratio, 0.5 for a response-rate difference).
+#' @param null_value Numeric. The null treatment effect. For
+#'   \code{family = "normal"} or \code{family = "beta"}, provide this on the
+#'   natural scale (e.g. \code{0} for a mean difference, \code{0.5} for a
+#'   response-rate difference). For \code{family = "lognormal"}, provide
+#'   this on the \strong{log scale} (e.g. \code{0} for a hazard ratio null
+#'   of 1, since \code{log(1) = 0}) -- \code{null_value = 1} for
+#'   \code{family = "lognormal"} centres the prior at \code{exp(1) ~ 2.72},
+#'   \strong{not} at a hazard ratio of 1. This mirrors how \code{0} already
+#'   represents "no difference" for the normal family; it does not carry
+#'   over to the natural (ratio) scale for lognormal.
 #'   For \code{family = "beta"}, must be strictly in (0, 1).
 #' @param family     Character. Distribution family. One of \code{"normal"},
 #'   \code{"beta"}, \code{"lognormal"}.
@@ -43,6 +51,12 @@
 #' sc_b <- sceptical_prior(null_value = 0.20, family = "beta",
 #'                         strength = "moderate", label = "Response rate")
 #' plot(sc_b)
+#'
+#' # Lognormal sceptical prior for a hazard ratio: null_value is on the LOG
+#' # scale, so 0 (not 1) represents a null hazard ratio of exp(0) = 1.
+#' sc_hr <- sceptical_prior(null_value = 0, family = "lognormal",
+#'                          strength = "moderate", label = "Hazard ratio")
+#' print(sc_hr)  # mean should be at or near 1, the null hazard ratio
 #'
 #' @importFrom rlang abort
 #' @export

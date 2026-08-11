@@ -14,13 +14,18 @@
 #'   Default \code{0.05}.
 #' @param labels     Character vector of length k. Endpoint labels for output.
 #'
-#' @return A named list with components:
+#' @return A named list of class \code{bayprior_conflict_mv} with components:
 #'   \describe{
 #'     \item{mahal_distance}{Mahalanobis distance D.}
-#'     \item{mahal_d2}{Squared distance D^2.}
-#'     \item{p_value}{Chi-squared p-value (df = k).}
-#'     \item{conflict_flag}{Logical. TRUE if p_value < alpha.}
+#'     \item{mahal_D2}{Squared distance D^2.}
+#'     \item{pvalue}{Chi-squared p-value (df = p).}
+#'     \item{df}{Degrees of freedom (number of endpoints, p).}
+#'     \item{conflict_flag}{Logical. TRUE if pvalue < alpha.}
+#'     \item{marginal_z}{Named numeric vector of per-parameter marginal
+#'       z-scores (difference standardised by the marginal predictive SD).}
+#'     \item{interpretation}{Character. Plain-language summary.}
 #'     \item{labels}{Endpoint labels.}
+#'     \item{alpha}{The significance level used.}
 #'   }
 #'
 #' @details
