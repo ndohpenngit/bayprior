@@ -67,6 +67,7 @@ params
 poisson
 prior's
 propto
+pvalue
 regex
 renv
 roxygen

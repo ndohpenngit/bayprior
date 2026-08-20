@@ -1,6 +1,6 @@
 Package: bayprior
 Title: Bayesian Prior Elicitation and Diagnostics for Clinical Trials
-Version: 0.3.1
+Version: 0.3.2
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0003-9054-465X"))
