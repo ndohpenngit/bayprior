@@ -205,10 +205,11 @@ plot_tornado <- function(sensitivity,
                         colour = "#185FA5", size = 3) +
     ggplot2::labs(
       title    = title,
-      subtitle = paste(strwrap(
-        "Bar width = range across sensitivity grid. Blue dot = reference prior.",
-        width = 50
-      ), collapse = "\n"),
+      subtitle = paste(
+        "Bar width = range across sensitivity grid.",
+        "Blue dot = reference prior.",
+        sep = "\n"
+      ),
       x        = "Posterior estimate range",
       y        = NULL
     ) +
