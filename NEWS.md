@@ -1,3 +1,57 @@
+# bayprior (development version)
+
+## Bug fixes
+
+* Fixed `prior_report()` rendering literal "****" in the Executive
+  Summary when `trial_name`/`author`/`sponsor` were not supplied,
+  instead of a readable fallback. Also affected the Trial Information
+  table, which previously showed a barely-visible em-dash rather than
+  a clear placeholder. Both now show "Not specified".
+
+* Fixed `plot_tornado()`'s subtitle text truncating mid-word in
+  narrower rendering contexts (e.g. embedded in a generated report).
+  Now wraps automatically instead of using a single unwrapped line.
+
+* Fixed the "Conflict severity" row in the prior-data conflict table
+  duplicating its own Value column in the Interpretation column,
+  instead of giving an actual plain-language recommendation.
+
+## New features
+
+* `prior_report()` now includes a synthesized "Key Findings" summary
+  immediately after the Executive Summary table, surfacing the most
+  consequential results (conflict status, sensitivity flags, whether a
+  robust/sceptical prior comparison was performed) up front, rather
+  than requiring the reader to piece these together from later
+  sections.
+
+* Sensitivity, conflict severity, and regulatory compliance status
+  values in generated reports are now colour-coded (HTML/PDF) or
+  tagged with a plain-text indicator (Word, since the underlying
+  colour-coding mechanism does not support docx output) to make
+  flagged items visually distinct from routine ones.
+
+* Section 6 ("Robust and Sensitivity Priors") now explicitly
+  cross-references Section 5's sensitivity findings when no robust
+  prior comparison was performed and sensitivity was flagged, rather
+  than leaving the two facts disconnected for the reader to notice
+  independently.
+
+## Internal
+
+* Added `kableExtra` (Suggests) for HTML/PDF status-cell colouring in
+  generated reports, with a graceful plain-text fallback if it is not
+  installed.
+
+* Fixed a latent bug in `prior_report.qmd`'s internal `.callout()`
+  helper: multi-line callout content (e.g. a bulleted list) rendered
+  as a single run-on paragraph in PDF output rather than a real list,
+  since Pandoc requires a list to start on its own line. Not
+  previously triggered, since every existing callout call used
+  single-line text.
+
+---
+
 # bayprior 0.3.2
 
 ## Bug fixes
@@ -63,6 +117,15 @@
   same working-prior logic as the underlying function, so the interface's
   suggested ranges no longer risk diverging from what is actually
   analyzed.
+
+* Corrected the documented meaning of `null_value` for
+  `sceptical_prior(..., family = "lognormal")`: it must be supplied on
+  the log scale (e.g. 0 for a null hazard ratio of 1), not the natural
+  scale implied by the previous generic parameter documentation.
+
+* Fixed `conflict_mahalanobis()`'s documented return field names
+  (`mahal_d2`, `p_value`), which did not match the object's actual field
+  names (`mahal_D2`, `pvalue`).
 
 ---
 
