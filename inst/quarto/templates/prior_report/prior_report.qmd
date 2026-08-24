@@ -51,7 +51,7 @@ knitr:
 
 ```{=html}
 <style>
-/* Table striping — replaces Bootstrap table-striped class lost in knitr path */
+/* Table striping -- replaces Bootstrap table-striped class lost in knitr path */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -97,7 +97,7 @@ library(bayprior)
 library(ggplot2)
 library(knitr)
 
-# ── Load R objects from RDS ───────────────────────────────────────────────────
+# -- Load R objects from RDS ---------------------------------------------------
 # All complex R objects (bayprior, ggplot2) are passed via an .rds file rather
 # than execute_params, which serializes to YAML and cannot handle S3 objects.
 if (nzchar(params$rds_path) && file.exists(params$rds_path)) {
@@ -131,34 +131,66 @@ pow_result    <- .session$power_prior
 pp_pow_plot   <- .session$power_plot
 has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_result)
 
-# ── Format detection ──────────────────────────────────────────────────────────
+# -- Format detection ----------------------------------------------------------
 # Callout blocks require tcolorbox in PDF but work in HTML and Word.
 # Use plain blockquotes for PDF, rich callouts for other formats.
 .fmt <- knitr::pandoc_to()
-.is_pdf <- isTRUE(grepl("latex|pdf|beamer", .fmt))
+.is_pdf  <- isTRUE(grepl("latex|pdf|beamer", .fmt))
+.is_docx <- isTRUE(grepl("docx", .fmt))
 
 .callout <- function(type, text) {
   if (.is_pdf) {
     prefix <- switch(type,
-      note      = "> **Note:**",
-      warning   = "> **Warning:**",
-      important = "> **Important:**",
-      tip       = "> **Tip:**",
-      ">"
+      note      = "**Note:**",
+      warning   = "**Warning:**",
+      important = "**Important:**",
+      tip       = "**Tip:**",
+      ""
     )
-    cat(paste0(prefix, " ", text, "
-
-"))
+    # Markdown blockquotes require every line prefixed with ">", and a
+    # list must start on its own line (not share a line with preceding
+    # text) or pandoc collapses it into a run-on paragraph instead of a
+    # real list -- verified empirically against pandoc's actual output.
+    body  <- if (nzchar(prefix)) paste0(prefix, "\n\n", text) else text
+    lines <- strsplit(body, "\n", fixed = TRUE)[[1]]
+    lines[lines == ""] <- " "  # blank quoted lines need a space after ">"
+    cat(paste0(paste0("> ", lines, collapse = "\n"), "\n\n"))
   } else {
-    cat(paste0("::: {.callout-", type, "}
-", text, "
-:::
-
-"))
+    cat(paste0("::: {.callout-", type, "}\n", text, "\n:::\n\n"))
   }
 }
 
-# ── Safe helpers ──────────────────────────────────────────────────────────────
+# -- Status badges (colour-coded cells) -----------------------------------
+# kableExtra::cell_spec() supports HTML and LaTeX/PDF, but NOT Word/docx --
+# pandoc does not process its embedded HTML/LaTeX styling when converting
+# to docx. Rather than silently rendering nothing (or raw markup) in Word,
+# fall back to a plain-text bracketed tag there so the flag is still
+# conveyed, just without colour. Levels: "good" (green), "warning" (amber),
+# "danger" (red), "neutral" (grey, no tag).
+.status_colours <- list(
+  good    = list(bg = "#2E7D32", tag = "OK"),
+  warning = list(bg = "#B36B00", tag = "FLAG"),
+  danger  = list(bg = "#B00020", tag = "ALERT"),
+  neutral = list(bg = "#616161", tag = NULL)
+)
+
+.status_badge <- function(text, level = "neutral") {
+  spec <- .status_colours[[level]]
+  if (is.null(spec)) spec <- .status_colours$neutral
+
+  # Degrade gracefully to the plain-text tag (same as docx) if kableExtra
+  # isn't installed, rather than erroring on this optional dependency.
+  if (.is_docx || !requireNamespace("kableExtra", quietly = TRUE)) {
+    if (is.null(spec$tag)) return(text)
+    return(paste0("[", spec$tag, "] ", text))
+  }
+
+  fmt <- if (.is_pdf) "latex" else "html"
+  kableExtra::cell_spec(text, fmt, color = "white", bold = TRUE,
+                        background = spec$bg)
+}
+
+# -- Safe helpers --------------------------------------------------------------
 # Self-contained: no dependency on %||% or rlang, which are absent from
 # quarto::quarto_render()'s fresh environment when called from a Shiny app.
 
@@ -171,7 +203,7 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
   round(x, digits)
 }
 
-.safe_chr <- function(x, fallback = "\u2014") {
+.safe_chr <- function(x, fallback = "N/A") {
   if (is.null(x) || length(x) == 0L || (length(x) == 1L && is.na(x)))
     return(fallback)
   as.character(x[[1L]])
@@ -184,7 +216,7 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
 }
 
 # CrI with fallback for mixture priors that lack q025/q975.
-# Mixture priors store only mean and sd; approximate with mean ± 1.96 * sd.
+# Mixture priors store only mean and sd; approximate with mean +/- 1.96 * sd.
 .cri <- function(s) {
   lo <- .fs(s, "q025"); hi <- .fs(s, "q975")
   mn <- .fs(s, "mean"); sd_v <- .fs(s, "sd")
@@ -194,7 +226,7 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
 }
 
 # For mixture priors, pull method/expert from the dominant component so
-# these fields never display as "—" in tables.
+# these fields never display as "N/A" in tables.
 .prior_method <- function(p) {
   if (!identical(p$dist, "mixture")) return(.safe_chr(p$method))
   dom <- p$components[[which.max(p$weights)]]
@@ -205,7 +237,7 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
   if (!identical(p$dist, "mixture")) return(.safe_chr(p$expert_id))
   nms <- vapply(p$components,
                 function(x) .safe_chr(x$expert_id), character(1L))
-  paste(unique(nms[nms != "\u2014"]), collapse = ", ")
+  paste(unique(nms[nms != "N/A"]), collapse = ", ")
 }
 
 .params_df <- function(prior_obj) {
@@ -251,8 +283,9 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
 ## Executive Summary
 
 This report documents the Bayesian prior specification for study
-**`r params$trial_name`**, prepared by **`r params$author`**
-(`r params$sponsor`) and dated `r format(Sys.Date(), "%d %B %Y")`.
+**`r .safe_chr(params$trial_name, "Not specified")`**, prepared by
+**`r .safe_chr(params$author, "Not specified")`**
+(`r .safe_chr(params$sponsor, "Not specified")`) and dated `r format(Sys.Date(), "%d %B %Y")`.
 
 ```{r exec-table}
 if (has_prior) {
@@ -277,6 +310,58 @@ if (has_prior) {
 }
 ```
 
+```{r key-findings}
+#| results: asis
+findings <- character(0L)
+
+if (has_conf) {
+  sev <- tolower(.safe_chr(cd$conflict_severity, "none"))
+  bp  <- .safe_round(cd$box_pvalue, 3)
+  if (sev == "none") {
+    findings <- c(findings, paste0(
+      "No prior-data conflict detected (Box p = ", bp, ")."))
+  } else {
+    findings <- c(findings, paste0(
+      "**Prior-data conflict flagged** (severity: ", toupper(sev),
+      ", Box p = ", bp, ") -- see Section 4."))
+  }
+}
+
+if (has_sens) {
+  sc <- sa$influence_scores
+  any_sensitive <- any(is.na(sc) | sc > 0.05)
+  if (any_sensitive) {
+    worst <- names(sc)[which.max(ifelse(is.na(sc), Inf, sc))]
+    findings <- c(findings, paste0(
+      "**Posterior conclusions are sensitive to prior specification** ",
+      "(", .safe_chr(worst, "at least one target"),
+      " exceeds the sensitivity threshold) -- see Section 5."))
+  } else {
+    findings <- c(findings,
+      "Posterior conclusions are robust to plausible variation in the prior's hyperparameters.")
+  }
+}
+
+if (has_sens && !has_robust) {
+  any_sensitive <- has_sens && any(is.na(sa$influence_scores) | sa$influence_scores > 0.05)
+  if (any_sensitive) {
+    findings <- c(findings, paste0(
+      "No robust, sceptical, or power prior comparison was performed -- ",
+      "given the sensitivity flagged above, one is recommended before ",
+      "relying on this prior specification. See Section 6."))
+  }
+} else if (!has_robust) {
+  findings <- c(findings,
+    "No robust, sceptical, or power prior comparison was performed -- see Section 6.")
+}
+
+if (length(findings) > 0L) {
+  .callout("important", paste(
+    paste0("- ", findings), collapse = "\n"
+  ))
+}
+```
+
 ```{r notes-block}
 #| results: asis
 note_text <- .null_or(params$notes, "")
@@ -293,9 +378,9 @@ if (nzchar(note_text)) {
 df_trial <- data.frame(
   Field = c("Trial / Protocol", "Sponsor", "Statistician", "Report date"),
   Value = c(
-    .safe_chr(params$trial_name),
-    .safe_chr(params$sponsor),
-    .safe_chr(params$author),
+    .safe_chr(params$trial_name, "Not specified"),
+    .safe_chr(params$sponsor, "Not specified"),
+    .safe_chr(params$author, "Not specified"),
     format(Sys.Date(), "%d %B %Y")
   ),
   stringsAsFactors = FALSE
@@ -427,7 +512,12 @@ if (has_conf) {
       as.character(.safe_round(cd$surprise_index,      4)),
       as.character(.safe_round(cd$kl_prior_likelihood, 4)),
       as.character(.safe_round(cd$overlap,             4)),
-      toupper(.safe_chr(cd$conflict_severity))
+      {
+        sev_val   <- tolower(.safe_chr(cd$conflict_severity, "none"))
+        sev_level <- switch(sev_val, none = "good", mild = "warning",
+                            severe = "danger", "neutral")
+        .status_badge(toupper(.safe_chr(cd$conflict_severity)), sev_level)
+      }
     ),
     Interpretation = c(
       ifelse(isTRUE(cd$conflict_flag),
@@ -449,17 +539,23 @@ if (has_conf) {
       {
         ov <- suppressWarnings(as.numeric(cd$overlap))
         if (is.na(ov)) "Could not compute"
-        else if (ov < 0.3) "Low overlap \u2014 concern"
+        else if (ov < 0.3) "Low overlap - concern"
         else if (ov < 0.6) "Moderate overlap"
         else "Good overlap"
       },
-      toupper(.safe_chr(cd$conflict_severity))
+      {
+        sev <- tolower(.safe_chr(cd$conflict_severity))
+        if (sev == "none") "No corrective action needed"
+        else if (sev == "mild") "Consider reviewing the prior specification"
+        else if (sev == "severe") "Prior specification should be reconsidered"
+        else "Could not compute"
+      }
     ),
     stringsAsFactors = FALSE
   )
   rownames(df_conf) <- NULL
   kable(df_conf, caption = "Prior-data conflict diagnostics",
-        align = "llr", row.names = FALSE)
+        align = "llr", row.names = FALSE, escape = FALSE)
 }
 ```
 
@@ -510,16 +606,19 @@ if (has_sens) {
   nms <- names(sc)
   if (is.null(nms) || length(nms) == 0L)
     nms <- paste0("target_", seq_along(sc))
+  is_sensitive <- is.na(sc) | sc > 0.05
   df_sens <- data.frame(
     Target    = nms,
     Range     = as.character(.safe_round(sc, 5)),
-    Sensitive = ifelse(is.na(sc) | sc > 0.05, "Yes", "No"),
+    Sensitive = mapply(function(txt, flag)
+      .status_badge(txt, if (flag) "warning" else "good"),
+      ifelse(is_sensitive, "Yes", "No"), is_sensitive),
     stringsAsFactors = FALSE
   )
   rownames(df_sens) <- NULL
   kable(df_sens,
         caption = "Posterior sensitivity to prior hyperparameters",
-        align = "lrr", row.names = FALSE)
+        align = "lrr", row.names = FALSE, escape = FALSE)
 }
 ```
 
@@ -559,7 +658,19 @@ if (has_sens) {
 ```{r robust-check}
 #| results: asis
 if (!has_robust) {
-  .callout("warning", "No robust, sceptical, or power priors were computed for this report.")
+  sens_flagged <- has_sens &&
+    any(is.na(sa$influence_scores) | sa$influence_scores > 0.05)
+  msg <- if (sens_flagged) {
+    paste0(
+      "No robust, sceptical, or power priors were computed for this ",
+      "report. Section 5 flagged sensitivity to the prior specification ",
+      "for at least one posterior target -- a robust or sceptical prior ",
+      "comparison is recommended before relying on this specification."
+    )
+  } else {
+    "No robust, sceptical, or power priors were computed for this report."
+  }
+  .callout("warning", msg)
 }
 ```
 
@@ -672,10 +783,16 @@ df_comp <- data.frame(
   ),
   stringsAsFactors = FALSE
 )
+# "Missing" (a required prior was never supplied) is a more serious gap
+# than "Not run" (an optional downstream analysis wasn't performed).
+.status_level_map <- c(Complete = "good", Missing = "danger",
+                       "Not run" = "warning", "See above" = "neutral")
+df_comp$Status <- mapply(function(txt) .status_badge(txt, .status_level_map[[txt]]),
+                         df_comp$Status)
 rownames(df_comp) <- NULL
 kable(df_comp, align = "ll",
       caption = "FDA/EMA regulatory compliance checklist",
-      row.names = FALSE)
+      row.names = FALSE, escape = FALSE)
 ```
 
 ```{r fda-note, results="asis"}
@@ -708,7 +825,7 @@ df_sess <- data.frame(
     tryCatch(as.character(utils::packageVersion("quarto")),
              error = function(e) "unknown"),
     tryCatch(as.character(quarto::quarto_version()),
-             error = function(e) "not found — check Quarto CLI installation"),
+             error = function(e) "not found - check Quarto CLI installation"),
     si$platform,
     format(Sys.Date(), "%d %B %Y")
   ),
