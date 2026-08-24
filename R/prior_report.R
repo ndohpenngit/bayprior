@@ -324,7 +324,7 @@ prior_report <- function(prior,
   round(x, digits)
 }
 
-.safe_chr <- function(x, fallback = "\u2014") {
+.safe_chr <- function(x, fallback = "N/A") {
   if (is.null(x) || length(x) == 0L || (length(x) == 1L && is.na(x)))
     return(fallback)
   as.character(x[[1L]])
