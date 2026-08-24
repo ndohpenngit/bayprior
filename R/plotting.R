@@ -186,7 +186,7 @@ plot_tornado <- function(sensitivity,
   df <- purrr::imap_dfr(scores, function(range_val, nm) {
     vals <- grid[[nm]]
     data.frame(
-      target    = .target_label(nm),   # ? professional label
+      target    = .target_label(nm),   # human-readable label, e.g. "Posterior mean"
       ref_value = grid[[nm]][sensitivity$reference_row],
       lower     = min(vals, na.rm = TRUE),
       upper     = max(vals, na.rm = TRUE),
@@ -205,7 +205,10 @@ plot_tornado <- function(sensitivity,
                         colour = "#185FA5", size = 3) +
     ggplot2::labs(
       title    = title,
-      subtitle = "Bar width = range across sensitivity grid. Blue dot = reference prior.",
+      subtitle = paste(strwrap(
+        "Bar width = range across sensitivity grid. Blue dot = reference prior.",
+        width = 50
+      ), collapse = "\n"),
       x        = "Posterior estimate range",
       y        = NULL
     ) +
