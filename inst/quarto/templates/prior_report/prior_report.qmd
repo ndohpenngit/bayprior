@@ -149,8 +149,8 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
     )
     # Markdown blockquotes require every line prefixed with ">", and a
     # list must start on its own line (not share a line with preceding
-    # text) or pandoc collapses it into a run-on paragraph instead of a
-    # real list -- verified empirically against pandoc's actual output.
+    # text), or pandoc collapses it into a run-on paragraph instead of a
+    # real list.
     body  <- if (nzchar(prefix)) paste0(prefix, "\n\n", text) else text
     lines <- strsplit(body, "\n", fixed = TRUE)[[1]]
     lines[lines == ""] <- " "  # blank quoted lines need a space after ">"
@@ -188,6 +188,47 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
   fmt <- if (.is_pdf) "latex" else "html"
   kableExtra::cell_spec(text, fmt, color = "white", bold = TRUE,
                         background = spec$bg)
+}
+
+# -- PDF-safe table wrapper --------------------------------------------------
+# Tables containing kableExtra::cell_spec() output (raw LaTeX markup, verbose
+# as plain text even though it renders compactly) can throw off pandoc's
+# automatic column-width balancing in a plain knitr::kable() table, causing
+# other columns to be squeezed to the point of overlapping text rather than
+# wrapping cleanly. For PDF specifically, use kableExtra::kbl() with explicit
+# column widths instead. Falls back to plain kable() when kableExtra isn't
+# installed or the format isn't PDF, where this isn't needed.
+.safe_kable <- function(df, widths = NULL, ...) {
+  if (.is_pdf && requireNamespace("kableExtra", quietly = TRUE)) {
+    tbl <- kableExtra::kbl(df, booktabs = TRUE, linesep = "", ...)
+    if (!is.null(widths)) {
+      for (i in seq_along(widths)) {
+        if (!is.na(widths[i])) tbl <- kableExtra::column_spec(tbl, i, width = widths[i])
+      }
+    }
+    tbl <- kableExtra::kable_styling(tbl, latex_options = "hold_position")
+    return(tbl)
+  }
+
+  # Word/docx: kableExtra outputs HTML, which pandoc does not translate to
+  # native Word tables -- flextable is the correct tool here, producing
+  # real OpenXML Word understands directly, with its own working column-
+  # width control (widths given in cm above are converted to inches, since
+  # flextable::width() expects inches).
+  if (.is_docx && requireNamespace("flextable", quietly = TRUE)) {
+    ft <- flextable::flextable(df)
+    if (!is.null(widths)) {
+      for (i in seq_along(widths)) {
+        if (!is.na(widths[i])) {
+          w_in <- as.numeric(sub("cm$", "", widths[i])) / 2.54
+          ft <- flextable::width(ft, j = i, width = w_in)
+        }
+      }
+    }
+    return(flextable::set_table_properties(ft, layout = "fixed"))
+  }
+
+  kable(df, ...)
 }
 
 # -- Safe helpers --------------------------------------------------------------
@@ -554,8 +595,9 @@ if (has_conf) {
     stringsAsFactors = FALSE
   )
   rownames(df_conf) <- NULL
-  kable(df_conf, caption = "Prior-data conflict diagnostics",
-        align = "llr", row.names = FALSE, escape = FALSE)
+  .safe_kable(df_conf, widths = c("4.5cm", "2cm", "6cm"),
+              caption = "Prior-data conflict diagnostics",
+              align = "llr", row.names = FALSE, escape = FALSE)
 }
 ```
 
@@ -616,9 +658,9 @@ if (has_sens) {
     stringsAsFactors = FALSE
   )
   rownames(df_sens) <- NULL
-  kable(df_sens,
-        caption = "Posterior sensitivity to prior hyperparameters",
-        align = "lrr", row.names = FALSE, escape = FALSE)
+  .safe_kable(df_sens, widths = c("4.5cm", "2.5cm", "3cm"),
+              caption = "Posterior sensitivity to prior hyperparameters",
+              align = "lrr", row.names = FALSE, escape = FALSE)
 }
 ```
 
@@ -790,9 +832,9 @@ df_comp <- data.frame(
 df_comp$Status <- mapply(function(txt) .status_badge(txt, .status_level_map[[txt]]),
                          df_comp$Status)
 rownames(df_comp) <- NULL
-kable(df_comp, align = "ll",
-      caption = "FDA/EMA regulatory compliance checklist",
-      row.names = FALSE, escape = FALSE)
+.safe_kable(df_comp, widths = c("10cm", "3cm"), align = "ll",
+            caption = "FDA/EMA regulatory compliance checklist",
+            row.names = FALSE, escape = FALSE)
 ```
 
 ```{r fda-note, results="asis"}
