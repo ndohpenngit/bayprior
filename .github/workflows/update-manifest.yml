@@ -28,7 +28,8 @@ jobs:
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rsconnect, local::.
+          extra-packages: any::rsconnect, any::devtools, any::usethis, local::.
+          needs: check
 
       - name: Regenerate manifest.json
         run: rsconnect::writeManifest()
