@@ -16,6 +16,20 @@
   duplicating its own Value column in the Interpretation column,
   instead of giving an actual plain-language recommendation.
 
+* Fixed `prior_report()` table rendering in PDF and Word: columns
+  could collide or hyphenate mid-word due to a `kableExtra` function
+  defaulting to HTML output when its target format could not be
+  auto-detected, and Word column widths were silently ignored due to
+  a documented upstream Quarto/pandoc limitation. Both formats now use
+  plain, unstyled tables, which render reliably; colour-coded status
+  cells remain in HTML only, where the original styling was never
+  affected by either issue.
+
+* Added `number-sections` to the Word output format, matching HTML
+  and PDF. In-text references such as "see Section 5" previously
+  pointed at section numbers that did not visually exist in Word,
+  since only HTML and PDF had section numbering enabled.
+
 ## New features
 
 * `prior_report()` now includes a synthesized "Key Findings" summary
@@ -26,10 +40,8 @@
   sections.
 
 * Sensitivity, conflict severity, and regulatory compliance status
-  values in generated reports are now colour-coded (HTML/PDF) or
-  tagged with a plain-text indicator (Word, since the underlying
-  colour-coding mechanism does not support docx output) to make
-  flagged items visually distinct from routine ones.
+  values are now colour-coded in HTML report output to make flagged
+  items visually distinct from routine ones.
 
 * Section 6 ("Robust and Sensitivity Priors") now explicitly
   cross-references Section 5's sensitivity findings when no robust
@@ -39,16 +51,16 @@
 
 ## Internal
 
-* Added `kableExtra` (Suggests) for HTML/PDF status-cell colouring in
-  generated reports, with a graceful plain-text fallback if it is not
-  installed.
-
 * Fixed a latent bug in `prior_report.qmd`'s internal `.callout()`
   helper: multi-line callout content (e.g. a bulleted list) rendered
   as a single run-on paragraph in PDF output rather than a real list,
   since Pandoc requires a list to start on its own line. Not
   previously triggered, since every existing callout call used
   single-line text.
+
+* ASCII cleanup in `prior_report.qmd`: removed several non-ASCII
+  characters, including one embedded in an actual runtime error
+  message a user could see, not just source comments.
 
 ---
 
