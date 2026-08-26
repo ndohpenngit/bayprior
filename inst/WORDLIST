@@ -50,6 +50,7 @@ analyzing
 biom
 callout
 cdot
+cleanup
 codecov
 df
 doi
@@ -77,5 +78,6 @@ sd
 shinydashboard
 ss
 tikzfill
+unstyled
 var
 weibull

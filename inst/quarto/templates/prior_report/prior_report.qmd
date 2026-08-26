@@ -35,6 +35,7 @@ format:
   docx:
     toc: true
     toc-depth: 3
+    number-sections: true
     fig-width: 6.5
     fig-height: 4
     fig-cap-location: bottom
@@ -160,75 +161,27 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
   }
 }
 
-# -- Status badges (colour-coded cells) -----------------------------------
-# kableExtra::cell_spec() supports HTML and LaTeX/PDF, but NOT Word/docx --
-# pandoc does not process its embedded HTML/LaTeX styling when converting
-# to docx. Rather than silently rendering nothing (or raw markup) in Word,
-# fall back to a plain-text bracketed tag there so the flag is still
-# conveyed, just without colour. Levels: "good" (green), "warning" (amber),
-# "danger" (red), "neutral" (grey, no tag).
-.status_colours <- list(
-  good    = list(bg = "#2E7D32", tag = "OK"),
-  warning = list(bg = "#B36B00", tag = "FLAG"),
-  danger  = list(bg = "#B00020", tag = "ALERT"),
-  neutral = list(bg = "#616161", tag = NULL)
-)
-
-.status_badge <- function(text, level = "neutral") {
-  spec <- .status_colours[[level]]
-  if (is.null(spec)) spec <- .status_colours$neutral
-
-  # Degrade gracefully to the plain-text tag (same as docx) if kableExtra
-  # isn't installed, rather than erroring on this optional dependency.
-  if (.is_docx || !requireNamespace("kableExtra", quietly = TRUE)) {
-    if (is.null(spec$tag)) return(text)
-    return(paste0("[", spec$tag, "] ", text))
-  }
-
-  fmt <- if (.is_pdf) "latex" else "html"
-  kableExtra::cell_spec(text, fmt, color = "white", bold = TRUE,
-                        background = spec$bg)
-}
-
-# -- PDF-safe table wrapper --------------------------------------------------
-# Tables containing kableExtra::cell_spec() output (raw LaTeX markup, verbose
-# as plain text even though it renders compactly) can throw off pandoc's
-# automatic column-width balancing in a plain knitr::kable() table, causing
-# other columns to be squeezed to the point of overlapping text rather than
-# wrapping cleanly. For PDF specifically, use kableExtra::kbl() with explicit
-# column widths instead. Falls back to plain kable() when kableExtra isn't
-# installed or the format isn't PDF, where this isn't needed.
-.safe_kable <- function(df, widths = NULL, ...) {
-  if (.is_pdf && requireNamespace("kableExtra", quietly = TRUE)) {
-    tbl <- kableExtra::kbl(df, booktabs = TRUE, linesep = "", ...)
-    if (!is.null(widths)) {
-      for (i in seq_along(widths)) {
-        if (!is.na(widths[i])) tbl <- kableExtra::column_spec(tbl, i, width = widths[i])
-      }
-    }
-    tbl <- kableExtra::kable_styling(tbl, latex_options = "hold_position")
-    return(tbl)
-  }
-
-  # Word/docx: kableExtra outputs HTML, which pandoc does not translate to
-  # native Word tables -- flextable is the correct tool here, producing
-  # real OpenXML Word understands directly, with its own working column-
-  # width control (widths given in cm above are converted to inches, since
-  # flextable::width() expects inches).
-  if (.is_docx && requireNamespace("flextable", quietly = TRUE)) {
-    ft <- flextable::flextable(df)
-    if (!is.null(widths)) {
-      for (i in seq_along(widths)) {
-        if (!is.na(widths[i])) {
-          w_in <- as.numeric(sub("cm$", "", widths[i])) / 2.54
-          ft <- flextable::width(ft, j = i, width = w_in)
-        }
-      }
-    }
-    return(flextable::set_table_properties(ft, layout = "fixed"))
-  }
-
-  kable(df, ...)
+# -- Status badges (HTML only) --------------------------------------------
+# Colour-coded status cells for HTML output, where this renders reliably.
+# PDF and Word plain-text kable() tables caused real, confirmed rendering
+# bugs when this same styling was attempted there (raw LaTeX/OpenXML markup
+# throwing off column-width handling); HTML never had that problem, so
+# there's no reason to withhold the richer styling here. Hand-written HTML
+# span markup, not routed through kableExtra, to avoid any dependency on
+# its format auto-detection (the actual root cause of the PDF bug found
+# earlier) and to drop kableExtra/flextable as dependencies entirely, since
+# nothing else in this template uses them anymore.
+.HTML_BADGE_COLOURS <- c(good = "#2E7D32", warning = "#B36B00",
+                        danger = "#B00020", neutral = "#616161")
+.html_badge <- function(text, level = "neutral") {
+  if (.is_pdf || .is_docx) return(text)
+  bg <- .HTML_BADGE_COLOURS[[level]]
+  if (is.null(bg)) bg <- .HTML_BADGE_COLOURS[["neutral"]]
+  paste0(
+    "<span style=\"background-color:", bg, "; color:white; ",
+    "padding:2px 8px; border-radius:4px; font-weight:bold;\">",
+    text, "</span>"
+  )
 }
 
 # -- Safe helpers --------------------------------------------------------------
@@ -248,6 +201,27 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
   if (is.null(x) || length(x) == 0L || (length(x) == 1L && is.na(x)))
     return(fallback)
   as.character(x[[1L]])
+}
+
+# Local copy of the package's internal .target_label() mapping (not called
+# directly, per the self-contained design noted above). Converts raw
+# sensitivity-target identifiers (e.g. "posterior_mean") to human-readable
+# labels (e.g. "Posterior mean") for display. This also matters for PDF/Word
+# table layout: identifiers like "posterior_mean" are a single unbroken
+# token with no space for LaTeX/Word to wrap at, so in a narrow table
+# column they overflow into the next column rather than wrapping onto a
+# second line. The human-readable labels have natural break points and
+# don't have this problem.
+.REPORT_TARGET_LABELS <- c(
+  posterior_mean = "Posterior mean",
+  posterior_sd   = "Posterior SD",
+  cri_lower      = "95% CrI lower bound",
+  cri_upper      = "95% CrI upper bound",
+  cri_width      = "95% CrI width",
+  prob_efficacy  = "Pr(efficacy)"
+)
+.report_target_label <- function(x) {
+  unname(ifelse(x %in% names(.REPORT_TARGET_LABELS), .REPORT_TARGET_LABELS[x], x))
 }
 
 .fs <- function(s, nm) {
@@ -557,7 +531,7 @@ if (has_conf) {
         sev_val   <- tolower(.safe_chr(cd$conflict_severity, "none"))
         sev_level <- switch(sev_val, none = "good", mild = "warning",
                             severe = "danger", "neutral")
-        .status_badge(toupper(.safe_chr(cd$conflict_severity)), sev_level)
+        .html_badge(toupper(.safe_chr(cd$conflict_severity)), sev_level)
       }
     ),
     Interpretation = c(
@@ -595,9 +569,8 @@ if (has_conf) {
     stringsAsFactors = FALSE
   )
   rownames(df_conf) <- NULL
-  .safe_kable(df_conf, widths = c("4.5cm", "2cm", "6cm"),
-              caption = "Prior-data conflict diagnostics",
-              align = "llr", row.names = FALSE, escape = FALSE)
+  kable(df_conf, caption = "Prior-data conflict diagnostics",
+        align = "llr", row.names = FALSE, escape = FALSE)
 }
 ```
 
@@ -650,17 +623,17 @@ if (has_sens) {
     nms <- paste0("target_", seq_along(sc))
   is_sensitive <- is.na(sc) | sc > 0.05
   df_sens <- data.frame(
-    Target    = nms,
+    Target    = .report_target_label(nms),
     Range     = as.character(.safe_round(sc, 5)),
     Sensitive = mapply(function(txt, flag)
-      .status_badge(txt, if (flag) "warning" else "good"),
+      .html_badge(txt, if (flag) "warning" else "good"),
       ifelse(is_sensitive, "Yes", "No"), is_sensitive),
     stringsAsFactors = FALSE
   )
   rownames(df_sens) <- NULL
-  .safe_kable(df_sens, widths = c("4.5cm", "2.5cm", "3cm"),
-              caption = "Posterior sensitivity to prior hyperparameters",
-              align = "lrr", row.names = FALSE, escape = FALSE)
+  kable(df_sens,
+        caption = "Posterior sensitivity to prior hyperparameters",
+        align = "lrr", row.names = FALSE, escape = FALSE)
 }
 ```
 
@@ -829,12 +802,12 @@ df_comp <- data.frame(
 # than "Not run" (an optional downstream analysis wasn't performed).
 .status_level_map <- c(Complete = "good", Missing = "danger",
                        "Not run" = "warning", "See above" = "neutral")
-df_comp$Status <- mapply(function(txt) .status_badge(txt, .status_level_map[[txt]]),
+df_comp$Status <- mapply(function(txt) .html_badge(txt, .status_level_map[[txt]]),
                          df_comp$Status)
 rownames(df_comp) <- NULL
-.safe_kable(df_comp, widths = c("10cm", "3cm"), align = "ll",
-            caption = "FDA/EMA regulatory compliance checklist",
-            row.names = FALSE, escape = FALSE)
+kable(df_comp, align = "ll",
+      caption = "FDA/EMA regulatory compliance checklist",
+      row.names = FALSE, escape = FALSE)
 ```
 
 ```{r fda-note, results="asis"}
