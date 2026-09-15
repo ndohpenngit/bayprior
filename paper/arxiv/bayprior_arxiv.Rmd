@@ -3,7 +3,6 @@ title: "bayprior: Structured Bayesian Prior Elicitation, Conflict Diagnostics, a
 author: |
   | Ndoh Penn
   | Independent Researcher, Antwerp, Belgium
-  | ORCID: 0009-0003-9054-465X
 date: "2026-08-03"
 abstract: >
   Bayesian clinical trials require a well-specified prior distribution, and
@@ -36,6 +35,7 @@ geometry: margin=1in
 bibliography: RJreferences.bib
 biblio-style: plainnat
 link-citations: true
+reference-section-title: References
 header-includes:
   - \usepackage{hyperref}
   - \usepackage{amsmath}
@@ -43,12 +43,6 @@ header-includes:
   - \newcommand{\CRANpkg}[1]{\texttt{#1}}
   - \newcommand{\pkg}[1]{\texttt{#1}}
 ---
-
-\begin{center}
-\textit{Package source: \url{https://github.com/ndohpenngit/bayprior}}
-\end{center}
-
-\bigskip
 
 
 ```{r setup, include=FALSE}
@@ -616,8 +610,8 @@ consensus prior towards the observed data as expected.
 
 ## Enthusiastic and Sceptical Priors
 
-A common regulatory sensitivity practice, following Spiegelhalter and
-Freedman (1994), is to present conclusions under both an enthusiastic
+A common regulatory sensitivity practice, following Spiegelhalter et al.
+(1994), is to present conclusions under both an enthusiastic
 prior (favouring treatment benefit) and a sceptical prior (centred at the
 null), alongside the consensus prior already assessed above:
 
@@ -758,7 +752,7 @@ locally via `run_app()`.
 
 ## Limitations
 
-Several limitations apply to the current release (v0.3.1). The
+Several limitations apply to the current release (v0.3.2). The
 multivariate Mahalanobis check is currently limited to bivariate (k = 2)
 endpoints; extension to k $\geq$ 3 co-primary endpoints is planned for a
 future release. Survival power priors require numerical integration over
@@ -797,6 +791,10 @@ The full documentation and vignettes are available at
 <https://ndohpenngit.github.io/bayprior/>. A live Shiny application
 is hosted at <https://ndohpenn-bayprior.share.connect.posit.cloud>.
 
-```{r citation, echo=FALSE}
-cat(format(citation("bayprior"), style = "text"), sep = "\n")
+To cite `bayprior` in publications, use:
+
+```{r citation, echo=FALSE, comment=""}
+cite_text <- format(citation("bayprior"), style = "text")
+cite_text <- gsub("_", "", cite_text)
+cat(strwrap(cite_text, width = 80), sep = "\n")
 ```
