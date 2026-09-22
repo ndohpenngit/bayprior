@@ -73,6 +73,11 @@ app_ui <- function(request) {
             icon     = icon("users")
           ),
           shinydashboard::menuItem(
+            tagList("MAP Prior (Historical)", uiOutput("step_badge_map", inline = TRUE)),
+            tabName  = "map_prior",
+            icon     = icon("hospital")
+          ),
+          shinydashboard::menuItem(
             tagList("Conflict Diagnostics", uiOutput("step_badge_conflict", inline = TRUE)),
             icon     = icon("vial"),
             tabName  = "conflict",
@@ -362,9 +367,9 @@ app_ui <- function(request) {
               t.className = 'bp-toast' +
                 (type === 'error' ? ' bp-toast-error' :
                  type === 'warn'  ? ' bp-toast-warn'  : '');
-              t.innerHTML = (type === 'error' ? '<i class=\'fa fa-circle-xmark\'></i> ' :
-                             type === 'warn'  ? '<i class=\'fa fa-triangle-exclamation\'></i> ' :
-                                               '<i class=\'fa fa-circle-check\'></i> ') + msg;
+              t.innerHTML = (type === 'error' ? '<i class=\"fa fa-circle-xmark\"></i> ' :
+                             type === 'warn'  ? '<i class=\"fa fa-triangle-exclamation\"></i> ' :
+                                               '<i class=\"fa fa-circle-check\"></i> ') + msg;
               container.appendChild(t);
               setTimeout(function() {
                 t.style.animation = 'bp-slide-out 0.25s ease forwards';
@@ -412,6 +417,10 @@ app_ui <- function(request) {
           shinydashboard::tabItem(
             tabName = "pooling",
             mod_pooling_ui("pooling")
+          ),
+          shinydashboard::tabItem(
+            tabName = "map_prior",
+            mod_map_prior_ui("map_prior")
           ),
           shinydashboard::tabItem(
             tabName = "conflict",
