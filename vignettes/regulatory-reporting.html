@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Ndoh Penn">
-<meta name="dcterms.date" content="2026-08-27">
+<meta name="dcterms.date" content="2026-09-22">
 
 <title>Regulatory Reporting – bayprior</title>
 <style>
@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-3c9c489b3365030a08823a85c71cd1a4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-65ab6f6afcc98c2005f3bec1c5e98b7d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -240,7 +240,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 27, 2026</p>
+      <p class="date">September 22, 2026</p>
     </div>
   </div>
   
@@ -516,17 +516,18 @@ will be repeated using the sceptical prior as a co-primary analysis."</code></pr
 </section>
 <section id="working-with-the-shiny-app" class="level1">
 <h1>Working with the Shiny App</h1>
-<p>The <code>run_app()</code> function launches the full interactive Shiny interface. Every analysis conducted in the app — elicitation, pooling, conflict diagnostics, sensitivity, and robust/sceptical/power priors — is preserved in the session state and flows directly into the report when the Download button is clicked.</p>
+<p>The <code>run_app()</code> function launches the full interactive Shiny interface. Every analysis conducted in the app — elicitation, pooling, MAP derivation, conflict diagnostics, sensitivity, and robust/sceptical/power priors — is preserved in the session state and flows directly into the report when the Download button is clicked.</p>
 <p>Figures in the report reflect exactly what the analyst saw in the app at the time of download. Specifically:</p>
 <ul>
-<li>The <strong>prior density plot</strong> comes from the fitted prior in the Elicitation panel</li>
+<li>The <strong>prior density plot</strong> comes from the fitted prior in the Elicitation (or MAP Prior) panel, whichever produced the prior actually in use</li>
+<li>The <strong>heterogeneity (tau) posterior plot</strong> comes from the MAP Prior panel — this appears in the report only if the prior was derived via <code>map_prior()</code></li>
 <li>The <strong>conflict overlay</strong> comes from the Conflict Diagnostics panel</li>
 <li>The <strong>tornado and heatmap</strong> come from the Sensitivity Analysis panel</li>
 <li>The <strong>robust, sceptical, and power prior plots</strong> come from the Robust Priors panel — these appear in the report only if those analyses were run in the session</li>
 </ul>
-<p>The app workflow mirrors the analytical steps:</p>
-<pre><code>Welcome → Prior Elicitation → Expert Pooling → Conflict Diagnostics →
-Sensitivity Analysis → Robust Priors → Export Report</code></pre>
+<p>The app workflow mirrors the analytical steps. Prior Elicitation, Expert Pooling, and MAP Prior (Historical) are three alternative ways to arrive at a base informative prior — use whichever fits the available evidence, not necessarily all three — after which the workflow converges on diagnostics, sensitivity, and (optionally) robustness adjustment:</p>
+<pre><code>Welcome → Prior Elicitation / Expert Pooling / MAP Prior (Historical) →
+Conflict Diagnostics → Sensitivity Analysis → Robust Priors → Export Report</code></pre>
 <hr>
 </section>
 <section id="pre-submission-checklist" class="level1">
