@@ -1,15 +1,26 @@
 ## Resubmission
 
-This is a resubmission. This submission (v0.3.2) contains the following changes:
+This is a resubmission. This submission (v0.4.0) contains the following changes:
 
-* Corrected several regulatory citations (FDA/EMA references) throughout
-  the documentation and Shiny app.
+* Added `map_prior()`: derives a meta-analytic-predictive (MAP) prior from
+  historical trial summaries via a random-effects meta-analysis, with an
+  explicit prior on the between-trial heterogeneity parameter tau
+  (Schmidli et al., 2014). The meta-analysis engine is implemented
+  entirely in base R -- no new hard dependency is introduced for it.
 
-* Fixed a handful of bugs affecting mixture priors, plotting, and prior
-  updating for certain distribution families -- see NEWS.md for details.
+* Added `historical_effect_sizes()`, an optional convenience wrapper
+  around `metafor::escalc()` for deriving `map_prior()`'s inputs from raw
+  per-trial summary statistics. `metafor` is listed under `Suggests`
+  only, guarded by `requireNamespace(..., quietly = TRUE)`, and is not
+  required to use `map_prior()` itself.
 
-* Corrected some documentation that didn't match actual function
-  behaviour.
+* Added `resolve_tau_prior()` and `plot_tau_posterior()` in support of
+  the above.
+
+* Added a Shiny module exposing `map_prior()` ("MAP Prior (Historical)")
+  as its own top-level sidebar item.
+
+* See NEWS.md for full details.
 
 ## R CMD check results
 

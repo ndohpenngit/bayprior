@@ -1,6 +1,6 @@
 Package: bayprior
 Title: Bayesian Prior Elicitation and Diagnostics for Clinical Trials
-Version: 0.3.2.9001
+Version: 0.4.0
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0003-9054-465X"))
@@ -44,6 +44,7 @@ Imports:
 Suggests:
     htmlwidgets (>= 1.5.4),
     knitr (>= 1.40),
+    metafor (>= 4.0.0),
     patchwork (>= 1.1.0),
     quarto (>= 1.4),
     rmarkdown (>= 2.20),

@@ -49,6 +49,7 @@ regulatory report generation together in one integrated workflow. The FDA's
 |---|---|---|---|
 | **Prior Elicitation** | Quantile matching, moment matching, SHELF roulette for Beta / Normal / Gamma / Log-Normal / **Exponential** / **Weibull** | Fitted density plot + parameter table | Structured expert prior elicitation |
 | **Expert Pooling** | Linear and logarithmic opinion pooling with support compatibility validation | Consensus density overlay + Bhattacharyya matrix | Aggregate multi-expert beliefs |
+| **MAP Prior (Historical)** | Meta-analytic-predictive prior via random-effects meta-analysis, with an explicit prior on between-trial heterogeneity (tau) | Fitted prior + tau posterior plot | Derive an informative prior from historical trials |
 | **Conflict Diagnostics** | Box p-value, surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, **Poisson**, and **survival** data | Prior-Likelihood-Posterior overlay | Detect prior misspecification |
 | **Mahalanobis Check** | Two-endpoint multivariate conflict test | Chi-sq p-value + per-parameter z-scores | Co-primary endpoint trials |
 | **Sensitivity Analysis** | Hyperparameter grid over posterior mean, SD, CrI width, Pr(efficacy); independent data entry | Tornado plot + influence heatmap | Demonstrate robustness to regulators |
@@ -82,6 +83,23 @@ All three methods support six distribution families:
 | **Log-Normal** | (0, Inf) | Hazard ratios, PK parameters |
 | **Exponential** | (0, Inf) | Constant hazard rates, Poisson rate priors |
 | **Weibull** | (0, Inf) | Non-constant hazard survival times (OS, PFS) |
+
+### MAP Prior (Historical Data)
+
+The meta-analytic-predictive (MAP) approach (Schmidli et al., 2014) derives
+an informative prior directly from multiple historical trials via a
+random-effects meta-analysis, with an explicit prior on the between-trial
+heterogeneity parameter tau -- how much heterogeneity is assumed among
+historical trials directly affects how much borrowing is justified, so
+`map_prior()` requires this to be stated rather than left as an unstated
+default (see `?resolve_tau_prior` for outcome-specific defaults). It
+returns an ordinary prior object that can be used directly, or passed into
+`robust_prior()` for an additional vague-mixture component.
+
+`y`/`se` per historical trial can be supplied directly, or derived from raw
+trial-level summary statistics via the optional convenience function
+`historical_effect_sizes()`, a thin wrapper around `metafor::escalc()`
+(`metafor` is Suggests-only and not required to use `map_prior()` itself).
 
 ### Prior-Data Conflict Diagnostics
 
@@ -197,7 +215,7 @@ run_app()
 | `prior-elicitation` | All six families and three elicitation methods |
 | `conflict-diagnostics` | All four data types; univariate and multivariate |
 | `sensitivity-analysis` | Grid sensitivity, tornado plots, CrI tracking |
-| `robust-priors` | Robust mixture, sceptical, and power priors |
+| `robust-priors` | MAP priors from historical trials, robust mixture, sceptical, and power priors |
 | `regulatory-reporting` | Report generation and compliance checklist |
 
 ```r
@@ -228,6 +246,7 @@ By contributing to this project, you agree to abide by its terms.
 - Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling and robustness. *JRSS-A*, 143, 383-430.
 - Oakley, J. E. & O'Hagan, A. (2010). *SHELF: the Sheffield Elicitation Framework*. University of Sheffield.
 - Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in clinical trials with historical control information. *Biometrics*, 70, 1023-1032.
+- Roever, C., Bender, R., Dias, S., Schmid, C. H., Schmidli, H., Sturtz, S., Weber, S. & Friede, T. (2021). On weakly informative prior distributions for the heterogeneity parameter in Bayesian random-effects meta-analysis. *Research Synthesis Methods*, 12(4), 448-474.
 - Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for regression models. *Statistical Science*, 15, 46-60.
 - Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994). Bayesian approaches to randomized trials. *JRSS-A*, 157, 357-416.
 - U.S. Food and Drug Administration (2026). *Use of Bayesian Methodology in Clinical Trials of Drug and Biological Products* (Draft Guidance for Industry).

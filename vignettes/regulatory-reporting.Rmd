@@ -241,24 +241,32 @@ submission documents.
 # Working with the Shiny App
 
 The `run_app()` function launches the full interactive Shiny interface. Every
-analysis conducted in the app — elicitation, pooling, conflict diagnostics,
-sensitivity, and robust/sceptical/power priors — is preserved in the session
-state and flows directly into the report when the Download button is clicked.
+analysis conducted in the app — elicitation, pooling, MAP derivation,
+conflict diagnostics, sensitivity, and robust/sceptical/power priors — is
+preserved in the session state and flows directly into the report when the
+Download button is clicked.
 
 Figures in the report reflect exactly what the analyst saw in the app at the
 time of download. Specifically:
 
-- The **prior density plot** comes from the fitted prior in the Elicitation panel
+- The **prior density plot** comes from the fitted prior in the Elicitation
+  (or MAP Prior) panel, whichever produced the prior actually in use
+- The **heterogeneity (tau) posterior plot** comes from the MAP Prior panel —
+  this appears in the report only if the prior was derived via `map_prior()`
 - The **conflict overlay** comes from the Conflict Diagnostics panel
 - The **tornado and heatmap** come from the Sensitivity Analysis panel
 - The **robust, sceptical, and power prior plots** come from the Robust Priors
   panel — these appear in the report only if those analyses were run in the session
 
-The app workflow mirrors the analytical steps:
+The app workflow mirrors the analytical steps. Prior Elicitation, Expert
+Pooling, and MAP Prior (Historical) are three alternative ways to arrive at
+a base informative prior — use whichever fits the available evidence, not
+necessarily all three — after which the workflow converges on diagnostics,
+sensitivity, and (optionally) robustness adjustment:
 
 ```
-Welcome → Prior Elicitation → Expert Pooling → Conflict Diagnostics →
-Sensitivity Analysis → Robust Priors → Export Report
+Welcome → Prior Elicitation / Expert Pooling / MAP Prior (Historical) →
+Conflict Diagnostics → Sensitivity Analysis → Robust Priors → Export Report
 ```
 
 ---

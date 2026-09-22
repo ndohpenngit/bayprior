@@ -1,66 +1,36 @@
-# bayprior (development version)
-
-## Bug fixes
-
-* Fixed `prior_report()` rendering literal "****" in the Executive
-  Summary when `trial_name`/`author`/`sponsor` were not supplied,
-  instead of a readable fallback. Also affected the Trial Information
-  table, which previously showed a barely-visible em-dash rather than
-  a clear placeholder. Both now show "Not specified".
-
-* Fixed `plot_tornado()`'s subtitle text truncating mid-word in
-  narrower rendering contexts (e.g. embedded in a generated report).
-  Now wraps automatically instead of using a single unwrapped line.
-
-* Fixed the "Conflict severity" row in the prior-data conflict table
-  duplicating its own Value column in the Interpretation column,
-  instead of giving an actual plain-language recommendation.
-
-* Fixed `prior_report()` table rendering in PDF and Word: columns
-  could collide or hyphenate mid-word due to a `kableExtra` function
-  defaulting to HTML output when its target format could not be
-  auto-detected, and Word column widths were silently ignored due to
-  a documented upstream Quarto/pandoc limitation. Both formats now use
-  plain, unstyled tables, which render reliably; colour-coded status
-  cells remain in HTML only, where the original styling was never
-  affected by either issue.
-
-* Added `number-sections` to the Word output format, matching HTML
-  and PDF. In-text references such as "see Section 5" previously
-  pointed at section numbers that did not visually exist in Word,
-  since only HTML and PDF had section numbering enabled.
+# bayprior 0.4.0
 
 ## New features
 
-* `prior_report()` now includes a synthesized "Key Findings" summary
-  immediately after the Executive Summary table, surfacing the most
-  consequential results (conflict status, sensitivity flags, whether a
-  robust/sceptical prior comparison was performed) up front, rather
-  than requiring the reader to piece these together from later
-  sections.
+* Added `map_prior()`: derives a meta-analytic-predictive (MAP) prior from
+  historical trial summaries via a random-effects meta-analysis, with an
+  explicit prior on the between-trial heterogeneity parameter tau
+  (Schmidli et al., 2014). The meta-analysis engine is implemented
+  entirely in base R: the posterior of mu given tau has a closed form, so
+  the only numerical step is a one-dimensional integral over tau
+  (`stats::integrate()`/`stats::optimize()`/`stats::uniroot()`, all base
+  R) -- `bayprior` has no dependency, direct or optional, on any external
+  meta-analysis package for this. `outcome_type` presets select the
+  default tau prior from Roever et al. (2021)'s outcome-specific
+  recommendations, distinguishing a single-arm log-odds case (e.g.
+  historical control response rates -- the typical MAP use case) from a
+  two-arm log-odds ratio case, which get different default
+  heterogeneity-prior scales despite both being "log-odds" in casual
+  speech.
 
-* Sensitivity, conflict severity, and regulatory compliance status
-  values are now colour-coded in HTML report output to make flagged
-  items visually distinct from routine ones.
+* Added `historical_effect_sizes()`, a thin wrapper around
+  `metafor::escalc()` (`Suggests`, not `Imports`) that converts raw
+  per-trial summary statistics (event counts, arm means/SDs, ...) into
+  the `y`/`se` inputs `map_prior()` expects, across all six supported
+  `outcome_type`s.
 
-* Section 6 ("Robust and Sensitivity Priors") now explicitly
-  cross-references Section 5's sensitivity findings when no robust
-  prior comparison was performed and sensitivity was flagged, rather
-  than leaving the two facts disconnected for the reader to notice
-  independently.
-
-## Internal
-
-* Fixed a latent bug in `prior_report.qmd`'s internal `.callout()`
-  helper: multi-line callout content (e.g. a bulleted list) rendered
-  as a single run-on paragraph in PDF output rather than a real list,
-  since Pandoc requires a list to start on its own line. Not
-  previously triggered, since every existing callout call used
-  single-line text.
-
-* ASCII cleanup in `prior_report.qmd`: removed several non-ASCII
-  characters, including one embedded in an actual runtime error
-  message a user could see, not just source comments.
+* Added a Shiny module for `map_prior()`, "MAP Prior (Historical)", as
+  its own top-level sidebar item alongside "Prior Elicitation" and
+  "Expert Pooling" -- reflecting that MAP derivation is an alternative
+  way to construct a base informative prior, not a robustness adjustment
+  applied to one (Robust Mixture, Sceptical, and Power Prior all take an
+  existing base prior as input; MAP produces one). Its step-completion
+  indicator is tracked independently of Robust Priors' own.
 
 ---
 
