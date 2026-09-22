@@ -114,7 +114,8 @@ jobs:
               "R/app_server.R",     "R/app_ui.R",        "R/run_app.R",
               "R/prior_report.R",   "R/mod_elicitation.R","R/mod_pooling.R",
               "R/mod_conflict.R",   "R/mod_report.R",    "R/mod_robust_priors.R",
-              "R/mod_roulette.R",   "R/mod_sensitivity.R","R/mod_welcome.R"
+              "R/mod_roulette.R",   "R/mod_sensitivity.R","R/mod_welcome.R",
+              "R/mod_map_prior.R"
             ),
             token = Sys.getenv("CODECOV_TOKEN")
           )

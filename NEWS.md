@@ -1,3 +1,39 @@
+# bayprior 0.4.0
+
+## New features
+
+* Added `map_prior()`: derives a meta-analytic-predictive (MAP) prior from
+  historical trial summaries via a random-effects meta-analysis, with an
+  explicit prior on the between-trial heterogeneity parameter tau
+  (Schmidli et al., 2014). The meta-analysis engine is implemented
+  entirely in base R: the posterior of mu given tau has a closed form, so
+  the only numerical step is a one-dimensional integral over tau
+  (`stats::integrate()`/`stats::optimize()`/`stats::uniroot()`, all base
+  R) -- `bayprior` has no dependency, direct or optional, on any external
+  meta-analysis package for this. `outcome_type` presets select the
+  default tau prior from Roever et al. (2021)'s outcome-specific
+  recommendations, distinguishing a single-arm log-odds case (e.g.
+  historical control response rates -- the typical MAP use case) from a
+  two-arm log-odds ratio case, which get different default
+  heterogeneity-prior scales despite both being "log-odds" in casual
+  speech.
+
+* Added `historical_effect_sizes()`, a thin wrapper around
+  `metafor::escalc()` (`Suggests`, not `Imports`) that converts raw
+  per-trial summary statistics (event counts, arm means/SDs, ...) into
+  the `y`/`se` inputs `map_prior()` expects, across all six supported
+  `outcome_type`s.
+
+* Added a Shiny module for `map_prior()`, "MAP Prior (Historical)", as
+  its own top-level sidebar item alongside "Prior Elicitation" and
+  "Expert Pooling" -- reflecting that MAP derivation is an alternative
+  way to construct a base informative prior, not a robustness adjustment
+  applied to one (Robust Mixture, Sceptical, and Power Prior all take an
+  existing base prior as input; MAP produces one). Its step-completion
+  indicator is tracked independently of Robust Priors' own.
+
+---
+
 # bayprior 0.3.2
 
 ## Bug fixes
@@ -63,6 +99,15 @@
   same working-prior logic as the underlying function, so the interface's
   suggested ranges no longer risk diverging from what is actually
   analyzed.
+
+* Corrected the documented meaning of `null_value` for
+  `sceptical_prior(..., family = "lognormal")`: it must be supplied on
+  the log scale (e.g. 0 for a null hazard ratio of 1), not the natural
+  scale implied by the previous generic parameter documentation.
+
+* Fixed `conflict_mahalanobis()`'s documented return field names
+  (`mahal_d2`, `p_value`), which did not match the object's actual field
+  names (`mahal_D2`, `pvalue`).
 
 ---
 

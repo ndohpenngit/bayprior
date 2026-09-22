@@ -3,6 +3,7 @@ Bhattacharyya
 CHMP
 CMD
 CRAN's
+Capkun
 Chromote
 Cov
 CrI
@@ -11,6 +12,7 @@ EMA
 EMA's
 Eiser
 Estimands
+Friede
 Garthwaite
 Genest
 Gravestock
@@ -25,6 +27,7 @@ Leibler
 McConway
 Nelder
 Neuenschwander
+Niggli
 O'Hagan
 Parameterised
 Parmar
@@ -34,11 +37,14 @@ RBesT
 README's
 Rakow
 Rightarrow
+Roever
 Roychoudhury
 SDs
 Schervish
+Schmid
 Schmidli
 Spiegelhalter
+Sturtz
 Sys
 Var
 VignetteBuilder
@@ -61,10 +67,12 @@ golem
 heatmaps
 knitr
 mis
+mmHg
 pandoc
 parameterised
 params
 poisson
+posterior's
 prior's
 propto
 pvalue
@@ -72,8 +80,10 @@ regex
 renv
 roxygen
 sd
+se
 shinydashboard
 ss
+th
 tikzfill
 var
 weibull
