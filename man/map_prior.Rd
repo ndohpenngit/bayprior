@@ -97,10 +97,7 @@ weakly-informative recommendations of Roever et al. (2021).
 dependency; the posterior of \eqn{\mu} given \eqn{\tau} is available in
 closed form (a precision-weighted Normal), so the only numerical step is a
 one-dimensional integral over \eqn{\tau \in [0, \infty)}, evaluated with
-\code{\link[stats]{integrate}} (adaptive quadrature). This self-contained
-approach was chosen deliberately, and cross-checked during development
-against independent numerical methods (deterministic quadrature and Monte
-Carlo simulation) rather than against any other package's implementation.
+\code{\link[stats]{integrate}} (adaptive quadrature).
 
 The full \eqn{\tau} posterior (not just its effect on \eqn{\mu}) is
 retained in the returned object's \code{$tau_posterior} element, and can

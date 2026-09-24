@@ -20,6 +20,12 @@ This is a resubmission. This submission (v0.4.0) contains the following changes:
 * Added a Shiny module exposing `map_prior()` ("MAP Prior (Historical)")
   as its own top-level sidebar item.
 
+* `prior_conflict()` now also reports `s_value`, the surprisal
+  `-log2(box_pvalue)` in bits -- an exploratory
+  companion to the existing Box p-value, reported alongside it (not
+  replacing it) in the console output, the Shiny app, and the
+  `prior_report()` regulatory report.
+
 * See NEWS.md for full details.
 
 ## R CMD check results

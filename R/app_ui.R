@@ -318,6 +318,40 @@ app_ui <- function(request) {
           .btn-tip-wrap:hover .btn-tip-text {
             visibility: visible; opacity: 1;
           }
+          /* Longer info-icon tooltips (valueBox metric explanations) reuse
+             .btn-tip-wrap as their hover trigger, but need to wrap onto
+             multiple lines within a fixed width instead of .btn-tip-text's
+             single-line nowrap -- which, for a long sentence, stretched
+             far past the viewport instead of just overflowing off-screen. */
+          .btn-tip-wrap .info-tip-text {
+            visibility: hidden; opacity: 0;
+            background: #333; color: #fff;
+            font-size: 11px; line-height: 1.4; text-align: left;
+            border-radius: 4px; padding: 6px 10px;
+            white-space: normal; width: 220px; max-width: 70vw;
+            position: absolute; bottom: 125%; left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.15s;
+            z-index: 9999; pointer-events: none;
+          }
+          .btn-tip-wrap:hover .info-tip-text {
+            visibility: visible; opacity: 1;
+          }
+          /* shinydashboard's valueBox() draws a large decorative icon
+             (.icon-large) that, in a narrow box (these are width=3 of 12),
+             visually and functionally overlaps the small info-icon placed
+             in the title text -- and because .icon-large comes later in
+             the DOM, it sits on top and swallows all pointer events there,
+             so .btn-tip-wrap:hover never fires no matter how precisely the
+             cursor is placed over the info icon. Confirmed via a headless
+             browser: hovering the info icon times out with 'i.fa-dice ...
+             subtree intercepts pointer events'. A purely decorative
+             background icon should never block interaction with content
+             drawn in front of it. */
+          .small-box .icon-large,
+          .small-box .icon-large-icon {
+            pointer-events: none;
+          }
         ")),
 
 

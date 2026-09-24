@@ -35,7 +35,6 @@ format:
   docx:
     toc: true
     toc-depth: 3
-    number-sections: true
     fig-width: 6.5
     fig-height: 4
     fig-cap-location: bottom
@@ -52,7 +51,7 @@ knitr:
 
 ```{=html}
 <style>
-/* Table striping -- replaces Bootstrap table-striped class lost in knitr path */
+/* Table striping — replaces Bootstrap table-striped class lost in knitr path */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -98,7 +97,7 @@ library(bayprior)
 library(ggplot2)
 library(knitr)
 
-# -- Load R objects from RDS ---------------------------------------------------
+# ── Load R objects from RDS ───────────────────────────────────────────────────
 # All complex R objects (bayprior, ggplot2) are passed via an .rds file rather
 # than execute_params, which serializes to YAML and cannot handle S3 objects.
 if (nzchar(params$rds_path) && file.exists(params$rds_path)) {
@@ -109,7 +108,8 @@ if (nzchar(params$rds_path) && file.exists(params$rds_path)) {
                    tornado_plot=NULL, heatmap_plot=NULL,
                    robust_prior=NULL, robust_plot=NULL,
                    sceptical_prior=NULL, sceptical_plot=NULL,
-                   power_prior=NULL, power_plot=NULL)
+                   power_prior=NULL, power_plot=NULL,
+                   tau_posterior_plot=NULL)
 }
 
 pr  <- .session$prior
@@ -119,10 +119,17 @@ has_prior <- !is.null(pr)
 has_conf  <- !is.null(cd)
 has_sens  <- !is.null(sa)
 
+# A MAP-derived prior (map_prior()) carries prior_type == "map" and a
+# $tau_posterior element -- used to conditionally show the heterogeneity
+# section below rather than showing it (or an empty placeholder) for every
+# prior type.
+has_map <- has_prior && identical(pr$prior_type, "map")
+
 pp_prior_plot   <- .session$prior_plot
 pp_overlay_plot <- .session$overlay_plot
 pp_tornado_plot <- .session$tornado_plot
 pp_heatmap_plot <- .session$heatmap_plot
+pp_tau_plot     <- .session$tau_posterior_plot
 
 rob_prior     <- .session$robust_prior
 pp_rob_plot   <- .session$robust_plot
@@ -132,59 +139,34 @@ pow_result    <- .session$power_prior
 pp_pow_plot   <- .session$power_plot
 has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_result)
 
-# -- Format detection ----------------------------------------------------------
+# ── Format detection ──────────────────────────────────────────────────────────
 # Callout blocks require tcolorbox in PDF but work in HTML and Word.
 # Use plain blockquotes for PDF, rich callouts for other formats.
 .fmt <- knitr::pandoc_to()
-.is_pdf  <- isTRUE(grepl("latex|pdf|beamer", .fmt))
-.is_docx <- isTRUE(grepl("docx", .fmt))
+.is_pdf <- isTRUE(grepl("latex|pdf|beamer", .fmt))
 
 .callout <- function(type, text) {
   if (.is_pdf) {
     prefix <- switch(type,
-      note      = "**Note:**",
-      warning   = "**Warning:**",
-      important = "**Important:**",
-      tip       = "**Tip:**",
-      ""
+      note      = "> **Note:**",
+      warning   = "> **Warning:**",
+      important = "> **Important:**",
+      tip       = "> **Tip:**",
+      ">"
     )
-    # Markdown blockquotes require every line prefixed with ">", and a
-    # list must start on its own line (not share a line with preceding
-    # text), or pandoc collapses it into a run-on paragraph instead of a
-    # real list.
-    body  <- if (nzchar(prefix)) paste0(prefix, "\n\n", text) else text
-    lines <- strsplit(body, "\n", fixed = TRUE)[[1]]
-    lines[lines == ""] <- " "  # blank quoted lines need a space after ">"
-    cat(paste0(paste0("> ", lines, collapse = "\n"), "\n\n"))
+    cat(paste0(prefix, " ", text, "
+
+"))
   } else {
-    cat(paste0("::: {.callout-", type, "}\n", text, "\n:::\n\n"))
+    cat(paste0("::: {.callout-", type, "}
+", text, "
+:::
+
+"))
   }
 }
 
-# -- Status badges (HTML only) --------------------------------------------
-# Colour-coded status cells for HTML output, where this renders reliably.
-# PDF and Word plain-text kable() tables caused real, confirmed rendering
-# bugs when this same styling was attempted there (raw LaTeX/OpenXML markup
-# throwing off column-width handling); HTML never had that problem, so
-# there's no reason to withhold the richer styling here. Hand-written HTML
-# span markup, not routed through kableExtra, to avoid any dependency on
-# its format auto-detection (the actual root cause of the PDF bug found
-# earlier) and to drop kableExtra/flextable as dependencies entirely, since
-# nothing else in this template uses them anymore.
-.HTML_BADGE_COLOURS <- c(good = "#2E7D32", warning = "#B36B00",
-                        danger = "#B00020", neutral = "#616161")
-.html_badge <- function(text, level = "neutral") {
-  if (.is_pdf || .is_docx) return(text)
-  bg <- .HTML_BADGE_COLOURS[[level]]
-  if (is.null(bg)) bg <- .HTML_BADGE_COLOURS[["neutral"]]
-  paste0(
-    "<span style=\"background-color:", bg, "; color:white; ",
-    "padding:2px 8px; border-radius:4px; font-weight:bold;\">",
-    text, "</span>"
-  )
-}
-
-# -- Safe helpers --------------------------------------------------------------
+# ── Safe helpers ──────────────────────────────────────────────────────────────
 # Self-contained: no dependency on %||% or rlang, which are absent from
 # quarto::quarto_render()'s fresh environment when called from a Shiny app.
 
@@ -197,31 +179,10 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
   round(x, digits)
 }
 
-.safe_chr <- function(x, fallback = "N/A") {
+.safe_chr <- function(x, fallback = "—") {
   if (is.null(x) || length(x) == 0L || (length(x) == 1L && is.na(x)))
     return(fallback)
   as.character(x[[1L]])
-}
-
-# Local copy of the package's internal .target_label() mapping (not called
-# directly, per the self-contained design noted above). Converts raw
-# sensitivity-target identifiers (e.g. "posterior_mean") to human-readable
-# labels (e.g. "Posterior mean") for display. This also matters for PDF/Word
-# table layout: identifiers like "posterior_mean" are a single unbroken
-# token with no space for LaTeX/Word to wrap at, so in a narrow table
-# column they overflow into the next column rather than wrapping onto a
-# second line. The human-readable labels have natural break points and
-# don't have this problem.
-.REPORT_TARGET_LABELS <- c(
-  posterior_mean = "Posterior mean",
-  posterior_sd   = "Posterior SD",
-  cri_lower      = "95% CrI lower bound",
-  cri_upper      = "95% CrI upper bound",
-  cri_width      = "95% CrI width",
-  prob_efficacy  = "Pr(efficacy)"
-)
-.report_target_label <- function(x) {
-  unname(ifelse(x %in% names(.REPORT_TARGET_LABELS), .REPORT_TARGET_LABELS[x], x))
 }
 
 .fs <- function(s, nm) {
@@ -231,7 +192,7 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
 }
 
 # CrI with fallback for mixture priors that lack q025/q975.
-# Mixture priors store only mean and sd; approximate with mean +/- 1.96 * sd.
+# Mixture priors store only mean and sd; approximate with mean ± 1.96 * sd.
 .cri <- function(s) {
   lo <- .fs(s, "q025"); hi <- .fs(s, "q975")
   mn <- .fs(s, "mean"); sd_v <- .fs(s, "sd")
@@ -241,18 +202,23 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
 }
 
 # For mixture priors, pull method/expert from the dominant component so
-# these fields never display as "N/A" in tables.
+# these fields never display as "—" in tables. For a MAP-derived prior,
+# report the number of historical trials rather than a raw internal method
+# string, which would otherwise read as "map" with no context.
 .prior_method <- function(p) {
+  if (identical(p$prior_type, "map"))
+    return(sprintf("MAP (%s historical trials)", .safe_chr(p$n_trials)))
   if (!identical(p$dist, "mixture")) return(.safe_chr(p$method))
   dom <- p$components[[which.max(p$weights)]]
   paste0(.safe_chr(dom$method), " (pooled)")
 }
 
 .prior_expert <- function(p) {
+  if (identical(p$prior_type, "map")) return("Historical trials (MAP)")
   if (!identical(p$dist, "mixture")) return(.safe_chr(p$expert_id))
   nms <- vapply(p$components,
                 function(x) .safe_chr(x$expert_id), character(1L))
-  paste(unique(nms[nms != "N/A"]), collapse = ", ")
+  paste(unique(nms[nms != "—"]), collapse = ", ")
 }
 
 .params_df <- function(prior_obj) {
@@ -298,9 +264,8 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
 ## Executive Summary
 
 This report documents the Bayesian prior specification for study
-**`r .safe_chr(params$trial_name, "Not specified")`**, prepared by
-**`r .safe_chr(params$author, "Not specified")`**
-(`r .safe_chr(params$sponsor, "Not specified")`) and dated `r format(Sys.Date(), "%d %B %Y")`.
+**`r params$trial_name`**, prepared by **`r params$author`**
+(`r params$sponsor`) and dated `r format(Sys.Date(), "%d %B %Y")`.
 
 ```{r exec-table}
 if (has_prior) {
@@ -325,58 +290,6 @@ if (has_prior) {
 }
 ```
 
-```{r key-findings}
-#| results: asis
-findings <- character(0L)
-
-if (has_conf) {
-  sev <- tolower(.safe_chr(cd$conflict_severity, "none"))
-  bp  <- .safe_round(cd$box_pvalue, 3)
-  if (sev == "none") {
-    findings <- c(findings, paste0(
-      "No prior-data conflict detected (Box p = ", bp, ")."))
-  } else {
-    findings <- c(findings, paste0(
-      "**Prior-data conflict flagged** (severity: ", toupper(sev),
-      ", Box p = ", bp, ") -- see Section 4."))
-  }
-}
-
-if (has_sens) {
-  sc <- sa$influence_scores
-  any_sensitive <- any(is.na(sc) | sc > 0.05)
-  if (any_sensitive) {
-    worst <- names(sc)[which.max(ifelse(is.na(sc), Inf, sc))]
-    findings <- c(findings, paste0(
-      "**Posterior conclusions are sensitive to prior specification** ",
-      "(", .safe_chr(worst, "at least one target"),
-      " exceeds the sensitivity threshold) -- see Section 5."))
-  } else {
-    findings <- c(findings,
-      "Posterior conclusions are robust to plausible variation in the prior's hyperparameters.")
-  }
-}
-
-if (has_sens && !has_robust) {
-  any_sensitive <- has_sens && any(is.na(sa$influence_scores) | sa$influence_scores > 0.05)
-  if (any_sensitive) {
-    findings <- c(findings, paste0(
-      "No robust, sceptical, or power prior comparison was performed -- ",
-      "given the sensitivity flagged above, one is recommended before ",
-      "relying on this prior specification. See Section 6."))
-  }
-} else if (!has_robust) {
-  findings <- c(findings,
-    "No robust, sceptical, or power prior comparison was performed -- see Section 6.")
-}
-
-if (length(findings) > 0L) {
-  .callout("important", paste(
-    paste0("- ", findings), collapse = "\n"
-  ))
-}
-```
-
 ```{r notes-block}
 #| results: asis
 note_text <- .null_or(params$notes, "")
@@ -393,9 +306,9 @@ if (nzchar(note_text)) {
 df_trial <- data.frame(
   Field = c("Trial / Protocol", "Sponsor", "Statistician", "Report date"),
   Value = c(
-    .safe_chr(params$trial_name, "Not specified"),
-    .safe_chr(params$sponsor, "Not specified"),
-    .safe_chr(params$author, "Not specified"),
+    .safe_chr(params$trial_name),
+    .safe_chr(params$sponsor),
+    .safe_chr(params$author),
     format(Sys.Date(), "%d %B %Y")
   ),
   stringsAsFactors = FALSE
@@ -426,6 +339,30 @@ if (has_prior) {
   rownames(df_elic) <- NULL
   kable(df_elic, col.names = c("Attribute", "Value"), align = "ll",
         row.names = FALSE)
+}
+```
+
+```{r map-provenance}
+#| results: asis
+if (has_map) {
+  hd <- pr$historical_data
+  df_hist <- data.frame(
+    Trial    = seq_along(hd$y),
+    Estimate = as.character(.safe_round(hd$y, 4)),
+    SE       = as.character(.safe_round(hd$se, 4)),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_hist) <- NULL
+  cat("This prior was derived from ", .safe_chr(pr$n_trials),
+      " historical trial(s) via random-effects meta-analysis ",
+      "(Schmidli et al. 2014; Röver et al. 2021), with a ",
+      if (identical(pr$tau_prior$family, "half_cauchy")) "Half-Cauchy"
+      else "Half-Normal",
+      "(0, ", .safe_round(pr$tau_prior$scale, 3),
+      ") prior on the heterogeneity parameter tau.\n\n", sep = "")
+  print(kable(df_hist,
+              caption = "Historical trial estimates used for the MAP prior",
+              align = "lrr", row.names = FALSE))
 }
 ```
 
@@ -501,6 +438,46 @@ if (has_prior) {
 }
 ```
 
+### Heterogeneity (tau) Posterior
+
+```{r tau-check}
+#| results: asis
+if (has_prior && !has_map) {
+  cat("*Not applicable — this prior was not derived from historical trials via `map_prior()`.*\n")
+}
+```
+
+```{r tau-posterior}
+#| fig-cap: "Posterior distribution of the between-trial heterogeneity parameter tau, with the tau prior shown for comparison."
+if (has_map) {
+  if (!is.null(pp_tau_plot) && inherits(pp_tau_plot, "gg")) {
+    print(pp_tau_plot)
+  } else {
+    .safe_plot(function() plot_tau_posterior(pr),
+               "Heterogeneity posterior plot could not be rendered")
+  }
+}
+```
+
+```{r tau-summary}
+if (has_map) {
+  df_tau <- data.frame(
+    Statistic = c("Posterior mean tau", "Posterior median tau",
+                  "Tau prior family", "Tau prior scale"),
+    Value     = c(
+      as.character(.safe_round(pr$tau_summary$mean, 4)),
+      as.character(.safe_round(pr$tau_summary$median, 4)),
+      if (identical(pr$tau_prior$family, "half_cauchy")) "Half-Cauchy" else "Half-Normal",
+      as.character(.safe_round(pr$tau_prior$scale, 3))
+    ),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_tau) <- NULL
+  kable(df_tau, caption = "Heterogeneity (tau) posterior summary",
+        align = "lr", row.names = FALSE)
+}
+```
+
 ---
 
 ## Prior-Data Conflict Assessment
@@ -517,6 +494,7 @@ if (has_conf) {
   df_conf <- data.frame(
     Diagnostic = c(
       "Box's prior predictive p-value",
+      "S-value (surprisal, bits)",
       "Surprise index (standardised distance)",
       "KL divergence (prior || likelihood)",
       "Bhattacharyya overlap coefficient",
@@ -524,20 +502,17 @@ if (has_conf) {
     ),
     Value = c(
       as.character(.safe_round(cd$box_pvalue,          4)),
+      as.character(.safe_round(cd$s_value,             2)),
       as.character(.safe_round(cd$surprise_index,      4)),
       as.character(.safe_round(cd$kl_prior_likelihood, 4)),
       as.character(.safe_round(cd$overlap,             4)),
-      {
-        sev_val   <- tolower(.safe_chr(cd$conflict_severity, "none"))
-        sev_level <- switch(sev_val, none = "good", mild = "warning",
-                            severe = "danger", "neutral")
-        .html_badge(toupper(.safe_chr(cd$conflict_severity)), sev_level)
-      }
+      toupper(.safe_chr(cd$conflict_severity))
     ),
     Interpretation = c(
       ifelse(isTRUE(cd$conflict_flag),
              paste0("Conflict detected (p < alpha = ", cd$alpha, ")"),
              "No conflict detected"),
+      "Exploratory companion to the p-value above, not a thresholded decision rule",
       {
         si <- suppressWarnings(as.numeric(cd$surprise_index))
         if (is.na(si)) "Could not compute"
@@ -554,23 +529,35 @@ if (has_conf) {
       {
         ov <- suppressWarnings(as.numeric(cd$overlap))
         if (is.na(ov)) "Could not compute"
-        else if (ov < 0.3) "Low overlap - concern"
+        else if (ov < 0.3) "Low overlap — concern"
         else if (ov < 0.6) "Moderate overlap"
         else "Good overlap"
       },
-      {
-        sev <- tolower(.safe_chr(cd$conflict_severity))
-        if (sev == "none") "No corrective action needed"
-        else if (sev == "mild") "Consider reviewing the prior specification"
-        else if (sev == "severe") "Prior specification should be reconsidered"
-        else "Could not compute"
-      }
+      toupper(.safe_chr(cd$conflict_severity))
     ),
     stringsAsFactors = FALSE
   )
   rownames(df_conf) <- NULL
   kable(df_conf, caption = "Prior-data conflict diagnostics",
-        align = "llr", row.names = FALSE, escape = FALSE)
+        align = "llr", row.names = FALSE)
+}
+```
+
+```{r conflict-svalue-note}
+#| results: asis
+if (has_conf && !is.null(cd$s_value)) {
+  .callout(
+    "note",
+    paste0(
+      "The S-value reparametrises the p-value above onto a continuous, ",
+      "additive scale of evidence against the prior: ",
+      "S = -log2(p). It is reported alongside, not instead of, the p-value ",
+      "as an exploratory companion, since prior-data conflict checks are ",
+      "typically not powered for a binary accept/reject decision. As a ",
+      "rough anchor, S = 4.3 bits corresponds to p = 0.05 (as surprising ",
+      "as 4-5 consecutive coin flips landing the same way)."
+    )
+  )
 }
 ```
 
@@ -621,19 +608,16 @@ if (has_sens) {
   nms <- names(sc)
   if (is.null(nms) || length(nms) == 0L)
     nms <- paste0("target_", seq_along(sc))
-  is_sensitive <- is.na(sc) | sc > 0.05
   df_sens <- data.frame(
-    Target    = .report_target_label(nms),
+    Target    = nms,
     Range     = as.character(.safe_round(sc, 5)),
-    Sensitive = mapply(function(txt, flag)
-      .html_badge(txt, if (flag) "warning" else "good"),
-      ifelse(is_sensitive, "Yes", "No"), is_sensitive),
+    Sensitive = ifelse(is.na(sc) | sc > 0.05, "Yes", "No"),
     stringsAsFactors = FALSE
   )
   rownames(df_sens) <- NULL
   kable(df_sens,
         caption = "Posterior sensitivity to prior hyperparameters",
-        align = "lrr", row.names = FALSE, escape = FALSE)
+        align = "lrr", row.names = FALSE)
 }
 ```
 
@@ -673,19 +657,7 @@ if (has_sens) {
 ```{r robust-check}
 #| results: asis
 if (!has_robust) {
-  sens_flagged <- has_sens &&
-    any(is.na(sa$influence_scores) | sa$influence_scores > 0.05)
-  msg <- if (sens_flagged) {
-    paste0(
-      "No robust, sceptical, or power priors were computed for this ",
-      "report. Section 5 flagged sensitivity to the prior specification ",
-      "for at least one posterior target -- a robust or sceptical prior ",
-      "comparison is recommended before relying on this specification."
-    )
-  } else {
-    "No robust, sceptical, or power priors were computed for this report."
-  }
-  .callout("warning", msg)
+  .callout("warning", "No robust, sceptical, or power priors were computed for this report.")
 }
 ```
 
@@ -798,25 +770,17 @@ df_comp <- data.frame(
   ),
   stringsAsFactors = FALSE
 )
-# "Missing" (a required prior was never supplied) is a more serious gap
-# than "Not run" (an optional downstream analysis wasn't performed).
-.status_level_map <- c(Complete = "good", Missing = "danger",
-                       "Not run" = "warning", "See above" = "neutral")
-df_comp$Status <- mapply(function(txt) .html_badge(txt, .status_level_map[[txt]]),
-                         df_comp$Status)
 rownames(df_comp) <- NULL
 kable(df_comp, align = "ll",
       caption = "FDA/EMA regulatory compliance checklist",
-      row.names = FALSE, escape = FALSE)
+      row.names = FALSE)
 ```
 
 ```{r fda-note, results="asis"}
 .callout("note", paste0(
-  "This checklist maps to considerations in the FDA's 2026 draft guidance, ",
-  "Use of Bayesian Methodology in Clinical Trials of Drug and Biological ",
-  "Products, and EMA's 2026 concept paper on the development of a reflection ",
-  "paper on the use of Bayesian methods in clinical development ",
-  "(EMA/CHMP/1813/2026)."
+  "This checklist maps to requirements in the FDA Draft Guidance on Bayesian ",
+  "Statistical Methods (2026) and the EMA Reflection Paper on the Use of ",
+  "Bayesian Statistics in the Evaluation of Medicinal Products."
 ))
 ```
 
@@ -840,7 +804,7 @@ df_sess <- data.frame(
     tryCatch(as.character(utils::packageVersion("quarto")),
              error = function(e) "unknown"),
     tryCatch(as.character(quarto::quarto_version()),
-             error = function(e) "not found - check Quarto CLI installation"),
+             error = function(e) "not found — check Quarto CLI installation"),
     si$platform,
     format(Sys.Date(), "%d %B %Y")
   ),
@@ -854,5 +818,5 @@ kable(df_sess, align = "ll", row.names = FALSE)
 
 *Report generated by the **bayprior** R package using `prior_report()`.
 Methods follow O'Hagan et al. (2006), Box (1980), Schmidli et al. (2014),
-Ibrahim & Chen (2000), and the FDA's 2026 draft guidance, Use of Bayesian
-Methodology in Clinical Trials of Drug and Biological Products.*
+Ibrahim & Chen (2000), and the FDA Draft Guidance on Bayesian Methods in
+Clinical Trials (2026).*

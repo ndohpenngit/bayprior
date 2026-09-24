@@ -82,7 +82,7 @@ print(cd_severe)
 
 ---
 
-# The Four Diagnostics Explained
+# The Diagnostics Explained
 
 ## 1. Box's Prior Predictive P-value
 
@@ -91,21 +91,42 @@ $$p_{\text{Box}} = 2\Phi\!\left(-\left|\frac{\hat\theta - \mu_\pi}
 
 **Interpretation:** $p < 0.05$ flags conflict at the 5% level.
 
-## 2. Surprise Index
+## 2. S-value (Surprisal)
+
+$$S = -\log_2(p_{\text{Box}}) \quad \text{(bits)}$$
+
+`prior_conflict()` also reports `s_value`, a reparametrisation of the Box
+p-value above onto a continuous, additive scale of evidence. It is
+deliberately **not** a thresholded diagnostic: prior-data
+conflict checks are typically not powered for a binary accept/reject
+decision, so `s_value` is reported as an exploratory companion to
+`box_pvalue` rather than replacing it -- see the note under
+[Threshold Summary](#threshold-summary) below for why it has no severity
+band of its own.
+
+**Interpretation:** As a rough anchor, $S = 4.3$ bits corresponds to $p =
+0.05$ (as surprising as 4-5 consecutive coin flips landing the same way),
+and $S = 6.6$ bits to $p = 0.01$. Larger is more surprising; there is no
+recommended cutoff.
+
+Note `s_value` and `surprise_index` (next) are easily confused by name but
+measure different things -- see `?prior_conflict` for the distinction.
+
+## 3. Surprise Index
 
 $$S = \left|\frac{\hat\theta - \mu_\pi}
 {\sqrt{\sigma_\pi^2 + \text{SE}^2}}\right|$$
 
 **Interpretation:** $S > 2$ moderate; $S > 3$ high surprise.
 
-## 3. KL Divergence
+## 4. KL Divergence
 
 $$\text{KL}(P \| Q) = \log\frac{\sigma_Q}{\sigma_P}
 + \frac{\sigma_P^2 + (\mu_P - \mu_Q)^2}{2\sigma_Q^2} - \frac12$$
 
 **Interpretation:** $> 1$ indicates large information distance.
 
-## 4. Bhattacharyya Overlap Coefficient
+## 5. Bhattacharyya Overlap Coefficient
 
 $$\text{BC} = \exp\!\left(
 -\frac{(\mu_P - \mu_Q)^2}{4(\sigma_P^2 + \sigma_Q^2)}\right)
@@ -114,7 +135,7 @@ $$\text{BC} = \exp\!\left(
 
 **Interpretation:** 1 = identical distributions; 0 = no overlap.
 
-## Threshold Summary
+## Threshold Summary {#threshold-summary}
 
 ```{r thresholds, echo=FALSE}
 knitr::kable(data.frame(
@@ -126,6 +147,11 @@ knitr::kable(data.frame(
   check.names = FALSE
 ), align = "lrrr")
 ```
+
+`s_value` is intentionally absent from this table: it is reported as a
+continuous, exploratory companion to `box_pvalue`, not as a fifth
+thresholded diagnostic -- see [S-value (Surprisal)](#s-value-surprisal)
+above.
 
 ---
 
@@ -358,3 +384,4 @@ conflict_mahalanobis(
 
 - Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling and robustness. *JRSS-A*, 143, 383–430.
 - Bhattacharyya, A. (1943). On a measure of divergence between two statistical populations. *Bulletin of the Calcutta Mathematical Society*, 35, 99–109.
+- Greenland, S. (2023). Divergence versus decision P-values: A distinction worth making in theory and keeping in practice. *Scandinavian Journal of Statistics*, 50(1), 54–88.
