@@ -108,7 +108,8 @@ if (nzchar(params$rds_path) && file.exists(params$rds_path)) {
                    tornado_plot=NULL, heatmap_plot=NULL,
                    robust_prior=NULL, robust_plot=NULL,
                    sceptical_prior=NULL, sceptical_plot=NULL,
-                   power_prior=NULL, power_plot=NULL)
+                   power_prior=NULL, power_plot=NULL,
+                   tau_posterior_plot=NULL)
 }
 
 pr  <- .session$prior
@@ -118,10 +119,17 @@ has_prior <- !is.null(pr)
 has_conf  <- !is.null(cd)
 has_sens  <- !is.null(sa)
 
+# A MAP-derived prior (map_prior()) carries prior_type == "map" and a
+# $tau_posterior element -- used to conditionally show the heterogeneity
+# section below rather than showing it (or an empty placeholder) for every
+# prior type.
+has_map <- has_prior && identical(pr$prior_type, "map")
+
 pp_prior_plot   <- .session$prior_plot
 pp_overlay_plot <- .session$overlay_plot
 pp_tornado_plot <- .session$tornado_plot
 pp_heatmap_plot <- .session$heatmap_plot
+pp_tau_plot     <- .session$tau_posterior_plot
 
 rob_prior     <- .session$robust_prior
 pp_rob_plot   <- .session$robust_plot
@@ -171,7 +179,7 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
   round(x, digits)
 }
 
-.safe_chr <- function(x, fallback = "\u2014") {
+.safe_chr <- function(x, fallback = "—") {
   if (is.null(x) || length(x) == 0L || (length(x) == 1L && is.na(x)))
     return(fallback)
   as.character(x[[1L]])
@@ -194,18 +202,23 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
 }
 
 # For mixture priors, pull method/expert from the dominant component so
-# these fields never display as "—" in tables.
+# these fields never display as "—" in tables. For a MAP-derived prior,
+# report the number of historical trials rather than a raw internal method
+# string, which would otherwise read as "map" with no context.
 .prior_method <- function(p) {
+  if (identical(p$prior_type, "map"))
+    return(sprintf("MAP (%s historical trials)", .safe_chr(p$n_trials)))
   if (!identical(p$dist, "mixture")) return(.safe_chr(p$method))
   dom <- p$components[[which.max(p$weights)]]
   paste0(.safe_chr(dom$method), " (pooled)")
 }
 
 .prior_expert <- function(p) {
+  if (identical(p$prior_type, "map")) return("Historical trials (MAP)")
   if (!identical(p$dist, "mixture")) return(.safe_chr(p$expert_id))
   nms <- vapply(p$components,
                 function(x) .safe_chr(x$expert_id), character(1L))
-  paste(unique(nms[nms != "\u2014"]), collapse = ", ")
+  paste(unique(nms[nms != "—"]), collapse = ", ")
 }
 
 .params_df <- function(prior_obj) {
@@ -329,6 +342,30 @@ if (has_prior) {
 }
 ```
 
+```{r map-provenance}
+#| results: asis
+if (has_map) {
+  hd <- pr$historical_data
+  df_hist <- data.frame(
+    Trial    = seq_along(hd$y),
+    Estimate = as.character(.safe_round(hd$y, 4)),
+    SE       = as.character(.safe_round(hd$se, 4)),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_hist) <- NULL
+  cat("This prior was derived from ", .safe_chr(pr$n_trials),
+      " historical trial(s) via random-effects meta-analysis ",
+      "(Schmidli et al. 2014; Röver et al. 2021), with a ",
+      if (identical(pr$tau_prior$family, "half_cauchy")) "Half-Cauchy"
+      else "Half-Normal",
+      "(0, ", .safe_round(pr$tau_prior$scale, 3),
+      ") prior on the heterogeneity parameter tau.\n\n", sep = "")
+  print(kable(df_hist,
+              caption = "Historical trial estimates used for the MAP prior",
+              align = "lrr", row.names = FALSE))
+}
+```
+
 ### Fitted Parameters
 
 ```{r fitted-params}
@@ -401,6 +438,46 @@ if (has_prior) {
 }
 ```
 
+### Heterogeneity (tau) Posterior
+
+```{r tau-check}
+#| results: asis
+if (has_prior && !has_map) {
+  cat("*Not applicable — this prior was not derived from historical trials via `map_prior()`.*\n")
+}
+```
+
+```{r tau-posterior}
+#| fig-cap: "Posterior distribution of the between-trial heterogeneity parameter tau, with the tau prior shown for comparison."
+if (has_map) {
+  if (!is.null(pp_tau_plot) && inherits(pp_tau_plot, "gg")) {
+    print(pp_tau_plot)
+  } else {
+    .safe_plot(function() plot_tau_posterior(pr),
+               "Heterogeneity posterior plot could not be rendered")
+  }
+}
+```
+
+```{r tau-summary}
+if (has_map) {
+  df_tau <- data.frame(
+    Statistic = c("Posterior mean tau", "Posterior median tau",
+                  "Tau prior family", "Tau prior scale"),
+    Value     = c(
+      as.character(.safe_round(pr$tau_summary$mean, 4)),
+      as.character(.safe_round(pr$tau_summary$median, 4)),
+      if (identical(pr$tau_prior$family, "half_cauchy")) "Half-Cauchy" else "Half-Normal",
+      as.character(.safe_round(pr$tau_prior$scale, 3))
+    ),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_tau) <- NULL
+  kable(df_tau, caption = "Heterogeneity (tau) posterior summary",
+        align = "lr", row.names = FALSE)
+}
+```
+
 ---
 
 ## Prior-Data Conflict Assessment
@@ -417,6 +494,7 @@ if (has_conf) {
   df_conf <- data.frame(
     Diagnostic = c(
       "Box's prior predictive p-value",
+      "S-value (surprisal, bits)",
       "Surprise index (standardised distance)",
       "KL divergence (prior || likelihood)",
       "Bhattacharyya overlap coefficient",
@@ -424,6 +502,7 @@ if (has_conf) {
     ),
     Value = c(
       as.character(.safe_round(cd$box_pvalue,          4)),
+      as.character(.safe_round(cd$s_value,             2)),
       as.character(.safe_round(cd$surprise_index,      4)),
       as.character(.safe_round(cd$kl_prior_likelihood, 4)),
       as.character(.safe_round(cd$overlap,             4)),
@@ -433,6 +512,7 @@ if (has_conf) {
       ifelse(isTRUE(cd$conflict_flag),
              paste0("Conflict detected (p < alpha = ", cd$alpha, ")"),
              "No conflict detected"),
+      "Exploratory companion to the p-value above, not a thresholded decision rule",
       {
         si <- suppressWarnings(as.numeric(cd$surprise_index))
         if (is.na(si)) "Could not compute"
@@ -449,7 +529,7 @@ if (has_conf) {
       {
         ov <- suppressWarnings(as.numeric(cd$overlap))
         if (is.na(ov)) "Could not compute"
-        else if (ov < 0.3) "Low overlap \u2014 concern"
+        else if (ov < 0.3) "Low overlap — concern"
         else if (ov < 0.6) "Moderate overlap"
         else "Good overlap"
       },
@@ -460,6 +540,24 @@ if (has_conf) {
   rownames(df_conf) <- NULL
   kable(df_conf, caption = "Prior-data conflict diagnostics",
         align = "llr", row.names = FALSE)
+}
+```
+
+```{r conflict-svalue-note}
+#| results: asis
+if (has_conf && !is.null(cd$s_value)) {
+  .callout(
+    "note",
+    paste0(
+      "The S-value reparametrises the p-value above onto a continuous, ",
+      "additive scale of evidence against the prior: ",
+      "S = -log2(p). It is reported alongside, not instead of, the p-value ",
+      "as an exploratory companion, since prior-data conflict checks are ",
+      "typically not powered for a binary accept/reject decision. As a ",
+      "rough anchor, S = 4.3 bits corresponds to p = 0.05 (as surprising ",
+      "as 4-5 consecutive coin flips landing the same way)."
+    )
+  )
 }
 ```
 
@@ -680,11 +778,9 @@ kable(df_comp, align = "ll",
 
 ```{r fda-note, results="asis"}
 .callout("note", paste0(
-  "This checklist maps to considerations in the FDA's 2026 draft guidance, ",
-  "Use of Bayesian Methodology in Clinical Trials of Drug and Biological ",
-  "Products, and EMA's 2026 concept paper on the development of a reflection ",
-  "paper on the use of Bayesian methods in clinical development ",
-  "(EMA/CHMP/1813/2026)."
+  "This checklist maps to requirements in the FDA Draft Guidance on Bayesian ",
+  "Statistical Methods (2026) and the EMA Reflection Paper on the Use of ",
+  "Bayesian Statistics in the Evaluation of Medicinal Products."
 ))
 ```
 
@@ -722,5 +818,5 @@ kable(df_sess, align = "ll", row.names = FALSE)
 
 *Report generated by the **bayprior** R package using `prior_report()`.
 Methods follow O'Hagan et al. (2006), Box (1980), Schmidli et al. (2014),
-Ibrahim & Chen (2000), and the FDA's 2026 draft guidance, Use of Bayesian
-Methodology in Clinical Trials of Drug and Biological Products.*
+Ibrahim & Chen (2000), and the FDA Draft Guidance on Bayesian Methods in
+Clinical Trials (2026).*

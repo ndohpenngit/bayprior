@@ -29,10 +29,7 @@
 #' dependency; the posterior of \eqn{\mu} given \eqn{\tau} is available in
 #' closed form (a precision-weighted Normal), so the only numerical step is a
 #' one-dimensional integral over \eqn{\tau \in [0, \infty)}, evaluated with
-#' \code{\link[stats]{integrate}} (adaptive quadrature). This self-contained
-#' approach was chosen deliberately, and cross-checked during development
-#' against independent numerical methods (deterministic quadrature and Monte
-#' Carlo simulation) rather than against any other package's implementation.
+#' \code{\link[stats]{integrate}} (adaptive quadrature).
 #'
 #' The full \eqn{\tau} posterior (not just its effect on \eqn{\mu}) is
 #' retained in the returned object's \code{$tau_posterior} element, and can
@@ -516,9 +513,8 @@ historical_effect_sizes <- function(outcome_type, data, ...) {
   # escalc()'s column arguments (xi, ai, m1i, ...) use non-standard
   # evaluation resolved in *its own* calling frame, which breaks silently
   # ("Cannot find the object ('..1')...") when relayed through an
-  # intervening wrapper function's `...` -- confirmed by hitting exactly
-  # that error during development. Passing plain vectors sidesteps NSE
-  # entirely and is the only forwarding approach that's actually reliable.
+  # intervening wrapper function's `...`. Passing plain vectors sidesteps
+  # NSE entirely and is the only forwarding approach that's actually reliable.
   escalc_args <- c(
     list(measure = measure),
     stats::setNames(lapply(required, function(cn) data[[cn]]), required),

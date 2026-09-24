@@ -32,6 +32,15 @@
   existing base prior as input; MAP produces one). Its step-completion
   indicator is tracked independently of Robust Priors' own.
 
+* `prior_conflict()` now also reports `s_value`, the surprisal
+  `-log2(box_pvalue)` in bits -- an exploratory,
+  continuous companion to the existing Box p-value / thresholded
+  `conflict_severity` classification, since prior-data conflict checks are
+  typically not powered for a binary accept/reject decision. Reported
+  alongside (not instead of) the existing diagnostics in the console
+  `print()` method, the Shiny Conflict Diagnostics tab, and the
+  `prior_report()` regulatory report.
+
 ---
 
 # bayprior 0.3.2

@@ -45,6 +45,7 @@ Schmid
 Schmidli
 Spiegelhalter
 Sturtz
+Surprisal
 Sys
 Var
 VignetteBuilder
@@ -55,6 +56,7 @@ analyzing
 biom
 cdot
 codecov
+cutoff
 df
 doi
 erroring
@@ -68,6 +70,7 @@ heatmaps
 knitr
 mis
 mmHg
+nonlinearly
 pandoc
 parameterised
 params
@@ -78,11 +81,13 @@ propto
 pvalue
 regex
 renv
+reparametrisation
 roxygen
 sd
 se
 shinydashboard
 ss
+surprisal
 th
 tikzfill
 var
