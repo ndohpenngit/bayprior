@@ -106,7 +106,7 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05) {
   z       <- (obs_mean - prior_mean) / pred_sd
   box_p   <- 2 * stats::pnorm(-abs(z))
 
-  # Surprise index (standardised distance -- existing diagnostic, unchanged)
+  # Surprise index (standardised distance 
   surprise <- abs(z)
 
   # Surprisal / S-value (Greenland, 2023): -log2(box_pvalue), reported as an
