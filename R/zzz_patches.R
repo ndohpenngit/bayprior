@@ -26,11 +26,35 @@
 }
 
 
+# -- .prior_summary_weibull -----------------------------------------------------
+# Mirrors the closed-form moments elicit_weibull() computes for itself (see
+# elicitation.R). .prior_summary()'s own switch() has no "weibull" case, by
+# design, for elicit_weibull()'s use -- but .make_bayprior() is also used
+# generically to construct Weibull priors at each sensitivity_grid()/
+# sensitivity_cri() grid point, and those need a real fit_summary too:
+# .conjugate_update()'s Weibull branch reads prior$fit_summary$mean/$sd
+# directly, which was silently NULL (via .prior_summary()'s unmatched
+# switch()) for any Weibull prior not built by elicit_weibull() itself.
+.prior_summary_weibull <- function(params) {
+  k   <- params$shape
+  lam <- params$scale
+  list(
+    mean = lam * gamma(1 + 1 / k),
+    sd   = sqrt(lam^2 * (gamma(1 + 2 / k) - gamma(1 + 1 / k)^2)),
+    q025 = stats::qweibull(0.025, shape = k, scale = lam),
+    q500 = stats::qweibull(0.500, shape = k, scale = lam),
+    q975 = stats::qweibull(0.975, shape = k, scale = lam)
+  )
+}
+
+
 # -- .make_bayprior ------------------------------------------------------------
 # Central constructor for all bayprior objects.
 .make_bayprior <- function(dist, params, method, expert_id, label, input) {
   fit_summary <- if (dist == "lognormal") {
     .prior_summary_lognormal(params)
+  } else if (dist == "weibull") {
+    .prior_summary_weibull(params)
   } else {
     .prior_summary(dist, params)
   }
