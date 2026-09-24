@@ -13,7 +13,7 @@ Description: A toolkit for constructing, validating, and justifying Bayesian pri
   and influence heatmap plots, sceptical, robust, and power priors, and
   automated prior justification reports. Includes a fully modular 'Shiny'
   application for interactive use.
-  Methods based on O'Hagan et al. (2006, ISBN:9780470029886),
+  Methods based on O'Hagan et al. (2006, ISBN:9780470029992),
   Box (1980) <doi:10.2307/2982063>,
   Oakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,
   Schmidli et al. (2014) <doi:10.1111/biom.12242>,

@@ -186,7 +186,7 @@ plot_tornado <- function(sensitivity,
   df <- purrr::imap_dfr(scores, function(range_val, nm) {
     vals <- grid[[nm]]
     data.frame(
-      target    = .target_label(nm),   # ? professional label
+      target    = .target_label(nm),   # human-readable label, e.g. "Posterior mean"
       ref_value = grid[[nm]][sensitivity$reference_row],
       lower     = min(vals, na.rm = TRUE),
       upper     = max(vals, na.rm = TRUE),
@@ -205,7 +205,11 @@ plot_tornado <- function(sensitivity,
                         colour = "#185FA5", size = 3) +
     ggplot2::labs(
       title    = title,
-      subtitle = "Bar width = range across sensitivity grid. Blue dot = reference prior.",
+      subtitle = paste(
+        "Bar width = range across sensitivity grid.",
+        "Blue dot = reference prior.",
+        sep = "\n"
+      ),
       x        = "Posterior estimate range",
       y        = NULL
     ) +
@@ -248,12 +252,9 @@ plot.bayprior <- function(x, ...) {
 
 #' @export
 plot.bayprior_conflict <- function(x, ...) {
-  # Previously hardcoded to Beta: stats::dbeta(grid, p$alpha, p$beta) would
-  # error for any other family (p$alpha/p$beta are NULL for Normal, Gamma,
-  # Lognormal, Exponential, Weibull priors), and the grid range was clamped
-  # to (0, 1) regardless of family, which is wrong even for a Normal prior
-  # with negative support (e.g. a log-odds-ratio prior). Uses the same
-  # family-aware helpers as the rest of the package's plotting instead.
+  # Uses the family-aware density/range helpers shared with the rest of
+  # the package's plotting (not a Beta-specific density call), so this
+  # works for any of the six elicitable families, not just Beta.
   # The grid must span both the prior's range and the likelihood's range --
   # not just the prior's. This plot exists specifically to visualise
   # prior-data conflict; using only the prior's range meant that in a

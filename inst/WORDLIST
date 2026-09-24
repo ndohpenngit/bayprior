@@ -29,6 +29,7 @@ Nelder
 Neuenschwander
 Niggli
 O'Hagan
+Pandoc
 Parameterised
 Parmar
 Poisson
@@ -54,7 +55,9 @@ Zidek
 analyzed
 analyzing
 biom
+callout
 cdot
+cleanup
 codecov
 cutoff
 df
@@ -90,5 +93,6 @@ ss
 surprisal
 th
 tikzfill
+unstyled
 var
 weibull
