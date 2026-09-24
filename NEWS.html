@@ -46,7 +46,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-65ab6f6afcc98c2005f3bec1c5e98b7d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-7100700a5d4657facf49b32369185e6d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -266,6 +266,7 @@ ul.task-list li input[type="checkbox"] {
 </ol></li>
 <li><p>Added <code>historical_effect_sizes()</code>, a thin wrapper around <code>metafor::escalc()</code> (<code>Suggests</code>, not <code>Imports</code>) that converts raw per-trial summary statistics (event counts, arm means/SDs, …) into the <code>y</code>/<code>se</code> inputs <code>map_prior()</code> expects, across all six supported <code>outcome_type</code>s.</p></li>
 <li><p>Added a Shiny module for <code>map_prior()</code>, “MAP Prior (Historical)”, as its own top-level sidebar item alongside “Prior Elicitation” and “Expert Pooling” – reflecting that MAP derivation is an alternative way to construct a base informative prior, not a robustness adjustment applied to one (Robust Mixture, Sceptical, and Power Prior all take an existing base prior as input; MAP produces one). Its step-completion indicator is tracked independently of Robust Priors’ own.</p></li>
+<li><p><code>prior_conflict()</code> now also reports <code>s_value</code>, the surprisal <code>-log2(box_pvalue)</code> in bits – an exploratory, continuous companion to the existing Box p-value / thresholded <code>conflict_severity</code> classification, since prior-data conflict checks are typically not powered for a binary accept/reject decision. Reported alongside (not instead of) the existing diagnostics in the console <code>print()</code> method, the Shiny Conflict Diagnostics tab, and the <code>prior_report()</code> regulatory report.</p></li>
 </ul>
 <hr>
 </section>

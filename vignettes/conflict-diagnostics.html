@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Ndoh Penn">
-<meta name="dcterms.date" content="2026-09-22">
+<meta name="dcterms.date" content="2026-09-24">
 
 <title>Prior-Data Conflict Diagnostics – bayprior</title>
 <style>
@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-65ab6f6afcc98c2005f3bec1c5e98b7d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-7100700a5d4657facf49b32369185e6d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -237,12 +237,13 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#binary-data" id="toc-binary-data" class="nav-link" data-scroll-target="#binary-data">Binary Data</a></li>
   </ul></li>
-  <li><a href="#the-four-diagnostics-explained" id="toc-the-four-diagnostics-explained" class="nav-link" data-scroll-target="#the-four-diagnostics-explained">The Four Diagnostics Explained</a>
+  <li><a href="#the-diagnostics-explained" id="toc-the-diagnostics-explained" class="nav-link" data-scroll-target="#the-diagnostics-explained">The Diagnostics Explained</a>
   <ul class="collapse">
   <li><a href="#boxs-prior-predictive-p-value" id="toc-boxs-prior-predictive-p-value" class="nav-link" data-scroll-target="#boxs-prior-predictive-p-value">1. Box’s Prior Predictive P-value</a></li>
-  <li><a href="#surprise-index" id="toc-surprise-index" class="nav-link" data-scroll-target="#surprise-index">2. Surprise Index</a></li>
-  <li><a href="#kl-divergence" id="toc-kl-divergence" class="nav-link" data-scroll-target="#kl-divergence">3. KL Divergence</a></li>
-  <li><a href="#bhattacharyya-overlap-coefficient" id="toc-bhattacharyya-overlap-coefficient" class="nav-link" data-scroll-target="#bhattacharyya-overlap-coefficient">4. Bhattacharyya Overlap Coefficient</a></li>
+  <li><a href="#s-value-surprisal" id="toc-s-value-surprisal" class="nav-link" data-scroll-target="#s-value-surprisal">2. S-value (Surprisal)</a></li>
+  <li><a href="#surprise-index" id="toc-surprise-index" class="nav-link" data-scroll-target="#surprise-index">3. Surprise Index</a></li>
+  <li><a href="#kl-divergence" id="toc-kl-divergence" class="nav-link" data-scroll-target="#kl-divergence">4. KL Divergence</a></li>
+  <li><a href="#bhattacharyya-overlap-coefficient" id="toc-bhattacharyya-overlap-coefficient" class="nav-link" data-scroll-target="#bhattacharyya-overlap-coefficient">5. Bhattacharyya Overlap Coefficient</a></li>
   <li><a href="#threshold-summary" id="toc-threshold-summary" class="nav-link" data-scroll-target="#threshold-summary">Threshold Summary</a></li>
   </ul></li>
   <li><a href="#prior-likelihood-posterior-overlay" id="toc-prior-likelihood-posterior-overlay" class="nav-link" data-scroll-target="#prior-likelihood-posterior-overlay">Prior-Likelihood-Posterior Overlay</a></li>
@@ -279,7 +280,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 22, 2026</p>
+      <p class="date">September 24, 2026</p>
     </div>
   </div>
   
@@ -366,7 +367,7 @@ window.Quarto = {
 • Overlap coefficient : 0.9682
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.841). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.841, S-value = 0.25 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -387,7 +388,7 @@ window.Quarto = {
 • Overlap coefficient : 0.5331
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.117). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.117, S-value = 3.1 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -408,34 +409,42 @@ window.Quarto = {
 • Overlap coefficient : 0.0014
 • Conflict severity   : SEVERE
 
-!  Severe prior-data conflict detected (Box p = 0, surprise = 5.1). Re-elicitation or use of a robust/sceptical prior is strongly recommended. </code></pre>
+!  Severe prior-data conflict detected (Box p = 0, S-value = 21.45 bits, surprise = 5.1). Re-elicitation or use of a robust/sceptical prior is strongly recommended. </code></pre>
 </div>
 </div>
 <hr>
 </section>
 </section>
-<section id="the-four-diagnostics-explained" class="level1">
-<h1>The Four Diagnostics Explained</h1>
+<section id="the-diagnostics-explained" class="level1">
+<h1>The Diagnostics Explained</h1>
 <section id="boxs-prior-predictive-p-value" class="level2">
 <h2 class="anchored" data-anchor-id="boxs-prior-predictive-p-value">1. Box’s Prior Predictive P-value</h2>
 <p><span class="math display">\[p_{\text{Box}} = 2\Phi\!\left(-\left|\frac{\hat\theta - \mu_\pi}
 {\sqrt{\sigma_\pi^2 + \text{SE}^2}}\right|\right)\]</span></p>
 <p><strong>Interpretation:</strong> <span class="math inline">\(p &lt; 0.05\)</span> flags conflict at the 5% level.</p>
 </section>
+<section id="s-value-surprisal" class="level2">
+<h2 class="anchored" data-anchor-id="s-value-surprisal">2. S-value (Surprisal)</h2>
+<p><span class="math display">\[S = -\log_2(p_{\text{Box}}) \quad \text{(bits)}\]</span></p>
+<p><code>prior_conflict()</code> also reports <code>s_value</code>, a reparametrisation of the Box p-value above onto a continuous, additive scale of evidence. It is deliberately <strong>not</strong> a thresholded diagnostic: prior-data conflict checks are typically not powered for a binary accept/reject decision, so <code>s_value</code> is reported as an exploratory companion to <code>box_pvalue</code> rather than replacing it – see the note under <a href="#threshold-summary">Threshold Summary</a> below for why it has no severity band of its own.</p>
+<p><strong>Interpretation:</strong> As a rough anchor, <span class="math inline">\(S = 4.3\)</span> bits corresponds to <span class="math inline">\(p =
+0.05\)</span> (as surprising as 4-5 consecutive coin flips landing the same way), and <span class="math inline">\(S = 6.6\)</span> bits to <span class="math inline">\(p = 0.01\)</span>. Larger is more surprising; there is no recommended cutoff.</p>
+<p>Note <code>s_value</code> and <code>surprise_index</code> (next) are easily confused by name but measure different things – see <code>?prior_conflict</code> for the distinction.</p>
+</section>
 <section id="surprise-index" class="level2">
-<h2 class="anchored" data-anchor-id="surprise-index">2. Surprise Index</h2>
+<h2 class="anchored" data-anchor-id="surprise-index">3. Surprise Index</h2>
 <p><span class="math display">\[S = \left|\frac{\hat\theta - \mu_\pi}
 {\sqrt{\sigma_\pi^2 + \text{SE}^2}}\right|\]</span></p>
 <p><strong>Interpretation:</strong> <span class="math inline">\(S &gt; 2\)</span> moderate; <span class="math inline">\(S &gt; 3\)</span> high surprise.</p>
 </section>
 <section id="kl-divergence" class="level2">
-<h2 class="anchored" data-anchor-id="kl-divergence">3. KL Divergence</h2>
+<h2 class="anchored" data-anchor-id="kl-divergence">4. KL Divergence</h2>
 <p><span class="math display">\[\text{KL}(P \| Q) = \log\frac{\sigma_Q}{\sigma_P}
 + \frac{\sigma_P^2 + (\mu_P - \mu_Q)^2}{2\sigma_Q^2} - \frac12\]</span></p>
 <p><strong>Interpretation:</strong> <span class="math inline">\(&gt; 1\)</span> indicates large information distance.</p>
 </section>
 <section id="bhattacharyya-overlap-coefficient" class="level2">
-<h2 class="anchored" data-anchor-id="bhattacharyya-overlap-coefficient">4. Bhattacharyya Overlap Coefficient</h2>
+<h2 class="anchored" data-anchor-id="bhattacharyya-overlap-coefficient">5. Bhattacharyya Overlap Coefficient</h2>
 <p><span class="math display">\[\text{BC} = \exp\!\left(
 -\frac{(\mu_P - \mu_Q)^2}{4(\sigma_P^2 + \sigma_Q^2)}\right)
 \cdot \left(\frac{2\sigma_P\sigma_Q}
@@ -484,6 +493,7 @@ window.Quarto = {
 </table>
 </div>
 </div>
+<p><code>s_value</code> is intentionally absent from this table: it is reported as a continuous, exploratory companion to <code>box_pvalue</code>, not as a fifth thresholded diagnostic – see <a href="#s-value-surprisal">S-value (Surprisal)</a> above.</p>
 <hr>
 </section>
 </section>
@@ -545,7 +555,7 @@ window.Quarto = {
 • Overlap coefficient : 0.3618
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.618). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.618, S-value = 0.69 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <hr>
@@ -597,7 +607,7 @@ window.Quarto = {
 • Overlap coefficient : 0.888
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.665). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.665, S-value = 0.59 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -618,7 +628,7 @@ window.Quarto = {
 • Overlap coefficient : 0.1279
 • Conflict severity   : MILD
 
-!  Mild prior-data conflict detected (Box p = 0.004, surprise = 2.87). Consider reporting a sensitivity analysis with a more diffuse prior. </code></pre>
+!  Mild prior-data conflict detected (Box p = 0.004, S-value = 7.92 bits, surprise = 2.87). Consider reporting a sensitivity analysis with a more diffuse prior. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -684,7 +694,7 @@ window.Quarto = {
 • Overlap coefficient : 0.6526
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 1). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 1, S-value = 0 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -705,7 +715,7 @@ window.Quarto = {
 • Overlap coefficient : 0.344
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.062). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.062, S-value = 4.01 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -743,7 +753,7 @@ window.Quarto = {
 • Overlap coefficient : 0.9229
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 1). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 1, S-value = 0 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <hr>
@@ -786,7 +796,7 @@ window.Quarto = {
 • Overlap coefficient : 0.7942
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.402). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.402, S-value = 1.32 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <hr>
@@ -854,6 +864,7 @@ i  No multivariate prior-data conflict detected (Mahalanobis D = 2.094, p = 0.11
 <ul>
 <li>Box, G. E. P. (1980). Sampling and Bayes’ inference in scientific modelling and robustness. <em>JRSS-A</em>, 143, 383–430.</li>
 <li>Bhattacharyya, A. (1943). On a measure of divergence between two statistical populations. <em>Bulletin of the Calcutta Mathematical Society</em>, 35, 99–109.</li>
+<li>Greenland, S. (2023). Divergence versus decision P-values: A distinction worth making in theory and keeping in practice. <em>Scandinavian Journal of Statistics</em>, 50(1), 54–88.</li>
 </ul>
 
 
