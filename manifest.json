@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "locale": "C",
+  "locale": "en_US",
   "platform": "4.4.2",
   "metadata": {
     "appmode": "shiny",
@@ -329,7 +329,7 @@
       "description": {
         "Package": "bayprior",
         "Title": "Bayesian Prior Elicitation and Diagnostics for Clinical Trials",
-        "Version": "0.3.0",
+        "Version": "0.3.2",
         "Authors@R": "\n    person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0009-0003-9054-465X\"))",
         "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\n  in clinical trial settings. Implements expert elicitation via quantile\n  matching, the roulette method, and moment matching across six distribution\n  families, linear and logarithmic expert pooling, prior-data conflict\n  diagnostics including the Box p-value, surprise index, information\n  divergence, and Mahalanobis distance, sensitivity analyses with tornado\n  and influence heatmap plots, sceptical, robust, and power priors, and\n  automated prior justification reports. Includes a fully modular 'Shiny'\n  application for interactive use.\n  Methods based on O'Hagan et al. (2006, ISBN:9780470029886),\n  Box (1980) <doi:10.2307/2982063>,\n  Oakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\n  Schmidli et al. (2014) <doi:10.1111/biom.12242>,\n  Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\n  Spiegelhalter et al. (1994) <doi:10.2307/2983527>.",
         "License": "GPL-3",
@@ -343,15 +343,14 @@
         "Config/testthat/edition": "3",
         "Encoding": "UTF-8",
         "Language": "en-GB",
+        "Roxygen": "list(markdown = TRUE)",
         "RoxygenNote": "7.3.3",
         "SystemRequirements": "Quarto CLI (>= 1.5, https://quarto.org)",
         "NeedsCompilation": "no",
-        "Packaged": "2026-07-30 13:03:47 UTC; ndohpenn",
-        "Author": "Ndoh Penn [aut, cre] (ORCID: <https://orcid.org/0009-0003-9054-465X>)",
+        "Packaged": "2026-08-13 12:47:15 UTC; ndohpenn",
+        "Author": "Ndoh Penn [aut, cre] (<https://orcid.org/0009-0003-9054-465X>)",
         "Maintainer": "Ndoh Penn <ndohpenn9@gmail.com>",
-        "Repository": "CRAN",
-        "Date/Publication": "2026-07-30 15:20:02 UTC",
-        "Built": "R 4.4.2; ; 2026-07-31 15:38:02 UTC; unix"
+        "Built": "R 4.4.2; ; 2026-08-13 12:47:16 UTC; unix"
       }
     },
     "brew": {
@@ -4383,7 +4382,7 @@
       "checksum": "d41d8cd98f00b204e9800998ecf8427e"
     },
     ".Rbuildignore": {
-      "checksum": "680582527d4d56dd630f3ac464505e6a"
+      "checksum": "cd290afb0211f4c3f8663575ca5f3b35"
     },
     "app.R": {
       "checksum": "7d37328408a952250717c26713fee3b7"
@@ -4391,8 +4390,11 @@
     "CODE_OF_CONDUCT.md": {
       "checksum": "d359e96b5ac3d2d44b70123a81b2f9ac"
     },
+    "codecov.yml": {
+      "checksum": "3df907b50c4f00bc26ee6d988e0c849f"
+    },
     "DESCRIPTION": {
-      "checksum": "e4bd9cb3d1b86feb8114ff31813160a6"
+      "checksum": "2361182090c42b98a6d8c9b4bb2de178"
     },
     "dev/01_start.R": {
       "checksum": "bebcf086db3e03cc332ac4728fee8d2d"
@@ -4416,49 +4418,55 @@
       "checksum": "7b535b95f67e6ff0f8112527e4d1db1a"
     },
     "inst/quarto/templates/prior_report/prior_report.qmd": {
-      "checksum": "38e81f3ab5f65f4c322daf9d4ffd292a"
+      "checksum": "e7c6073c800ea896064878770fa1c202"
     },
     "inst/quarto/templates/template.yaml": {
       "checksum": "4e71f6a95ca723fd0635f23bfc48a99c"
     },
     "inst/WORDLIST": {
-      "checksum": "92b078ba4a7768f4f778d8ea3691123c"
+      "checksum": "9aca33e7d111e53e963dac9ea3a7bae8"
     },
     "man/aggregate_experts.Rd": {
-      "checksum": "d695e34398039308e2992cc3ee0fa91a"
+      "checksum": "9e42f7630f20698686519c3f96781810"
     },
     "man/as_prior.Rd": {
       "checksum": "276c6f0583e0d5000187ab63486ea9ea"
     },
     "man/bayprior.Rd": {
-      "checksum": "bed92f6ae356f13ea1abc88aefe397de"
+      "checksum": "9f4a04cac6656935642ebbcdee85ce58"
     },
     "man/calibrate_power_prior.Rd": {
       "checksum": "337df8e1064b6cd867d145bcd93b7211"
     },
     "man/conflict_mahalanobis.Rd": {
-      "checksum": "5c7e5fcc635b6cee7e51cb46ca1da880"
+      "checksum": "bdcacd2f839987df3ca8025f3e67a70d"
+    },
+    "man/dot-mixture_working_prior.Rd": {
+      "checksum": "6bbee197f23f59ad2ab1a3b55d9ff484"
     },
     "man/dot-pairwise_bhattacharyya.Rd": {
       "checksum": "591f83d646746d91f6de0fcccaf12a0a"
     },
+    "man/dot-prior_range.Rd": {
+      "checksum": "4c6b447e492034098ea99dc54a77a95b"
+    },
     "man/elicit_beta.Rd": {
-      "checksum": "a8d54cd99e1b90312f04fb23c06219c9"
+      "checksum": "38d31c3fefb8d1f2b3a14b2b056d3681"
     },
     "man/elicit_exponential.Rd": {
       "checksum": "3dfcb67d5c1bf0b6da96fd5872eda00e"
     },
     "man/elicit_gamma.Rd": {
-      "checksum": "d659a3e2d853eba9f3429d6c429e49a1"
+      "checksum": "9335b23868d90d833425483cae3ae0aa"
     },
     "man/elicit_lognormal.Rd": {
-      "checksum": "2cf9fc0e61857c62cf96bc3465dff9ac"
+      "checksum": "4ba6d7fc099b7de06b2117f71d48a8af"
     },
     "man/elicit_mixture.Rd": {
       "checksum": "a95878314110c6fcf8e64ab1a46c703e"
     },
     "man/elicit_normal.Rd": {
-      "checksum": "ca0e8b22cc1ec06cfe2eed3c39622172"
+      "checksum": "567e281bb0c5aec68db36b7daf427e7f"
     },
     "man/elicit_roulette.Rd": {
       "checksum": "86109c2eeb51108bc9cc4ed922af7176"
@@ -4509,13 +4517,13 @@
       "checksum": "deacf9e14071e82439d1282cfa478f03"
     },
     "man/sceptical_prior.Rd": {
-      "checksum": "83a3f293f13c91df71ca9b3f85d88fb9"
+      "checksum": "0b57f743fb751d995b9587392addfe1e"
     },
     "man/sensitivity_cri.Rd": {
-      "checksum": "b649c03bfce3a3bf865ad1c76dd13212"
+      "checksum": "0794f50c4a8b3a30af7ea9f7f3ddbe43"
     },
     "man/sensitivity_grid.Rd": {
-      "checksum": "bbbae5c6899b80629c5bbe1da1c00597"
+      "checksum": "52807bed4b9f5818d272f9219c951612"
     },
     "man/summary.bayprior.Rd": {
       "checksum": "7fb7ba7f24abb99c344084cd87cb94e6"
@@ -4526,32 +4534,11 @@
     "NAMESPACE": {
       "checksum": "560844d5307d8719898d304d4a81c671"
     },
-    "paper/rjournal/bayprior.html": {
-      "checksum": "361921b7202651739ad2ecf4a4aab9de"
-    },
-    "paper/rjournal/bayprior.log": {
-      "checksum": "bd83e5c53f331b31d481c3e4fe81ea35"
-    },
-    "paper/rjournal/bayprior.R": {
-      "checksum": "e3f8c564f67164efa7e699854883ec88"
-    },
-    "paper/rjournal/bayprior.tex": {
-      "checksum": "d118edf2994776f643a7aecb81e87b8c"
-    },
-    "paper/rjournal/RJwrapper.log": {
-      "checksum": "44e9687499052d8e89b57befd7d8a86e"
-    },
-    "paper/rjournal/RJwrapper.pdf": {
-      "checksum": "eb44f5425f93d48ea514b4c37509b7a0"
-    },
-    "paper/rjournal/RJwrapper.tex": {
-      "checksum": "80bc3ad3b55dc6bcba025a60ffd58291"
-    },
     "R/_disable_autoload.R": {
       "checksum": "1178c335d6c11555fd1c4ec6098dfee6"
     },
     "R/aggregation.R": {
-      "checksum": "4453a199e987de23258b169f6a91aeb6"
+      "checksum": "68348efc6304ae745e44f9d2f320c6c6"
     },
     "R/app_config.R": {
       "checksum": "19dafdc722f93df4c4ea9065c5d762f9"
@@ -4563,19 +4550,19 @@
       "checksum": "dbb08799747a0f2b77689f5abfedec64"
     },
     "R/bayprior-package.R": {
-      "checksum": "46e913fa9ecd1869181b9dd8e520ae93"
+      "checksum": "9ee5c3ec024f08d63a4abd483312878e"
     },
     "R/conflict_mahalanobis.R": {
-      "checksum": "560c079a771ec10d3a0a317ffd1cf24d"
+      "checksum": "79733d5cda8e7aa52b2c39a753239218"
     },
     "R/conflict_sensitivity.R": {
-      "checksum": "5a35ed976bf63eb8e5538bb540e77310"
+      "checksum": "ac7250a4e8c8d12b0207c147a7c165e8"
     },
     "R/elicitation_roulette.R": {
       "checksum": "dd5321505c06dc8534cd6f5688fc9e92"
     },
     "R/elicitation.R": {
-      "checksum": "9eb56578f6ca84e6b8d1b4d2fcc772da"
+      "checksum": "aafec39f8ed2691ee6126e70801f10f3"
     },
     "R/globals.R": {
       "checksum": "791485629bba75b6299dbb3d07660c35"
@@ -4593,28 +4580,28 @@
       "checksum": "d1d5ffe718c0bfaaa0a15d99cbe89c2b"
     },
     "R/mod_report.R": {
-      "checksum": "f76c5d3e11c2be01c5145749c3579081"
+      "checksum": "fc1c1628bfa42a573ad1c81fbc81a211"
     },
     "R/mod_robust_priors.R": {
-      "checksum": "c8222c04a7a45834e0ce3219afe42cdb"
+      "checksum": "799bd45bac285544ab11901f661e6c23"
     },
     "R/mod_roulette.R": {
       "checksum": "026603b37a75552024973310c1879fea"
     },
     "R/mod_sensitivity.R": {
-      "checksum": "4320e6a1e0d68115b27ed4235a04b14b"
+      "checksum": "c332b2f6b851f110c98d783abb4469c0"
     },
     "R/mod_welcome.R": {
-      "checksum": "567929e4e2f19afb6aff21dfb97e7f69"
+      "checksum": "e5e970e7207afe17ef657242b4ac0cca"
     },
     "R/plotting.R": {
-      "checksum": "77a8912c56ecada0cbf886c5962365ef"
+      "checksum": "0d99ba43908dbf6a970476ff4a17a6e1"
     },
     "R/prior_report.R": {
-      "checksum": "5f1ce56db3df78c7676168b09fd0b8af"
+      "checksum": "93f29b3f77ba1b6916e106fe5ab11548"
     },
     "R/robust_priors.R": {
-      "checksum": "122c5c9e78054bc833856c19fe224217"
+      "checksum": "7dd79432ec2a05e4ee2ac1bdfcb5bdfb"
     },
     "R/run_app.R": {
       "checksum": "7506ad2bdb4653efcf0930284c7f2401"
@@ -4623,7 +4610,7 @@
       "checksum": "d31f09cd4924d02eb58e746beffbcc6d"
     },
     "R/zzz_patches.R": {
-      "checksum": "f7d4cadc8263bf56dd782528307f7967"
+      "checksum": "5409c359a0dd22e91dd8563f26eccc5b"
     },
     "tests/spelling.R": {
       "checksum": "0622a97a2aaa3c342f09636052c2d7f5"
@@ -4665,13 +4652,13 @@
       "checksum": "d5873942c50682108a5e1661ec04cf3f"
     },
     "tests/testthat/test-aggregation.R": {
-      "checksum": "4c1cf4e041d8dd45875522f6a6d1c412"
+      "checksum": "e9e3f2d5542c5fcf6c5b8deb23f6519a"
     },
     "tests/testthat/test-conflict.R": {
       "checksum": "2ca79d3d5b8445faf177043dc618de94"
     },
     "tests/testthat/test-edge-cases.R": {
-      "checksum": "470862ce8105cc58c61476cfe238486a"
+      "checksum": "52ac4679df00bbae4f1d8a7c86e98789"
     },
     "tests/testthat/test-elicitation.R": {
       "checksum": "360200123a73627478251e2ced8e0d27"
@@ -4680,10 +4667,10 @@
       "checksum": "1b0f5e9dfb2c5f2e967072e19743a0b0"
     },
     "tests/testthat/test-patches.R": {
-      "checksum": "6721e4517404653d500c8a91f7b98f13"
+      "checksum": "ef96b0667014c5dc1252488b68e7c94f"
     },
     "tests/testthat/test-plots-snapshots.R": {
-      "checksum": "d0d93dad2cffdf78a1d4a281f7858ce9"
+      "checksum": "cb816a49034dc58624b03a141da3a808"
     },
     "tests/testthat/test-print-methods.R": {
       "checksum": "241cf24121d54079e9761a6d2b84cc23"
@@ -4692,13 +4679,13 @@
       "checksum": "c1eabf3802b515c366ea54bdca505f39"
     },
     "tests/testthat/test-sensitivity.R": {
-      "checksum": "c928068d74bc651ff4e3007fc52af624"
+      "checksum": "b58b64621d6367ae8ba7c67399aa825e"
     },
     "tests/testthat/test-shiny-modules.R": {
-      "checksum": "fdb14079d87d4460a18d5312c93924a6"
+      "checksum": "b65e231e9eb2a1e3403ce7f49919419c"
     },
     "tests/testthat/test-validation.R": {
-      "checksum": "476c8d93b6386bf5ff53942ddc0c5e46"
+      "checksum": "5d55a5281399bf67a9abb1f364546445"
     },
     "tests/testthat/testthat.R": {
       "checksum": "864f4627c07ab18947fb5d272fddd65d"

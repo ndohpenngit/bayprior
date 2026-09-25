@@ -14,8 +14,8 @@ compatibility validation, prior-data conflict diagnostics (Box p-value,
 surprise index, KL divergence, Bhattacharyya overlap, Mahalanobis check)
 for binary, continuous, Poisson/count, and survival data types, sensitivity
 analyses with tornado and influence plots, sceptical/robust/power priors,
-and automated HTML/PDF/Word regulatory reports aligned with FDA/EMA
-expectations. Includes a fully modular Shiny application with automatic
+and automated HTML/PDF/Word regulatory reports informed by FDA and EMA
+guidance on Bayesian methods. Includes a fully modular Shiny application with automatic
 output reset on input change.
 }
 \section{Main workflow}{
@@ -76,7 +76,8 @@ Conjugate: Gamma-Exponential.}
 \item Schmidli et al. (2014). \emph{Biometrics}, 70, 1023--1032.
 \item Ibrahim & Chen (2000). \emph{Statistical Science}, 15, 46--60.
 \item Spiegelhalter et al. (1994). JRSS-A, 157, 357--416.
-\item FDA Draft Guidance: Bayesian Methods in Clinical Trials (2026).
+\item FDA (2026). Use of Bayesian Methodology in Clinical Trials of
+Drug and Biological Products.
 }
 }
 

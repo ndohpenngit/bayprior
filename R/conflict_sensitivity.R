@@ -141,6 +141,96 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05) {
 }
 
 
+#' Derive a single-family working prior from a mixture (internal)
+#'
+#' Sensitivity grids are defined over a single distribution family's
+#' hyperparameters, so mixture priors (from \code{\link{aggregate_experts}}
+#' or \code{\link{robust_prior}}) need a single-family stand-in. This
+#' moment-matches the mixture's actual pooled mean and SD (from
+#' \code{prior$fit_summary}) to the dominant component's family, so the
+#' working prior reflects the full pooled information rather than
+#' discarding all but one component. Falls back to the dominant component
+#' alone, with a warning, if the family cannot be moment-matched from
+#' mean/SD (e.g. \code{"exponential"}, \code{"weibull"}) or if
+#' \code{fit_summary$sd} is unavailable (e.g. logarithmic pooling).
+#'
+#' Shared by \code{\link{sensitivity_grid}} and the Shiny sensitivity
+#' module (\code{mod_sensitivity.R}) so that the parameter ranges shown in
+#' the UI are always centred on the same working prior actually analysed.
+#'
+#' See \code{\link{aggregate_experts}} for the pooled mean/variance
+#' formula, and \code{\link{elicit_beta}}, \code{\link{elicit_normal}},
+#' \code{\link{elicit_gamma}}, \code{\link{elicit_lognormal}} for each
+#' family's moment-matching identities.
+#'
+#' @param prior A \code{bayprior} object, mixture or single-family.
+#' @param quiet Logical. If \code{TRUE}, suppress the informational message
+#'   emitted when moment-matching succeeds (warnings for failures/fallback
+#'   are still shown). Useful for reactive UI contexts. Default \code{FALSE}.
+#'
+#' @return A single-family \code{bayprior} object.
+#' @keywords internal
+.mixture_working_prior <- function(prior, quiet = FALSE) {
+
+  if (!prior$dist %in% c("mixture", "log_pool")) return(prior)
+
+  dominant    <- which.max(prior$weights)
+  fam         <- prior$components[[dominant]]$dist
+  fams        <- unique(vapply(prior$components, function(x) x$dist, character(1)))
+  pooled_mean <- prior$fit_summary$mean
+  pooled_sd   <- prior$fit_summary$sd
+
+  if (length(fams) > 1) {
+    rlang::warn(paste0(
+      "[bayprior] mixture components have different distribution ",
+      "families (", paste(fams, collapse = ", "), "). Moment-matching ",
+      "the pooled mean/SD against the dominant component's family ('",
+      fam, "')."
+    ))
+  }
+
+  moment_matcher <- switch(fam,
+    beta      = elicit_beta,
+    normal    = elicit_normal,
+    gamma     = elicit_gamma,
+    lognormal = elicit_lognormal,
+    NULL
+  )
+
+  matched <- if (is.null(moment_matcher) || is.null(pooled_sd) || is.na(pooled_sd)) {
+    NULL
+  } else {
+    tryCatch(
+      moment_matcher(mean = pooled_mean, sd = pooled_sd, method = "moments",
+                     label = prior$label,
+                     expert_id = "Pooled (moment-matched)"),
+      error = function(e) NULL
+    )
+  }
+
+  if (is.null(matched)) {
+    rlang::warn(paste0(
+      "[bayprior] could not moment-match the pooled '", fam, "' mixture ",
+      "(mean = ", round(pooled_mean, 4), ", SD = ",
+      round(pooled_sd %||% NA_real_, 4), "). Falling back to the dominant ",
+      "component only (weight = ", round(prior$weights[dominant], 3),
+      ", expert_id = '", prior$components[[dominant]]$expert_id, "'). ",
+      "Results reflect this single component, not the full pooled prior."
+    ))
+    return(prior$components[[dominant]])
+  }
+
+  if (!quiet) {
+    message(paste0(
+      "[bayprior] using a moment-matched working prior (", toupper(fam),
+      ", mean = ", round(pooled_mean, 4), ", SD = ", round(pooled_sd, 4),
+      ") that represents the full pooled mixture, not a single component."
+    ))
+  }
+  matched
+}
+
+
 #' Sensitivity grid over prior hyperparameters
 #'
 #' Evaluates how posterior inferences change as prior hyperparameters vary
@@ -157,6 +247,25 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05) {
 #'   \code{"prob_efficacy"}.
 #' @param threshold Numeric. Efficacy threshold used in
 #'   \code{Pr(theta > threshold)}. Default \code{0.30}.
+#'
+#' @details
+#' The hyperparameter grid is defined over a single distribution family, so
+#' when \code{prior} is a mixture (e.g. from \code{\link{aggregate_experts}}
+#' or \code{\link{robust_prior}}), a single-family \emph{working prior} is
+#' derived first, via the internal \code{.mixture_working_prior()} helper.
+#' As of this version, that working prior is obtained in two steps: first,
+#' the mixture's pooled mean and SD are computed exactly (see the mean/var
+#' formula in \code{\link{aggregate_experts}}); second, those pooled moments
+#' are matched to the dominant component's distribution family using that
+#' family's own moment-matching identities (see \code{\link{elicit_beta}},
+#' \code{\link{elicit_normal}}, \code{\link{elicit_gamma}}, or
+#' \code{\link{elicit_lognormal}} for the specific formula used). The grid
+#' therefore reflects the full pooled information, not just one component.
+#' A message reports the working prior used. If the dominant component's
+#' family cannot be moment-matched from mean/SD alone (\code{"exponential"}
+#' or \code{"weibull"}), the function falls back to the dominant component
+#' by weight and issues an explicit warning identifying which component
+#' was used and why.
 #'
 #' @return An object of class \code{bayprior_sensitivity}.
 #'
@@ -186,14 +295,11 @@ sensitivity_grid <- function(prior,
   n    <- data_summary$n
   x    <- data_summary$x
 
-  # -- For mixture priors, use the dominant component as working prior ---------
-  # Mixture params (weights) are not hyperparameters to grid over.
-  working_prior <- if (prior$dist == "mixture") {
-    dominant <- which.max(prior$weights)
-    prior$components[[dominant]]
-  } else {
-    prior
-  }
+  # -- For mixture priors, derive a single-family working prior ----------------
+  # See .mixture_working_prior() for the moment-matching logic; shared with
+  # the Shiny sensitivity module so UI defaults stay consistent with what
+  # is actually analysed here.
+  working_prior <- .mixture_working_prior(prior)
 
   # -- Auto-remap param_grid names to prior hyperparameter names ----------------
   #
@@ -242,9 +348,9 @@ sensitivity_grid <- function(prior,
   grid_df <- do.call(expand.grid, param_grid)
 
   # Identify reference row closest to working prior's parameters.
-  # FIX #2: mapply() returns a plain vector when param_grid has only one entry,
-  # making rowSums() produce wrong scalar results. matrix() with explicit nrow
-  # handles both single- and multi-parameter cases correctly.
+  # mapply() returns a plain vector when param_grid has only one entry,
+  # which would make rowSums() produce wrong scalar results. matrix() with
+  # explicit nrow handles both single- and multi-parameter cases correctly.
   dist_matrix <- matrix(
     mapply(
       function(col, ref) (grid_df[[col]] - ref)^2,
@@ -313,11 +419,11 @@ sensitivity_grid <- function(prior,
     as.data.frame(out)
   })
 
-  # FIX #B: Detect the case where every grid point produced NA (e.g. because
-  # .make_bayprior or .conjugate_update failed for all rows) and abort with a
-  # clear message before we ever call range() or build a colorscale.  This is
-  # what causes the cascade of "no non-missing arguments to min/max" warnings
-  # and the broken Plotly colorscale_json warnings downstream.
+  # Detect the case where every grid point produced NA (e.g. because
+  # .make_bayprior() or .conjugate_update() failed for all rows) and abort
+  # with a clear message before calling range() or building a colorscale --
+  # otherwise this cascades into "no non-missing arguments to min/max"
+  # warnings and a broken Plotly colorscale downstream.
   all_na_targets <- Filter(function(t) {
     v <- results[[t]]
     is.null(v) || all(is.na(v))
@@ -335,7 +441,8 @@ sensitivity_grid <- function(prior,
     ))
   }
 
-  # FIX #3 (refined): Warn about missing target columns (different from all-NA).
+  # Warn about target columns missing from results entirely (distinct from
+  # a target column that exists but is all-NA, handled above).
   missing_targets <- setdiff(target, names(results))
   if (length(missing_targets) > 0) {
     rlang::warn(paste0(
@@ -386,6 +493,12 @@ sensitivity_grid <- function(prior,
 #' @param threshold    Optional numeric. Computes \code{Pr(theta > threshold)}
 #'   at each grid point if supplied.
 #'
+#' @details
+#' As with \code{\link{sensitivity_grid}}, when \code{prior} is a mixture,
+#' a single-family working prior is derived via \code{.mixture_working_prior()}
+#' -- moment-matching the mixture's pooled mean/SD to the dominant
+#' component's family -- rather than analysing the dominant component alone.
+#'
 #' @return An object of class \code{bayprior_sensitivity} whose grid contains
 #'   columns \code{cri_lower}, \code{cri_upper}, and \code{cri_width}, plus
 #'   optionally \code{posterior_mean}, \code{posterior_sd}, and
@@ -418,12 +531,11 @@ sensitivity_cri <- function(prior,
   alpha_lo <- (1 - cri_level) / 2
   alpha_hi <- 1 - alpha_lo
 
-  # Use dominant component as working prior for mixture priors
-  working_prior <- if (prior$dist == "mixture") {
-    prior$components[[which.max(prior$weights)]]
-  } else {
-    prior
-  }
+  # Moment-match a mixture prior's pooled mean/SD to a working prior in the
+  # dominant component's family (see .mixture_working_prior() for details
+  # and the same fix applied to sensitivity_grid()), rather than discarding
+  # all but the dominant component.
+  working_prior <- .mixture_working_prior(prior)
 
   # Remap generic param names (e.g. "param1", "param2") to prior param names
   prior_param_names <- names(working_prior$params)
@@ -563,15 +675,16 @@ sensitivity_cri <- function(prior,
 
 
 
-# FIX #1: Define %||% explicitly so it is available regardless of whether rlang
-# is attached (it may only be in Imports, not Depends).  Functions in this file
+# Define %||% explicitly so it is available regardless of whether rlang is
+# attached (it may only be in Imports, not Depends). Functions in this file
 # that carry @importFrom rlang %||% will also satisfy R CMD CHECK.
 `%||%` <- rlang::`%||%`
 
 
 # KL(P||Q): KL divergence from P = Normal(m1, s1) to Q = Normal(m2, s2).
 # Formula: log(s2/s1) + (s1^2 + (m1-m2)^2) / (2*s2^2) - 1/2
-# FIX #5: Added explicit convention comment to prevent future sign/argument confusion.
+# Argument order is (from_mean, from_sd, to_mean, to_sd) -- kept explicit
+# here to prevent future sign/argument confusion.
 .kl_normal <- function(m1, s1, m2, s2) {
   log(s2 / s1) + (s1^2 + (m1 - m2)^2) / (2 * s2^2) - 0.5
 }
@@ -660,11 +773,10 @@ sensitivity_cri <- function(prior,
   }
 
   # -- Gamma ------------------------------------------------------------------
-  # FIX #4: The original code used `n * x` where x is the *mean*, which is
-  # numerically correct only when x happens to be the total count. For
-  # continuous data, x is explicitly documented as the observed mean, so we
-  # must recover the total. We prefer an explicit x_sum field when available
-  # (e.g. Poisson count data) and fall back to n * x otherwise.
+  # For continuous data, x is the observed mean (not a total count), so the
+  # total must be recovered before updating the Gamma rate. Prefer an
+  # explicit x_sum field when available (e.g. Poisson count data) and fall
+  # back to n * x otherwise.
   if (prior$dist == "gamma" && type == "continuous") {
     x_sum      <- data_summary$x_sum %||% (x * n)
     shape_post <- prior$params$shape + x_sum
@@ -738,77 +850,55 @@ sensitivity_cri <- function(prior,
     ))
   }
 
-  rlang::abort(glue::glue(
-    "Conjugate update not implemented for dist='{prior$dist}' with type='{type}'."
-  ))
-}
+  # -- Generic fallback: Normal approximation ----------------------------------
+  # No exact conjugate formula exists for this prior/data-type pairing (e.g.
+  # a Beta prior with continuous data -- Beta is conjugate to Binomial, not
+  # to a continuous likelihood). Previously this aborted, which contradicted
+  # the compatibility warning shown to users elsewhere in the package, which
+  # explicitly states the analysis will "proceed using a Normal
+  # approximation." Generalises the same approach already used for Weibull
+  # above (and the same approximation prior_conflict() uses for its
+  # diagnostics): approximate both prior and likelihood as Normal via the
+  # prior's fit_summary, and return a Normal posterior. This keeps the
+  # promised approximation behaviour consistent between the numeric
+  # diagnostics and any posterior-dependent plot or downstream computation,
+  # including each component of a mixture prior.
+  prior_mean <- prior$fit_summary$mean
+  prior_sd   <- prior$fit_summary$sd
 
+  if (is.null(prior_mean) || is.null(prior_sd) ||
+      is.na(prior_mean)  || is.na(prior_sd)) {
+    rlang::abort(glue::glue(
+      "Conjugate update not implemented for dist='{prior$dist}' with ",
+      "type='{type}', and no fit_summary mean/SD is available for a ",
+      "Normal-approximation fallback."
+    ))
+  }
 
-# -- Density helpers (shared with zzz_patches.R -- defined here as fallback) ---
-
-.density_grid <- function(prior, n_grid = 500) {
-
-  if (prior$dist == "lognormal") {
-    lo <- stats::qlnorm(0.001, prior$params$meanlog, prior$params$sdlog)
-    hi <- stats::qlnorm(0.999, prior$params$meanlog, prior$params$sdlog)
-  } else if (prior$dist == "gamma") {
-    lo <- stats::qgamma(0.001, prior$params$shape, prior$params$rate)
-    hi <- stats::qgamma(0.999, prior$params$shape, prior$params$rate)
-  } else if (prior$dist == "beta") {
-    lo <- 0; hi <- 1
-  } else if (prior$dist == "mixture") {
-    summaries <- lapply(prior$components, function(p) p$fit_summary)
-
-    lo_vals <- sapply(summaries, function(s) s$q025 %||% (s$mean - 4 * s$sd))
-    hi_vals <- sapply(summaries, function(s) s$q975 %||% (s$mean + 4 * s$sd))
-
-    # FIX #C: Filter to finite values before calling min/max.  When all
-    # components have NULL or NA summaries, sapply() returns a vector of NAs
-    # and min/max emit "no non-missing arguments ? returning Inf/-Inf", which
-    # then propagates to seq() -> .eval_density_vec -> the Plotly colorscale.
-    lo_vals <- lo_vals[is.finite(lo_vals)]
-    hi_vals <- hi_vals[is.finite(hi_vals)]
-
-    if (length(lo_vals) == 0 || length(hi_vals) == 0) {
-      rlang::abort(
-        "Cannot determine density range for mixture prior: all component ",
-        "fit_summary values are NULL or NA. Ensure every mixture component ",
-        "has a valid fit_summary with mean and sd."
-      )
-    }
-
-    lo <- min(lo_vals)
-    hi <- max(hi_vals)
+  if (type %in% c("poisson", "survival")) {
+    obs_mean <- x / n
+    obs_se   <- sqrt(x) / n
+  } else if (type == "binary") {
+    obs_mean <- x / n
+    obs_se   <- sqrt(obs_mean * (1 - obs_mean) / n)
   } else {
-    s  <- prior$fit_summary
-    lo <- s$q025 %||% (s$mean - 4 * s$sd)
-    hi <- s$q975 %||% (s$mean + 4 * s$sd)
+    obs_mean <- x
+    obs_se   <- (data_summary$sd %||% prior_sd) / sqrt(n)
   }
+  obs_se <- max(obs_se, 1e-8)
 
-  # FIX #6: Only clamp lo to 1e-6 for distributions with non-negative support
-  # (beta, gamma, lognormal). Clamping Normal priors silently drops the left
-  # tail and produces misleading density plots for negative-valued parameters.
-  if (prior$dist %in% c("beta", "gamma", "lognormal")) {
-    lo <- max(lo, 1e-6)
-  }
+  prior_var <- prior_sd^2
+  lik_var   <- obs_se^2
+  post_var  <- 1 / (1 / prior_var + 1 / lik_var)
+  post_mean <- post_var * (prior_mean / prior_var + obs_mean / lik_var)
 
-  x  <- seq(lo, hi, length.out = n_grid)
-  list(x = x, y = .eval_density_vec(prior, x))
-}
+  rlang::inform(glue::glue(
+    "No exact conjugate update exists for dist='{prior$dist}' with ",
+    "type='{type}'; approximated the posterior as Normal(mean = ",
+    "{round(post_mean, 4)}, sd = {round(sqrt(post_var), 4)})."
+  ))
 
-.eval_density_vec <- function(prior, x) {
-  switch(prior$dist,
-    beta      = stats::dbeta(x, prior$params$alpha, prior$params$beta),
-    normal    = stats::dnorm(x, prior$params$mu,    prior$params$sigma),
-    gamma     = stats::dgamma(x, prior$params$shape, prior$params$rate),
-    lognormal = stats::dlnorm(x, prior$params$meanlog, prior$params$sdlog),
-    mixture   = {
-      d <- numeric(length(x))
-      for (i in seq_along(prior$components)) {
-        d <- d + prior$weights[i] * .eval_density_vec(prior$components[[i]], x)
-      }
-      d
-    },
-    rep(NA_real_, length(x))
-  )
+  .make_bayprior("normal", list(mu = post_mean, sigma = sqrt(post_var)),
+                 "posterior (normal approximation)", prior$expert_id,
+                 prior$label, list())
 }

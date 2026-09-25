@@ -37,8 +37,9 @@ mod_report_ui <- function(id) {
                        class = "btn-default btn-block"),
         tags$br(),
         tags$small(class = "text-muted",
-          icon("info-circle"), " Report follows FDA (2026) and EMA guidance on
-          Bayesian prior documentation.")
+          icon("info-circle"), " Report follows the FDA's 2026 draft guidance
+          and EMA's 2026 concept paper on Bayesian methods in clinical
+          development.")
       )
     )
   )

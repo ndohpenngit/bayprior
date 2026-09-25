@@ -36,6 +36,11 @@ An object of class \code{bayprior}.
 \description{
 Elicit a Normal prior via quantile matching or moment matching
 }
+\details{
+For \code{method = "moments"}, the Normal is parameterised directly by
+its mean and SD, so matching is exact with no transformation required:
+\eqn{\mu = \bar{x}}, \eqn{\sigma = s}.
+}
 \examples{
 prior <- elicit_normal(
   quantiles = c("0.025" = -0.5, "0.50" = 0.2, "0.975" = 0.9),

@@ -14,11 +14,13 @@ abstract: >
   implements structured expert elicitation via quantile matching, moment
   matching, and the SHELF roulette method across six distribution
   families; linear and logarithmic expert opinion pooling with
-  Bhattacharyya agreement diagnostics; prior-data conflict assessment
-  using the Box p-value, surprise index, information divergence,
-  Bhattacharyya overlap, and multivariate Mahalanobis distance;
-  hyperparameter sensitivity analysis with tornado and influence heatmap
-  visualisations; and robust, sceptical, and power prior alternatives. A
+  Bhattacharyya agreement diagnostics; derivation of meta-analytic-predictive
+  (MAP) priors from historical trial data via random-effects meta-analysis;
+  prior-data conflict assessment using the Box p-value, S-value (surprisal),
+  surprise index, information divergence, Bhattacharyya overlap, and
+  multivariate Mahalanobis distance; hyperparameter sensitivity analysis
+  with tornado and influence heatmap visualisations; and robust, sceptical,
+  and power prior alternatives. A
   regulatory reporting module generates self-contained HTML, PDF, or Word
   documents addressing expectations in the FDA's 2026 draft Bayesian
   methods guidance and in EMA guidance on incorporating external and
@@ -132,10 +134,13 @@ inter-expert consistency before pooling.
 data. \CRANpkg{hdbayes} [@hdbayes] provides a broader range of historical
 borrowing methods, including power priors, normalised power priors,
 commensurate priors, and robust MAP priors, for generalised linear models
-via Stan. \CRANpkg{bayprior} provides the Schmidli robust mixture prior
-and calibrated power priors [@Ibrahim2000] as alternatives within the prior
-justification workflow, but focuses on prior specification and justification
-rather than historical data meta-analysis.
+via Stan. \CRANpkg{bayprior} implements the same MAP approach
+[@Schmidli2014; @Neuenschwander2010] as a closed-form random-effects
+meta-analysis with an explicit, outcome-type-specific prior on the
+between-trial heterogeneity parameter $\tau$ [@Roever2021], requiring
+neither Stan nor an external sampler, and provides the Schmidli robust
+mixture prior and calibrated power priors [@Ibrahim2000] as further
+alternatives within the same prior justification workflow.
 
 ## Prior Sensitivity and Conflict Diagnostics
 
@@ -161,6 +166,8 @@ knitr::kable(
                     "No",       "Yes"),
     Pooling     = c("Partial", "No",    "No",     "No",
                     "No",       "Yes"),
+    `Hist. borrowing` = c("No", "Yes",  "No",     "Yes",
+                          "No",  "Yes"),
     Conflict    = c("No",      "No",    "No",     "No",
                     "Yes",      "Yes"),
     Sensitivity = c("No",      "No",    "No",     "No",
@@ -173,8 +180,10 @@ knitr::kable(
   ),
   caption = "Scope comparison of R packages for Bayesian prior specification.
              Partial: SHELF pooling supports linear pooling only.
-             priorsense conflict and sensitivity diagnostics require a
-             fitted Stan model.",
+             Hist. borrowing: derives an informative prior from historical
+             trial-level data (as opposed to Robust priors, which modifies
+             an already-specified prior). priorsense conflict and
+             sensitivity diagnostics require a fitted Stan model.",
   booktabs = TRUE
 ) %>%
   kableExtra::kable_styling(latex_options = "hold_position")
@@ -320,7 +329,7 @@ a genuine disagreement that should be reported separately.
 ## Prior-Data Conflict Diagnostics
 
 Prior-data conflict occurs when the observed data is implausible under the
-prior predictive distribution [@Box1980]. \CRANpkg{bayprior} computes four
+prior predictive distribution [@Box1980]. \CRANpkg{bayprior} computes five
 complementary conflict metrics using a common Normal approximation to the
 prior and to the observed-data likelihood (via their means and standard
 errors), so that the same diagnostics apply uniformly whatever the prior's
@@ -329,8 +338,16 @@ distribution family or the data type:
 - **Prior predictive p-value** [@Box1980]: the probability of observing
   data at least as extreme as the observed data under the prior predictive
   distribution.
+- **S-value** [@Greenland2023]: the surprisal $-\log_2(p)$ of the Box
+  p-value, in bits -- an exploratory, continuous companion to the
+  p-value rather than a thresholded decision rule, since prior-data
+  conflict checks are typically not powered for a binary accept/reject
+  decision.
 - **Surprise index**: the standardised distance between the prior mean and
-  the observed data, expressed in prior standard deviation units.
+  the observed data, expressed in prior standard deviation units. This
+  differs from the S-value above: it is a distance, not a
+  reparametrisation of the p-value, and the two are correlated but
+  nonlinearly related.
 - **Information divergence**: the Kullback-Leibler divergence from the
   prior to the normalised likelihood.
 - **Bhattacharyya overlap**: the distributional overlap between the prior
@@ -344,11 +361,12 @@ cd <- prior_conflict(prior, interim)
 ```{r cd-table, echo=FALSE}
 knitr::kable(
   data.frame(
-    Diagnostic = c("Box's p-value", "Surprise index", "KL divergence",
-                    "Bhattacharyya overlap", "Conflict severity",
-                    "Recommendation"),
+    Diagnostic = c("Box's p-value", "S-value (bits)", "Surprise index",
+                    "KL divergence", "Bhattacharyya overlap",
+                    "Conflict severity", "Recommendation"),
     Value = c(
       round(cd$box_pvalue, 4),
+      round(cd$s_value, 2),
       round(cd$surprise_index, 4),
       round(cd$kl_prior_likelihood, 4),
       round(cd$overlap, 4),
@@ -436,6 +454,55 @@ plot_tornado(sa)
 The `sensitivity_cri()` function tracks credible interval width
 specifically -- a quantity directly relevant to the precision of treatment
 effect estimates in regulatory submissions.
+
+## MAP Priors from Historical Data
+
+Where the previous two sections combine *expert judgement* into a prior,
+`map_prior()` derives one directly from *historical trial data* -- the
+meta-analytic-predictive (MAP) approach of @Schmidli2014 and
+@Neuenschwander2010. Historical trial point estimates and standard errors
+are combined via a random-effects meta-analysis, with an explicit,
+outcome-type-specific prior on the between-trial heterogeneity parameter
+$\tau$ following the weakly-informative recommendations of @Roever2021.
+Unlike `robust_prior()` (below) -- which mixes an *already-specified*
+informative prior with a vague component for robustness -- `map_prior()`
+derives the informative prior itself from historical data in the first
+place:
+
+```{r map-prior, fig.cap="Posterior density of the between-trial heterogeneity parameter $\\tau$, from three historical control-arm trials."}
+map <- map_prior(
+  y            = c(-0.85, -0.62, -1.10),
+  se           = c(0.25, 0.30, 0.28),
+  outcome_type = "single_arm_log_odds",
+  label        = "Historical control (3 trials)"
+)
+plot_tau_posterior(map)
+```
+
+```{r map-table, echo=FALSE}
+knitr::kable(
+  data.frame(
+    Quantity = c("Distribution", "Prior type", "Mean (SD)", "95% CrI"),
+    Value = c(
+      toupper(map$dist),
+      map$prior_type,
+      paste0(round(map$fit_summary$mean, 4), " (",
+             round(map$fit_summary$sd, 4), ")"),
+      paste0("[", round(map$fit_summary$q025, 4), ", ",
+             round(map$fit_summary$q975, 4), "]")
+    )
+  ),
+  caption = "MAP prior derived from three historical control-arm trials
+             (single-arm log-odds scale)."
+) %>%
+  kableExtra::kable_styling(latex_options = "hold_position")
+```
+
+The full $\tau$ posterior -- not just its effect on the meta-analytic
+mean -- is retained in `map$tau_posterior` and can be exported as part of
+`prior_report()`, giving reviewers direct visibility into how much
+heterogeneity the historical borrowing assumed, rather than treating it
+as a fixed nuisance parameter.
 
 ## Robust, Sceptical, and Power Priors
 
@@ -584,11 +651,12 @@ cd_trial <- prior_conflict(pool, interim_data, alpha = 0.05)
 ```{r cdtrial-table, echo=FALSE}
 knitr::kable(
   data.frame(
-    Diagnostic = c("Box's p-value", "Surprise index", "KL divergence",
-                    "Bhattacharyya overlap", "Conflict severity",
-                    "Recommendation"),
+    Diagnostic = c("Box's p-value", "S-value (bits)", "Surprise index",
+                    "KL divergence", "Bhattacharyya overlap",
+                    "Conflict severity", "Recommendation"),
     Value = c(
       round(cd_trial$box_pvalue, 4),
+      round(cd_trial$s_value, 2),
       round(cd_trial$surprise_index, 4),
       round(cd_trial$kl_prior_likelihood, 4),
       round(cd_trial$overlap, 4),
@@ -721,10 +789,13 @@ the prior specification and to prior-data conflict, typically via
 simulation -- and to document the analysis in sufficient detail for the
 FDA to understand and, where feasible, reproduce it. \CRANpkg{bayprior}
 supports each of these expectations directly: structured elicitation and
-pooling provide a documented, reproducible derivation of the prior; the
-sensitivity, robust, sceptical, and power prior modules provide alternative
-specifications for demonstrating robustness; and the regulatory reporting
-module assembles this into a single submission-ready document.
+pooling provide a documented, reproducible derivation of the prior;
+`map_prior()` gives a closed-form, auditable account of how much
+external/historical information was borrowed and with what assumed
+heterogeneity; the sensitivity, robust, sceptical, and power prior
+modules provide alternative specifications for demonstrating robustness;
+and the regulatory reporting module assembles this into a single
+submission-ready document.
 
 Prior-data conflict and the influence of external information are also a
 recurring theme in EMA guidance on incorporating historical or external
@@ -733,10 +804,10 @@ development [@EMA2018], for instance, requires sponsors to quantify how
 much information a Bayesian prior contributes relative to the data
 generated in the target population and to investigate the Type I error
 properties of the resulting analysis. The conflict diagnostics in
-\CRANpkg{bayprior} -- the Box predictive p-value, surprise index,
-information divergence, and Bhattacharyya overlap -- provide a closed-form
-way to address this for conjugate prior families, without requiring a
-fitted model.
+\CRANpkg{bayprior} -- the Box predictive p-value, S-value, surprise
+index, information divergence, and Bhattacharyya overlap -- provide a
+closed-form way to address this for conjugate prior families, without
+requiring a fitted model.
 
 ## Shiny Application
 

@@ -105,6 +105,12 @@ test_that("aggregate_experts: gamma family logarithmic pooling", {
     method  = "logarithmic"
   )
   expect_s3_class(pool, "bayprior")
+  # Gamma was already a handled case in the pre-fix density evaluator, but
+  # the integration grid was hardcoded to (0, 1) -- far from where this
+  # pair's actual mass lies (means of 3 and 5) -- so the coefficient was
+  # silently near-zero regardless of true similarity. These experts are
+  # moderately different, so BC should be well above 0 with the fixed grid.
+  expect_gt(pool$aggregation$disagreement[1, 2], 0.10)
 })
 
 test_that("aggregate_experts: lognormal family logarithmic pooling", {
@@ -116,4 +122,61 @@ test_that("aggregate_experts: lognormal family logarithmic pooling", {
     method  = "logarithmic"
   )
   expect_s3_class(pool, "bayprior")
+  # Prior to the .bc_coef() fix, lognormal was not handled by the internal
+  # density evaluator's fallback, so this pair's Bhattacharyya coefficient
+  # silently computed as exactly 0 (falsely reporting complete disagreement)
+  # regardless of the experts' actual similarity. These two experts are
+  # only moderately different, so BC should be well above 0.
+  expect_gt(pool$aggregation$disagreement[1, 2], 0.10)
+})
+
+# -- .bc_coef() / .prior_range() -- verifying the fix for previously-broken
+#    families (lognormal, exponential, weibull) directly, not just via
+#    aggregate_experts()'s weakly-asserting integration tests above --------
+
+test_that(".bc_coef reports high agreement for near-identical lognormal experts", {
+  e1 <- elicit_lognormal(mean = 1.0, sd = 0.30, method = "moments", expert_id = "E1")
+  e2 <- elicit_lognormal(mean = 1.02, sd = 0.31, method = "moments", expert_id = "E2")
+  bc <- .bc_coef(e1, e2)
+  expect_gt(bc, 0.9)  # near-identical priors should have BC close to 1
+})
+
+test_that(".bc_coef reports high agreement for near-identical exponential experts", {
+  e1 <- elicit_exponential(rate = 2.0, method = "rate", expert_id = "E1")
+  e2 <- elicit_exponential(rate = 2.05, method = "rate", expert_id = "E2")
+  bc <- .bc_coef(e1, e2)
+  expect_gt(bc, 0.9)
+})
+
+test_that(".bc_coef reports high agreement for near-identical weibull experts", {
+  e1 <- elicit_weibull(mean = 20, sd = 10, method = "moments",
+                       label = "Survival time (months)", expert_id = "E1")
+  e2 <- elicit_weibull(mean = 21, sd = 10.5, method = "moments",
+                       label = "Survival time (months)", expert_id = "E2")
+  bc <- .bc_coef(e1, e2)
+  expect_gt(bc, 0.9)
+})
+
+test_that(".bc_coef reports low agreement for genuinely distant weibull experts
+           (confirms the fixed integration grid isn't just trivially wide)", {
+  e1 <- elicit_weibull(mean = 5, sd = 2, method = "moments",
+                       label = "Survival time (months)", expert_id = "E1")
+  e2 <- elicit_weibull(mean = 60, sd = 15, method = "moments",
+                       label = "Survival time (months)", expert_id = "E2")
+  bc <- .bc_coef(e1, e2)
+  expect_lt(bc, 0.10)
+})
+
+test_that(".prior_range spans the actual support for non-unit-interval families", {
+  # The grid previously hardcoded in .bc_coef() was (0, 1) -- correct only
+  # for beta. Confirm .prior_range() instead returns each family's own
+  # support, well outside [0, 1] for these examples.
+  wei <- elicit_weibull(mean = 20, sd = 10, method = "moments",
+                        label = "Survival time (months)", expert_id = "E1")
+  r <- .prior_range(wei)
+  expect_gt(r$hi, 1)  # true support extends well past the unit interval
+
+  gam <- elicit_gamma(mean = 5.0, sd = 1.5, method = "moments", expert_id = "E1")
+  r2 <- .prior_range(gam)
+  expect_gt(r2$hi, 1)
 })

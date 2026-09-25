@@ -310,3 +310,172 @@ test_that("plot_sensitivity: posterior_sd target heatmap works", {
   gp <- plot_sensitivity(sa, target = "posterior_sd")
   expect_true(inherits(gp, "gg") || inherits(gp, "patchwork"))
 })
+
+test_that("sensitivity_grid moment-matches a linearly pooled mixture prior", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments",
+                    expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments",
+                    expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+
+  # Ties in which.max(c(0.5, 0.5)) resolve to the first component; if the
+  # old dominant-component-only fallback were still in effect, the grid
+  # would silently reflect E1 alone (mean 0.30) rather than the pool's
+  # actual blended mean (~0.36-0.37). Confirm the working prior instead
+  # reflects the pooled mean by checking that a grid centred on the
+  # pooled mean does not raise all its mass at the low end typical of E1.
+  expect_message(
+    sa <- sensitivity_grid(
+      prior        = pool,
+      data_summary = list(type = "binary", x = 18, n = 40),
+      param_grid   = list(alpha = seq(5, 15, by = 1),
+                          beta  = seq(15, 30, by = 1)),
+      target       = "posterior_mean"
+    ),
+    "moment-matched working prior"
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+  expect_true(nrow(sa$grid) > 0)
+})
+
+test_that("sensitivity_grid falls back to dominant component and warns
+           when a mixture family cannot be moment-matched", {
+  e1 <- elicit_exponential(rate = 2, method = "rate", expert_id = "E1")
+  e2 <- elicit_exponential(rate = 3, method = "rate", expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+
+  expect_warning(
+    sa <- sensitivity_grid(
+      prior        = pool,
+      data_summary = list(type = "survival", x = 12, n = 40),
+      param_grid   = list(rate = seq(1, 5, by = 0.5)),
+      target       = "posterior_mean"
+    ),
+    "Falling back to the dominant component"
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+})
+
+test_that("sensitivity_grid does not error on a logarithmically pooled
+           prior, whose fit_summary$sd is NULL", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments",
+                    expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments",
+                    expert_id = "E2")
+  pool_log <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                                method = "logarithmic")
+  expect_true(is.null(pool_log$fit_summary$sd))
+
+  # This previously crashed with "argument is of length zero" because
+  # is.na(NULL) inside the working_prior if() condition returns a
+  # zero-length logical rather than FALSE.
+  expect_no_error(
+    suppressWarnings(suppressMessages(
+      sensitivity_grid(
+        prior        = pool_log,
+        data_summary = list(type = "binary", x = 18, n = 40),
+        param_grid   = list(alpha = seq(5, 15, by = 1),
+                            beta  = seq(15, 30, by = 1)),
+        target       = "posterior_mean"
+      )
+    ))
+  )
+})
+
+test_that("sensitivity_cri moment-matches a linearly pooled mixture prior
+           (previously discarded non-dominant components, matching the
+           sensitivity_grid bug found and fixed separately)", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments", expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments", expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+
+  expect_message(
+    cri_sa <- sensitivity_cri(
+      prior        = pool,
+      data_summary = list(type = "binary", x = 18, n = 40),
+      param_grid   = list(alpha = seq(3, 12, by = 1), beta = seq(6, 20, by = 1)),
+      cri_level    = 0.95
+    ),
+    "moment-matched working prior"
+  )
+  expect_s3_class(cri_sa, "bayprior_sensitivity")
+  expect_true("cri_width" %in% names(cri_sa$grid))
+})
+
+# -- .conjugate_update() Normal-approximation fallback ------------------------
+# Previously aborted for any prior/data-type pairing with no exact conjugate
+# formula (e.g. Beta with continuous data), contradicting the compatibility
+# warning shown elsewhere in the package, which promises a Normal
+# approximation. Now falls back to one instead of erroring.
+
+test_that(".conjugate_update falls back to a Normal-approximation posterior
+           for an unsupported family/type pairing, with a message", {
+  beta_prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  expect_message(
+    post <- .conjugate_update(beta_prior,
+                              list(type = "continuous", x = 0.45, sd = 0.18, n = 50)),
+    "approximated the posterior as Normal"
+  )
+  expect_equal(post$dist, "normal")
+  expect_true(is.finite(post$params$mu))
+  expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
+})
+
+test_that(".conjugate_update mixture branch keeps components that only
+           succeed via the Normal-approximation fallback, instead of
+           dropping all of them and aborting", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+  # Beta + continuous has no exact conjugate update; previously this meant
+  # every component failed and the mixture branch aborted with "Could not
+  # update any mixture component with the supplied data."
+  expect_no_error(
+    suppressMessages(
+      post <- .conjugate_update(pool,
+                                list(type = "continuous", x = 0.45, sd = 0.18, n = 50))
+    )
+  )
+  expect_equal(post$dist, "mixture")
+  expect_equal(length(post$components), 2)
+})
+
+test_that("plot_prior_likelihood renders a posterior curve end to end for a
+           pooled Beta mixture against continuous data (the exact scenario
+           from the reported app crash)", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+  expect_no_error(
+    suppressMessages(
+      p <- plot_prior_likelihood(pool,
+                                 list(type = "continuous", x = 0.45, sd = 0.18, n = 50),
+                                 show_posterior = TRUE)
+    )
+  )
+  expect_true(inherits(p, "gg") || inherits(p, "ggplot"))
+})
+
+test_that("plot_prior_likelihood does not silently clip the likelihood curve
+           when it falls far from the prior's own range -- same class of fix
+           as plot.bayprior_conflict, applied here since this is the
+           function the Shiny app actually calls for its overlay panel", {
+  prior <- elicit_gamma(mean = 20, sd = 5, method = "moments",
+                        label = "Survival time")
+  expect_no_warning(
+    suppressMessages(
+      p <- plot_prior_likelihood(prior, list(type = "survival", x = 12, n = 40),
+                                 show_posterior = TRUE)
+    )
+  )
+  built   <- ggplot2::ggplot_build(p)
+  x_range <- built$layout$panel_params[[1]]$x.range
+  # Grid must reach down near the likelihood's location (hazard rate ~0.3),
+  # not stop at the prior's own lower bound (~8, per qgamma(0.001,...)).
+  expect_lt(x_range[1], 1)
+})

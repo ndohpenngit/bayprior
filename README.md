@@ -20,8 +20,7 @@ for clinical trials.
 *how do you construct, validate, and justify your prior to a regulator?*
 It brings structured elicitation, prior-data conflict diagnostics, and
 regulatory report generation together in one integrated workflow. The FDA's
-2026 draft guidance on Bayesian methods makes this a growing area of focus
-for biostatisticians.
+2026 draft guidance on Bayesian methods makes this a growing area of focus.
 
 **bayprior** enables users to:
 

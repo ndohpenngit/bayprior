@@ -1,27 +1,28 @@
 ## Resubmission
 
-This is a resubmission. bayprior was first accepted on CRAN as v0.2.12.
-This submission (v0.3.0) contains the following changes since v0.2.12:
+This is a resubmission. This submission (v0.3.2) contains the following changes:
 
-* Fixed `print.bayprior*` methods producing no output in non-interactive
-  R sessions (e.g. inside `rmarkdown::render()`, `callr::r()`, knitr
-  vignettes).
+* Corrected several regulatory citations (FDA/EMA references) throughout
+  the documentation and Shiny app.
 
-* Expanded test suite coverage (excluding Shiny
-  modules).
+* Fixed a handful of bugs affecting mixture priors, plotting, and prior
+  updating for certain distribution families -- see NEWS.md for details.
+
+* Corrected some documentation that didn't match actual function
+  behaviour.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 notes
+0 errors | 0 warnings | 1 note
 
 * checking for future file timestamps -- unable to verify current time.
-   Not package-related.
+  Not package-related.
 
 ## Test environments
 
 * macOS aarch64, R 4.4.2 (local)
-* Windows R-devel via devtools::check_win_devel()
 * ubuntu-latest (release, devel, oldrel) via GitHub Actions
+* Windows R-devel via devtools::check_win_devel()
 
 ## Downstream dependencies
 

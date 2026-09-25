@@ -7,8 +7,9 @@ mod_welcome_ui <- function(id) {
       title = tagList(icon("house"), " Welcome to bayprior"),
       tags$p(class = "lead",
         "A structured toolkit for Bayesian prior elicitation, conflict
-         diagnostics, and sensitivity analysis \u2014 aligned with FDA (2026)
-         and EMA guidance on Bayesian clinical trial methods."
+         diagnostics, and sensitivity analysis \u2014 informed by the FDA's
+         2026 draft guidance and EMA's 2026 concept paper on Bayesian
+         methods in clinical development."
       ),
       tags$hr(),
       tags$h5("Analytical Workflow"),
@@ -79,7 +80,7 @@ mod_welcome_ui <- function(id) {
   <text x="718" y="70" text-anchor="middle" fill="#cef5e8" font-size="9">
     HTML . PDF . Word</text>
   <text x="718" y="82" text-anchor="middle" fill="#cef5e8" font-size="9">
-    FDA / EMA aligned</text>
+    FDA (2026) informed</text>
 
   <!-- Arrows -->
   <line x1="115" y1="62" x2="132" y2="62" stroke="#adb5bd" stroke-width="2"
@@ -123,7 +124,8 @@ mod_welcome_ui <- function(id) {
         tags$li("Box (1980). JRSS-A 143, 383-430."),
         tags$li("Schmidli et al. (2014). Biometrics 70, 1023-1032."),
         tags$li("Ibrahim & Chen (2000). Statistical Science 15, 46-60."),
-        tags$li("FDA Draft Guidance: Bayesian Methods (2026).")
+        tags$li("FDA (2026). Use of Bayesian Methodology in Clinical Trials
+                 of Drug and Biological Products.")
       )
     ),
     column(4,

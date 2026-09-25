@@ -36,6 +36,25 @@ Evaluates how posterior inferences change as prior hyperparameters vary
 over a specified grid. This is the core function for demonstrating
 robustness of trial conclusions to prior choice.
 }
+\details{
+The hyperparameter grid is defined over a single distribution family, so
+when \code{prior} is a mixture (e.g. from \code{\link{aggregate_experts}}
+or \code{\link{robust_prior}}), a single-family \emph{working prior} is
+derived first, via the internal \code{.mixture_working_prior()} helper.
+As of this version, that working prior is obtained in two steps: first,
+the mixture's pooled mean and SD are computed exactly (see the mean/var
+formula in \code{\link{aggregate_experts}}); second, those pooled moments
+are matched to the dominant component's distribution family using that
+family's own moment-matching identities (see \code{\link{elicit_beta}},
+\code{\link{elicit_normal}}, \code{\link{elicit_gamma}}, or
+\code{\link{elicit_lognormal}} for the specific formula used). The grid
+therefore reflects the full pooled information, not just one component.
+A message reports the working prior used. If the dominant component's
+family cannot be moment-matched from mean/SD alone (\code{"exponential"}
+or \code{"weibull"}), the function falls back to the dominant component
+by weight and issues an explicit warning identifying which component
+was used and why.
+}
 \examples{
 prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
                      label = "Response rate")

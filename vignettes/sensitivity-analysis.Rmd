@@ -17,9 +17,10 @@ library(bayprior)
 
 # Why Sensitivity Analysis Is Required
 
-Regulatory guidelines — including the FDA Draft Guidance on Bayesian Statistical
-Methods (2026) and ICH E9(R1) — require demonstrating that trial conclusions are
-robust to plausible variations in prior specification.
+The FDA's 2026 draft guidance, *Use of Bayesian Methodology in Clinical
+Trials of Drug and Biological Products*, calls for sensitivity analyses
+that demonstrate trial conclusions are robust to plausible variations in
+prior specification.
 
 **bayprior** provides two dedicated functions:
 
@@ -208,5 +209,5 @@ All three are generated automatically by `prior_report()` when a
 
 # References
 
-- FDA (2026). *Draft Guidance: Bayesian Statistical Methods for Drug and Biological Products*.
+- FDA (2026). *Use of Bayesian Methodology in Clinical Trials of Drug and Biological Products* (Draft Guidance for Industry).
 - ICH E9(R1) (2019). *Addendum on Estimands and Sensitivity Analysis*.

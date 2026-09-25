@@ -94,9 +94,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
     pnames <- reactive({
       p <- active_prior()
       if (is.null(p)) return(list(p1 = "param1", p2 = "param2"))
-      working <- if (p$dist == "mixture") {
-        p$components[[which.max(p$weights)]]
-      } else p
+      working <- .mixture_working_prior(p, quiet = TRUE)
       nms <- names(working$params)
       list(
         p1   = if (length(nms) >= 1) nms[[1]] else "param1",

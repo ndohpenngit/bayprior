@@ -1,3 +1,103 @@
+# bayprior 0.3.2
+
+## Bug fixes
+
+* `sensitivity_grid()` and `sensitivity_cri()` now moment-match a mixture
+  prior's actual pooled mean and SD to a working prior, instead of
+  silently analyzing only the dominant component by weight. Under equal
+  or near-equal expert weights, this previously meant the sensitivity
+  grid could reflect a single expert's prior without any indication that
+  other experts' input had been dropped. A message now reports the
+  working prior used; a warning is issued if the mixture's family cannot
+  be moment-matched from mean/SD (Exponential, Weibull), in which case
+  the dominant-component fallback is used and clearly identified.
+
+* Fixed the pairwise Bhattacharyya agreement coefficient
+  (`aggregate_experts()`) silently reporting near-total disagreement for
+  any pair of experts using Lognormal, Exponential, or Weibull priors
+  (or Gamma, via a related integration-range issue), regardless of how
+  similar their actual priors were. This always triggered the "substantial
+  expert disagreement" warning for these families.
+
+* Fixed `plot()` on a `bayprior_conflict` object and `plot_prior_likelihood()`
+  silently clipping the likelihood curve when it falls substantially
+  outside the prior's own range. Both functions previously built their
+  plotting grid from the prior's range alone; since these plots exist
+  specifically to visualise prior-vs-data agreement or conflict, a
+  genuinely severe conflict (the case the plot is meant to surface) could
+  mean the likelihood curve was dropped from the visible range entirely.
+  The grid now spans both the prior's and the likelihood's range.
+
+* Fixed `plot()` on a `bayprior_conflict` object erroring for any prior
+  other than Beta (Normal, Gamma, Lognormal, Exponential, Weibull), and
+  the plotted x-axis range being incorrectly clamped to [0, 1] regardless
+  of the prior's actual support.
+
+* Fixed `plot_prior_likelihood()`'s likelihood curve for Poisson/count and
+  survival data types being centred at the raw event count rather than
+  the event rate, and referencing an SD field that is never collected for
+  these data types (only continuous data has one). This affected the
+  "Prior-Likelihood-Posterior overlay" panel in the Shiny app's Conflict
+  Diagnostics tab for any Poisson or survival analysis.
+
+* Fixed `.conjugate_update()` aborting for any prior/data-type pairing
+  with no exact conjugate formula (e.g. a Beta prior with continuous
+  data), which contradicted the compatibility warning shown elsewhere in
+  the package promising the analysis would proceed via a Normal
+  approximation. Now falls back to a Normal-approximation posterior
+  instead, consistent with that promise. This also fixes the Shiny app's
+  "Prior-Likelihood-Posterior overlay" panel erroring ("Could not update
+  any mixture component with the supplied data") for a pooled mixture
+  prior with any component/data-type pairing lacking an exact conjugate
+  update.
+
+* Removed a duplicate, dead definition of `sensitivity_cri()` that had
+  fallen out of sync with the version actually in use; the live version
+  had the same mixture-handling issue described above, now fixed.
+
+* Fixed a crash (`argument is of length zero`) in mixture-handling logic
+  when called on a logarithmically-pooled prior, whose `fit_summary$sd`
+  is `NULL` by design.
+
+* `sensitivity_grid()`'s Shiny UI parameter-range defaults now use the
+  same working-prior logic as the underlying function, so the interface's
+  suggested ranges no longer risk diverging from what is actually
+  analyzed.
+
+---
+
+# bayprior 0.3.1
+
+## Documentation improvements
+
+* Corrected the title of the FDA's 2026 draft guidance as cited throughout
+  the package documentation, vignettes, Shiny app, and regulatory report
+  template. The guidance is titled "Use of Bayesian Methodology in
+  Clinical Trials of Drug and Biological Products."
+
+* Updated the EMA reference in the regulatory report, Shiny app, and
+  vignettes to reflect the agency's current published position: a 2026
+  concept paper proposing the development of guidance on Bayesian methods
+  (EMA/CHMP/1813/2026), with the full reflection paper expected in
+  2027-2028.
+
+* Corrected the FDA guidance section references in the
+  `regulatory-reporting` vignette's compliance-checklist table to match
+  the guidance document's structure (Sections V.A, V.C, V.D, V.F, and
+  VIII.B).
+
+* Clarified attribution of the sceptical prior and the enthusiastic/
+  sceptical sensitivity pairing to Spiegelhalter & Freedman (1994).
+
+* Removed an inaccurate cross-reference to ICH E9(R1) in the
+  `sensitivity-analysis` vignette; ICH E9(R1) addresses estimands and
+  intercurrent events rather than prior specification.
+
+* Aligned the package website overview (`index.qmd`) with the README's
+  description of related packages.
+
+---
+
 # bayprior 0.3.0
 
 ## Bug fixes
