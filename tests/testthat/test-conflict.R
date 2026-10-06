@@ -38,6 +38,96 @@ test_that("prior_conflict errors on non-bayprior input", {
   expect_error(prior_conflict(list(a = 1), list(type = "binary", x = 10, n = 40)))
 })
 
+# -- exact = TRUE ----------------------------------------------------------
+
+test_that("prior_conflict(exact = FALSE) is unchanged (default behaviour)", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  cd    <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
+  expect_equal(cd$box_pvalue_method, "normal_approx")
+  expect_equal(cd$box_pvalue, 2 * stats::pnorm(-abs(
+    (18 / 40 - cd$prior_mean) / sqrt(cd$prior_sd^2 + cd$obs_se^2)
+  )))
+})
+
+test_that("prior_conflict(exact = TRUE) computes the exact Beta-Binomial p-value", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  cd    <- prior_conflict(prior, list(type = "binary", x = 18, n = 40), exact = TRUE)
+  expect_equal(cd$box_pvalue_method, "exact")
+
+  # Independent brute-force Beta-Binomial computation, not sharing any code
+  # path with the package implementation.
+  a <- prior$params$alpha; b <- prior$params$beta; n <- 40; x <- 18
+  k <- 0:n
+  pmf <- exp(lchoose(n, k) + lbeta(k + a, n - k + b) - lbeta(a, b))
+  pmf <- pmf / sum(pmf)
+  expected_p <- sum(pmf[pmf <= pmf[x + 1] * (1 + 1e-8)])
+
+  expect_equal(cd$box_pvalue, expected_p, tolerance = 1e-8)
+  # The exact and Normal-approximation p-values should differ measurably
+  # for this (meaningfully skewed) Beta(7.6, 14.1) prior -- guards against
+  # exact = TRUE silently no-op'ing back to the approximation.
+  cd_approx <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
+  expect_gt(abs(cd$box_pvalue - cd_approx$box_pvalue), 0.01)
+})
+
+test_that("prior_conflict(exact = TRUE) computes the exact Gamma-Poisson p-value", {
+  prior <- elicit_gamma(mean = 5, sd = 2, method = "moments")
+  cd    <- prior_conflict(prior, list(type = "poisson", x = 15, n = 3), exact = TRUE)
+  expect_equal(cd$box_pvalue_method, "exact")
+
+  a <- prior$params$shape; rate <- prior$params$rate
+  expected_p <- {
+    nb_prob <- rate / (rate + 3)
+    k <- 0:200
+    pmf <- stats::dnbinom(k, size = a, prob = nb_prob)
+    pmf <- pmf / sum(pmf)
+    sum(pmf[pmf <= pmf[15 + 1] * (1 + 1e-8)])
+  }
+  expect_equal(cd$box_pvalue, expected_p, tolerance = 1e-6)
+})
+
+test_that("prior_conflict(exact = TRUE) applies the same exact check to survival data as poisson data", {
+  # Gamma-Poisson and Gamma-Exponential conjugacy are the same model under
+  # this package's (events, exposure) parameterisation -- "poisson" and
+  # "survival" should therefore produce identical exact results for the
+  # same (x, n), not one exact and the other falling back to the approximation.
+  prior <- elicit_gamma(mean = 0.05, sd = 0.02, method = "moments")
+  cd_survival <- prior_conflict(prior, list(type = "survival", x = 20, n = 300), exact = TRUE)
+  cd_poisson  <- prior_conflict(prior, list(type = "poisson",  x = 20, n = 300), exact = TRUE)
+
+  expect_equal(cd_survival$box_pvalue_method, "exact")
+  expect_equal(cd_survival$box_pvalue, cd_poisson$box_pvalue)
+
+  a <- prior$params$shape; rate <- prior$params$rate
+  expected_p <- {
+    nb_prob <- rate / (rate + 300)
+    k <- 0:500
+    pmf <- stats::dnbinom(k, size = a, prob = nb_prob)
+    pmf <- pmf / sum(pmf)
+    sum(pmf[pmf <= pmf[20 + 1] * (1 + 1e-8)])
+  }
+  expect_equal(cd_survival$box_pvalue, expected_p, tolerance = 1e-6)
+})
+
+test_that("prior_conflict(exact = TRUE) falls back to the approximation, with a message, when unsupported", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  expect_message(
+    cd <- prior_conflict(prior, list(type = "continuous", x = 0.4, sd = 0.15, n = 40), exact = TRUE),
+    "no closed-form exact prior predictive"
+  )
+  expect_equal(cd$box_pvalue_method, "normal_approx")
+})
+
+test_that("prior_conflict(exact = TRUE) leaves surprise_index, kl, and overlap unaffected", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  interim <- list(type = "binary", x = 18, n = 40)
+  cd_approx <- prior_conflict(prior, interim)
+  cd_exact  <- prior_conflict(prior, interim, exact = TRUE)
+  expect_equal(cd_exact$surprise_index, cd_approx$surprise_index)
+  expect_equal(cd_exact$kl_prior_likelihood, cd_approx$kl_prior_likelihood)
+  expect_equal(cd_exact$overlap, cd_approx$overlap)
+})
+
 test_that("prior_conflict custom alpha changes flag threshold", {
   prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
   cd_05 <- prior_conflict(prior, list(type = "binary", x = 20, n = 40), alpha = 0.05)

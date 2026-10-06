@@ -1,3 +1,121 @@
+#' Exact Beta-Binomial prior predictive p-value (internal)
+#'
+#' Box's (1980) prior predictive check computed exactly for a Beta prior
+#' against binomial data, with no Normal approximation to either the prior
+#' or the data likelihood. Used by \code{\link{prior_conflict}} when
+#' \code{exact = TRUE} and the prior/data-type combination supports it
+#' (currently: a Beta-family prior with \code{type = "binary"} data).
+#'
+#' @details
+#' The prior predictive distribution of the observed event count under a
+#' Beta(\code{alpha}, \code{beta}) prior and Binomial(\code{n}) sampling is
+#' Beta-Binomial: \eqn{P(X = k) = \binom{n}{k}
+#' \mathrm{B}(k + \alpha, n - k + \beta) / \mathrm{B}(\alpha, \beta)}. The
+#' two-sided p-value sums the probability of every outcome at least as
+#' extreme as the observed one, defined (as is standard for a discrete
+#' predictive check with no natural ordering) by probability itself: every
+#' outcome whose prior predictive probability is no greater than that of
+#' the observed outcome. This matches \code{\link{prior_conflict}}'s
+#' \code{box_pvalue} definition exactly in the large-sample, symmetric-prior
+#' limit, and differs from it (see the package's companion vignette,
+#' \code{vignette("exact-vs-approximate-conflict")}) whenever the Beta
+#' prior is meaningfully skewed, at any sample size -- not only small ones.
+#'
+#' @param alpha_p,beta_p Beta prior shape parameters.
+#' @param x Observed event count.
+#' @param n Sample size.
+#'
+#' @return A single numeric p-value in \eqn{(0, 1]}.
+#'
+#' @keywords internal
+#' @noRd
+.exact_box_pvalue_beta_binomial <- function(alpha_p, beta_p, x, n) {
+  k <- 0:n
+  log_pmf <- lchoose(n, k) + lbeta(k + alpha_p, n - k + beta_p) - lbeta(alpha_p, beta_p)
+  pmf <- exp(log_pmf)
+  pmf <- pmf / sum(pmf)  # guard against floating-point drift in the sum
+  p_obs <- pmf[x + 1]
+  # Numerical tolerance on the "at least as extreme" comparison, since
+  # p_obs and other pmf entries are floating-point sums of log-scale terms
+  # and an exact `<=` can otherwise exclude p_obs itself due to rounding.
+  sum(pmf[pmf <= p_obs * (1 + 1e-8)])
+}
+
+#' Exact Gamma-Poisson (Negative Binomial) prior predictive p-value (internal)
+#'
+#' The Poisson/count-data analogue of
+#' \code{\link{.exact_box_pvalue_beta_binomial}}: exact for a Gamma-family
+#' prior on a Poisson rate against event counts observed over exposure
+#' \code{n}, with no Normal approximation. The prior predictive distribution
+#' of the event count is Negative Binomial with size \code{alpha_p} and
+#' probability \code{beta_p / (beta_p + n)} (Gamma-Poisson conjugacy).
+#'
+#' @param alpha_p,beta_p Gamma prior shape/rate parameters (rate
+#'   parameterisation, matching \code{\link{elicit_gamma}}).
+#' @param x Observed event count.
+#' @param n Total exposure (person-time).
+#'
+#' @return A single numeric p-value in \eqn{(0, 1]}.
+#'
+#' @keywords internal
+#' @noRd
+.exact_box_pvalue_gamma_poisson <- function(alpha_p, beta_p, x, n) {
+  nb_size <- alpha_p
+  nb_prob <- beta_p / (beta_p + n)
+  # Upper truncation point chosen far enough into the tail that the
+  # omitted probability mass is negligible (< 1e-12) for any x actually
+  # supplied -- the Negative Binomial's tail decays geometrically, so a
+  # generous multiple of (x, mean, sd) is more than sufficient.
+  nb_mean  <- nb_size * (1 - nb_prob) / nb_prob
+  nb_sd    <- sqrt(nb_size * (1 - nb_prob)) / nb_prob
+  k_max    <- max(x, ceiling(nb_mean + 12 * nb_sd)) + 1
+  k <- 0:k_max
+  pmf <- stats::dnbinom(k, size = nb_size, prob = nb_prob)
+  pmf <- pmf / sum(pmf)
+  p_obs <- pmf[x + 1]
+  sum(pmf[pmf <= p_obs * (1 + 1e-8)])
+}
+
+#' Dispatch to an exact prior predictive p-value where one exists (internal)
+#'
+#' Used by \code{\link{prior_conflict}} when \code{exact = TRUE}. Returns
+#' \code{NULL} (rather than erroring) when the prior family and data type
+#' combination has no closed-form exact check implemented yet, so the
+#' caller can fall back to the Normal-approximation \code{box_pvalue} with
+#' a message rather than fail.
+#'
+#' @param prior A \code{bayprior} object.
+#' @param type Data type (\code{data_summary$type}).
+#' @param x,n Observed count/exposure, as used elsewhere in
+#'   \code{\link{prior_conflict}}.
+#'
+#' @return A single numeric p-value, or \code{NULL} if unsupported.
+#'
+#' @keywords internal
+#' @noRd
+.exact_box_pvalue <- function(prior, type, x, n) {
+  if (identical(prior$dist, "beta") && identical(type, "binary")) {
+    return(.exact_box_pvalue_beta_binomial(
+      prior$params$alpha, prior$params$beta, x, n
+    ))
+  }
+  if (identical(prior$dist, "gamma") && type %in% c("poisson", "survival")) {
+    # Gamma-Poisson and Gamma-Exponential conjugacy are the same model
+    # under this package's (x = events, n = exposure/follow-up time)
+    # parameterisation -- prior_conflict()'s own Normal-approximation path
+    # already treats "poisson" and "survival" identically (see the
+    # `type %in% c("poisson", "survival")` branch below), so the exact
+    # Negative-Binomial prior predictive applies unchanged to survival data.
+    return(.exact_box_pvalue_gamma_poisson(
+      prior$params$shape, prior$params$rate, x, n
+    ))
+  }
+  # Normal-Normal (continuous data with a Normal prior) is already exact
+  # under prior_conflict()'s existing Normal-approximation machinery -- no
+  # separate exact path is needed there.
+  NULL
+}
+
 #' Compute prior-data conflict diagnostics
 #'
 #' Evaluates conflict between a specified prior and observed data using
@@ -19,10 +137,34 @@
 #'   }
 #' @param alpha Numeric. Significance level for the Box p-value flag.
 #'   Default \code{0.05}.
+#' @param exact Logical. If \code{TRUE}, \code{box_pvalue} (and the
+#'   \code{s_value} derived from it) are computed from the \strong{exact}
+#'   prior predictive distribution rather than the default Normal
+#'   approximation to both the prior and the data likelihood, for prior
+#'   family/data-type combinations where a closed form exists (currently: a
+#'   Beta prior with \code{type = "binary"} data, via the Beta-Binomial
+#'   distribution; a Gamma prior with \code{type = "poisson"} or
+#'   \code{type = "survival"} data, via the Negative Binomial distribution
+#'   -- Gamma-Poisson and Gamma-Exponential conjugacy are the same model
+#'   under this package's (events, exposure) parameterisation, so both data
+#'   types share the one exact check). \code{surprise_index},
+#'   \code{kl_prior_likelihood}, and \code{overlap} are unaffected -- they
+#'   are defined with respect to the Normal-approximated prior and
+#'   likelihood regardless of \code{exact}, since that is how this package
+#'   defines them (see Details). For an unsupported prior/data-type
+#'   combination, \code{exact = TRUE} falls back to the Normal
+#'   approximation with a message rather than erroring; check
+#'   \code{$box_pvalue_method} on the returned object to see which was
+#'   used. Default \code{FALSE}, matching this function's behaviour prior
+#'   to the exact option being added.
 #'
 #' @return An object of class \code{bayprior_conflict} containing:
 #'   \describe{
 #'     \item{\code{box_pvalue}}{Box's prior predictive p-value.}
+#'     \item{\code{box_pvalue_method}}{\code{"exact"} or
+#'       \code{"normal_approx"}, indicating how \code{box_pvalue} (and
+#'       hence \code{s_value}) was computed. Always \code{"normal_approx"}
+#'       when \code{exact = FALSE}.}
 #'     \item{\code{s_value}}{Surprisal, \eqn{-\log_2(\text{box\_pvalue})},
 #'       in bits. See Details.}
 #'     \item{\code{surprise_index}}{Standardised distance between prior mean
@@ -69,7 +211,7 @@
 #'
 #' @importFrom rlang %||% abort
 #' @export
-prior_conflict <- function(prior, data_summary, alpha = 0.05) {
+prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = FALSE) {
 
   if (!inherits(prior, "bayprior")) {
     rlang::abort("`prior` must be a bayprior object.")
@@ -101,12 +243,35 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05) {
   # which would cause division-by-zero in pred_sd, z, kl, and overlap.
   obs_se <- max(obs_se, 1e-8)
 
-  # Box's prior predictive p-value
+  # Box's prior predictive p-value (Normal approximation -- always computed,
+  # since it is needed below for surprise_index/severity regardless of
+  # `exact`, and as the fallback when `exact = TRUE` has no closed form for
+  # this prior family/data-type combination).
   pred_sd <- sqrt(prior_sd^2 + obs_se^2)
   z       <- (obs_mean - prior_mean) / pred_sd
   box_p   <- 2 * stats::pnorm(-abs(z))
+  box_pvalue_method <- "normal_approx"
 
-  # Surprise index (standardised distance 
+  if (isTRUE(exact)) {
+    exact_p <- .exact_box_pvalue(prior, type, x, n)
+    if (!is.null(exact_p)) {
+      box_p <- exact_p
+      box_pvalue_method <- "exact"
+    } else {
+      message(
+        "prior_conflict(): exact = TRUE requested, but no closed-form ",
+        "exact prior predictive is implemented for a '", prior$dist,
+        "' prior with type = '", type, "' data. Falling back to the ",
+        "Normal approximation for box_pvalue (see $box_pvalue_method on ",
+        "the returned object)."
+      )
+    }
+  }
+
+  # Surprise index: standardised distance between the prior mean and the
+  # observed data, in prior-predictive SD units. Always the Normal-
+  # approximation version (see `exact` argument docs above) -- it is not
+  # redefined by an exact box_pvalue.
   surprise <- abs(z)
 
   # Surprisal / S-value (Greenland, 2023): -log2(box_pvalue), reported as an
@@ -149,6 +314,7 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05) {
   structure(
     list(
       box_pvalue          = box_p,
+      box_pvalue_method   = box_pvalue_method,
       s_value             = s_value,
       surprise_index      = surprise,
       kl_prior_likelihood = kl,
