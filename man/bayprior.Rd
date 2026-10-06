@@ -4,7 +4,7 @@
 \name{bayprior}
 \alias{bayprior-package}
 \alias{bayprior}
-\title{bayprior: Bayesian Prior Elicitation for Clinical Trials}
+\title{bayprior: Bayesian Prior Elicitation, Diagnostics, and Regulatory Reporting}
 \description{
 A toolkit for constructing, validating, and justifying Bayesian priors
 in clinical trial settings. Implements SHELF-style expert elicitation
@@ -25,8 +25,10 @@ output reset on input change.
 \code{\link{elicit_normal}}, \code{\link{elicit_gamma}},
 \code{\link{elicit_lognormal}}, \code{\link{elicit_exponential}},
 \code{\link{elicit_weibull}}, \code{\link{elicit_roulette}},
-\code{\link{elicit_mixture}}
+\code{\link{elicit_mixture}}, \code{\link{as_prior}}
 \item \strong{Expert pooling} -- \code{\link{aggregate_experts}}
+\item \strong{MAP priors} -- \code{\link{map_prior}},
+\code{\link{resolve_tau_prior}}, \code{\link{historical_effect_sizes}}
 \item \strong{Conflict diagnostics} -- \code{\link{prior_conflict}},
 \code{\link{conflict_mahalanobis}}
 \item \strong{Sensitivity analysis} -- \code{\link{sensitivity_grid}},
@@ -34,6 +36,9 @@ output reset on input change.
 \item \strong{Robust priors} -- \code{\link{sceptical_prior}},
 \code{\link{robust_prior}}, \code{\link{calibrate_power_prior}}
 \item \strong{Reporting} -- \code{\link{prior_report}}
+\item \strong{Visualisation} -- \code{\link{plot_prior_likelihood}},
+\code{\link{plot_sensitivity}}, \code{\link{plot_tornado}},
+\code{\link{plot_tau_posterior}}
 \item \strong{Shiny app} -- \code{\link{run_app}}
 }
 }
@@ -73,7 +78,14 @@ Conjugate: Gamma-Exponential.}
 \itemize{
 \item O'Hagan et al. (2006). \emph{Uncertain Judgements}. Wiley.
 \item Box (1980). JRSS-A, 143, 383--430.
+\item Greenland (2023). \emph{Scandinavian Journal of Statistics}, 50,
+54--88.
+\item Oakley & O'Hagan (2010). \emph{SHELF: the Sheffield Elicitation
+Framework}. \url{https://tonyohagan.co.uk/shelf/}.
 \item Schmidli et al. (2014). \emph{Biometrics}, 70, 1023--1032.
+\item Roever et al. (2021). \emph{Research Synthesis Methods}, 12,
+448--474.
+\item Neuenschwander et al. (2010). \emph{Clinical Trials}, 7, 5--18.
 \item Ibrahim & Chen (2000). \emph{Statistical Science}, 15, 46--60.
 \item Spiegelhalter et al. (1994). JRSS-A, 157, 357--416.
 \item FDA (2026). Use of Bayesian Methodology in Clinical Trials of
