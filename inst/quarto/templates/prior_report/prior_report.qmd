@@ -493,7 +493,9 @@ if (!has_conf) {
 if (has_conf) {
   df_conf <- data.frame(
     Diagnostic = c(
-      "Box's prior predictive p-value",
+      paste0("Box's prior predictive p-value (",
+             ifelse(identical(cd$box_pvalue_method, "exact"),
+                    "exact", "Normal approximation"), ")"),
       "S-value (surprisal, bits)",
       "Surprise index (standardised distance)",
       "KL divergence (prior || likelihood)",

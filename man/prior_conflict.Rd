@@ -4,7 +4,7 @@
 \alias{prior_conflict}
 \title{Compute prior-data conflict diagnostics}
 \usage{
-prior_conflict(prior, data_summary, alpha = 0.05)
+prior_conflict(prior, data_summary, alpha = 0.05, exact = FALSE)
 }
 \arguments{
 \item{prior}{A \code{bayprior} object.}
@@ -22,11 +22,36 @@ or observed mean (continuous).}
 
 \item{alpha}{Numeric. Significance level for the Box p-value flag.
 Default \code{0.05}.}
+
+\item{exact}{Logical. If \code{TRUE}, \code{box_pvalue} (and the
+\code{s_value} derived from it) are computed from the \strong{exact}
+prior predictive distribution rather than the default Normal
+approximation to both the prior and the data likelihood, for prior
+family/data-type combinations where a closed form exists (currently: a
+Beta prior with \code{type = "binary"} data, via the Beta-Binomial
+distribution; a Gamma prior with \code{type = "poisson"} or
+\code{type = "survival"} data, via the Negative Binomial distribution
+-- Gamma-Poisson and Gamma-Exponential conjugacy are the same model
+under this package's (events, exposure) parameterisation, so both data
+types share the one exact check). \code{surprise_index},
+\code{kl_prior_likelihood}, and \code{overlap} are unaffected -- they
+are defined with respect to the Normal-approximated prior and
+likelihood regardless of \code{exact}, since that is how this package
+defines them (see Details). For an unsupported prior/data-type
+combination, \code{exact = TRUE} falls back to the Normal
+approximation with a message rather than erroring; check
+\code{$box_pvalue_method} on the returned object to see which was
+used. Default \code{FALSE}, matching this function's behaviour prior
+to the exact option being added.}
 }
 \value{
 An object of class \code{bayprior_conflict} containing:
 \describe{
 \item{\code{box_pvalue}}{Box's prior predictive p-value.}
+\item{\code{box_pvalue_method}}{\code{"exact"} or
+\code{"normal_approx"}, indicating how \code{box_pvalue} (and
+hence \code{s_value}) was computed. Always \code{"normal_approx"}
+when \code{exact = FALSE}.}
 \item{\code{s_value}}{Surprisal, \eqn{-\log_2(\text{box\_pvalue})},
 in bits. See Details.}
 \item{\code{surprise_index}}{Standardised distance between prior mean

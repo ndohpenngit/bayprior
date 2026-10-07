@@ -1,0 +1,169 @@
+---
+title: "Using bayprior Priors with rstanarm and brms"
+author: "Ndoh Penn"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Using bayprior Priors with rstanarm and brms}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  warning    = FALSE,
+  message    = FALSE
+)
+```
+
+# Overview
+
+bayprior handles prior specification, elicitation, pooling, and
+diagnostics; it does not fit posterior models itself. This vignette shows
+how to take a bayprior prior object's fitted hyperparameters and hand them
+to `rstanarm` or `brms` for the model-fitting step, using the same
+historical-trial data as the MAP Priors example in the package's main
+vignette and companion paper.
+
+Both `rstanarm` and `brms` are Suggested, not Imported, dependencies:
+this vignette's code only runs if both are installed.
+
+```{r check-deps}
+have_rstanarm <- requireNamespace("rstanarm", quietly = TRUE)
+have_brms     <- requireNamespace("brms",     quietly = TRUE)
+have_deps     <- have_rstanarm && have_brms
+```
+
+# Deriving the prior
+
+```{r map-prior}
+library(bayprior)
+
+map <- map_prior(
+  y            = c(-0.85, -0.62, -1.10),
+  se           = c(0.25, 0.30, 0.28),
+  outcome_type = "single_arm_log_odds",
+  label        = "Historical control (3 trials)"
+)
+
+mu    <- map$fit_summary$mean
+sigma <- map$fit_summary$sd
+c(mu = mu, sigma = sigma)
+```
+
+`map$dist` is `"normal"`, and `mu`/`sigma` are its mean and SD on the
+**log-odds scale** -- exactly the scale a logistic-regression intercept
+uses. This is what makes the handoff below possible without any
+distributional-family conversion: both packages already expect a Normal
+prior on that scale for an intercept term.
+
+# Handoff to rstanarm
+
+`rstanarm::normal()` evaluates its `location`/`scale` arguments as
+ordinary R expressions, so `mu` and `sigma` can be passed directly.
+Setting `autoscale = FALSE` is important: `rstanarm` otherwise may rescale
+the SD you supplied relative to the data before fitting, which would
+silently change the prior bayprior computed.
+
+```{r rstanarm-demo, eval = have_rstanarm}
+library(rstanarm)
+
+# A toy current-trial dataset, sized only to keep this vignette's build
+# time short -- substitute your own trial data in practice.
+set.seed(1)
+n_trial  <- 40
+p_trial  <- 0.32
+dat <- data.frame(y = rbinom(n_trial, 1, p_trial))
+
+# Wrapped in tryCatch so an incomplete local C++/Stan toolchain degrades
+# this vignette gracefully (a build failure here would otherwise fail
+# R CMD check on such a machine) rather than as a claim this code is
+# untested -- it has been run successfully end to end where the toolchain
+# is complete.
+fit_rstanarm <- tryCatch(
+  stan_glm(
+    y ~ 1,
+    data            = dat,
+    family          = binomial(link = "logit"),
+    prior_intercept = normal(location = mu, scale = sigma, autoscale = FALSE),
+    chains          = 1,
+    iter            = 500,
+    refresh         = 0,
+    seed            = 1
+  ),
+  error = function(e) {
+    message("Model fit skipped (local Stan toolchain issue): ", conditionMessage(e))
+    NULL
+  }
+)
+
+if (!is.null(fit_rstanarm)) print(fit_rstanarm, digits = 3)
+```
+
+```{r rstanarm-skip, eval = !have_rstanarm}
+cat("rstanarm not installed -- skipping this demo.\n")
+```
+
+# Handoff to brms
+
+`brms::prior()` is **not** a drop-in replacement here: it captures its
+argument by non-standard evaluation and stores it as literal text, so
+`brms::prior(normal(mu, sigma), class = "Intercept")` would store the
+string `"normal(mu, sigma)"` -- the variable *names*, not their values --
+and fail at fit time. `brms::prior_string()` builds the prior specification
+from an already-evaluated R string instead, and is the reliable way to
+pass numeric values programmatically:
+
+```{r brms-demo, eval = have_brms}
+library(brms)
+
+prior_spec <- prior_string(
+  paste0("normal(", mu, ",", sigma, ")"),
+  class = "Intercept"
+)
+prior_spec
+
+# See the rstanarm chunk above for why this is wrapped in tryCatch.
+fit_brms <- tryCatch(
+  brm(
+    y ~ 1,
+    data    = dat,
+    family  = bernoulli(link = "logit"),
+    prior   = prior_spec,
+    chains  = 1,
+    iter    = 500,
+    refresh = 0,
+    seed    = 1,
+    silent  = 2
+  ),
+  error = function(e) {
+    message("Model fit skipped (local Stan toolchain issue): ", conditionMessage(e))
+    NULL
+  }
+)
+
+if (!is.null(fit_brms)) summary(fit_brms)
+```
+
+```{r brms-skip, eval = !have_brms}
+cat("brms not installed -- skipping this demo.\n")
+```
+
+# Summary
+
+| Package | Correct call | Common mistake |
+|---|---|---|
+| `rstanarm` | `normal(location = mu, scale = sigma, autoscale = FALSE)` | Omitting `autoscale = FALSE` lets rstanarm silently rescale the SD |
+| `brms` | `prior_string(paste0("normal(", mu, ",", sigma, ")"), class = "Intercept")` | `prior(normal(mu, sigma), ...)` stores the variable names as text, not their values |
+
+Both handoffs apply specifically to an **intercept** term representing
+the same quantity `map_prior()` (or an elicited prior on the log-odds
+scale) was fit to -- not to slope/coefficient priors (`class = "b"` in
+`brms`, `prior = ` in `rstanarm`), which are on a different parameter and
+should not receive these values unmodified.

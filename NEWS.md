@@ -2,6 +2,26 @@
 
 ## New features
 
+* `prior_conflict()` gains an `exact` argument (default `FALSE`, matching
+  prior behaviour exactly). `exact = TRUE` replaces the Normal
+  approximation to the prior and to the data likelihood -- used by
+  default for `box_pvalue` and the `s_value` derived from it -- with the
+  exact prior predictive distribution, for the prior family/data-type
+  combinations where one has a closed form: Beta-Binomial (a Beta
+  prior against `type = "binary"` data) and Gamma-Poisson/Negative
+  Binomial (a Gamma prior against `type = "poisson"` or
+  `type = "survival"` data -- both reduce to the same events/exposure
+  model, so one exact check covers both). The Normal-Normal case
+  (`type = "continuous"` against a Normal prior) was already exact and
+  needs no separate path. For prior family/data-type
+  combinations with no closed-form check implemented, `exact = TRUE`
+  falls back to the Normal approximation with a message rather than
+  erroring; `$box_pvalue_method` on the returned object reports which was
+  used ("exact" or "normal_approx"). `surprise_index`,
+  `kl_prior_likelihood`, and `overlap` are unaffected by `exact`, since
+  they are defined with respect to the Normal-approximated prior and
+  likelihood regardless.
+
 * Added `map_prior()`: derives a meta-analytic-predictive (MAP) prior from
   historical trial summaries via a random-effects meta-analysis, with an
   explicit prior on the between-trial heterogeneity parameter tau
