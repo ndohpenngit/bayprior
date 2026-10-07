@@ -35,6 +35,7 @@ provides three well-established alternatives:
 
 | Prior type | Function | Method | Reference |
 |---|---|---|---|
+| **MAP (from historical trials)** | `map_prior()` | Random-effects meta-analysis with explicit tau prior | Roever et al. (2021) |
 | **Robust mixture** | `robust_prior()` | Mixes informative + vague | Schmidli et al. (2014) |
 | **Sceptical** | `sceptical_prior()` | Centred at null effect | Spiegelhalter et al. (1994) |
 | **Power prior** | `calibrate_power_prior()` | Down-weights historical data | Ibrahim & Chen (2000) |
@@ -125,6 +126,144 @@ rob_wide   <- robust_prior(informative, vague_weight = 0.20,
 cat("Narrow vague SD: ", round(rob_narrow$components$vague$fit_summary$sd, 3), "\n")
 cat("Default vague SD:", round(rob$components$vague$fit_summary$sd, 3), "\n")
 cat("Wide vague SD:   ", round(rob_wide$components$vague$fit_summary$sd, 3), "\n")
+```
+
+---
+
+# Deriving the Informative Prior from Historical Trials (MAP)
+
+## Concept
+
+The examples above assume the informative prior fed into `robust_prior()`
+already exists (from elicitation, or otherwise). In practice, that informative
+component is often itself derived from **multiple historical trials** via a
+random-effects meta-analysis. `map_prior()` performs this step directly:
+given trial-level effect estimates and standard errors, it returns a
+meta-analytic-predictive (MAP) prior suitable for passing straight into
+`robust_prior()`.
+
+Unlike treating the between-trial heterogeneity (the parameter $\tau$) as
+fixed, `map_prior()` always places an explicit **prior on $\tau$**, following
+the weakly-informative recommendations of Roever et al. (2021). This matters
+because how much heterogeneity is assumed among historical trials directly
+affects how much borrowing is ultimately justified — an assumption that
+should be stated and justified explicitly, not left as an unstated default.
+Sensible outcome-specific defaults are built in; see `?resolve_tau_prior`.
+
+`map_prior()` fits this model itself, entirely in base R: the posterior of
+$\mu$ given $\tau$ has a closed form, so only the marginal posterior of
+$\tau$ needs numerical integration (`stats::integrate()`). `bayprior` has no
+dependency, direct or optional, on any external meta-analysis package for
+this. See `?map_prior` for the underlying model.
+
+## Usage
+
+```{r map-prior}
+# Five historical control-arm trials -- i.e. a single-arm log-odds scale,
+# not a two-arm log-odds RATIO. This distinction matters: see below.
+y  <- c(0.10, -0.05, 0.22, 0.05, 0.15)
+se <- c(0.12, 0.15, 0.10, 0.18, 0.14)
+
+map <- map_prior(
+  y, se,
+  outcome_type = "single_arm_log_odds",
+  label        = "Historical control (log-odds)"
+)
+print(map)
+```
+
+`map_prior()` returns an ordinary `bayprior` object (a Normal approximation
+to the marginal posterior of the meta-analytic mean, integrating over $\tau$),
+so it can be used exactly like any elicited prior:
+
+```{r map-into-robust}
+rob_map <- robust_prior(map, vague_weight = 0.20)
+plot(rob_map)
+```
+
+## Getting `y` and `se` from Raw Trial Data
+
+The example above assumes `y`/`se` are already computed. In practice
+they're usually derived from each historical trial's own reported summary
+statistics (event counts, arm means/SDs, ...), and
+[`metafor::escalc()`](https://cran.r-project.org/package=metafor) is the
+standard tool for that conversion. `historical_effect_sizes()` is a thin
+wrapper around it that maps `map_prior()`'s `outcome_type` vocabulary onto
+the matching `metafor` measure, so raw trial data can be turned into
+`y`/`se` in one step:
+
+```{r historical-effect-sizes, eval=requireNamespace("metafor", quietly = TRUE)}
+# The same five trials as above, but as originally reported -- event
+# counts (xi out of ni) rather than pre-computed log-odds estimates.
+trials <- data.frame(
+  xi = c(11, 9, 14, 10, 12),
+  ni = c(45, 40, 55, 48, 42)
+)
+es <- historical_effect_sizes("single_arm_log_odds", trials)
+es[, c("xi", "ni", "y", "se")]
+
+map_from_counts <- map_prior(
+  y = es$y, se = es$se,
+  outcome_type = "single_arm_log_odds",
+  label        = "Historical control (from raw counts)"
+)
+print(map_from_counts)
+```
+
+This is not the only way to get `y`/`se` -- they can equally be read by
+hand off a published point estimate and 95% CI (e.g.
+`se = (log(upper) - log(lower)) / (2 * 1.96)` on whatever scale the CI was
+reported) -- and `historical_effect_sizes()` is only usable if `metafor` is
+installed (it is a `Suggests` dependency, not `Imports`, so it is not
+required just to use `map_prior()` itself). See `?historical_effect_sizes`
+for the full column-name mapping across outcome types -- two-arm odds
+ratios, standardised/raw mean differences, incidence-rate ratios, and
+correlations, in addition to the single-arm case shown here.
+
+## Choosing the Heterogeneity Prior Scale
+
+`outcome_type` is not just a label: unless `tau_prior` is supplied
+explicitly, it selects the default $\tau$ prior from Roever et al. (2021)'s
+outcome-specific recommendations, via `resolve_tau_prior()`:
+
+```{r tau-presets}
+resolve_tau_prior("log_or")               # two-arm log-odds ratio
+resolve_tau_prior("single_arm_log_odds")  # e.g. a historical control rate
+```
+
+Note that these give **different scales (0.5 vs 1.0)**, despite both being
+"log-odds" in casual speech -- they are different quantities with different
+heterogeneity properties, and conflating them silently applies the wrong
+default. `"mean_difference"` (raw, unstandardised units) has no preset at
+all -- its scale is entirely endpoint-specific (mmHg, cm, days, ...), so
+`map_prior()` requires `tau_prior` to be supplied explicitly for it:
+
+```{r map-tau-sensitivity}
+# An explicit tau_prior always overrides the outcome_type preset, and is
+# required (map_prior() errors otherwise) for "mean_difference".
+map_tight <- map_prior(y, se, tau_prior = list(family = "half_normal", scale = 0.1))
+map_wide  <- map_prior(y, se, tau_prior = list(family = "half_normal", scale = 1.0))
+
+cat("Tight tau prior -- posterior SD:", round(map_tight$fit_summary$sd, 4), "\n")
+cat("Wide tau prior  -- posterior SD:", round(map_wide$fit_summary$sd, 4), "\n")
+```
+
+Allowing more heterogeneity (a wider $\tau$ prior) generally widens the
+resulting informative prior, which in turn results in a more conservative
+(less confident) prior being carried forward into `robust_prior()`.
+
+## Inspecting the Heterogeneity Posterior
+
+The full posterior distribution of $\tau$ (evaluated on a plotting grid
+whose range is chosen automatically from the fitted posterior, not a fixed
+guess) is available via `$tau_posterior`, useful for checking whether the
+data are actually informative about heterogeneity or whether the posterior
+for $\tau$ still closely tracks the prior:
+
+```{r map-tau-posterior}
+plot(map$tau_posterior$tau, map$tau_posterior$density, type = "l",
+     xlab = expression(tau), ylab = "Posterior density",
+     main = "Posterior distribution of the heterogeneity SD")
 ```
 
 ---
@@ -407,3 +546,8 @@ approaches to randomized trials. *Journal of the Royal Statistical Society A*,
 
 Gravestock, I. & Held, L. (2017). Adaptive power priors with empirical Bayes
 for clinical trials. *Pharmaceutical Statistics*, 16, 349–360.
+
+Roever, C., Bender, R., Dias, S., Schmid, C. H., Schmidli, H., Sturtz, S.,
+Weber, S., & Friede, T. (2021). On weakly informative prior distributions for
+the heterogeneity parameter in Bayesian random-effects meta-analysis.
+*Research Synthesis Methods*, 12(4), 448–474.

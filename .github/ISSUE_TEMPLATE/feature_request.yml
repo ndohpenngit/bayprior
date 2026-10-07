@@ -56,17 +56,19 @@ body:
     validations:
       required: false
 
-  - type: dropdown
+  - type: checkboxes
     id: regulatory
     attributes:
       label: Regulatory relevance
-      description: Is this feature motivated by a regulatory guideline?
+      description: >-
+        Is this feature motivated by a regulatory guideline? Select all that
+        apply -- many features (e.g. historical borrowing, prior
+        justification) span more than one guideline.
       options:
-        - Yes -- FDA guidance
-        - Yes -- EMA / ICH guidance
-        - Yes -- other guideline
-        - No -- general statistical practice
-        - Not applicable
+        - label: FDA guidance
+        - label: EMA / ICH guidance
+        - label: Other guideline (specify in References below)
+        - label: General statistical practice (no specific guideline)
     validations:
       required: false
 

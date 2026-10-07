@@ -25,6 +25,7 @@ prior_report(
   robust_plot = NULL,
   sceptical_plot = NULL,
   power_plot = NULL,
+  tau_posterior_plot = NULL,
   open_after = interactive()
 )
 }
@@ -68,6 +69,12 @@ prior_report(
 \item{sceptical_plot}{Optional pre-captured ggplot of the sceptical prior.}
 
 \item{power_plot}{Optional pre-captured ggplot of the power prior.}
+
+\item{tau_posterior_plot}{Optional pre-captured ggplot from
+\code{plot_tau_posterior()}, shown when \code{prior} was derived with
+\code{map_prior()} (i.e. \code{prior$prior_type == "map"}). If omitted
+and \code{prior} is a MAP prior, the report attempts to render it
+directly from \code{prior$tau_posterior}.}
 
 \item{open_after}{Open after rendering. Default TRUE interactively.}
 }

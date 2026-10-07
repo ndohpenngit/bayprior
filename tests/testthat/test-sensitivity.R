@@ -479,3 +479,293 @@ test_that("plot_prior_likelihood does not silently clip the likelihood curve
   # not stop at the prior's own lower bound (~8, per qgamma(0.001,...)).
   expect_lt(x_range[1], 1)
 })
+
+# -- param_grid name-remapping: positional remap and hard abort ---------------
+
+test_that("sensitivity_grid remaps generic param_grid names positionally
+           when counts match but names don't", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  expect_message(
+    sa <- sensitivity_grid(
+      prior, list(type = "binary", x = 14, n = 40),
+      list(param1 = seq(1, 4, 1), param2 = seq(2, 8, 2)),
+      target = "posterior_mean"
+    ),
+    "remapping param_grid names positionally"
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+  expect_equal(nrow(sa$grid), 16)
+})
+
+test_that("sensitivity_grid aborts when param_grid names don't match and
+           counts also differ", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  expect_error(
+    sensitivity_grid(
+      prior, list(type = "binary", x = 14, n = 40),
+      list(param1 = seq(1, 4, 1)),  # beta has 2 hyperparameters, not 1
+      target = "posterior_mean"
+    ),
+    "names don't match and counts differ"
+  )
+})
+
+test_that("sensitivity_cri remaps generic param_grid names positionally
+           when counts match but names don't", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  expect_message(
+    cri_sa <- sensitivity_cri(
+      prior, list(type = "binary", x = 14, n = 40),
+      list(param1 = seq(1, 4, 1), param2 = seq(2, 8, 2))
+    ),
+    "remapping param_grid names positionally"
+  )
+  expect_s3_class(cri_sa, "bayprior_sensitivity")
+})
+
+test_that("sensitivity_cri aborts when param_grid names don't match and
+           counts also differ", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  expect_error(
+    sensitivity_cri(
+      prior, list(type = "binary", x = 14, n = 40),
+      list(param1 = seq(1, 4, 1))
+    ),
+    "Names don't match and counts differ"
+  )
+})
+
+# -- sensitivity_cri input validation -----------------------------------------
+
+test_that("sensitivity_cri aborts on a non-bayprior `prior`", {
+  expect_error(
+    sensitivity_cri(
+      list(not = "a bayprior"), list(type = "binary", x = 14, n = 40),
+      list(alpha = 1:3, beta = 2:4)
+    ),
+    "must be a bayprior object"
+  )
+})
+
+test_that("sensitivity_cri aborts on an out-of-range cri_level", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  expect_error(
+    sensitivity_cri(
+      prior, list(type = "binary", x = 14, n = 40),
+      list(alpha = 1:3, beta = 2:4), cri_level = 1.5
+    ),
+    "strictly between 0 and 1"
+  )
+})
+
+# -- .conjugate_update(): Weibull branch, both data-type sub-paths -----------
+
+test_that(".conjugate_update Weibull Normal-approximation works for binary
+           data (obs_mean_w/obs_se_w computed as a proportion)", {
+  wp <- elicit_weibull(shape = 2, scale = 5, method = "params")
+  post <- .conjugate_update(wp, list(type = "binary", x = 14, n = 40))
+  expect_equal(post$dist, "normal")
+  expect_true(is.finite(post$params$mu))
+  expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
+})
+
+test_that(".conjugate_update Weibull Normal-approximation works for
+           continuous data (obs_mean_w/obs_se_w taken from data_summary)", {
+  wp <- elicit_weibull(shape = 2, scale = 5, method = "params")
+  post <- .conjugate_update(wp, list(type = "continuous", x = 4, sd = 1.2, n = 30))
+  expect_equal(post$dist, "normal")
+  expect_true(is.finite(post$params$mu))
+  expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
+})
+
+test_that("sensitivity_grid: Weibull prior with binary data works end to end", {
+  wp <- elicit_weibull(shape = 2, scale = 5, method = "params")
+  sa <- sensitivity_grid(
+    wp, list(type = "binary", x = 14, n = 40),
+    list(shape = seq(1, 3, 0.5), scale = seq(3, 7, 1)),
+    target = "posterior_mean"
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+  expect_false(all(is.na(sa$grid$posterior_mean)))
+})
+
+# -- .conjugate_update(): Gamma + continuous data -----------------------------
+
+test_that(".conjugate_update Gamma + continuous data recovers the total via
+           x_sum (falling back to x * n when x_sum is absent)", {
+  gp <- elicit_gamma(mean = 2, sd = 1, method = "moments")
+  post <- .conjugate_update(gp, list(type = "continuous", x = 1.8, n = 25))
+  expect_equal(post$dist, "gamma")
+  expect_equal(post$params$shape, gp$params$shape + 1.8 * 25)
+  expect_equal(post$params$rate,  gp$params$rate  + 25)
+})
+
+test_that("sensitivity_grid: Gamma prior with continuous data works end to end", {
+  gp <- elicit_gamma(mean = 2, sd = 1, method = "moments")
+  sa <- sensitivity_grid(
+    gp, list(type = "continuous", x = 1.8, n = 25),
+    list(shape = seq(1, 4, 1), rate = seq(0.5, 2, 0.5)),
+    target = "posterior_mean"
+  )
+  expect_s3_class(sa, "bayprior_sensitivity")
+  expect_false(all(is.na(sa$grid$posterior_mean)))
+})
+
+# -- .conjugate_update(): defensive branches, exercised directly -------------
+# These two branches guard against a prior/component that cannot be updated
+# at all; reaching them through sensitivity_grid()/sensitivity_cri() would
+# require a prior that fails validation earlier, so they're exercised
+# directly against .conjugate_update() with synthetic inputs instead.
+
+test_that(".conjugate_update aborts with a clear message when no conjugate
+           formula applies and no fit_summary mean/SD exists for a Normal
+           fallback", {
+  bad_prior <- structure(
+    list(dist = "lognormal", params = list(meanlog = 0, sdlog = 1),
+         method = "moments", expert_id = "E", label = "x", input = list(),
+         fit_summary = list(mean = NA_real_, sd = NA_real_)),
+    class = "bayprior"
+  )
+  expect_error(
+    .conjugate_update(bad_prior, list(type = "continuous", x = 1, sd = 1, n = 10)),
+    "no fit_summary mean/SD is available"
+  )
+})
+
+test_that(".conjugate_update aborts when every component of a mixture prior
+           fails to update", {
+  e1 <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
+  e2 <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments", expert_id = "E2")
+  pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
+                            method = "linear")
+  real_update <- .conjugate_update
+  failing_update <- function(prior, data_summary) {
+    if (!identical(prior$dist, "mixture")) stop("simulated component failure")
+    real_update(prior, data_summary)
+  }
+  testthat::local_mocked_bindings(.conjugate_update = failing_update,
+                                  .package = "bayprior")
+  expect_error(
+    .conjugate_update(pool, list(type = "binary", x = 14, n = 40)),
+    "Could not update any mixture component"
+  )
+})
+
+# -- sensitivity_grid()/sensitivity_cri(): per-grid-point construction or
+# update failures degrade to NA for that row rather than aborting the whole
+# call (a full-grid failure is covered separately by the all-NA abort test
+# below). A real numeric trigger for .make_bayprior()/.conjugate_update()
+# throwing on a single grid point is hard to construct (the underlying stats
+# functions degrade to NaN with a warning rather than erroring), so this
+# mocks a construction/update failure for one specific grid point -- the
+# same defensive path a malformed or pathological input would take.
+
+test_that("sensitivity_grid degrades a single failed grid point to NA rather
+           than aborting, when prior construction fails only at that point", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  real_make <- .make_bayprior
+  testthat::local_mocked_bindings(
+    .make_bayprior = function(dist, params, ...) {
+      if (identical(params$alpha, 2)) stop("simulated construction failure")
+      real_make(dist, params, ...)
+    },
+    .package = "bayprior"
+  )
+  sa <- sensitivity_grid(
+    prior, list(type = "binary", x = 14, n = 40),
+    list(alpha = c(1, 2, 3), beta = c(2, 4)),
+    target = "posterior_mean"
+  )
+  expect_equal(sum(is.na(sa$grid$posterior_mean)), 2L)
+  expect_true(any(!is.na(sa$grid$posterior_mean)))
+})
+
+test_that("sensitivity_grid degrades a single failed grid point to NA rather
+           than aborting, when the conjugate update fails only at that
+           point", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  real_update <- .conjugate_update
+  testthat::local_mocked_bindings(
+    .conjugate_update = function(prior, data_summary) {
+      if (identical(prior$params$alpha, 2)) stop("simulated update failure")
+      real_update(prior, data_summary)
+    },
+    .package = "bayprior"
+  )
+  sa <- sensitivity_grid(
+    prior, list(type = "binary", x = 14, n = 40),
+    list(alpha = c(1, 2, 3), beta = c(2, 4)),
+    target = "posterior_mean"
+  )
+  expect_equal(sum(is.na(sa$grid$posterior_mean)), 2L)
+  expect_true(any(!is.na(sa$grid$posterior_mean)))
+})
+
+test_that("sensitivity_grid aborts with a clear message when every grid
+           point fails to produce a value for a target", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  testthat::local_mocked_bindings(
+    .make_bayprior = function(...) stop("simulated total failure"),
+    .package = "bayprior"
+  )
+  expect_error(
+    sensitivity_grid(
+      prior, list(type = "binary", x = 14, n = 40),
+      list(alpha = 1:2, beta = 2:3), target = "posterior_mean"
+    ),
+    "All grid evaluations returned NA"
+  )
+})
+
+test_that("sensitivity_cri degrades a single failed grid point to NA rather
+           than aborting, when prior construction fails only at that point", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  real_make <- .make_bayprior
+  testthat::local_mocked_bindings(
+    .make_bayprior = function(dist, params, ...) {
+      if (identical(params$alpha, 2)) stop("simulated construction failure")
+      real_make(dist, params, ...)
+    },
+    .package = "bayprior"
+  )
+  cri_sa <- sensitivity_cri(
+    prior, list(type = "binary", x = 14, n = 40),
+    list(alpha = c(1, 2, 3), beta = c(2, 4))
+  )
+  expect_equal(sum(is.na(cri_sa$grid$cri_width)), 2L)
+  expect_true(any(!is.na(cri_sa$grid$cri_width)))
+})
+
+test_that("sensitivity_cri degrades a single failed grid point to NA rather
+           than aborting, when the conjugate update fails only at that
+           point", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  real_update <- .conjugate_update
+  testthat::local_mocked_bindings(
+    .conjugate_update = function(prior, data_summary) {
+      if (identical(prior$params$alpha, 2)) stop("simulated update failure")
+      real_update(prior, data_summary)
+    },
+    .package = "bayprior"
+  )
+  cri_sa <- sensitivity_cri(
+    prior, list(type = "binary", x = 14, n = 40),
+    list(alpha = c(1, 2, 3), beta = c(2, 4))
+  )
+  expect_equal(sum(is.na(cri_sa$grid$cri_width)), 2L)
+  expect_true(any(!is.na(cri_sa$grid$cri_width)))
+})
+
+# -- sensitivity_cri(): Gamma prob_efficacy branch, and the CrI-bounds
+# "else" (Normal-approximation) branch for a non-beta/normal/gamma posterior
+
+test_that("sensitivity_cri computes prob_efficacy via the Gamma branch", {
+  gp <- elicit_gamma(mean = 2, sd = 1, method = "moments")
+  cri_sa <- sensitivity_cri(
+    gp, list(type = "poisson", x = 3, n = 10),
+    list(shape = seq(1, 4, 1), rate = seq(0.5, 2, 0.5)),
+    cri_level = 0.95, threshold = 2
+  )
+  expect_true("prob_efficacy" %in% names(cri_sa$grid))
+  expect_false(all(is.na(cri_sa$grid$prob_efficacy)))
+})

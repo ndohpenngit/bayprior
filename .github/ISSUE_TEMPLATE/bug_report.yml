@@ -19,6 +19,7 @@ body:
         - Conflict Diagnostics (R function)
         - Sensitivity Analysis (R function)
         - Robust / Sceptical / Power Prior (R function)
+        - MAP Prior from Historical Trials (map_prior())
         - Report Generation (prior_report)
         - Shiny app -- Prior Elicitation module
         - Shiny app -- Expert Pooling module
@@ -68,7 +69,41 @@ body:
     id: bayprior_version
     attributes:
       label: bayprior version
-      placeholder: "e.g. 0.2.11 -- check with packageVersion('bayprior')"
+      placeholder: "e.g. 0.3.2 -- check with packageVersion('bayprior')"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install_source
+    attributes:
+      label: Install source
+      description: >-
+        Where did this version come from? A dev version installed from
+        GitHub main can behave differently from the released CRAN version,
+        and different branches/commits can carry different code even at the
+        same version number.
+      options:
+        - CRAN (install.packages)
+        - GitHub main (pak::pak / devtools::install_github, no @ref)
+        - GitHub, specific branch or tag (name it in Description below)
+        - GitHub, specific commit SHA (name it in Description below)
+        - Local source / package under active development
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: restart_check
+    attributes:
+      label: Fresh session check
+      description: >-
+        A stale R session can make an old package version look like it's
+        still loaded even after reinstalling. Please confirm before
+        reporting.
+      options:
+        - label: >-
+            I restarted R (fresh session, no packages pre-loaded) and
+            confirmed packageVersion("bayprior") reports the version above
+            before reproducing this bug.
     validations:
       required: true
 

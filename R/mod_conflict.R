@@ -162,12 +162,25 @@ mod_conflict_server <- function(id, shared, active_prior) {
                 class = "btn-tip-wrap",
                 style = "display:inline; margin-left:4px;",
                 icon("circle-info", style = "font-size:11px; color:#ccc; cursor:help;"),
-                tags$span(class = "btn-tip-text",
-                  "p < 0.05 indicates conflict. Tests if observed data is plausible under the prior predictive distribution.")
+                tags$span(class = "info-tip-text",
+                  "p < 0.05 flags conflict. Tests whether the observed data is plausible under the prior predictive distribution.")
               )
             ),
             icon  = icon("vial"),
-            color = if (r$conflict_flag) "red" else "green", width = 4),
+            color = if (r$conflict_flag) "red" else "green", width = 3),
+          shinydashboard::valueBox(
+            if (!is.null(r$s_value)) round(r$s_value, 2) else "--",
+            tagList("S-value (bits)",
+              tags$span(
+                class = "btn-tip-wrap",
+                style = "display:inline; margin-left:4px;",
+                icon("circle-info", style = "font-size:11px; color:#ccc; cursor:help;"),
+                tags$span(class = "info-tip-text",
+                  "Surprisal, -log2(Box p-value): an exploratory companion to the ",
+                  "p-value, not a threshold rule (S = 4.3 bits ~ p = 0.05).")
+              )
+            ),
+            icon  = icon("dice"), color = "purple", width = 3),
           shinydashboard::valueBox(
             round(r$surprise_index, 3),
             tagList("Surprise index",
@@ -175,11 +188,12 @@ mod_conflict_server <- function(id, shared, active_prior) {
                 class = "btn-tip-wrap",
                 style = "display:inline; margin-left:4px;",
                 icon("circle-info", style = "font-size:11px; color:#ccc; cursor:help;"),
-                tags$span(class = "btn-tip-text",
-                  "Standardised distance between prior mean and observed data. > 2 = moderate surprise; > 3 = high surprise.")
+                tags$span(class = "info-tip-text",
+                  "Standardised distance between prior mean and data. ",
+                  "> 2 = moderate, > 3 = high surprise. Differs from S-value.")
               )
             ),
-            icon  = icon("bolt"), color = "yellow", width = 4),
+            icon  = icon("bolt"), color = "yellow", width = 3),
           shinydashboard::valueBox(
             round(r$overlap, 3),
             tagList("Overlap coeff.",
@@ -187,11 +201,11 @@ mod_conflict_server <- function(id, shared, active_prior) {
                 class = "btn-tip-wrap",
                 style = "display:inline; margin-left:4px;",
                 icon("circle-info", style = "font-size:11px; color:#ccc; cursor:help;"),
-                tags$span(class = "btn-tip-text",
+                tags$span(class = "info-tip-text",
                   "Bhattacharyya overlap between prior and likelihood. 1 = identical; < 0.3 = concerning conflict.")
               )
             ),
-            icon  = icon("circle-half-stroke"), color = "blue", width = 4)
+            icon  = icon("circle-half-stroke"), color = "blue", width = 3)
         ),
         tags$div(
           class = if (r$conflict_flag) "alert alert-danger" else "alert alert-success",

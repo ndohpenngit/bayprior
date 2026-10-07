@@ -73,6 +73,11 @@ app_ui <- function(request) {
             icon     = icon("users")
           ),
           shinydashboard::menuItem(
+            tagList("MAP Prior (Historical)", uiOutput("step_badge_map", inline = TRUE)),
+            tabName  = "map_prior",
+            icon     = icon("hospital")
+          ),
+          shinydashboard::menuItem(
             tagList("Conflict Diagnostics", uiOutput("step_badge_conflict", inline = TRUE)),
             icon     = icon("vial"),
             tabName  = "conflict",
@@ -313,6 +318,40 @@ app_ui <- function(request) {
           .btn-tip-wrap:hover .btn-tip-text {
             visibility: visible; opacity: 1;
           }
+          /* Longer info-icon tooltips (valueBox metric explanations) reuse
+             .btn-tip-wrap as their hover trigger, but need to wrap onto
+             multiple lines within a fixed width instead of .btn-tip-text's
+             single-line nowrap -- which, for a long sentence, stretched
+             far past the viewport instead of just overflowing off-screen. */
+          .btn-tip-wrap .info-tip-text {
+            visibility: hidden; opacity: 0;
+            background: #333; color: #fff;
+            font-size: 11px; line-height: 1.4; text-align: left;
+            border-radius: 4px; padding: 6px 10px;
+            white-space: normal; width: 220px; max-width: 70vw;
+            position: absolute; bottom: 125%; left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.15s;
+            z-index: 9999; pointer-events: none;
+          }
+          .btn-tip-wrap:hover .info-tip-text {
+            visibility: visible; opacity: 1;
+          }
+          /* shinydashboard's valueBox() draws a large decorative icon
+             (.icon-large) that, in a narrow box (these are width=3 of 12),
+             visually and functionally overlaps the small info-icon placed
+             in the title text -- and because .icon-large comes later in
+             the DOM, it sits on top and swallows all pointer events there,
+             so .btn-tip-wrap:hover never fires no matter how precisely the
+             cursor is placed over the info icon. Confirmed via a headless
+             browser: hovering the info icon times out with 'i.fa-dice ...
+             subtree intercepts pointer events'. A purely decorative
+             background icon should never block interaction with content
+             drawn in front of it. */
+          .small-box .icon-large,
+          .small-box .icon-large-icon {
+            pointer-events: none;
+          }
         ")),
 
 
@@ -362,9 +401,9 @@ app_ui <- function(request) {
               t.className = 'bp-toast' +
                 (type === 'error' ? ' bp-toast-error' :
                  type === 'warn'  ? ' bp-toast-warn'  : '');
-              t.innerHTML = (type === 'error' ? '<i class=\'fa fa-circle-xmark\'></i> ' :
-                             type === 'warn'  ? '<i class=\'fa fa-triangle-exclamation\'></i> ' :
-                                               '<i class=\'fa fa-circle-check\'></i> ') + msg;
+              t.innerHTML = (type === 'error' ? '<i class=\"fa fa-circle-xmark\"></i> ' :
+                             type === 'warn'  ? '<i class=\"fa fa-triangle-exclamation\"></i> ' :
+                                               '<i class=\"fa fa-circle-check\"></i> ') + msg;
               container.appendChild(t);
               setTimeout(function() {
                 t.style.animation = 'bp-slide-out 0.25s ease forwards';
@@ -412,6 +451,10 @@ app_ui <- function(request) {
           shinydashboard::tabItem(
             tabName = "pooling",
             mod_pooling_ui("pooling")
+          ),
+          shinydashboard::tabItem(
+            tabName = "map_prior",
+            mod_map_prior_ui("map_prior")
           ),
           shinydashboard::tabItem(
             tabName = "conflict",

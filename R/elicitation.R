@@ -666,9 +666,14 @@ elicit_mixture <- function(components, weights = NULL, label = "Mixture prior") 
 
 # -- Internal helpers ----------------------------------------------------------
 # Note: .make_bayprior() is the authoritative constructor defined in
-# R/zzz_patches.R. It handles lognormal via .prior_summary_lognormal().
-# elicit_exponential() and elicit_weibull() build fit_summary directly
-# since their formulas are simple closed-form expressions.
+# R/zzz_patches.R. It handles lognormal via .prior_summary_lognormal() and
+# weibull via .prior_summary_weibull() (the latter needed because
+# .make_bayprior() also constructs Weibull priors generically, e.g. at each
+# sensitivity_grid()/sensitivity_cri() grid point, not just via
+# elicit_weibull()). elicit_exponential() builds fit_summary directly and
+# has no .prior_summary_*() counterpart, since .conjugate_update()'s
+# exponential branch never reconstructs an exponential prior or reads its
+# fit_summary (it converts straight to a Gamma posterior).
 
 .prior_summary <- function(dist, params) {
   switch(dist,

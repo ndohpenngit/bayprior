@@ -37,12 +37,14 @@ framework (O'Hagan et al., 2006).
 
 The core analytical workflow is:
 
-1. **Elicit** — Specify a prior from expert knowledge or historical data
+1. **Elicit** — Specify a prior from expert knowledge
 2. **Pool** — Combine priors from multiple experts into a consensus prior
-3. **Diagnose** — Detect conflict between the prior and observed data
-4. **Analyse** — Assess how sensitive posterior conclusions are to prior choice
-5. **Robust** — Construct robust, sceptical, or power priors as alternatives
-6. **Report** — Generate a regulatory-ready prior justification report
+3. **MAP** — Derive a prior from historical trials via meta-analysis (an
+   alternative to, not a required step after, elicitation/pooling)
+4. **Diagnose** — Detect conflict between the prior and observed data
+5. **Analyse** — Assess how sensitive posterior conclusions are to prior choice
+6. **Robust** — Construct robust, sceptical, or power priors as alternatives
+7. **Report** — Generate a regulatory-ready prior justification report
 
 ---
 
@@ -186,6 +188,38 @@ mix <- elicit_mixture(
 )
 plot(mix)
 ```
+
+---
+
+# Meta-Analytic-Predictive (MAP) Priors
+
+Elicitation and pooling both start from expert judgement. When multiple
+**historical trials** are available instead (or as well), `map_prior()`
+derives an informative prior directly from them via a random-effects
+meta-analysis, with an explicit prior on the between-trial heterogeneity
+parameter tau (Schmidli et al., 2014; Roever et al., 2021):
+
+```{r map-prior-intro}
+# Five historical control-arm trials, single-arm log-odds scale.
+y_hist  <- c(0.10, -0.05, 0.22, 0.05, 0.15)
+se_hist <- c(0.12, 0.15, 0.10, 0.18, 0.14)
+
+map <- map_prior(
+  y_hist, se_hist,
+  outcome_type = "single_arm_log_odds",
+  label        = "Historical control (MAP)"
+)
+print(map)
+plot_tau_posterior(map)
+```
+
+`map_prior()` returns an ordinary prior object, usable anywhere an elicited
+or pooled prior would be -- including as the input to `robust_prior()` for
+an additional vague-mixture component. Raw trial-level data (event counts,
+arm means/SDs, ...) can be converted to the `y`/`se` inputs above via
+`historical_effect_sizes()`. See `vignette("robust-priors")` for the full
+treatment: outcome-specific default heterogeneity priors and worked
+`historical_effect_sizes()` examples.
 
 ---
 
@@ -503,6 +537,10 @@ plot(rob_full)
 | `elicit_roulette()` | Chip-based roulette elicitation |
 | `elicit_mixture()` | Manual mixture prior construction |
 | `aggregate_experts()` | Pool multiple expert priors |
+| `map_prior()` | Meta-analytic-predictive prior from historical trials |
+| `resolve_tau_prior()` | Look up the default heterogeneity (tau) prior for an outcome type |
+| `historical_effect_sizes()` | Derive `y`/`se` from raw historical trial data via `metafor::escalc()` |
+| `plot_tau_posterior()` | Posterior density of the heterogeneity parameter tau |
 | `prior_conflict()` | Univariate prior-data conflict diagnostics |
 | `conflict_mahalanobis()` | Multivariate conflict diagnostics |
 | `sensitivity_grid()` | Grid sensitivity of posterior quantities |
@@ -534,6 +572,11 @@ Eliciting Experts' Probabilities*. Wiley.
 
 Oakley, J. E. & O'Hagan, A. (2010). SHELF: the Sheffield Elicitation
 Framework. University of Sheffield.
+
+Roever, C., Bender, R., Dias, S., Schmid, C. H., Schmidli, H., Sturtz, S.,
+Weber, S., & Friede, T. (2021). On weakly informative prior distributions
+for the heterogeneity parameter in Bayesian random-effects meta-analysis.
+*Research Synthesis Methods*, 12(4), 448–474.
 
 Schmidli, H., Gsteiger, S., Roychoudhury, S., O'Hagan, A., Spiegelhalter, D.,
 & Neuenschwander, B. (2014). Robust meta-analytic-predictive priors in clinical

@@ -27,6 +27,8 @@ Default \code{0.05}.}
 An object of class \code{bayprior_conflict} containing:
 \describe{
 \item{\code{box_pvalue}}{Box's prior predictive p-value.}
+\item{\code{s_value}}{Surprisal, \eqn{-\log_2(\text{box\_pvalue})},
+in bits. See Details.}
 \item{\code{surprise_index}}{Standardised distance between prior mean
 and observed data.}
 \item{\code{kl_prior_likelihood}}{KL divergence from prior to likelihood.}
@@ -47,6 +49,20 @@ the surprise index (standardised distance), Kullback-Leibler divergence,
 and the Bhattacharyya overlap coefficient between the prior and the
 (normalised) likelihood.
 }
+\details{
+\code{s_value} and \code{surprise_index} are easily confused by name but
+measure different things. \code{surprise_index} is a \emph{distance}:
+how many prior-SD units the observed data sits from the prior mean
+(\code{abs(z)}). \code{s_value} is an \emph{evidence-strength}
+reparametrisation of \code{box_pvalue} itself, expressed in bits --
+intended as an exploratory companion to
+\code{box_pvalue} rather than a thresholded decision rule, since
+prior-data conflict checks are typically not powered for a binary
+accept/reject decision. The two are correlated but nonlinearly related:
+\code{s_value} grows faster than \code{surprise_index} as evidence
+strengthens, since it derives from \code{box_pvalue}'s tail probability,
+not from \code{z} directly.
+}
 \examples{
 prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
                      label = "Response rate")
@@ -58,4 +74,8 @@ print(cd)
 Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling
 and robustness. \emph{Journal of the Royal Statistical Society A}, 143,
 383-430.
+
+Greenland, S. (2023). Divergence versus decision P-values: A distinction
+worth making in theory and keeping in practice. \emph{Scandinavian
+Journal of Statistics}, 50(1), 54-88.
 }

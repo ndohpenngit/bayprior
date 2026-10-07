@@ -17,7 +17,8 @@ app_server <- function(input, output, session) {
     sensitivity     = NULL,  # output of sensitivity_grid() / sensitivity_cri()
     robust_prior    = NULL,  # output of robust_prior()
     sceptical_prior = NULL,  # output of sceptical_prior()
-    power_prior     = NULL   # output of calibrate_power_prior()
+    power_prior     = NULL,  # output of calibrate_power_prior()
+    map_prior       = NULL   # output of map_prior()
   )
 
   # Convenience: resolved prior (consensus preferred, else current)
@@ -26,7 +27,7 @@ app_server <- function(input, output, session) {
     shared$consensus %||% shared$current_prior
   })
 
-  # Base prior: only set by elicitation and pooling.
+  # Base prior: only set by elicitation, pooling, and MAP derivation.
   # Sensitivity analysis uses this to avoid reacting to downstream
   # priors (robust, sceptical, power) which are products of sensitivity,
   # not inputs to it.
@@ -54,6 +55,8 @@ app_server <- function(input, output, session) {
     .step_badge(!is.null(active_prior())))
   output$step_badge_pool    <- renderUI(
     .step_badge(!is.null(shared$consensus)))
+  output$step_badge_map     <- renderUI(
+    .step_badge(!is.null(shared$map_prior)))
   output$step_badge_conflict <- renderUI(
     .step_badge(!is.null(shared$conflict)))
   output$step_badge_sens    <- renderUI(
@@ -71,6 +74,8 @@ app_server <- function(input, output, session) {
     has <- !is.null(active_prior())
     # Note: mahal-run_btn is NOT disabled -- Mahalanobis takes raw prior
     # parameters as direct inputs and does not require an elicited prior.
+    # Note: map_prior-fit_btn is NOT disabled -- MAP derivation takes raw
+    # historical trial summaries as direct inputs, same rationale as Mahalanobis.
     btns <- c("conflict-run_btn", "sensitivity-run_btn",
               "robust-fit_btn",   "sceptical-fit_btn", "power-run_btn",
               "pooling-pool_btn")
@@ -79,7 +84,7 @@ app_server <- function(input, output, session) {
     }
   })
 
-  # When the BASE prior changes (elicitation / pooling only), downstream
+  # When the BASE prior changes (elicitation / pooling / MAP only), downstream
   # results are stale. Robust/sceptical/power priors changing should NOT
   # clear sensitivity -- they are downstream products, not inputs.
   observeEvent(base_prior(), {
@@ -188,6 +193,7 @@ app_server <- function(input, output, session) {
   mod_elicitation_server("elicitation", shared = shared)
   mod_roulette_server("roulette",       shared = shared)
   mod_pooling_server("pooling",         shared = shared, active_prior = active_prior)
+  mod_map_prior_server("map_prior",     shared = shared)
   mod_conflict_server("conflict",       shared = shared, active_prior = active_prior)
   mod_mahal_server("mahal")
   mod_sensitivity_server("sensitivity", shared = shared, active_prior = base_prior)
