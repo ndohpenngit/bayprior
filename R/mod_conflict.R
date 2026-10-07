@@ -44,6 +44,19 @@ mod_conflict_ui <- function(id) {
       tags$hr(),
       numericInput(ns("alpha"), "Significance level (alpha)",
                    0.05, 0.001, 0.2, 0.005),
+      shinyWidgets::prettyCheckbox(
+        ns("exact"), "Use exact prior predictive distribution",
+        value = FALSE, icon = icon("check"), status = "success",
+        animation = "smooth"
+      ),
+      tags$p(class = "text-muted", style = "font-size:11px; margin-top:-8px;",
+             icon("circle-info"),
+             " Replaces the Normal-approximation Box p-value with the exact",
+             " Beta-Binomial (binary data) or Gamma-Poisson (count data)",
+             " prior predictive distribution where available. Falls back to",
+             " the Normal approximation -- with a notification -- for data",
+             " types or prior families without a closed-form exact check."),
+      tags$hr(),
       tags$div(
         class = "btn-tip-wrap",
         actionButton(ns("run_btn"), "Run Diagnostics",
@@ -101,7 +114,7 @@ mod_conflict_server <- function(id, shared, active_prior) {
            input$cont_mean, input$cont_sd, input$cont_n,
            input$pois_x, input$pois_n,
            input$surv_x, input$surv_n,
-           input$alpha),
+           input$alpha, input$exact),
       { res(NULL); shared$conflict <- NULL },
       ignoreInit = TRUE
     )
@@ -119,12 +132,23 @@ mod_conflict_server <- function(id, shared, active_prior) {
         showNotification(chk$msg, type = "warning", duration = 8)
       }
 
-      r <- tryCatch(
-        prior_conflict(p, data_sum(), alpha = input$alpha),
-        error = function(e) {
-          showNotification(paste("Error:", conditionMessage(e)), type = "error")
-          NULL
-        })
+      r <- withCallingHandlers(
+        tryCatch(
+          prior_conflict(p, data_sum(), alpha = input$alpha,
+                         exact = isTRUE(input$exact)),
+          error = function(e) {
+            showNotification(paste("Error:", conditionMessage(e)), type = "error")
+            NULL
+          }),
+        # prior_conflict() signals a plain message() (not a warning) when
+        # exact = TRUE was requested but no closed-form check applies to
+        # this prior/data combination -- surface it, since a message()
+        # is otherwise invisible in a deployed Shiny app.
+        message = function(m) {
+          showNotification(conditionMessage(m), type = "warning", duration = 10)
+          invokeRestart("muffleMessage")
+        }
+      )
       res(r)
       shared$conflict <- r
       sev <- toupper(r$conflict_severity)
@@ -164,6 +188,14 @@ mod_conflict_server <- function(id, shared, active_prior) {
                 icon("circle-info", style = "font-size:11px; color:#ccc; cursor:help;"),
                 tags$span(class = "info-tip-text",
                   "p < 0.05 flags conflict. Tests whether the observed data is plausible under the prior predictive distribution.")
+              ),
+              tags$br(),
+              tags$span(
+                style = "font-size:10px; font-weight:400; opacity:0.85;",
+                if (identical(r$box_pvalue_method, "exact"))
+                  "exact prior predictive"
+                else
+                  "Normal approximation"
               )
             ),
             icon  = icon("vial"),

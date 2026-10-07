@@ -135,13 +135,7 @@
         "Maintainer": "Winston Chang <winston@posit.co>",
         "Repository": "CRAN",
         "Date/Publication": "2025-02-15 00:50:02 UTC",
-        "Built": "R 4.4.1; ; 2025-02-15 00:56:23 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "R6",
-        "RemoteRef": "R6",
-        "RemoteRepos": "https://cran.rstudio.com/",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "2.6.1"
+        "Built": "R 4.4.1; ; 2025-02-15 00:56:23 UTC; unix"
       }
     },
     "RColorBrewer": {
@@ -4619,7 +4613,7 @@
       "checksum": "3df907b50c4f00bc26ee6d988e0c849f"
     },
     "DESCRIPTION": {
-      "checksum": "e54f51de3ad7eab9f4d195c06d1f5154"
+      "checksum": "9f100568171a0d1800cf94518f03b195"
     },
     "dev/01_start.R": {
       "checksum": "bebcf086db3e03cc332ac4728fee8d2d"
@@ -4643,7 +4637,7 @@
       "checksum": "7b535b95f67e6ff0f8112527e4d1db1a"
     },
     "inst/quarto/templates/prior_report/prior_report.qmd": {
-      "checksum": "4b9202680fb7af988db20de47335f808"
+      "checksum": "14423d61e1f0b433a1091bac27c0fd90"
     },
     "inst/quarto/templates/template.yaml": {
       "checksum": "4e71f6a95ca723fd0635f23bfc48a99c"
@@ -4658,7 +4652,7 @@
       "checksum": "276c6f0583e0d5000187ab63486ea9ea"
     },
     "man/bayprior.Rd": {
-      "checksum": "9f4a04cac6656935642ebbcdee85ce58"
+      "checksum": "e49cf9169c1b45a43f69adfe3b5d1040"
     },
     "man/calibrate_power_prior.Rd": {
       "checksum": "337df8e1064b6cd867d145bcd93b7211"
@@ -4739,7 +4733,7 @@
       "checksum": "5b19cf0c2c4f35aa5d79868d6f8f4f1d"
     },
     "man/prior_conflict.Rd": {
-      "checksum": "c9c2fff56dea8640a4b12edbbd3a6e36"
+      "checksum": "93815eb0ce6e2b044ad2d4263c2d5b75"
     },
     "man/prior_report.Rd": {
       "checksum": "39ced7bd0869866cb1209f4bd3177449"
@@ -4771,6 +4765,27 @@
     "NAMESPACE": {
       "checksum": "cd658384d0a01c5912e47bf8a1382547"
     },
+    "paper/arxiv/bayprior_arxiv_files/figure-latex/elicitation-plot-1.pdf": {
+      "checksum": "c7b62ba1f792b15f91b811892dbea5a9"
+    },
+    "paper/arxiv/bayprior_arxiv_files/figure-latex/map-prior-1.pdf": {
+      "checksum": "084b0d8661942dcd25e95b75123d29ac"
+    },
+    "paper/arxiv/bayprior_arxiv_files/figure-latex/robust-1.pdf": {
+      "checksum": "318731e7e40c83408f989c5aaaa852d4"
+    },
+    "paper/arxiv/bayprior_arxiv_files/figure-latex/sensitivity-1.pdf": {
+      "checksum": "1dbe179af6919292bd8c9cca8aaf4f41"
+    },
+    "paper/arxiv/bayprior_arxiv_files/figure-latex/trial-sensitivity-1.pdf": {
+      "checksum": "fa5c51831365c38b22a5fdf12e1d96c5"
+    },
+    "paper/arxiv/bayprior_arxiv.pdf": {
+      "checksum": "f9bafdd55ec0bf141c339f124ace21e7"
+    },
+    "paper/arxiv/bayprior_arxiv.tex": {
+      "checksum": "d0f5b91fe9f27a5d4ed88e98b5b34601"
+    },
     "R/_disable_autoload.R": {
       "checksum": "1178c335d6c11555fd1c4ec6098dfee6"
     },
@@ -4787,13 +4802,13 @@
       "checksum": "e922a98340be151d8a5f7f5a1815c467"
     },
     "R/bayprior-package.R": {
-      "checksum": "9ee5c3ec024f08d63a4abd483312878e"
+      "checksum": "60134ee03c17cd232e64c983aae25817"
     },
     "R/conflict_mahalanobis.R": {
       "checksum": "79733d5cda8e7aa52b2c39a753239218"
     },
     "R/conflict_sensitivity.R": {
-      "checksum": "4869cbeeff62f811809b089b66bddc3f"
+      "checksum": "212998a8ca693c7821f341a5731fe2db"
     },
     "R/elicitation_roulette.R": {
       "checksum": "dd5321505c06dc8534cd6f5688fc9e92"
@@ -4811,7 +4826,7 @@
       "checksum": "99864aa4c48f6b7dc39662635c0480f4"
     },
     "R/mod_conflict.R": {
-      "checksum": "0b886a7b686f48f9cf3168924807b112"
+      "checksum": "93861d146283c37f0b0def62c73c3370"
     },
     "R/mod_elicitation.R": {
       "checksum": "104d7a03be59730c4bc0572a853f0356"
@@ -4841,7 +4856,7 @@
       "checksum": "9f3e2d1fe9a4f17014f5aca5e6cedb68"
     },
     "R/prior_report.R": {
-      "checksum": "41f0dc65c5a4daa54dbafbe6cc765a14"
+      "checksum": "ed20156d5516db5528c9ed672ff1930a"
     },
     "R/robust_priors.R": {
       "checksum": "7dd79432ec2a05e4ee2ac1bdfcb5bdfb"
@@ -4898,7 +4913,7 @@
       "checksum": "e9e3f2d5542c5fcf6c5b8deb23f6519a"
     },
     "tests/testthat/test-conflict.R": {
-      "checksum": "2ca79d3d5b8445faf177043dc618de94"
+      "checksum": "a3e167f947f76cc0b5600e45f75d014f"
     },
     "tests/testthat/test-edge-cases.R": {
       "checksum": "52ac4679df00bbae4f1d8a7c86e98789"
@@ -4910,7 +4925,7 @@
       "checksum": "1b0f5e9dfb2c5f2e967072e19743a0b0"
     },
     "tests/testthat/test-map-prior.R": {
-      "checksum": "f5d4e9814eced9793ff7ca562a45c275"
+      "checksum": "b9c66993bd22e799259fd8fbafd75ea2"
     },
     "tests/testthat/test-patches.R": {
       "checksum": "ef96b0667014c5dc1252488b68e7c94f"

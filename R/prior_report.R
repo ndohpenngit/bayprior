@@ -331,7 +331,7 @@ prior_report <- function(prior,
   round(x, digits)
 }
 
-.safe_chr <- function(x, fallback = "N/A") {
+.safe_chr <- function(x, fallback = "\u2014") {
   if (is.null(x) || length(x) == 0L || (length(x) == 1L && is.na(x)))
     return(fallback)
   as.character(x[[1L]])
@@ -619,7 +619,9 @@ prior_report <- function(prior,
     "```{r conflict-table}",
     "if (has_conf) {",
     "  df_c <- data.frame(",
-    "    Diagnostic=c('Box prior predictive p-value',",
+    "    Diagnostic=c(paste0('Box prior predictive p-value (',",
+    "                 ifelse(identical(cd$box_pvalue_method, 'exact'),",
+    "                        'exact', 'Normal approximation'), ')'),",
     "                 'S-value (surprisal, bits)',",
     "                 'Surprise index (standardised distance)',",
     "                 'KL divergence (prior || likelihood)',",
