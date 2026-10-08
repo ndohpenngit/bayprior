@@ -25,6 +25,7 @@ vignettes/*.html
 vignettes/*.html
 doc/
 /doc/
+paper/
 
 **/*.quarto_ipynb
 CRAN-SUBMISSION

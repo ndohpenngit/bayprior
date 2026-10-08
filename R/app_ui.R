@@ -117,19 +117,10 @@ app_ui <- function(request) {
         # Active prior badge + version footer
         tags$div(
           style = "position:absolute; bottom:0; width:100%; padding:4px 0;",
-          tags$div(
-            style = paste0(
-              "font-size:10px; color:#aaa; text-transform:uppercase;",
-              "letter-spacing:0.8px; padding:0 12px 2px;"
-            ),
-            "Active prior:"
-          ),
+          tags$div(class = "bp-side-label", "Active prior"),
           uiOutput("sidebar_prior_badge"),
           tags$div(
-            style = paste0(
-              "font-size:9px; color:#666; text-align:center;",
-              "padding:4px 0 6px; border-top:1px solid #333; margin-top:4px;"
-            ),
+            class = "bp-side-version",
             paste0("bayprior v",
                    tryCatch(as.character(utils::packageVersion("bayprior")),
                             error = function(e) "dev"))
@@ -208,7 +199,7 @@ app_ui <- function(request) {
                   '<span style=\"font-size:9px;opacity:0.6;margin-left:4px;\">' +
                   (osDark ? '(dark)' : '(light)') + '</span>';
               }
-              if (window.Shiny)
+              if (window.Shiny && typeof Shiny.setInputValue === 'function')
                 Shiny.setInputValue('app_theme', isDark() ? 'dark' : 'light',
                                     {priority:'event'});
             }
@@ -225,6 +216,11 @@ app_ui <- function(request) {
               applyThemeState(next);
             }
 
+            // This script sits in <head>, where document.body does not exist
+            // yet; touching body.classList there threw and aborted everything
+            // below it (OS listener, label sync, app_theme input). Defer the
+            // body-dependent set-up until the body is available.
+            function bpThemeBoot() {
             // -- Initialise on page load -------------------------------------
             // Migration: earlier two-state toggle saved 'light' on first
             // load without explicit user action. Clear stale preferences
@@ -269,6 +265,9 @@ app_ui <- function(request) {
                 applyThemeState(getThemeState()); // final apply
               }, { once: true });
             })();
+            }
+            if (document.body) { bpThemeBoot(); }
+            else { document.addEventListener('DOMContentLoaded', bpThemeBoot); }
 
             // -- React to OS changes at runtime ------------------------------
             // Only applies when in Auto mode (no manual preference saved)
@@ -287,7 +286,7 @@ app_ui <- function(request) {
             });
 
             document.addEventListener('shiny:connected', function() {
-              if (window.Shiny)
+              if (window.Shiny && typeof Shiny.setInputValue === 'function')
                 Shiny.setInputValue('app_theme', isDark() ? 'dark' : 'light',
                                     {priority:'event'});
             });
@@ -499,7 +498,11 @@ golem_add_external_resources <- function() {
               href = "www/favicon.png"),
     tags$link(rel = "shortcut icon", type = "image/png",
               href = "www/favicon.png"),
+    # Theme tokens first, dark-mode overrides second (same specificity rules,
+    # so order matters).
     tags$link(rel = "stylesheet", type = "text/css",
-               href = "www/bayprior-dark.css")
+              href = "www/custom.css"),
+    tags$link(rel = "stylesheet", type = "text/css",
+              href = "www/bayprior-dark.css")
   )
 }

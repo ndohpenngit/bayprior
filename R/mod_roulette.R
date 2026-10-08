@@ -150,7 +150,8 @@ mod_roulette_server <- function(id, shared) {
         .apply_plotly_theme()
     })
 
-    fitted <- reactiveVal(NULL)
+    fitted  <- reactiveVal(NULL)
+    pending <- reactiveVal(NULL)
 
     observeEvent(input$fit_btn, {
       brks <- breaks(); cv <- chips()
@@ -169,7 +170,24 @@ mod_roulette_server <- function(id, shared) {
           NULL
         })
       fitted(pr)
-      shared$current_prior <- pr
+      if (!is.null(pr) && !is.null(shared$consensus)) {
+        pending(pr)
+        showModal(.consensus_modal(session$ns))
+      } else {
+        shared$current_prior <- pr
+      }
+    })
+    observeEvent(input$use_new, {
+      removeModal()
+      shared$consensus <- NULL
+      shared$current_prior <- pending()
+      shared$base_prior    <- pending()
+      pending(NULL)
+    })
+    observeEvent(input$keep_consensus, {
+      removeModal(); pending(NULL)
+      showNotification("Consensus kept. Add this expert to the pool and pool again to include it.",
+                       type = "message", duration = 6)
     })
 
     observeEvent(input$add_btn, {

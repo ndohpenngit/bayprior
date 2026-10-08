@@ -18,6 +18,7 @@ Genest
 Gravestock
 Gsteiger
 HR
+Handoff
 HbA
 ICH
 Inf
@@ -29,7 +30,6 @@ Nelder
 Neuenschwander
 Niggli
 O'Hagan
-Pandoc
 Parameterised
 Parmar
 Poisson
@@ -55,9 +55,8 @@ Zidek
 analyzed
 analyzing
 biom
-callout
+brms
 cdot
-cleanup
 codecov
 cutoff
 df
@@ -69,7 +68,10 @@ frac
 ggplot
 ggplots
 golem
+handoff
+handoffs
 heatmaps
+jrsm
 knitr
 mis
 mmHg
@@ -86,13 +88,14 @@ regex
 renv
 reparametrisation
 roxygen
+rstanarm
 sd
 se
 shinydashboard
+sjos
 ss
 surprisal
 th
 tikzfill
-unstyled
 var
 weibull
