@@ -199,7 +199,7 @@ app_ui <- function(request) {
                   '<span style=\"font-size:9px;opacity:0.6;margin-left:4px;\">' +
                   (osDark ? '(dark)' : '(light)') + '</span>';
               }
-              if (window.Shiny)
+              if (window.Shiny && typeof Shiny.setInputValue === 'function')
                 Shiny.setInputValue('app_theme', isDark() ? 'dark' : 'light',
                                     {priority:'event'});
             }
@@ -216,6 +216,11 @@ app_ui <- function(request) {
               applyThemeState(next);
             }
 
+            // This script sits in <head>, where document.body does not exist
+            // yet; touching body.classList there threw and aborted everything
+            // below it (OS listener, label sync, app_theme input). Defer the
+            // body-dependent set-up until the body is available.
+            function bpThemeBoot() {
             // -- Initialise on page load -------------------------------------
             // Migration: earlier two-state toggle saved 'light' on first
             // load without explicit user action. Clear stale preferences
@@ -260,6 +265,9 @@ app_ui <- function(request) {
                 applyThemeState(getThemeState()); // final apply
               }, { once: true });
             })();
+            }
+            if (document.body) { bpThemeBoot(); }
+            else { document.addEventListener('DOMContentLoaded', bpThemeBoot); }
 
             // -- React to OS changes at runtime ------------------------------
             // Only applies when in Auto mode (no manual preference saved)
@@ -278,7 +286,7 @@ app_ui <- function(request) {
             });
 
             document.addEventListener('shiny:connected', function() {
-              if (window.Shiny)
+              if (window.Shiny && typeof Shiny.setInputValue === 'function')
                 Shiny.setInputValue('app_theme', isDark() ? 'dark' : 'light',
                                     {priority:'event'});
             });
