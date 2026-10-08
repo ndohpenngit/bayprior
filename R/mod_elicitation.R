@@ -78,11 +78,34 @@ mod_elicitation_ui <- function(id) {
   )
 }
 
+#' Confirmation shown when a new prior is fitted while a pooled consensus
+#' prior is active. Downstream steps use the consensus, so silently fitting a
+#' new prior would leave the app analysing the old one.
+#' @noRd
+.consensus_modal <- function(ns) {
+  shiny::modalDialog(
+    title = "Replace the pooled consensus prior?",
+    easyClose = FALSE,
+    shiny::p("A pooled consensus prior is active and is what conflict,",
+             "sensitivity and the report currently use."),
+    shiny::p("Use the new prior instead and the consensus is discarded; any",
+             "conflict, sensitivity or robust results built on it are cleared.",
+             "Or keep the consensus: the new fit stays on this page so you can",
+             "add it to the expert pool and pool again."),
+    footer = shiny::tagList(
+      shiny::actionButton(ns("keep_consensus"), "Keep consensus",
+                          class = "btn btn-outline btn-sm"),
+      shiny::actionButton(ns("use_new"), "Use new prior instead",
+                          class = "btn btn-primary btn-sm"))
+  )
+}
+
 #' @noRd
 mod_elicitation_server <- function(id, shared) {
   moduleServer(id, function(input, output, session) {
 
-    fitted <- reactiveVal(NULL)
+    fitted  <- reactiveVal(NULL)
+    pending <- reactiveVal(NULL)   # fitted prior awaiting the consensus decision
 
     # Reset fitted prior whenever ANY input changes -- clears density plot
     # and parameter table so stale results are not shown while editing.
@@ -159,9 +182,29 @@ mod_elicitation_server <- function(id, shared) {
         NULL
       })
       fitted(pr)
+      if (!is.null(pr) && !is.null(shared$consensus)) {
+        pending(pr)
+        showModal(.consensus_modal(session$ns))
+      } else {
+        commit_prior(pr)
+      }
+    })
+
+    commit_prior <- function(pr) {
       shared$current_prior <- pr
       shared$base_prior    <- pr   # sensitivity uses base_prior only
       shinyjs::runjs("bpToast('Prior fitted successfully &#10003;', 'info', 3000);")
+    }
+    observeEvent(input$use_new, {
+      removeModal()
+      shared$consensus <- NULL
+      commit_prior(pending())
+      pending(NULL)
+    })
+    observeEvent(input$keep_consensus, {
+      removeModal(); pending(NULL)
+      showNotification("Consensus kept. Add this expert to the pool and pool again to include it.",
+                       type = "message", duration = 6)
     })
 
     observeEvent(input$add_btn, {
