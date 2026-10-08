@@ -117,19 +117,10 @@ app_ui <- function(request) {
         # Active prior badge + version footer
         tags$div(
           style = "position:absolute; bottom:0; width:100%; padding:4px 0;",
-          tags$div(
-            style = paste0(
-              "font-size:10px; color:#aaa; text-transform:uppercase;",
-              "letter-spacing:0.8px; padding:0 12px 2px;"
-            ),
-            "Active prior:"
-          ),
+          tags$div(class = "bp-side-label", "Active prior"),
           uiOutput("sidebar_prior_badge"),
           tags$div(
-            style = paste0(
-              "font-size:9px; color:#666; text-align:center;",
-              "padding:4px 0 6px; border-top:1px solid #333; margin-top:4px;"
-            ),
+            class = "bp-side-version",
             paste0("bayprior v",
                    tryCatch(as.character(utils::packageVersion("bayprior")),
                             error = function(e) "dev"))
@@ -499,7 +490,11 @@ golem_add_external_resources <- function() {
               href = "www/favicon.png"),
     tags$link(rel = "shortcut icon", type = "image/png",
               href = "www/favicon.png"),
+    # Theme tokens first, dark-mode overrides second (same specificity rules,
+    # so order matters).
     tags$link(rel = "stylesheet", type = "text/css",
-               href = "www/bayprior-dark.css")
+              href = "www/custom.css"),
+    tags$link(rel = "stylesheet", type = "text/css",
+              href = "www/bayprior-dark.css")
   )
 }

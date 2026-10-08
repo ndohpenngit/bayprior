@@ -1,92 +1,292 @@
 /* ============================================================
-   bayprior — Custom shinydashboard styles
+   bayprior theme
+   Palette is taken from the hex logo: deep navy + emerald.
+   One accent (emerald) means "done / fitted"; navy is structure;
+   everything else is neutral. Dark-mode values are swapped through
+   the same variables, so components never hard-code a colour.
+   Loaded before bayprior-dark.css (see golem_add_external_resources).
    ============================================================ */
 
 :root {
-  --blue-dark:  #1a2744;
-  --blue-mid:   #185FA5;
-  --green:      #1D9E75;
-  --green-dark: #0F6E56;
-  --grey-light: #F2F4F7;
-  --grey-med:   #D0D5DD;
+  --bp-navy:        #0F3460;   /* logo navy: header, headings, structure   */
+  --bp-navy-deep:   #0A2342;   /* sidebar                                   */
+  --bp-emerald:     #1D9E75;   /* logo emerald: fills, borders, icons       */
+  --bp-emerald-ink: #0B6B4F;   /* emerald for TEXT on light (AA, 6.2:1)     */
+  --bp-amber-ink:   #8A5300;   /* caution text on light (AA)                */
+  --bp-danger:      #B3261E;   /* errors only, never an empty state         */
+  --bp-danger-ink:  #B3261E;   /* danger as TEXT on a surface (6.5:1)       */
+
+  --bp-paper:       #F3F5F8;   /* page background                           */
+  --bp-surface:     #FFFFFF;   /* cards                                     */
+  --bp-line:        #D5DBE4;   /* hairlines                                 */
+  --bp-text:        #1B2638;   /* body text                                 */
+  --bp-muted:       #566176;   /* secondary text (AA on surface and paper)  */
+  --bp-done:        #0B6B4F;   /* fill for completed steps; white text 6.5:1 */
+  --bp-heading:     #0F3460;   /* navy used as TEXT/stroke on a surface     */
+  --bp-step-hover:  #E8EEF6;
 }
 
-/* Header */
-.main-header .logo,
-.main-header .navbar { background-color: var(--blue-dark) !important; }
-.main-header .logo   { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+body.dark-mode {
+  --bp-emerald-ink: #4FD1A5;
+  --bp-danger-ink:  #FF9C94;
+  --bp-amber-ink:   #E3B057;
+  --bp-paper:       #1a1a2e;
+  --bp-surface:     #16213e;
+  --bp-line:        #2C3A5E;
+  --bp-text:        #E3E8F2;
+  --bp-muted:       #9FADC6;
+  --bp-done:        #4FD1A5;
+  --bp-heading:     #A9C7F0;
+  --bp-step-hover:  #1F2E52;
+}
 
-/* Sidebar */
-.main-sidebar { background-color: #1e2d50 !important; }
-.sidebar-menu > li > a { font-size: 13px; color: #c8d8f0 !important; border-left: 3px solid transparent; transition: all 0.15s; }
-.sidebar-menu > li.active > a,
-.sidebar-menu > li > a:hover { background-color: rgba(29,158,117,0.18) !important; border-left-color: var(--green) !important; color: #5DCAA5 !important; }
-.sidebar-menu .treeview-menu > li > a { font-size: 12px; color: #8faecf !important; padding: 7px 5px 7px 30px; }
-.sidebar-menu .treeview-menu > li > a:hover { color: #A8CFED !important; }
+/* Header and sidebar: navy, with a serif wordmark to match the logo -------- */
+.skin-blue .main-header .logo,
+.skin-blue .main-header .navbar {
+  background-color: var(--bp-navy);
+}
+.skin-blue .main-header .logo:hover { background-color: var(--bp-navy); }
+.main-header .logo {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0.2px;
+}
+.skin-blue .main-sidebar { background-color: var(--bp-navy-deep); }
+.skin-blue .sidebar-menu > li > a { border-left: 3px solid transparent; }
+.skin-blue .sidebar-menu > li.active > a,
+.skin-blue .sidebar-menu > li > a:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  border-left-color: var(--bp-emerald);
+}
+.skin-blue .sidebar-menu > li > a > .fa { color: #7FB8A5; }
 
-/* Content */
-.content-wrapper { background-color: #f0f2f5 !important; }
+/* Page and cards ------------------------------------------------------------ */
+.content-wrapper { background-color: var(--bp-paper); }
+.box {
+  border-radius: 6px;
+  border-top: 0;
+  box-shadow: none;
+  border: 1px solid var(--bp-line);
+}
+.box.box-primary > .box-header,
+.box.box-solid.box-primary > .box-header {
+  background: var(--bp-navy);
+  color: #fff;
+}
+.box-header .box-title { font-family: Georgia, "Times New Roman", serif; }
 
-/* Boxes */
-.box { border-radius: 6px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important; border-top: none !important; }
-.box-header { border-radius: 6px 6px 0 0; padding: 10px 15px; font-size: 13px; font-weight: 600; }
-.box.box-primary > .box-header { background-color: var(--blue-dark) !important; color: #fff; }
-.box.box-info    > .box-header { background-color: var(--blue-mid)  !important; color: #fff; }
-.box.box-success > .box-header { background-color: var(--green)     !important; color: #fff; }
-.box.box-warning > .box-header { background-color: #BA7517          !important; color: #fff; }
-.box-body { padding: 12px 15px; }
-.box-header .btn-box-tool { color: rgba(255,255,255,0.7) !important; }
+/* Keyboard focus must always be visible ------------------------------------ */
+a:focus-visible, button:focus-visible, .btn:focus-visible,
+.bp-step:focus-visible {
+  outline: 2px solid var(--bp-emerald);
+  outline-offset: 2px;
+}
 
-/* Value & info boxes */
-.small-box { border-radius: 6px !important; }
-.small-box .inner h3 { font-size: 26px; font-weight: 700; }
-.small-box .inner p  { font-size: 12px; }
-.info-box { border-radius: 6px !important; min-height: 60px; }
-.info-box-icon { border-radius: 6px 0 0 6px !important; font-size: 28px; width: 60px; line-height: 60px; }
+/* Welcome page ---------------------------------------------------------------
+   Lead copy in the serif.                                                         */
+.bp-welcome .lead {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--bp-text);
+  max-width: 62ch;
+}
+/* Welcome: one-line summary and "Start here" cards -------------------------- */
+.bp-glance { color: var(--bp-muted); font-size: 13px; max-width: 62ch; }
+.bp-start h5 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px; color: var(--bp-text); margin: 4px 0 10px;
+}
+.bp-start-card {
+  background: var(--bp-surface); border: 1px solid var(--bp-line);
+  border-radius: 6px; padding: 14px 16px; margin-bottom: 12px;
+}
+.bp-start-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px; font-weight: 700; color: var(--bp-heading);
+}
+.bp-start-text { color: var(--bp-muted); font-size: 12.5px; margin: 4px 0 10px; }
 
-/* Forms */
-label, .control-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 3px; }
-.form-control { font-size: 12px; border-radius: 4px; border-color: var(--grey-med); height: 32px; padding: 4px 8px; }
-.form-control:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 2px rgba(24,95,165,0.15); }
+/* One heading style for every section title on the Welcome page. */
+.bp-h, .bp-welcome h5.bp-h, .bp-start h5.bp-h {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px; font-weight: 700; color: var(--bp-text);
+  margin: 4px 0 10px;
+}
+.bp-start-more { margin: 4px 2px 0; font-size: 12px; }
+.bp-start-more a { color: var(--bp-muted); text-decoration: underline; }
+.bp-start-card--done { border-left: 4px solid var(--bp-done); }
+.bp-start-title .bp-tick { color: var(--bp-done); margin-right: 6px; }
 
-/* Buttons */
-.btn-primary { background-color: var(--green) !important; border-color: var(--green) !important; }
-.btn-primary:hover { background-color: var(--green-dark) !important; border-color: var(--green-dark) !important; }
-.btn-block { margin-bottom: 4px; }
+/* Workflow diagram: HTML grid, real text sizes. Two states instead of seven
+   hues: open = outlined navy; done = filled emerald. Clickable and
+   keyboard-focusable; scrolls sideways rather than shrinking the text. */
+.bp-flow {
+  display: grid; grid-template-columns: repeat(7, minmax(92px, 1fr));
+  column-gap: 16px; row-gap: 0; min-width: 700px; max-width: 940px;
+  font-family: Arial, sans-serif;
+}
+.bp-step {
+  position: relative; display: flex; flex-direction: column; gap: 3px;
+  padding: 8px 7px 10px; text-align: center; text-decoration: none;
+  background: var(--bp-surface); border: 1.5px solid var(--bp-heading);
+  border-radius: 8px; color: var(--bp-text); transition: background 0.12s;
+}
+.bp-step:hover, .bp-step:focus { background: var(--bp-step-hover); text-decoration: none; }
+.bp-step-num   { font-size: 10px; font-weight: 700; letter-spacing: 0.6px; color: var(--bp-muted); }
+.bp-step-title { font-size: 13px; font-weight: 700; color: var(--bp-heading); }
+.bp-step-sub   { font-size: 11px; line-height: 1.3; color: var(--bp-muted); text-wrap: balance; }
+.bp-step.is-done { background: var(--bp-done); border-color: var(--bp-done); }
+.bp-step.is-done:hover, .bp-step.is-done:focus { background: #095A41; }
+.bp-step.is-done .bp-step-num,
+.bp-step.is-done .bp-step-title,
+.bp-step.is-done .bp-step-sub { color: #fff; }
+/* connectors drawn in the column gap: arrow, or "or" between Pooling and MAP */
+.bp-step:not(:nth-of-type(7))::after {
+  content: "\25B8"; position: absolute; right: -15px; top: 50%;
+  transform: translateY(-50%); width: 14px; text-align: center;
+  font-size: 12px; color: var(--bp-muted); pointer-events: none;
+}
+a.bp-step.bp-step-2::after { content: "or"; font-size: 11px; font-style: italic; }
+/* bracket under steps 1-3 */
+.bp-bracket {
+  grid-column: 1 / 4; margin: 8px 0 0; height: 8px;
+  border: 1.5px solid var(--bp-muted); border-top: 0;
+}
+.bp-bracket-cap, .bp-flow-foot {
+  font-size: 11px; line-height: 1.4; color: var(--bp-muted); text-align: center;
+}
+.bp-bracket-cap { grid-column: 1 / 4; margin-top: 4px; }
+.bp-flow-foot   { grid-column: 1 / -1; margin-top: 12px; }
+body.dark-mode .bp-step.is-done .bp-step-num,
+body.dark-mode .bp-step.is-done .bp-step-title,
+body.dark-mode .bp-step.is-done .bp-step-sub { color: #06241A; }
+body.dark-mode .bp-step.is-done:hover,
+body.dark-mode .bp-step.is-done:focus { background: #3DBE92; }
 
-/* Alerts */
-.alert { font-size: 12px; border-radius: 5px; padding: 8px 12px; }
-.alert-success { border-left: 4px solid var(--green); }
-.alert-warning { border-left: 4px solid #BA7517; }
-.alert-danger  { border-left: 4px solid #c0392b; }
+/* Sidebar "active prior" card ------------------------------------------------
+   Empty is neutral, not an error. Fitted gets the emerald.                   */
+.bp-prior-card {
+  margin: 6px 8px; padding: 8px 10px; border-radius: 6px; font-size: 11px;
+}
+.bp-prior-card--empty {
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  color: #B7C3D8;
+}
+.bp-prior-card--empty .bp-prior-title { font-weight: 600; font-size: 12px; }
+.bp-prior-card--empty .bp-prior-hint  { margin-top: 2px; opacity: 0.85; }
+.bp-prior-card--fitted {
+  background: #167A5A; color: #fff;   /* white text 5.3:1 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
 
-/* DT tables */
-table.dataTable { font-size: 12px !important; }
-table.dataTable thead th { background-color: var(--blue-dark) !important; color: #fff !important; font-weight: 600; padding: 8px 10px !important; }
-table.dataTable tbody tr:nth-child(even) { background-color: var(--grey-light); }
-table.dataTable tbody tr:hover { background-color: #dce8f5 !important; }
+/* Forms, buttons, tables ---------------------------------------------------- */
+label, .control-label {
+  font-size: 12px; font-weight: 600; color: var(--bp-text); margin-bottom: 3px;
+}
+.form-control:focus {
+  border-color: var(--bp-navy); box-shadow: 0 0 0 2px rgba(15, 52, 96, 0.18);
+}
+.btn.btn-primary {
+  background-color: var(--bp-navy); border-color: var(--bp-navy); color: #fff;
+}
+.btn.btn-primary:hover, .btn.btn-primary:focus {
+  background-color: #0B2748; border-color: #0B2748; color: #fff;
+}
+.btn.btn-success {
+  background-color: var(--bp-emerald-ink); border-color: var(--bp-emerald-ink); color: #fff;
+}
+.irs-bar, .irs-bar-edge { background: var(--bp-emerald); border-color: var(--bp-emerald); }
+.irs-single, .irs-from, .irs-to { background: var(--bp-navy); }
+table.dataTable thead th { background-color: var(--bp-navy); color: #fff; }
 
-/* Slider */
-.irs-bar, .irs-bar-edge { background: var(--green) !important; border-color: var(--green) !important; }
-.irs-single { background: var(--blue-mid) !important; }
+/* Plotly sits on its own white surface; do not tint it here (see the dark-mode
+   notes in bayprior-dark.css and app_ui.R). */
+.js-plotly-plot .plotly, .plotly-graph-div { background: transparent; }
 
-/* ── Plotly ──────────────────────────────────────────────────────────────────
-   IMPORTANT: Do NOT set background: transparent here with !important.
-   Plotly sets SVG backgrounds via inline style="fill: rgb(255,255,255)" which
-   CSS cannot override. Setting transparent here just makes the white SVG rect
-   show through, which is invisible in dark mode.
-   The R-side plotly_layout reactive + .apply_plotly_theme() handle this.     */
-.js-plotly-plot .plotly { background: transparent; }
-.plotly-graph-div        { background: transparent; }
-
-/* Spinner */
 .shiny-spinner-output-container { min-height: 120px; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: #b0bec5; border-radius: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .bp-step { transition: none; }
+}
 
-/* Sidebar status box */
-.sidebar .small-box { margin: 0 10px; border-radius: 4px !important; }
-.sidebar .small-box .inner h3 { font-size: 16px; }
-.sidebar .small-box .inner p  { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Secondary action: outlined navy (reads as a button, not as disabled). */
+.btn.btn-outline {
+  background: transparent; color: var(--bp-heading);
+  border: 1px solid var(--bp-heading);
+}
+.btn.btn-outline:hover, .btn.btn-outline:focus {
+  background: var(--bp-step-hover); color: var(--bp-heading);
+  border-color: var(--bp-heading);
+}
+
+/* Result tiles (shinydashboard valueBox) -------------------------------------
+   Colour now carries status only: a neutral card with a coloured left edge.
+   red = conflict flagged, green = no conflict; every other tile is navy.   */
+.small-box[class*="bg-"] {
+  background-color: var(--bp-surface) !important;
+  color: var(--bp-text) !important;
+  border: 1px solid var(--bp-line); border-left: 4px solid var(--bp-heading);
+  border-radius: 6px; box-shadow: none;
+}
+.small-box[class*="bg-"] h3 { color: var(--bp-heading); }
+.small-box[class*="bg-"] p  { color: var(--bp-muted); }
+.small-box.bg-green  { border-left-color: var(--bp-emerald); }
+.small-box.bg-green h3 { color: var(--bp-emerald-ink); }
+.small-box.bg-red    { border-left-color: var(--bp-danger); }
+.small-box.bg-red h3 { color: var(--bp-danger-ink); }
+.small-box.bg-yellow, .small-box.bg-orange { border-left-color: var(--bp-amber-ink); }
+.small-box .icon-large, .small-box .icon {
+  color: var(--bp-heading) !important; opacity: 0.09;
+}
+.small-box:hover .icon-large, .small-box:hover .icon { opacity: 0.14; }
+.small-box .btn-tip-wrap .fa, .small-box .btn-tip-wrap svg {
+  color: var(--bp-muted) !important;
+}
+
+/* Sidebar: icons share one width so labels line up -------------------------- */
+.sidebar-menu > li > a > i:first-child,
+.sidebar-menu > li > a > svg:first-child {
+  display: inline-block; width: 22px; margin-right: 4px; text-align: center;
+}
+.bp-side-label {
+  font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase;
+  color: #C5CFE0; padding: 0 12px 2px;
+}
+.bp-side-version {
+  font-size: 10px; color: #9DAAC2; text-align: center;
+  padding: 5px 0 7px; border-top: 1px solid rgba(255, 255, 255, 0.14);
+  margin-top: 4px;
+}
+
+/* Equal-height result tiles (Box p carries an extra "method" line). */
+.small-box[class*="bg-"] { min-height: 124px; }
+
+/* Box headers: one family. primary = navy, info = steel, success = emerald,
+   warning = amber; all white text >= 6:1. Outlines use the hairline colour. */
+.box.box-solid.box-primary, .box.box-solid.box-info,
+.box.box-solid.box-success, .box.box-solid.box-warning,
+.box.box-solid.box-danger { border: 1px solid var(--bp-line); }
+.box.box-solid.box-info    > .box-header { background: #2B5A8C; color: #fff; }
+.box.box-solid.box-success > .box-header { background: var(--bp-emerald-ink); color: #fff; }
+.box.box-solid.box-warning > .box-header { background: var(--bp-amber-ink);  color: #fff; }
+.box.box-solid.box-danger  > .box-header { background: var(--bp-danger);     color: #fff; }
+body.dark-mode .box.box-solid.box-success > .box-header { background: #0B6B4F; }
+body.dark-mode .box.box-solid.box-warning > .box-header { background: #8A5300; }
+
+/* Alerts (light mode): tinted surface + dark ink instead of saturated fills.
+   Dark-mode variants live in bayprior-dark.css. */
+.alert { border-radius: 6px; border-width: 1px; border-left-width: 4px; }
+.alert.alert-success { background: #E8F5EF !important; border-color: #1D9E75 !important; color: #0B4A37 !important; }
+.alert.alert-info    { background: #EAF1FA !important; border-color: #2B5A8C !important; color: #12304F !important; }
+.alert.alert-warning { background: #FBF1E0 !important; border-color: #B7791F !important; color: #5E3800 !important; }
+.alert.alert-danger  { background: #FCEBEA !important; border-color: #B3261E !important; color: #6E1712 !important; }
+
+/* Shiny notifications: neutral card with a status edge, fully opaque. */
+.shiny-notification {
+  opacity: 1; background: var(--bp-surface); color: var(--bp-text);
+  border: 1px solid var(--bp-line); border-left: 4px solid var(--bp-emerald);
+  border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+.shiny-notification-error   { border-left-color: var(--bp-danger); }
+.shiny-notification-warning { border-left-color: var(--bp-amber-ink); }
