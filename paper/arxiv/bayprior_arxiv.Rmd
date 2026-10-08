@@ -2,13 +2,14 @@
 title: "bayprior: Structured Bayesian Prior Elicitation, Conflict Diagnostics, and Regulatory Reporting"
 author: |
   | Ndoh Penn
-  | Independent Researcher, Antwerp, Belgium
-date: "2026-08-03"
+  | Independent Researcher
+  | Reprostats, Belgium
+date: "2026-10-07"
 abstract: >
   Bayesian clinical trials require a well-specified prior distribution, and
   regulators increasingly expect that specification to be documented,
   diagnosed for prior-data conflict, and shown to be robust to reasonable
-  alternatives -- yet few R tools connect the full workflow of prior
+  alternatives, yet few R tools connect the full workflow of prior
   construction, validation, and regulatory justification into a single
   package. We introduce bayprior, an R package and Shiny application that
   implements structured expert elicitation via quantile matching, moment
@@ -51,7 +52,7 @@ header-includes:
 # print.bayprior() and related cli-based print methods fall back to plain
 # cat() output when cli's styled rendering isn't available (e.g. no RSTUDIO/
 # POSITRON env var and stdout isn't a tty, as in rmarkdown::render()'s callr
-# subprocess) -- this fallback shipped in the v0.3.0 fix for #40. Setting
+# subprocess): this fallback shipped in the v0.3.0 fix for #40. Setting
 # RSTUDIO here instead forces the styled cli:: output path for this document,
 # which is a cosmetic choice, not a requirement for output to appear at all.
 Sys.setenv(RSTUDIO = "1")
@@ -94,8 +95,8 @@ computation and adaptive design. \CRANpkg{RBesT} [@RBesT] implements
 robust meta-analytic-predictive priors for historical data borrowing.
 \CRANpkg{trialr} [@trialr] provides a range of adaptive trial designs
 via Stan. \CRANpkg{hdbayes} [@hdbayes] implements multiple historical
-data borrowing priors -- including power priors, normalised power priors,
-robust MAP priors, and commensurate priors -- for generalised linear
+data borrowing priors (including power priors, normalised power priors,
+robust MAP priors, and commensurate priors) for generalised linear
 models. Each of these tools addresses a specific stage of the Bayesian
 workflow well, but none carries a prior through construction from expert
 knowledge, prior-data conflict assessment, and regulatory reporting as a
@@ -252,7 +253,7 @@ knitr::kable(
 ```
 
 **Quantile matching** fits the distribution numerically to expert-specified
-probability--value pairs, accommodating asymmetric beliefs that moment
+probability-value pairs, accommodating asymmetric beliefs that moment
 matching cannot capture. For example, an expert who believes the response
 rate has a 25\% chance of being below 0.20, a 60\% chance of being below
 0.35, and an 80\% chance of being below 0.50:
@@ -339,7 +340,7 @@ distribution family or the data type:
   data at least as extreme as the observed data under the prior predictive
   distribution.
 - **S-value** [@Greenland2023]: the surprisal $-\log_2(p)$ of the Box
-  p-value, in bits -- an exploratory, continuous companion to the
+  p-value, in bits. It is an exploratory, continuous companion to the
   p-value rather than a thresholded decision rule, since prior-data
   conflict checks are typically not powered for a binary accept/reject
   decision.
@@ -352,6 +353,34 @@ distribution family or the data type:
   prior to the normalised likelihood.
 - **Bhattacharyya overlap**: the distributional overlap between the prior
   and normalised likelihood.
+
+Writing the prior as $\pi \sim \mathcal{N}(\mu_\pi, \sigma_\pi^2)$ and the
+observed-data likelihood, summarised by its mean and standard error, as
+$\ell \sim \mathcal{N}(\mu_\ell, \sigma_\ell^2)$, all five diagnostics
+reduce to closed-form expressions under this common Normal approximation.
+The prior predictive distribution of the data summary is
+$\mathcal{N}(\mu_\pi, \sigma_\pi^2 + \sigma_\ell^2)$, giving a standardised
+distance
+$$z = \frac{\mu_\ell - \mu_\pi}{\sqrt{\sigma_\pi^2 + \sigma_\ell^2}},$$
+the two-sided Box p-value $p = 2\left[1 - \Phi(|z|)\right]$, and the
+S-value $S = -\log_2(p)$. The surprise index uses the prior's own spread
+rather than the combined spread of $z$ above,
+$$\text{SI} = \frac{|\mu_\ell - \mu_\pi|}{\sigma_\pi},$$
+which is why it is correlated with, but not a monotone reparametrisation
+of, the Box p-value. The KL divergence from the prior to the normalised
+likelihood, both treated as Normal densities on the same parameter scale,
+is
+$$D_{\mathrm{KL}}(\pi \,\|\, \ell) = \ln\!\left(\frac{\sigma_\ell}{\sigma_\pi}\right)
+  + \frac{\sigma_\pi^2 + (\mu_\pi - \mu_\ell)^2}{2\sigma_\ell^2} - \frac{1}{2},$$
+and the Bhattacharyya coefficient between the two Normal densities is
+$$\mathrm{BC} = \sqrt{\frac{2\sigma_\pi \sigma_\ell}{\sigma_\pi^2 + \sigma_\ell^2}}
+  \, \exp\!\left(-\frac{(\mu_\pi - \mu_\ell)^2}{4\left(\sigma_\pi^2 + \sigma_\ell^2\right)}\right).$$
+These expressions make explicit that all five diagnostics are functions of
+a single standardised quantity, the distance between $\mu_\pi$ and
+$\mu_\ell$ relative to their spreads, computed after each of the four
+supported data types (binary, continuous, Poisson/count, survival) is
+mapped to its own approximate mean and standard error, not five
+independent pieces of evidence.
 
 ```{r conflict}
 interim <- list(type = "binary", x = 18, n = 40)
@@ -389,8 +418,8 @@ comparison: binary (event count out of a sample size), continuous
 approximate mean and standard error before the Normal-approximation
 diagnostics above are applied. This is distinct from the *exact* conjugate
 posterior updates (Beta-Binomial, Normal-Normal, Gamma-Poisson,
-Gamma-Exponential) that \CRANpkg{bayprior} uses elsewhere -- for example
-in the sensitivity analysis module below -- to compute posterior summaries.
+Gamma-Exponential) that \CRANpkg{bayprior} uses elsewhere (for example
+in the sensitivity analysis module below) to compute posterior summaries.
 
 For co-primary endpoints, multivariate conflict can be assessed using the
 Mahalanobis distance [@Mahalanobis1936]. The test assumes approximate
@@ -452,20 +481,21 @@ plot_tornado(sa)
 ```
 
 The `sensitivity_cri()` function tracks credible interval width
-specifically -- a quantity directly relevant to the precision of treatment
+specifically, a quantity directly relevant to the precision of treatment
 effect estimates in regulatory submissions.
 
 ## MAP Priors from Historical Data
 
-Where the previous two sections combine *expert judgement* into a prior,
-`map_prior()` derives one directly from *historical trial data* -- the
+Where the Prior Elicitation and Expert Pooling sections above combine
+*expert judgement* into a prior, `map_prior()` derives one directly from
+*historical trial data* using the
 meta-analytic-predictive (MAP) approach of @Schmidli2014 and
 @Neuenschwander2010. Historical trial point estimates and standard errors
 are combined via a random-effects meta-analysis, with an explicit,
 outcome-type-specific prior on the between-trial heterogeneity parameter
 $\tau$ following the weakly-informative recommendations of @Roever2021.
-Unlike `robust_prior()` (below) -- which mixes an *already-specified*
-informative prior with a vague component for robustness -- `map_prior()`
+Unlike `robust_prior()` (below), which mixes an *already-specified*
+informative prior with a vague component for robustness, `map_prior()`
 derives the informative prior itself from historical data in the first
 place:
 
@@ -498,8 +528,8 @@ knitr::kable(
   kableExtra::kable_styling(latex_options = "hold_position")
 ```
 
-The full $\tau$ posterior -- not just its effect on the meta-analytic
-mean -- is retained in `map$tau_posterior` and can be exported as part of
+The full $\tau$ posterior (not just its effect on the meta-analytic
+mean) is retained in `map$tau_posterior` and can be exported as part of
 `prior_report()`, giving reviewers direct visibility into how much
 heterogeneity the historical borrowing assumed, rather than treating it
 as a fixed nuisance parameter.
@@ -590,8 +620,9 @@ We demonstrate the \CRANpkg{bayprior} workflow end to end on TRIAL-001, a
 synthetic oncology Phase II trial with a binary response rate endpoint.
 The target response rate is 30\% (null hypothesis) versus an expected
 rate of 40\% (alternative hypothesis). TRIAL-001 is single-arm with no
-historical control data, so the power prior module is not demonstrated
-here; a worked example appears in the Package overview section above.
+historical control data, so the power prior and MAP-prior modules are
+not demonstrated here; worked examples for both appear in the Package
+overview section above.
 
 ## Expert Elicitation and Pooling
 
@@ -698,9 +729,17 @@ cat("Conflict severity (enthusiastic): ", cd_enth$conflict_severity, "\n")
 cat("Conflict severity (sceptical):    ", cd_scep$conflict_severity, "\n")
 ```
 
-Conclusions were consistent across all three priors, supporting the
-robustness of the trial's conclusions to reasonable variation in the
-prior specification.
+The consensus and enthusiastic priors showed no evidence of prior-data
+conflict (Box p-values of `r round(cd_trial$box_pvalue, 2)` and
+`r round(cd_enth$box_pvalue, 2)`); the sceptical prior showed mild
+conflict (Box p = `r round(cd_scep$box_pvalue, 3)`). This is the expected
+diagnostic outcome for a prior deliberately centred at the null response
+rate (20\%) confronted with a substantially higher observed interim rate
+(45\%): the sceptical prior is a stress test by design, and the
+diagnostic correctly flags that it is in tension with the data, rather
+than indicating a problem with the trial's conclusion. The consensus and
+enthusiastic priors, which reflect the experts' actual clinical belief
+rather than a deliberately adversarial position, are not flagged.
 
 ## Sensitivity Analysis
 
@@ -727,10 +766,22 @@ sa_trial <- sensitivity_grid(
 plot_tornado(sa_trial)
 ```
 
-The posterior mean and the probability of exceeding the 30\% efficacy
-threshold both remained stable across the explored hyperparameter range,
-indicating the trial's conclusion is not driven by fine details of the
-pooled prior's specification.
+```{r trial-sensitivity-range, echo=FALSE}
+pm_range <- range(sa_trial$grid$posterior_mean)
+pe_range <- range(sa_trial$grid$prob_efficacy)
+```
+
+Across the explored hyperparameter range, the posterior mean varies from
+`r round(pm_range[1], 2)` to `r round(pm_range[2], 2)` and the probability
+of exceeding the 30\% efficacy threshold varies from
+`r round(pe_range[1], 2)` to `r round(pe_range[2], 2)`. Neither quantity
+is pinned to a single value, but the trial's qualitative conclusion does
+not reverse anywhere in the grid: the posterior mean remains above the
+30\% null in every cell, and the probability of efficacy never
+approaches a level that would change a regulatory decision built on this
+threshold. The trial's conclusion is therefore not driven by fine
+details of the pooled prior's specification, even though the exact
+posterior summaries do move with the hyperparameters.
 
 ## Robust Mixture Prior
 
@@ -745,14 +796,18 @@ cd_rob    <- prior_conflict(rob_trial, interim_data, alpha = 0.05)
 cat("Conflict severity (robust mixture):", cd_rob$conflict_severity, "\n")
 ```
 
-The robust mixture prior showed the same conflict conclusion as the
-consensus, enthusiastic, and sceptical priors above.
+The robust mixture prior showed the same conflict conclusion (no evidence of
+conflict) as the consensus and enthusiastic priors above. It does not match
+the sceptical prior's mild-conflict flag, nor should it: the sceptical
+prior is a deliberately adversarial stress test, while the robust mixture
+is a bounded-influence version of the experts' actual consensus belief, so
+the two are expected to diverge.
 
 ## Regulatory Report
 
-The full set of TRIAL-001 analyses -- the pooled prior, conflict
-diagnostics, sensitivity analysis, and robust and sceptical alternatives
--- can be assembled into a single submission-ready document with one
+The full set of TRIAL-001 analyses (the pooled prior, conflict
+diagnostics, sensitivity analysis, and robust and sceptical alternatives)
+can be assembled into a single submission-ready document with one
 function call:
 
 ```{r trial-report, eval=FALSE}
@@ -772,11 +827,23 @@ prior_report(
 # Discussion
 
 \CRANpkg{bayprior} provides a structured workflow for prior justification
-that addresses a practical gap in the Bayesian clinical trial toolkit. The
-package is designed to be used alongside existing analysis packages
-(\CRANpkg{RBesT}, \CRANpkg{rstanarm}, \CRANpkg{brms}) rather than
-replacing them: bayprior handles the prior specification phase, and
-established packages handle the posterior computation.
+that addresses a practical gap in the Bayesian clinical trial toolkit. It
+is intended for use alongside, not as a replacement for, established
+posterior-computation packages such as \CRANpkg{rstanarm} [@rstanarm] and
+\CRANpkg{brms} [@Buerkner2017]: bayprior handles the prior specification
+phase, and these packages handle model fitting. bayprior's fitted
+hyperparameters are ordinary distribution parameters rather than an
+opaque object (the `prior$params$alpha`/`beta` shown in Table 2 above,
+or a `map_prior()` fit's Normal mean and SD on the log-odds scale), and
+for the latter this is exactly the Normal intercept-prior parameterisation
+both downstream packages expect for a logistic-regression model,
+requiring no distributional-family conversion. An example of both
+handoffs, including the syntax each package's own prior-specification
+API actually requires (which is easy to get wrong), is provided in the
+package's `vignette("using-with-rstanarm-brms")`. \CRANpkg{rstanarm} and
+\CRANpkg{brms} are listed only as optional (`Suggests`) dependencies for
+this demonstration; neither is required to use \CRANpkg{bayprior}
+itself.
 
 ## Regulatory Alignment
 
@@ -784,9 +851,9 @@ The FDA's 2026 draft guidance on Bayesian methods [@FDA2026] asks sponsors
 relying on a Bayesian analysis to provide detailed support for the
 proposed prior distribution and any external information borrowing, to
 quantify the prior's influence (for example via an effective sample
-size), to evaluate operating characteristics -- including sensitivity to
+size), to evaluate operating characteristics (including sensitivity to
 the prior specification and to prior-data conflict, typically via
-simulation -- and to document the analysis in sufficient detail for the
+simulation) and to document the analysis in sufficient detail for the
 FDA to understand and, where feasible, reproduce it. \CRANpkg{bayprior}
 supports each of these expectations directly: structured elicitation and
 pooling provide a documented, reproducible derivation of the prior;
@@ -804,32 +871,34 @@ development [@EMA2018], for instance, requires sponsors to quantify how
 much information a Bayesian prior contributes relative to the data
 generated in the target population and to investigate the Type I error
 properties of the resulting analysis. The conflict diagnostics in
-\CRANpkg{bayprior} -- the Box predictive p-value, S-value, surprise
-index, information divergence, and Bhattacharyya overlap -- provide a
+\CRANpkg{bayprior} (the Box predictive p-value, S-value, surprise
+index, information divergence, and Bhattacharyya overlap) provide a
 closed-form way to address this for conjugate prior families, without
 requiring a fitted model.
 
 ## Shiny Application
 
-The bundled Shiny application mirrors the package's six modules as
+The bundled Shiny application mirrors the package's analytical workflow as
 separate panels, allowing a biostatistician without R programming
-experience to perform the same elicitation, pooling, conflict, sensitivity,
-robust prior, and reporting workflow interactively. Each panel produces the
-same plots and summary statistics as the corresponding R function, and the
-final regulatory report can be downloaded directly from the application.
+experience to perform the same elicitation, pooling, MAP-prior derivation,
+conflict, sensitivity, robust prior, and reporting workflow interactively.
+Each panel produces the same plots and summary statistics as the
+corresponding R function, and the final regulatory report can be
+downloaded directly from the application.
 The application is hosted at
 <https://ndohpenn-bayprior.share.connect.posit.cloud> and can be launched
 locally via `run_app()`.
 
 ## Limitations
 
-Several limitations apply to the current release (v0.3.2). The
+Several limitations apply to the current release (v0.4.0). The
 multivariate Mahalanobis check is currently limited to bivariate (k = 2)
 endpoints; extension to k $\geq$ 3 co-primary endpoints is planned for a
 future release. Survival power priors require numerical integration over
 the partial likelihood and are not yet implemented; calibrated power priors
-are currently available for binary, continuous, Poisson, and log-normal
-data types. The robust mixture prior uses a Normal vague component
+are currently available for binary, continuous, and Poisson/count data,
+using Beta, Normal, Gamma, or Lognormal prior families as appropriate. The
+robust mixture prior uses a Normal vague component
 regardless of the informative prior family; for Beta, Gamma, and other
 non-Normal informative priors, the resulting mixture density is computed
 numerically rather than analytically, which is accurate in the body of the
@@ -838,21 +907,36 @@ grids over mixture priors moment-match the pooled mean and SD to a
 working prior in the dominant component's family (Beta, Normal, Gamma, or
 Log-Normal); families without a mean/SD parameterisation (Exponential,
 Weibull) fall back to the dominant component alone, with a warning.
+Finally, the conflict diagnostics themselves rest by default on a Normal
+approximation to the prior and to the data likelihood (see the Prior-Data
+Conflict Diagnostics section above). `prior_conflict(..., exact = TRUE)`
+replaces this with the exact prior predictive distribution: Beta-Binomial
+for a Beta prior against binary data, and Negative Binomial (via
+Gamma-Poisson conjugacy) for a Gamma prior against count or survival data
+(the two share one exact check, since both reduce to the same
+events/exposure model). This eliminates the approximation entirely for
+these common cases; the Normal-Normal case (a Normal prior against continuous data) is already
+exact under the default. For prior families or data types without a
+closed-form exact check (for example a Weibull-elicited prior), the
+Normal approximation remains the only option, and this paper does not
+separately quantify its accuracy there, nor the repeated-sampling
+operating characteristics (for example, the false conflict-flag rate
+under the null) of the resulting diagnostics more generally.
 
-Future development includes survival power priors, k $\geq$ 3 endpoint
-Mahalanobis conflict, and interoperability with \CRANpkg{RBesT} for MAP
-prior workflows. A companion paper in Pharmaceutical Statistics
+Future development includes survival power priors and k $\geq$ 3 endpoint
+Mahalanobis conflict. A companion paper in Pharmaceutical Statistics
 (in preparation) provides a methodological treatment of the conflict
-diagnostic framework and a regulatory alignment assessment against the
-FDA 2026 draft guidance.
+diagnostic framework, including this operating-characteristics assessment,
+and a regulatory alignment assessment against the FDA 2026 draft guidance.
 
 # Summary
 
 \CRANpkg{bayprior} provides an integrated R tool for the complete prior
 justification workflow in Bayesian clinical trials, combining structured
-expert elicitation, opinion pooling, conjugate conflict diagnostics,
-hyperparameter sensitivity analysis, robust prior alternatives, and
-regulatory reporting in a single package. The package is available on CRAN:
+expert elicitation, opinion pooling, MAP priors from historical trial
+data, conjugate conflict diagnostics, hyperparameter sensitivity
+analysis, robust prior alternatives, and regulatory reporting in a
+single package. The package is available on CRAN:
 
 ```{r install-cran, eval=FALSE}
 install.packages("bayprior")

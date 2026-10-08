@@ -29,3 +29,7 @@ doc/
 **/*.quarto_ipynb
 CRAN-SUBMISSION
 codecov.yml
+
+paper/arxiv/bayprior_arxiv_files/
+paper/arxiv/*.tex
+paper/arxiv/*.pdf
