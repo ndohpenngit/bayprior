@@ -76,7 +76,8 @@ mod_map_prior_server <- function(id, shared) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
-    fitted <- reactiveVal(NULL)
+    fitted  <- reactiveVal(NULL)
+    pending <- reactiveVal(NULL)
 
     # Parses the "estimate, se" textarea into a numeric data.frame.
     # Returns NULL (with a UI message set) on any malformed line rather
@@ -170,12 +171,30 @@ mod_map_prior_server <- function(id, shared) {
         }
       )
       fitted(pr)
-      if (!is.null(pr)) {
-        shared$current_prior <- pr
-        shared$base_prior    <- pr   # sensitivity uses base_prior only
-        shared$map_prior     <- pr
-        shinyjs::runjs("bpToast('MAP prior derived successfully &#10003;', 'info', 3000);")
+      if (!is.null(pr) && !is.null(shared$consensus)) {
+        pending(pr)
+        showModal(.consensus_modal(session$ns))
+      } else if (!is.null(pr)) {
+        commit_map(pr)
       }
+    })
+
+    commit_map <- function(pr) {
+      shared$current_prior <- pr
+      shared$base_prior    <- pr   # sensitivity uses base_prior only
+      shared$map_prior     <- pr
+      shinyjs::runjs("bpToast('MAP prior derived successfully &#10003;', 'info', 3000);")
+    }
+    observeEvent(input$use_new, {
+      removeModal()
+      shared$consensus <- NULL
+      commit_map(pending())
+      pending(NULL)
+    })
+    observeEvent(input$keep_consensus, {
+      removeModal(); pending(NULL)
+      showNotification("Consensus kept; the MAP prior was not made active.",
+                       type = "message", duration = 6)
     })
 
     output$fit_msg <- renderUI({

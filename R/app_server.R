@@ -18,7 +18,8 @@ app_server <- function(input, output, session) {
     robust_prior    = NULL,  # output of robust_prior()
     sceptical_prior = NULL,  # output of sceptical_prior()
     power_prior     = NULL,  # output of calibrate_power_prior()
-    map_prior       = NULL   # output of map_prior()
+    map_prior       = NULL,  # output of map_prior()
+    report_exported = FALSE  # TRUE once a report has been generated
   )
 
   # Convenience: resolved prior (consensus preferred, else current)
@@ -119,33 +120,34 @@ app_server <- function(input, output, session) {
     }
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+  # A report is only "done" while it still matches the session: any change to
+  # the prior or to an analysis it would contain (new elicitation, pooling,
+  # MAP prior, example load, rerun conflict / sensitivity / robust) reopens
+  # the Report step so the Welcome diagram never shows a stale tick.
+  observeEvent(
+    list(active_prior(), shared$map_prior, shared$conflict, shared$sensitivity,
+         shared$robust_prior, shared$sceptical_prior, shared$power_prior),
+    { shared$report_exported <- FALSE },
+    ignoreInit = TRUE, ignoreNULL = FALSE
+  )
+
   # -- Sidebar prior badge ---------------------------------------------------
   # Rendered into uiOutput("sidebar_prior_badge") in app_ui.R sidebar footer.
   output$sidebar_prior_badge <- renderUI({
     p <- active_prior()
     if (is.null(p)) {
+      # Empty is a normal starting state, not an error: neutral, dashed, with
+      # the next action instead of an alarm colour.
       tags$div(
-        style = paste0(
-          "margin:6px 8px; padding:8px 10px; border-radius:6px;",
-          "background:#c0392b; color:#fff; font-size:11px;"
-        ),
-        tags$div(
-          style = "font-weight:700; font-size:12px; letter-spacing:0.5px;",
-          icon("circle-xmark"), " NONE"
-        ),
-        tags$div(
-          style = "opacity:0.85; margin-top:2px;",
-          "No prior fitted"
-        )
+        class = "bp-prior-card bp-prior-card--empty",
+        tags$div(class = "bp-prior-title", "No prior yet"),
+        tags$div(class = "bp-prior-hint",
+                 "Elicit one, pool experts, or derive it from historical data.")
       )
     } else {
       s <- p$fit_summary
       tags$div(
-        style = paste0(
-          "margin:6px 8px; padding:8px 10px; border-radius:6px;",
-          "background:#1D9E75; color:#fff; font-size:11px;",
-          "box-shadow: 0 2px 6px rgba(0,0,0,0.25);"
-        ),
+        class = "bp-prior-card bp-prior-card--fitted",
         tags$div(
           style = "font-weight:700; font-size:13px; letter-spacing:0.5px;",
           icon("circle-check"), " ", toupper(p$dist)
@@ -189,7 +191,20 @@ app_server <- function(input, output, session) {
   })
 
   # -- Module servers --------------------------------------------------------
-  mod_welcome_server("welcome")
+  # Same completion rules as the sidebar badges above, shared with the
+  # Welcome page so its workflow diagram shows real progress.
+  steps_done <- reactive(list(
+    elicit   = !is.null(active_prior()),
+    pool     = !is.null(shared$consensus),
+    map      = !is.null(shared$map_prior),
+    conflict = !is.null(shared$conflict),
+    sens     = !is.null(shared$sensitivity),
+    robust   = !is.null(shared$robust_prior) ||
+               !is.null(shared$sceptical_prior) ||
+               !is.null(shared$power_prior),
+    report   = isTRUE(shared$report_exported)
+  ))
+  mod_welcome_server("welcome", steps_done = steps_done, shared = shared)
   mod_elicitation_server("elicitation", shared = shared)
   mod_roulette_server("roulette",       shared = shared)
   mod_pooling_server("pooling",         shared = shared, active_prior = active_prior)

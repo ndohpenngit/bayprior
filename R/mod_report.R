@@ -55,6 +55,10 @@ mod_report_server <- function(id, shared, active_prior) {
         .status_item(!is.null(p),
           if (!is.null(p)) glue::glue("Prior: {p$label} ({toupper(p$dist)})")
           else "No prior fitted"),
+        .status_item(!is.null(shared$map_prior),
+          if (!is.null(shared$map_prior))
+            glue::glue("MAP prior: {shared$map_prior$n_trials} historical trial(s)")
+          else "MAP prior: not derived"),
         .status_item(!is.null(shared$conflict),
           if (!is.null(shared$conflict))
             glue::glue("Conflict: severity = {toupper(shared$conflict$conflict_severity)}")
@@ -75,6 +79,7 @@ mod_report_server <- function(id, shared, active_prior) {
       has_r <- !is.null(shared$robust_prior) ||
                !is.null(shared$sceptical_prior) ||
                !is.null(shared$power_prior)
+      has_map <- !is.null(shared$map_prior)
       has_n <- nzchar(input$notes %||% "")
 
       .item <- function(done, label, optional = FALSE) {
@@ -97,6 +102,8 @@ mod_report_server <- function(id, shared, active_prior) {
           style = "margin:0;",
           .item(has_p,  "Prior fitted and density plotted"),
           .item(has_p,  "Expert / source identified"),
+          .item(has_map, "MAP prior derived from historical trials", optional = !has_map),
+          .item(has_map, "Heterogeneity (tau) posterior plotted",    optional = !has_map),
           .item(has_c,  "Prior-data conflict assessed",    optional = !has_c),
           .item(has_c,  "Prior-Likelihood-Posterior overlay", optional = !has_c),
           .item(has_s,  "Sensitivity analysis performed",  optional = !has_s),
@@ -165,6 +172,16 @@ mod_report_server <- function(id, shared, active_prior) {
           tryCatch(plot(shared$power_prior), error = function(e) NULL)
           else NULL
 
+        # MAP prior heterogeneity (tau) posterior plot -- only meaningful
+        # when the active prior was itself derived via map_prior(); a MAP
+        # prior sitting unused in shared$map_prior while a different prior
+        # is active (e.g. after a later robust/sceptical step) should not
+        # be plotted here, hence the check against the ACTIVE prior `p`,
+        # not against shared$map_prior directly.
+        tau_posterior_plot <- if (!is.null(p) && identical(p$prior_type, "map"))
+          tryCatch(plot_tau_posterior(p), error = function(e) NULL)
+          else NULL
+
         withProgress(message = "Rendering report...", value = 0.5, {
           prior_report(
             prior           = p,
@@ -189,10 +206,12 @@ mod_report_server <- function(id, shared, active_prior) {
             robust_plot   = robust_plot,
             sceptical_plot = sceptical_plot,
             power_plot    = power_plot,
+            tau_posterior_plot = tau_posterior_plot,
             open_after    = FALSE
           )
           setProgress(1)
         })
+        shared$report_exported <- TRUE
       }
     )
 
@@ -204,7 +223,8 @@ mod_report_server <- function(id, shared, active_prior) {
           expert_pool   = shared$expert_pool,
           consensus     = shared$consensus,
           conflict      = shared$conflict,
-          sensitivity   = shared$sensitivity
+          sensitivity   = shared$sensitivity,
+          map_prior     = shared$map_prior
         )
         save(session_data, file = file)
       }
@@ -214,8 +234,8 @@ mod_report_server <- function(id, shared, active_prior) {
 
 # -- Helpers -------------------------------------------------------------------
 .status_item <- function(ok, text) {
-  ico <- if (ok) tags$span(style = "color:#1D9E75;", icon("check-circle"))
-         else    tags$span(style = "color:#aaa;",    icon("dash-circle"))
+  ico <- if (ok) tags$span(style = "color:#1D9E75;", icon("circle-check"))
+         else    tags$span(style = "color:#aaa;",    icon("circle-minus"))
   tags$li(ico, " ", text, style = "margin-bottom:3px;")
 }
 
