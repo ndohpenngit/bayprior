@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Ndoh Penn">
-<meta name="dcterms.date" content="2026-10-08">
+<meta name="dcterms.date" content="2026-10-09">
 
 <title>Prior-Data Conflict Diagnostics – bayprior</title>
 <style>
@@ -239,7 +239,10 @@ window.Quarto = {
   </ul></li>
   <li><a href="#the-diagnostics-explained" id="toc-the-diagnostics-explained" class="nav-link" data-scroll-target="#the-diagnostics-explained">The Diagnostics Explained</a>
   <ul class="collapse">
-  <li><a href="#boxs-prior-predictive-p-value" id="toc-boxs-prior-predictive-p-value" class="nav-link" data-scroll-target="#boxs-prior-predictive-p-value">1. Box’s Prior Predictive P-value</a></li>
+  <li><a href="#boxs-prior-predictive-p-value" id="toc-boxs-prior-predictive-p-value" class="nav-link" data-scroll-target="#boxs-prior-predictive-p-value">1. Box’s Prior Predictive P-value</a>
+  <ul class="collapse">
+  <li><a href="#exact-prior-predictive-version" id="toc-exact-prior-predictive-version" class="nav-link" data-scroll-target="#exact-prior-predictive-version">Exact prior predictive version</a></li>
+  </ul></li>
   <li><a href="#s-value-surprisal" id="toc-s-value-surprisal" class="nav-link" data-scroll-target="#s-value-surprisal">2. S-value (Surprisal)</a></li>
   <li><a href="#surprise-index" id="toc-surprise-index" class="nav-link" data-scroll-target="#surprise-index">3. Surprise Index</a></li>
   <li><a href="#kl-divergence" id="toc-kl-divergence" class="nav-link" data-scroll-target="#kl-divergence">4. KL Divergence</a></li>
@@ -280,7 +283,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 8, 2026</p>
+      <p class="date">October 9, 2026</p>
     </div>
   </div>
   
@@ -295,7 +298,7 @@ window.Quarto = {
 <section id="why-conflict-diagnostics-matter" class="level1">
 <h1>Why Conflict Diagnostics Matter</h1>
 <p>Before updating a prior with trial data it is essential to check whether the two are compatible. Substantial prior-data conflict indicates one of three things: the prior was mis-specified, the data are anomalous, or the model is wrong. Regulators increasingly require evidence that conflict was assessed and addressed.</p>
-<p><strong>bayprior</strong> provides four complementary univariate diagnostics and one multivariate diagnostic, following Box (1980) and related work. The conflict module supports <strong>four data types</strong>: binary, continuous, Poisson/count, and survival.</p>
+<p><strong>bayprior</strong> provides five complementary univariate diagnostics (one of them an exploratory companion to the Box p-value) and one multivariate diagnostic, following Box (1980) and related work. The conflict module supports <strong>four data types</strong>: binary, continuous, Poisson/count, and survival.</p>
 <hr>
 </section>
 <section id="supported-data-types" class="level1">
@@ -422,6 +425,32 @@ window.Quarto = {
 <p><span class="math display">\[p_{\text{Box}} = 2\Phi\!\left(-\left|\frac{\hat\theta - \mu_\pi}
 {\sqrt{\sigma_\pi^2 + \text{SE}^2}}\right|\right)\]</span></p>
 <p><strong>Interpretation:</strong> <span class="math inline">\(p &lt; 0.05\)</span> flags conflict at the 5% level.</p>
+<section id="exact-prior-predictive-version" class="level3">
+<h3 class="anchored" data-anchor-id="exact-prior-predictive-version">Exact prior predictive version</h3>
+<p>By default the p-value above uses a Normal approximation to the prior and to the likelihood. Setting <code>exact = TRUE</code> replaces it with the exact prior predictive distribution where one has a closed form: Beta-Binomial (a Beta prior with <code>type = "binary"</code> data) and Gamma-Poisson / Negative Binomial (a Gamma prior with <code>type = "poisson"</code> or <code>"survival"</code> data). The approximation is usually adequate, but it can differ noticeably for small samples, extreme proportions, or sparse counts, which are exactly the cases where a regulator may ask how the p-value was obtained.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cd_approx <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">35</span>, <span class="at">n =</span> <span class="dv">40</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>cd_exact <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">35</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">exact        =</span> <span class="cn">TRUE</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">method     =</span> <span class="fu">c</span>(cd_approx<span class="sc">$</span>box_pvalue_method, cd_exact<span class="sc">$</span>box_pvalue_method),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">box_pvalue =</span> <span class="fu">signif</span>(<span class="fu">c</span>(cd_approx<span class="sc">$</span>box_pvalue, cd_exact<span class="sc">$</span>box_pvalue), <span class="dv">3</span>),</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">s_value    =</span> <span class="fu">round</span>(<span class="fu">c</span>(cd_approx<span class="sc">$</span>s_value, cd_exact<span class="sc">$</span>s_value), <span class="dv">1</span>)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         method box_pvalue s_value
+1 normal_approx   3.48e-07    21.5
+2         exact   5.74e-06    17.4</code></pre>
+</div>
+</div>
+<p>For prior and data combinations without a closed-form check, <code>exact = TRUE</code> falls back to the Normal approximation with a message, and <code>$box_pvalue_method</code> records which version was used (<code>"exact"</code> or <code>"normal_approx"</code>). The other diagnostics below are not affected by <code>exact</code>.</p>
+</section>
 </section>
 <section id="s-value-surprisal" class="level2">
 <h2 class="anchored" data-anchor-id="s-value-surprisal">2. S-value (Surprisal)</h2>
@@ -500,11 +529,11 @@ window.Quarto = {
 <section id="prior-likelihood-posterior-overlay" class="level1">
 <h1>Prior-Likelihood-Posterior Overlay</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  prior,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary   =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">13</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_posterior =</span> <span class="cn">TRUE</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  prior,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary   =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">13</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_posterior =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -515,11 +544,11 @@ window.Quarto = {
 </div>
 <p><em>No conflict: prior and likelihood overlap substantially.</em></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  prior,</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary   =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">35</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_posterior =</span> <span class="cn">TRUE</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  prior,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary   =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">35</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_posterior =</span> <span class="cn">TRUE</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -534,16 +563,16 @@ window.Quarto = {
 <section id="continuous-endpoint-conflict" class="level1">
 <h1>Continuous Endpoint Conflict</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>prior_norm <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fl">0.0</span>, <span class="at">sd =</span> <span class="fl">0.3</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"Log odds ratio"</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># No conflict: observed log OR consistent with prior</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_conflict</span>(</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  prior_norm,</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"continuous"</span>, <span class="at">x =</span> <span class="fl">0.15</span>, <span class="at">sd =</span> <span class="fl">0.20</span>, <span class="at">n =</span> <span class="dv">80</span>)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>prior_norm <span class="ot">&lt;-</span> <span class="fu">elicit_normal</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fl">0.0</span>, <span class="at">sd =</span> <span class="fl">0.3</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"Log odds ratio"</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># No conflict: observed log OR consistent with prior</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_conflict</span>(</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  prior_norm,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"continuous"</span>, <span class="at">x =</span> <span class="fl">0.15</span>, <span class="at">sd =</span> <span class="fl">0.20</span>, <span class="at">n =</span> <span class="dv">80</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- Prior-Data Conflict Diagnostics --
@@ -567,16 +596,16 @@ window.Quarto = {
 \text{Posterior: Gamma}(\alpha + x,\; \beta + n)\]</span></p>
 <p>where <span class="math inline">\(x\)</span> = observed events and <span class="math inline">\(n\)</span> = total person-time.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Gamma prior on adverse event rate</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expert believes the AE rate is ~0.15 events per person-year (SD 0.06)</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>prior_ae <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.15</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="fl">0.06</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Adverse event rate (per person-year)"</span>,</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Safety Expert"</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_ae)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Gamma prior on adverse event rate</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expert believes the AE rate is ~0.15 events per person-year (SD 0.06)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>prior_ae <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.15</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd        =</span> <span class="fl">0.06</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"Adverse event rate (per person-year)"</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Safety Expert"</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_ae)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- bayprior: Adverse event rate (per person-year) --
@@ -589,13 +618,13 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed: 12 AEs over 100 person-years =&gt; rate 0.12 — consistent with prior</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>cd_pois_none <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_ae,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">12</span>, <span class="at">n =</span> <span class="dv">100</span>),</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha        =</span> <span class="fl">0.05</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd_pois_none)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed: 12 AEs over 100 person-years =&gt; rate 0.12 — consistent with prior</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>cd_pois_none <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_ae,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">12</span>, <span class="at">n =</span> <span class="dv">100</span>),</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha        =</span> <span class="fl">0.05</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd_pois_none)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- Prior-Data Conflict Diagnostics --
@@ -611,12 +640,12 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed: 40 AEs over 100 person-years =&gt; rate 0.40 — much higher than prior</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>cd_pois_conf <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_ae,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">n =</span> <span class="dv">100</span>)</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd_pois_conf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed: 40 AEs over 100 person-years =&gt; rate 0.40 — much higher than prior</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>cd_pois_conf <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_ae,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">n =</span> <span class="dv">100</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd_pois_conf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- Prior-Data Conflict Diagnostics --
@@ -632,11 +661,11 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  prior_ae,</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary   =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">n =</span> <span class="dv">100</span>),</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_posterior =</span> <span class="cn">TRUE</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  prior_ae,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary   =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">n =</span> <span class="dv">100</span>),</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_posterior =</span> <span class="cn">TRUE</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -655,15 +684,15 @@ window.Quarto = {
 <p>where <span class="math inline">\(d\)</span> = observed events and <span class="math inline">\(T\)</span> = total follow-up time.</p>
 <p>An Exponential prior (constant hazard) is equivalent to <span class="math inline">\(\text{Gamma}(1, \lambda)\)</span>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exponential prior on hazard rate</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expert believes median OS ≈ 20 months =&gt; hazard ≈ 0.05</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>prior_hz <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.05</span>,</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"OS hazard rate"</span>,</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Clinical Expert"</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hz)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exponential prior on hazard rate</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expert believes median OS ≈ 20 months =&gt; hazard ≈ 0.05</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>prior_hz <span class="ot">&lt;-</span> <span class="fu">elicit_exponential</span>(</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean      =</span> <span class="fl">0.05</span>,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">"moments"</span>,</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">label     =</span> <span class="st">"OS hazard rate"</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">expert_id =</span> <span class="st">"Clinical Expert"</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prior_hz)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- bayprior: OS hazard rate --
@@ -676,13 +705,13 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed: 20 deaths over 400 person-months =&gt; hazard 0.05 — consistent</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>cd_surv_none <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_hz,</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">20</span>, <span class="at">n =</span> <span class="dv">400</span>),</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha        =</span> <span class="fl">0.05</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd_surv_none)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed: 20 deaths over 400 person-months =&gt; hazard 0.05 — consistent</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>cd_surv_none <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_hz,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">20</span>, <span class="at">n =</span> <span class="dv">400</span>),</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha        =</span> <span class="fl">0.05</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd_surv_none)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- Prior-Data Conflict Diagnostics --
@@ -698,12 +727,12 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed: 60 deaths over 400 person-months =&gt; hazard 0.15 — much higher</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>cd_surv_conf <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_hz,</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">60</span>, <span class="at">n =</span> <span class="dv">400</span>)</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd_surv_conf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed: 60 deaths over 400 person-months =&gt; hazard 0.15 — much higher</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>cd_surv_conf <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior_hz,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">60</span>, <span class="at">n =</span> <span class="dv">400</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd_surv_conf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- Prior-Data Conflict Diagnostics --
@@ -719,11 +748,11 @@ window.Quarto = {
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  prior_hz,</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary   =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">60</span>, <span class="at">n =</span> <span class="dv">400</span>),</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_posterior =</span> <span class="cn">TRUE</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_prior_likelihood</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  prior_hz,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary   =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">60</span>, <span class="at">n =</span> <span class="dv">400</span>),</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_posterior =</span> <span class="cn">TRUE</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -734,14 +763,14 @@ window.Quarto = {
 </div>
 <p>Also works with a Gamma prior on the hazard rate:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>prior_hz_gamma <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fl">0.05</span>, <span class="at">sd =</span> <span class="fl">0.02</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"OS hazard rate (Gamma prior)"</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_conflict</span>(</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  prior_hz_gamma,</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">20</span>, <span class="at">n =</span> <span class="dv">400</span>)</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>prior_hz_gamma <span class="ot">&lt;-</span> <span class="fu">elicit_gamma</span>(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fl">0.05</span>, <span class="at">sd =</span> <span class="fl">0.02</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"OS hazard rate (Gamma prior)"</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_conflict</span>(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  prior_hz_gamma,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"survival"</span>, <span class="at">x =</span> <span class="dv">20</span>, <span class="at">n =</span> <span class="dv">400</span>)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- Prior-Data Conflict Diagnostics --
@@ -762,15 +791,15 @@ window.Quarto = {
 <h1>Compatibility Validation</h1>
 <p>bayprior warns when the prior family is atypical for the chosen data type, helping users avoid inadvertent misspecification:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Warning: Beta prior with Poisson data is unusual</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>prior_beta <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.15</span>, <span class="at">sd =</span> <span class="fl">0.06</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">label =</span> <span class="st">"Rate"</span>)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The app shows a warning notification; the function still runs with</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co"># a Normal approximation</span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>cd_warn <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  prior_beta,</span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">15</span>, <span class="at">n =</span> <span class="dv">100</span>)</span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Warning: Beta prior with Poisson data is unusual</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>prior_beta <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.15</span>, <span class="at">sd =</span> <span class="fl">0.06</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">label =</span> <span class="st">"Rate"</span>)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The app shows a warning notification; the function still runs with</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co"># a Normal approximation</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>cd_warn <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  prior_beta,</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"poisson"</span>, <span class="at">x =</span> <span class="dv">15</span>, <span class="at">n =</span> <span class="dv">100</span>)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <hr>
 </section>
@@ -778,13 +807,13 @@ window.Quarto = {
 <h1>Mixture Prior Conflict</h1>
 <p>All diagnostics work transparently with mixture priors via a Normal approximation from the mixture’s <code>fit_summary</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>e1 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"E1"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>e2 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.40</span>, <span class="at">sd =</span> <span class="fl">0.12</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"E2"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>mix <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(<span class="fu">list</span>(<span class="at">E1 =</span> e1, <span class="at">E2 =</span> e2), <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>))</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_conflict</span>(mix, <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">40</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>e1 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"E1"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>e2 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.40</span>, <span class="at">sd =</span> <span class="fl">0.12</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"E2"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>mix <span class="ot">&lt;-</span> <span class="fu">aggregate_experts</span>(<span class="fu">list</span>(<span class="at">E1 =</span> e1, <span class="at">E2 =</span> e2), <span class="at">weights =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>))</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_conflict</span>(mix, <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">40</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- Prior-Data Conflict Diagnostics --
@@ -805,14 +834,14 @@ window.Quarto = {
 <h1>Multivariate Conflict: <code>conflict_mahalanobis()</code></h1>
 <p>For trials with co-primary endpoints, the Mahalanobis distance provides an omnibus multivariate conflict test:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conflict_mahalanobis</span>(</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_means =</span> <span class="fu">c</span>(<span class="fl">0.35</span>, <span class="fl">0.60</span>),</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_cov   =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">0.010</span>, <span class="fl">0.003</span>, <span class="fl">0.003</span>, <span class="fl">0.015</span>), <span class="dv">2</span>, <span class="dv">2</span>),</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs_means   =</span> <span class="fu">c</span>(<span class="fl">0.55</span>, <span class="fl">0.58</span>),</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs_cov     =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">0.008</span>, <span class="fl">0.002</span>, <span class="fl">0.002</span>, <span class="fl">0.010</span>), <span class="dv">2</span>, <span class="dv">2</span>) <span class="sc">/</span> <span class="dv">50</span>,</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels      =</span> <span class="fu">c</span>(<span class="st">"Response rate"</span>, <span class="st">"OS rate"</span>),</span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha       =</span> <span class="fl">0.05</span></span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conflict_mahalanobis</span>(</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_means =</span> <span class="fu">c</span>(<span class="fl">0.35</span>, <span class="fl">0.60</span>),</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_cov   =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">0.010</span>, <span class="fl">0.003</span>, <span class="fl">0.003</span>, <span class="fl">0.015</span>), <span class="dv">2</span>, <span class="dv">2</span>),</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs_means   =</span> <span class="fu">c</span>(<span class="fl">0.55</span>, <span class="fl">0.58</span>),</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs_cov     =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">0.008</span>, <span class="fl">0.002</span>, <span class="fl">0.002</span>, <span class="fl">0.010</span>), <span class="dv">2</span>, <span class="dv">2</span>) <span class="sc">/</span> <span class="dv">50</span>,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels      =</span> <span class="fu">c</span>(<span class="st">"Response rate"</span>, <span class="st">"OS rate"</span>),</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha       =</span> <span class="fl">0.05</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 -- Multivariate Prior-Data Conflict (Mahalanobis) --

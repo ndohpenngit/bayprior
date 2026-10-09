@@ -231,7 +231,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><strong>Elicit structured priors</strong> — SHELF-style quantile matching, moment matching, and the interactive roulette method across Beta, Normal, Gamma, Log-Normal, <strong>Exponential</strong>, and <strong>Weibull</strong> families.</li>
 <li><strong>Aggregate expert opinions</strong> — Linear or logarithmic pooling of multiple expert priors with pairwise Bhattacharyya agreement diagnostics and cross-family compatibility validation.</li>
-<li><strong>Diagnose prior-data conflict</strong> — Box’s p-value, surprise index, Bhattacharyya overlap, and multivariate Mahalanobis distance, supporting <strong>binary, continuous, Poisson/count, and survival</strong> data types.</li>
+<li><strong>Derive priors from historical trials</strong> — Meta-analytic-predictive (MAP) priors from a random-effects meta-analysis, with an explicit prior on between-trial heterogeneity.</li>
+<li><strong>Diagnose prior-data conflict</strong> — Box’s p-value (Normal approximation or exact prior predictive), S-value, surprise index, KL divergence, Bhattacharyya overlap, and multivariate Mahalanobis distance, supporting <strong>binary, continuous, Poisson/count, and survival</strong> data types.</li>
 <li><strong>Quantify sensitivity</strong> — Posterior conclusions evaluated across hyperparameter grids via tornado plots and influence heatmaps, with independent data entry.</li>
 <li><strong>Build robust priors</strong> — Sceptical, robust mixture, and calibrated power priors for regulatory sensitivity analyses.</li>
 <li><strong>Generate regulatory reports</strong> — Self-contained HTML, PDF, or Word (.docx) prior justification reports rendered via Quarto.</li>
@@ -269,42 +270,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Aggregate multi-expert beliefs</td>
 </tr>
 <tr class="odd">
+<td><strong>MAP Prior (Historical)</strong></td>
+<td>Meta-analytic-predictive prior via random-effects meta-analysis, with an explicit prior on between-trial heterogeneity (tau)</td>
+<td>Fitted prior + tau posterior plot</td>
+<td>Derive an informative prior from historical trials</td>
+</tr>
+<tr class="even">
 <td><strong>Conflict Diagnostics</strong></td>
-<td>Box p-value, surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, <strong>Poisson</strong>, and <strong>survival</strong> data</td>
+<td>Box p-value (Normal approximation or exact prior predictive), S-value (surprisal), surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, <strong>Poisson</strong>, and <strong>survival</strong> data</td>
 <td>Prior-Likelihood-Posterior overlay</td>
 <td>Detect prior misspecification</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>Mahalanobis Check</strong></td>
 <td>Two-endpoint multivariate conflict test</td>
 <td>Chi-sq p-value + per-parameter z-scores</td>
 <td>Co-primary endpoint trials</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>Sensitivity Analysis</strong></td>
 <td>Hyperparameter grid over posterior mean, SD, CrI width, Pr(efficacy); independent data entry</td>
 <td>Tornado plot + influence heatmap</td>
 <td>Demonstrate robustness to regulators</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>Sceptical Prior</strong></td>
 <td>Spiegelhalter-Freedman centred-at-null prior</td>
 <td>Prior density + summary statistics</td>
 <td>Conservative regulatory sensitivity</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>Robust Mixture</strong></td>
 <td>Schmidli et al.&nbsp;MAP robust mixture prior</td>
 <td>Robust vs informative density overlay</td>
 <td>Protection against misspecification</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>Power Prior</strong></td>
 <td>Ibrahim-Chen calibrated borrowing weight via Bayes Factor</td>
 <td>Calibration curves + optimal delta</td>
 <td>Principled historical data borrowing</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>Export Report</strong></td>
 <td>HTML / PDF / Word (.docx) prior justification document via Quarto</td>
 <td>Regulatory-ready self-contained report</td>
@@ -367,15 +374,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
+<section id="map-prior-historical-data" class="level3">
+<h3 class="anchored" data-anchor-id="map-prior-historical-data">MAP Prior (Historical Data)</h3>
+<p>The meta-analytic-predictive (MAP) approach (Schmidli et al., 2014) derives an informative prior directly from multiple historical trials via a random-effects meta-analysis, with an explicit prior on the between-trial heterogeneity parameter tau – how much heterogeneity is assumed among historical trials directly affects how much borrowing is justified, so <code>map_prior()</code> requires this to be stated rather than left as an unstated default (see <code>?resolve_tau_prior</code> for outcome-specific defaults). It returns an ordinary prior object that can be used directly, or passed into <code>robust_prior()</code> for an additional vague-mixture component.</p>
+<p><code>y</code>/<code>se</code> per historical trial can be supplied directly, or derived from raw trial-level summary statistics via the optional convenience function <code>historical_effect_sizes()</code>, a thin wrapper around <code>metafor::escalc()</code> (<code>metafor</code> is Suggests-only and not required to use <code>map_prior()</code> itself).</p>
+</section>
 <section id="prior-data-conflict-diagnostics" class="level3">
 <h3 class="anchored" data-anchor-id="prior-data-conflict-diagnostics">Prior-Data Conflict Diagnostics</h3>
-<p>Conflict detection follows Box (1980). Four complementary metrics are computed:</p>
+<p>Conflict detection follows Box (1980). Complementary metrics are computed:</p>
 <ul>
 <li><strong>Prior predictive p-value</strong> — tests whether observed data is plausible under the prior predictive distribution.</li>
+<li><strong>S-value (surprisal, bits)</strong> — <code>-log2(p)</code>: an exploratory companion to the p-value above, not a thresholded decision rule, since prior-data conflict checks are typically not powered for a binary accept/reject call.</li>
 <li><strong>Surprise index</strong> — standardised distance between prior mean and observed data.</li>
 <li><strong>Bhattacharyya overlap</strong> — distributional overlap between prior and normalised likelihood.</li>
 <li><strong>KL divergence</strong> — information-theoretic distance from prior to likelihood.</li>
 </ul>
+<p>By default the Box p-value uses a Normal approximation to the prior and the likelihood. <code>prior_conflict(..., exact = TRUE)</code> instead uses the exact prior predictive distribution where one has a closed form: Beta-Binomial (Beta prior, binary data) and Gamma-Poisson / Negative Binomial (Gamma prior, Poisson or survival data). Other combinations fall back to the Normal approximation with a message, and <code>$box_pvalue_method</code> reports which was used.</p>
 <p>Four data types are supported:</p>
 <table class="caption-top table">
 <colgroup>
@@ -433,6 +447,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <hr>
 </section>
 </section>
+<section id="shiny-application" class="level2">
+<h2 class="anchored" data-anchor-id="shiny-application">Shiny application</h2>
+<p><code>run_app()</code> launches the full workflow as an interactive app (also available as a <a href="https://ndohpenn-bayprior.share.connect.posit.cloud">live demo</a>). The Welcome page shows the analytical workflow, tracks which steps you have completed, and can load a synthetic Phase II example (TRIAL-001) so you can try the conflict check straight away.</p>
+<hr>
+</section>
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">Installation</h2>
 <table class="caption-top table">
@@ -486,35 +505,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>cd <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(prior, <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">40</span>))</span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cd)</span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Sensitivity analysis</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_grid</span>(</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  prior,</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">8</span>, <span class="fl">0.5</span>), <span class="at">beta =</span> <span class="fu">seq</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">1</span>)),</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="fu">c</span>(<span class="st">"posterior_mean"</span>, <span class="st">"prob_efficacy"</span>),</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">threshold    =</span> <span class="fl">0.30</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa)</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Robust and sceptical priors</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>rob  <span class="ot">&lt;-</span> <span class="fu">robust_prior</span>(prior, <span class="at">vague_weight =</span> <span class="fl">0.20</span>)</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>scep <span class="ot">&lt;-</span> <span class="fu">sceptical_prior</span>(<span class="at">null_value =</span> <span class="fl">0.20</span>, <span class="at">family =</span> <span class="st">"beta"</span>, <span class="at">strength =</span> <span class="st">"moderate"</span>)</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate regulatory report</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_report</span>(</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior           =</span> prior,</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">conflict        =</span> cd,</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">sensitivity     =</span> sa,</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">robust_prior    =</span> rob,</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">sceptical_prior =</span> scep,</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_format   =</span> <span class="st">"html"</span>,</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">trial_name      =</span> <span class="st">"TRIAL-001"</span>,</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">sponsor         =</span> <span class="st">"Example Pharma Ltd"</span>,</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">author          =</span> <span class="st">"N.P., Biostatistician"</span></span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co"># Launch the Shiny app</span></span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="fu">run_app</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Derive a MAP prior from historical trials (log-odds scale)</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>hist_prior <span class="ot">&lt;-</span> <span class="fu">map_prior</span>(</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">y  =</span> <span class="fu">qlogis</span>(<span class="fu">c</span>(<span class="fl">0.28</span>, <span class="fl">0.35</span>, <span class="fl">0.31</span>)),   <span class="co"># historical response rates, as log-odds</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">se =</span> <span class="fu">c</span>(<span class="fl">0.30</span>, <span class="fl">0.26</span>, <span class="fl">0.34</span>),           <span class="co"># their standard errors</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">outcome_type =</span> <span class="st">"single_arm_log_odds"</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(hist_prior)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Sensitivity analysis</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>sa <span class="ot">&lt;-</span> <span class="fu">sensitivity_grid</span>(</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  prior,</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">param_grid   =</span> <span class="fu">list</span>(<span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">8</span>, <span class="fl">0.5</span>), <span class="at">beta =</span> <span class="fu">seq</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">1</span>)),</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">target       =</span> <span class="fu">c</span>(<span class="st">"posterior_mean"</span>, <span class="st">"prob_efficacy"</span>),</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">threshold    =</span> <span class="fl">0.30</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tornado</span>(sa)</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Robust and sceptical priors</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>rob  <span class="ot">&lt;-</span> <span class="fu">robust_prior</span>(prior, <span class="at">vague_weight =</span> <span class="fl">0.20</span>)</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>scep <span class="ot">&lt;-</span> <span class="fu">sceptical_prior</span>(<span class="at">null_value =</span> <span class="fl">0.20</span>, <span class="at">family =</span> <span class="st">"beta"</span>, <span class="at">strength =</span> <span class="st">"moderate"</span>)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate regulatory report</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_report</span>(</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior           =</span> prior,</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">conflict        =</span> cd,</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">sensitivity     =</span> sa,</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">robust_prior    =</span> rob,</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">sceptical_prior =</span> scep,</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_format   =</span> <span class="st">"html"</span>,</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">trial_name      =</span> <span class="st">"TRIAL-001"</span>,</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">sponsor         =</span> <span class="st">"Example Pharma Ltd"</span>,</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">author          =</span> <span class="st">"N.P., Biostatistician"</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Launch the Shiny app</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="fu">run_app</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
 </section>
 <section id="vignettes" class="level2">
@@ -541,7 +568,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><code>conflict-diagnostics</code></td>
-<td>All four data types; univariate and multivariate</td>
+<td>All four data types; exact and approximate Box p-value; univariate and multivariate</td>
 </tr>
 <tr class="even">
 <td><code>sensitivity-analysis</code></td>
@@ -549,11 +576,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><code>robust-priors</code></td>
-<td>Robust mixture, sceptical, and power priors</td>
+<td>MAP priors from historical trials, robust mixture, sceptical, and power priors</td>
 </tr>
 <tr class="even">
 <td><code>regulatory-reporting</code></td>
 <td>Report generation and compliance checklist</td>
+</tr>
+<tr class="odd">
+<td><code>using-with-rstanarm-brms</code></td>
+<td>Passing bayprior priors to <code>rstanarm</code> and <code>brms</code> models</td>
 </tr>
 </tbody>
 </table>
@@ -565,8 +596,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li>O’Hagan, A. et al.&nbsp;(2006). <em>Uncertain Judgements: Eliciting Experts’ Probabilities</em>. Wiley.</li>
 <li>Box, G. E. P. (1980). Sampling and Bayes’ inference in scientific modelling and robustness. <em>JRSS-A</em>, 143, 383-430.</li>
+<li>Greenland, S. (2023). Divergence versus decision P-values: A distinction worth making in theory and keeping in practice. <em>Scandinavian Journal of Statistics</em>, 50(1), 54-88.</li>
 <li>Oakley, J. E. &amp; O’Hagan, A. (2010). <em>SHELF: the Sheffield Elicitation Framework</em>. University of Sheffield.</li>
 <li>Schmidli, H. et al.&nbsp;(2014). Robust meta-analytic-predictive priors in clinical trials with historical control information. <em>Biometrics</em>, 70, 1023-1032.</li>
+<li>Neuenschwander, B., Capkun-Niggli, G., Branson, M. &amp; Spiegelhalter, D. J. (2010). Summarizing historical information on controls in clinical trials. <em>Clinical Trials</em>, 7(1), 5-18.</li>
+<li>Roever, C., Bender, R., Dias, S., Schmid, C. H., Schmidli, H., Sturtz, S., Weber, S. &amp; Friede, T. (2021). On weakly informative prior distributions for the heterogeneity parameter in Bayesian random-effects meta-analysis. <em>Research Synthesis Methods</em>, 12(4), 448-474.</li>
 <li>Ibrahim, J. G. &amp; Chen, M.-H. (2000). Power prior distributions for regression models. <em>Statistical Science</em>, 15, 46-60.</li>
 <li>Spiegelhalter, D. J., Freedman, L. S. &amp; Parmar, M. K. B. (1994). Bayesian approaches to randomized trials. <em>JRSS-A</em>, 157, 357-416.</li>
 <li>U.S. Food and Drug Administration (2026). <em>Use of Bayesian Methodology in Clinical Trials of Drug and Biological Products</em> (Draft Guidance for Industry).</li>

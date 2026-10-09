@@ -168,6 +168,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#bayprior-0.4.0" id="toc-bayprior-0.4.0" class="nav-link active" data-scroll-target="#bayprior-0.4.0">bayprior 0.4.0</a>
   <ul class="collapse">
   <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
+  <li><a href="#shiny-app" id="toc-shiny-app" class="nav-link" data-scroll-target="#shiny-app">Shiny app</a></li>
   </ul></li>
   <li><a href="#bayprior-0.3.2" id="toc-bayprior-0.3.2" class="nav-link" data-scroll-target="#bayprior-0.3.2">bayprior 0.3.2</a>
   <ul class="collapse">
@@ -268,6 +269,15 @@ ul.task-list li input[type="checkbox"] {
 <li><p>Added <code>historical_effect_sizes()</code>, a thin wrapper around <code>metafor::escalc()</code> (<code>Suggests</code>, not <code>Imports</code>) that converts raw per-trial summary statistics (event counts, arm means/SDs, …) into the <code>y</code>/<code>se</code> inputs <code>map_prior()</code> expects, across all six supported <code>outcome_type</code>s.</p></li>
 <li><p>Added a Shiny module for <code>map_prior()</code>, “MAP Prior (Historical)”, as its own top-level sidebar item alongside “Prior Elicitation” and “Expert Pooling” – reflecting that MAP derivation is an alternative way to construct a base informative prior, not a robustness adjustment applied to one (Robust Mixture, Sceptical, and Power Prior all take an existing base prior as input; MAP produces one). Its step-completion indicator is tracked independently of Robust Priors’ own.</p></li>
 <li><p><code>prior_conflict()</code> now also reports <code>s_value</code>, the surprisal <code>-log2(box_pvalue)</code> in bits – an exploratory, continuous companion to the existing Box p-value / thresholded <code>conflict_severity</code> classification, since prior-data conflict checks are typically not powered for a binary accept/reject decision. Reported alongside (not instead of) the existing diagnostics in the console <code>print()</code> method, the Shiny Conflict Diagnostics tab, and the <code>prior_report()</code> regulatory report.</p></li>
+</ul>
+</section>
+<section id="shiny-app" class="level2">
+<h2 class="anchored" data-anchor-id="shiny-app">Shiny app</h2>
+<ul>
+<li><p>Restyled the app around the package palette (navy and emerald). The stylesheet <code>custom.css</code> shipped with the app but was never linked, so it had no effect; it is now loaded, with dark-mode variants. Result tiles, box headers, alerts, and notifications use colour for status only, and text colours were checked for WCAG AA contrast.</p></li>
+<li><p>The Welcome page workflow diagram is now live: steps link to their panels and show completed steps. A “Start here” panel (elicit, derive from historical trials, or load the TRIAL-001 example) becomes “Next steps” once a prior exists. The Report step is marked complete after a report is generated and reopens when the prior or any analysis changes.</p></li>
+<li><p>Fitting a prior (Parametric, Roulette, or MAP) while a pooled consensus prior is active now asks whether to replace the consensus or keep it, instead of leaving downstream steps on the old consensus without notice.</p></li>
+<li><p>Fixed a JavaScript error in the theme-toggle script, which ran before the page body existed and stopped the rest of the script from loading. The Auto / Dark / Light button label now shows correctly on load.</p></li>
 </ul>
 <hr>
 </section>

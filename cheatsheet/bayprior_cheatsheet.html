@@ -399,6 +399,18 @@ body{
         </div>
 
         <div class="fn">
+          <div class="fn-sig">elicit_exponential(mean, method, ...)</div>
+          <div class="fn-desc">Exponential prior for a constant hazard or rate.</div>
+          <div class="fn-ex">p &lt;- elicit_exponential(mean=0.5, method="moments")</div>
+        </div>
+
+        <div class="fn">
+          <div class="fn-sig">elicit_weibull(mean, sd, method, ...)</div>
+          <div class="fn-desc">Weibull prior for non-constant hazard survival times (OS, PFS).</div>
+          <div class="fn-ex">p &lt;- elicit_weibull(mean=12, sd=5, method="moments")</div>
+        </div>
+
+        <div class="fn">
           <div class="fn-sig">elicit_roulette(chips, breaks, family, ...)</div>
           <div class="fn-desc">SHELF roulette method: expert places chips across histogram bins.</div>
           <div class="args"><span class="arg req">chips</span><span class="arg req">breaks</span><span class="arg req">family</span></div>
@@ -473,8 +485,8 @@ con &lt;- aggregate_experts(
       <div class="section-body">
 
         <div class="fn">
-          <div class="fn-sig">prior_conflict(prior, data_summary, alpha)</div>
-          <div class="fn-desc">Box p-value, surprise index, KL divergence, Bhattacharyya overlap.</div>
+          <div class="fn-sig">prior_conflict(prior, data_summary, alpha, exact)</div>
+          <div class="fn-desc">Box p-value, S-value, surprise index, KL divergence, Bhattacharyya overlap. <code>exact = TRUE</code> uses the exact prior predictive for Beta-Binomial and Gamma-Poisson cases.</div>
           <div class="args">
             <span class="arg">Binary: </span><span class="arg req">type="binary"</span><span class="arg req">x</span><span class="arg req">n</span><br/>
             <span class="arg">Continuous: </span><span class="arg req">type="continuous"</span><span class="arg req">x</span><span class="arg req">sd</span><span class="arg req">n</span>
@@ -495,6 +507,8 @@ con &lt;- aggregate_experts(
           <table class="ptable">
             <tr><th>Field</th><th>Description</th></tr>
             <tr><td>box_pvalue</td><td>Prior predictive p-value (Box 1980)</td></tr>
+            <tr><td>s_value</td><td>Surprisal -log2(p), in bits (exploratory)</td></tr>
+            <tr><td>box_pvalue_method</td><td>"exact" or "normal_approx"</td></tr>
             <tr><td>surprise_index</td><td>Standardised distance from prior mean</td></tr>
             <tr><td>kl_prior_likelihood</td><td>KL divergence prior || likelihood</td></tr>
             <tr><td>overlap</td><td>Bhattacharyya overlap coefficient</td></tr>
@@ -574,6 +588,30 @@ con &lt;- aggregate_experts(
 plot_sensitivity(cri, target="cri_width")</div>
         </div>
 
+      </div>
+    </div>
+
+
+    <!-- MAP PRIOR -->
+    <div class="section s1">
+      <div class="section-header">
+        <span class="icon">&#9632;</span> MAP Prior
+        <span class="sub">-- Derive a prior from historical trials</span>
+      </div>
+      <div class="section-body">
+        <div class="fn">
+          <div class="fn-sig">map_prior(y, se, outcome_type, tau_prior, ...)</div>
+          <div class="fn-desc">Meta-analytic-predictive prior (Schmidli 2014) via random-effects meta-analysis, with an explicit prior on between-trial heterogeneity tau.</div>
+          <div class="args"><span class="arg req">y</span><span class="arg req">se</span><span class="arg">outcome_type = "single_arm_log_odds" | "log_or" | "smd" | ...</span><span class="arg">tau_prior</span></div>
+          <div class="fn-ex">m &lt;- map_prior(
+  y  = qlogis(c(0.28, 0.35, 0.31)),
+  se = c(0.30, 0.26, 0.34),
+  outcome_type = "single_arm_log_odds")
+plot_tau_posterior(m)   # tau posterior</div>
+        </div>
+        <div class="fn" style="border-bottom:none">
+          <div class="fn-desc"><code>historical_effect_sizes()</code> builds <code>y</code>/<code>se</code> from raw trial summaries (needs <code>metafor</code>). <code>resolve_tau_prior()</code> shows the default tau prior per outcome. Priors are on the scale of <code>outcome_type</code>, e.g. log-odds.</div>
+        </div>
       </div>
     </div>
 
@@ -673,7 +711,7 @@ plot(calib)   # calibration curves + optimal delta</div>
       </div>
       <div class="section-body">
         <ol class="steps">
-          <li>Elicit prior: <code>elicit_beta()</code> / <code>elicit_roulette()</code></li>
+          <li>Elicit prior: <code>elicit_beta()</code> / <code>elicit_roulette()</code> or <code>map_prior()</code></li>
           <li>Pool experts: <code>aggregate_experts()</code></li>
           <li>Check conflict: <code>prior_conflict()</code></li>
           <li>Assess sensitivity: <code>sensitivity_grid()</code> or <code>sensitivity_cri()</code></li>
@@ -710,7 +748,7 @@ devtools::install_github("ndohpenngit/bayprior",
 
   <!-- ── FOOTER ── -->
   <div class="footer">
-    <span class="footer-text">bayprior v0.1.1 &nbsp;&bull;&nbsp; GPL-3 licence &nbsp;&bull;&nbsp; O'Hagan et al. (2006) &nbsp;&bull;&nbsp; Box (1980) &nbsp;&bull;&nbsp; Schmidli et al. (2014) &nbsp;&bull;&nbsp; Ibrahim &amp; Chen (2000) &nbsp;&bull;&nbsp; FDA Draft Guidance on Bayesian Methods (2026)</span>
+    <span class="footer-text">bayprior v0.4.0 &nbsp;&bull;&nbsp; GPL-3 licence &nbsp;&bull;&nbsp; O'Hagan et al. (2006) &nbsp;&bull;&nbsp; Box (1980) &nbsp;&bull;&nbsp; Schmidli et al. (2014) &nbsp;&bull;&nbsp; Ibrahim &amp; Chen (2000) &nbsp;&bull;&nbsp; FDA Draft Guidance on Bayesian Methods (2026)</span>
     <span class="footer-url">ndohpenngit.github.io/bayprior</span>
   </div>
 
