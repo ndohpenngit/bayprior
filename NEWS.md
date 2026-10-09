@@ -61,6 +61,28 @@
   `print()` method, the Shiny Conflict Diagnostics tab, and the
   `prior_report()` regulatory report.
 
+## Shiny app
+
+* Restyled the app around the package palette (navy and emerald). The
+  stylesheet `custom.css` shipped with the app but was never linked, so
+  it had no effect; it is now loaded, with dark-mode variants. Result
+  tiles, box headers, alerts, and notifications use colour for status
+  only, and text colours were checked for WCAG AA contrast.
+
+* The Welcome page workflow diagram is now live: steps link to their
+  panels and show completed steps. A "Start here" panel (elicit, derive
+  from historical trials, or load the TRIAL-001 example) becomes "Next
+  steps" once a prior exists. The Report step is marked complete after a
+  report is generated and reopens when the prior or any analysis changes.
+
+* Fitting a prior (Parametric, Roulette, or MAP) while a pooled consensus
+  prior is active now asks whether to replace the consensus or keep it,
+  instead of leaving downstream steps on the old consensus without notice.
+
+* Fixed a JavaScript error in the theme-toggle script, which ran before
+  the page body existed and stopped the rest of the script from loading.
+  The Auto / Dark / Light button label now shows correctly on load.
+
 ---
 
 # bayprior 0.3.2

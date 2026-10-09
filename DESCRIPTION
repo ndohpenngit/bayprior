@@ -7,10 +7,12 @@ Authors@R:
 Description: A toolkit for constructing, validating, and justifying Bayesian priors
   in clinical trial settings. Implements expert elicitation via quantile
   matching, the roulette method, and moment matching across six distribution
-  families, linear and logarithmic expert pooling, prior-data conflict
-  diagnostics including the Box p-value, an exploratory surprisal
-  (S-value) companion to it, surprise index, information divergence, and
-  Mahalanobis distance, sensitivity analyses with tornado
+  families, linear and logarithmic expert pooling, meta-analytic-predictive
+  (MAP) priors derived from historical trials, prior-data conflict
+  diagnostics including the Box p-value (with an exact prior predictive
+  option for selected prior and data combinations), an exploratory
+  surprisal (S-value) companion to it, surprise index, information
+  divergence, and Mahalanobis distance, sensitivity analyses with tornado
   and influence heatmap plots, sceptical, robust, and power priors, and
   automated prior justification reports. Includes a fully modular 'Shiny'
   application for interactive use.

@@ -107,6 +107,10 @@
 #' print(map)
 #' plot_tau_posterior(map)
 #'
+#' @seealso [resolve_tau_prior()] for the default heterogeneity priors, [plot_tau_posterior()] to inspect tau,
+#'   [historical_effect_sizes()] to build `y`/`se` from raw trial summaries, and
+#'   [robust_prior()] to add a vague-mixture component.
+#'
 #' @export
 map_prior <- function(y, se,
                        outcome_type = c("log_or", "smd", "log_irr",
@@ -200,6 +204,8 @@ map_prior <- function(y, se,
 #' @examples
 #' resolve_tau_prior("log_or")
 #' resolve_tau_prior("single_arm_log_odds")
+#'
+#' @seealso [map_prior()], which uses these defaults, and [plot_tau_posterior()].
 #'
 #' @export
 resolve_tau_prior <- function(outcome_type) {
@@ -577,6 +583,8 @@ historical_effect_sizes <- function(outcome_type, data, ...) {
 #'   outcome_type = "single_arm_log_odds"
 #' )
 #' plot_tau_posterior(map)
+#'
+#' @seealso [map_prior()], which returns the object plotted here, and [resolve_tau_prior()].
 #'
 #' @export
 plot_tau_posterior <- function(prior, show_prior = TRUE) {

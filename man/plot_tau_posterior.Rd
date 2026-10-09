@@ -31,3 +31,6 @@ map <- map_prior(
 plot_tau_posterior(map)
 
 }
+\seealso{
+\code{\link[=map_prior]{map_prior()}}, which returns the object plotted here, and \code{\link[=resolve_tau_prior]{resolve_tau_prior()}}.
+}

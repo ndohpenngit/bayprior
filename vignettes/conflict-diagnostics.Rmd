@@ -23,7 +23,8 @@ things: the prior was mis-specified, the data are anomalous, or the model is
 wrong. Regulators increasingly require evidence that conflict was assessed and
 addressed.
 
-**bayprior** provides four complementary univariate diagnostics and one
+**bayprior** provides five complementary univariate diagnostics (one of them
+an exploratory companion to the Box p-value) and one
 multivariate diagnostic, following Box (1980) and related work. The conflict
 module supports **four data types**: binary, continuous, Poisson/count, and
 survival.
@@ -90,6 +91,39 @@ $$p_{\text{Box}} = 2\Phi\!\left(-\left|\frac{\hat\theta - \mu_\pi}
 {\sqrt{\sigma_\pi^2 + \text{SE}^2}}\right|\right)$$
 
 **Interpretation:** $p < 0.05$ flags conflict at the 5% level.
+
+### Exact prior predictive version
+
+By default the p-value above uses a Normal approximation to the prior and to
+the likelihood. Setting `exact = TRUE` replaces it with the exact prior
+predictive distribution where one has a closed form: Beta-Binomial (a Beta
+prior with `type = "binary"` data) and Gamma-Poisson / Negative Binomial (a
+Gamma prior with `type = "poisson"` or `"survival"` data). The approximation
+is usually adequate, but it can differ noticeably for small samples, extreme
+proportions, or sparse counts, which are exactly the cases where a
+regulator may ask how the p-value was obtained.
+
+```{r exact-binary}
+cd_approx <- prior_conflict(
+  prior        = prior,
+  data_summary = list(type = "binary", x = 35, n = 40)
+)
+cd_exact <- prior_conflict(
+  prior        = prior,
+  data_summary = list(type = "binary", x = 35, n = 40),
+  exact        = TRUE
+)
+data.frame(
+  method     = c(cd_approx$box_pvalue_method, cd_exact$box_pvalue_method),
+  box_pvalue = signif(c(cd_approx$box_pvalue, cd_exact$box_pvalue), 3),
+  s_value    = round(c(cd_approx$s_value, cd_exact$s_value), 1)
+)
+```
+
+For prior and data combinations without a closed-form check, `exact = TRUE`
+falls back to the Normal approximation with a message, and
+`$box_pvalue_method` records which version was used (`"exact"` or
+`"normal_approx"`). The other diagnostics below are not affected by `exact`.
 
 ## 2. S-value (Surprisal)
 

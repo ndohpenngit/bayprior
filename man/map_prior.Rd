@@ -132,3 +132,8 @@ Neuenschwander, B., Capkun-Niggli, G., Branson, M., & Spiegelhalter, D. J.
 (2010). Summarizing historical information on controls in clinical
 trials. \emph{Clinical Trials}, 7(1), 5-18.
 }
+\seealso{
+\code{\link[=resolve_tau_prior]{resolve_tau_prior()}} for the default heterogeneity priors, \code{\link[=plot_tau_posterior]{plot_tau_posterior()}} to inspect tau,
+\code{\link[=historical_effect_sizes]{historical_effect_sizes()}} to build \code{y}/\code{se} from raw trial summaries, and
+\code{\link[=robust_prior]{robust_prior()}} to add a vague-mixture component.
+}

@@ -45,3 +45,6 @@ resolve_tau_prior("log_or")
 resolve_tau_prior("single_arm_log_odds")
 
 }
+\seealso{
+\code{\link[=map_prior]{map_prior()}}, which uses these defaults, and \code{\link[=plot_tau_posterior]{plot_tau_posterior()}}.
+}

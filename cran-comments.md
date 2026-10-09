@@ -1,45 +1,44 @@
-## Resubmission
+## Update to bayprior 0.3.2
 
-This is a resubmission. This submission (v0.4.0) contains the following changes:
+This is an update of bayprior from 0.3.2 to 0.4.0. See NEWS.md for details.
+The main changes are:
+
+* `prior_conflict()` gains an `exact` argument (default `FALSE`, so existing
+  behaviour is unchanged). `exact = TRUE` uses the exact prior predictive
+  distribution (Beta-Binomial, Gamma-Poisson/Negative Binomial) for the Box
+  p-value where one has a closed form, and falls back to the Normal
+  approximation with a message otherwise.
 
 * Added `map_prior()`: derives a meta-analytic-predictive (MAP) prior from
   historical trial summaries via a random-effects meta-analysis, with an
   explicit prior on the between-trial heterogeneity parameter tau
-  (Schmidli et al., 2014). The meta-analysis engine is implemented
-  entirely in base R -- no new hard dependency is introduced for it.
+  (Schmidli et al., 2014). The meta-analysis engine is implemented in base
+  R; no new hard dependency is introduced.
 
-* Added `historical_effect_sizes()`, an optional convenience wrapper
-  around `metafor::escalc()` for deriving `map_prior()`'s inputs from raw
-  per-trial summary statistics. `metafor` is listed under `Suggests`
-  only, guarded by `requireNamespace(..., quietly = TRUE)`, and is not
-  required to use `map_prior()` itself.
+* Added `historical_effect_sizes()`, an optional wrapper around
+  `metafor::escalc()`. `metafor` is listed under `Suggests` only and is
+  guarded by `requireNamespace(..., quietly = TRUE)`.
 
-* Added `resolve_tau_prior()` and `plot_tau_posterior()` in support of
-  the above.
-
-* Added a Shiny module exposing `map_prior()` ("MAP Prior (Historical)")
-  as its own top-level sidebar item.
+* Added `resolve_tau_prior()` and `plot_tau_posterior()` in support of the
+  above.
 
 * `prior_conflict()` now also reports `s_value`, the surprisal
-  `-log2(box_pvalue)` in bits -- an exploratory
-  companion to the existing Box p-value, reported alongside it (not
-  replacing it) in the console output, the Shiny app, and the
-  `prior_report()` regulatory report.
+  `-log2(box_pvalue)` in bits, alongside the Box p-value.
 
-* See NEWS.md for full details.
+* Shiny app: new "MAP Prior (Historical)" module, a restyled interface, a
+  live workflow overview on the Welcome page, and a confirmation step
+  before a fitted prior replaces a pooled consensus prior.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
-
-* checking for future file timestamps -- unable to verify current time.
-  Not package-related.
+TODO: paste the final result lines from the last `devtools::check()` /
+win-builder / R-hub runs on the exact tarball being submitted, e.g.
+"0 errors | 0 warnings | 0 notes". Do not submit with this line unedited.
 
 ## Test environments
 
-* macOS aarch64, R 4.4.2 (local)
-* ubuntu-latest (release, devel, oldrel) via GitHub Actions
-* Windows R-devel via devtools::check_win_devel()
+TODO: list the environments actually used for this release (local OS and R
+version, GitHub Actions matrix, win-builder devel/release, R-hub).
 
 ## Downstream dependencies
 

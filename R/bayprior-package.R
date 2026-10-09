@@ -4,13 +4,15 @@
 #' in clinical trial settings. Implements SHELF-style expert elicitation
 #' (quantile matching, roulette method, moment matching) across six
 #' distribution families, linear and logarithmic expert pooling with
-#' compatibility validation, prior-data conflict diagnostics (Box p-value,
-#' surprise index, KL divergence, Bhattacharyya overlap, Mahalanobis check)
-#' for binary, continuous, Poisson/count, and survival data types, sensitivity
+#' compatibility validation, meta-analytic-predictive (MAP) priors derived from
+#' historical trials, prior-data conflict diagnostics (Box p-value with an
+#' optional exact prior predictive version, S-value, surprise index, KL
+#' divergence, Bhattacharyya overlap, Mahalanobis check) for binary,
+#' continuous, Poisson/count, and survival data types, sensitivity
 #' analyses with tornado and influence plots, sceptical/robust/power priors,
 #' and automated HTML/PDF/Word regulatory reports informed by FDA and EMA
-#' guidance on Bayesian methods. Includes a fully modular Shiny application with automatic
-#' output reset on input change.
+#' guidance on Bayesian methods. Includes a modular Shiny application for
+#' interactive use.
 #'
 #' @section Main workflow:
 #' \enumerate{

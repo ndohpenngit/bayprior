@@ -50,6 +50,7 @@ Surprisal
 Sys
 Var
 VignetteBuilder
+WCAG
 Weerahandi
 Zidek
 analyzed
@@ -94,6 +95,7 @@ se
 shinydashboard
 sjos
 ss
+stylesheet
 surprisal
 th
 tikzfill
