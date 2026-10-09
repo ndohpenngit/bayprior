@@ -6,10 +6,10 @@
 #' @importFrom shiny NS tagList tags icon fluidRow column uiOutput HTML
 #' @importFrom shiny textInput textAreaInput dateInput numericInput
 #' @importFrom shiny selectInput sliderInput checkboxGroupInput
-#' @importFrom shiny actionButton downloadButton conditionalPanel
+#' @importFrom shiny actionButton actionLink downloadButton conditionalPanel
 #' @importFrom shiny moduleServer renderUI observeEvent observe reactive
 #' @importFrom shiny reactiveVal reactiveValues req isolate
-#' @importFrom shiny showNotification withProgress setProgress
+#' @importFrom shiny showNotification showModal removeModal withProgress setProgress
 #' @importFrom shiny downloadHandler addResourcePath
 #' @importFrom shiny updateNumericInput updateSliderInput
 NULL
