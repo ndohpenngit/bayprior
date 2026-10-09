@@ -65,8 +65,10 @@ A bayprior report includes:
 - **Trial information** — protocol number, sponsor, statistician, date
 - **Prior specification** — distribution, hyperparameters, summary statistics,
   density plot, and elicitation method
-- **Conflict diagnostics** — Box p-value, surprise index, KL divergence,
-  Bhattacharyya overlap, severity classification, and recommendation
+- **Conflict diagnostics** — Box p-value (stating whether the Normal
+  approximation or the exact prior predictive was used), S-value (surprisal),
+  surprise index, KL divergence, Bhattacharyya overlap, severity
+  classification, and recommendation
 - **Prior-likelihood-posterior overlay** — the canonical visual for conflict
 - **Sensitivity analysis** — tornado plot and influence heatmap
 - **Robust and sensitivity priors** — robust mixture, sceptical, and power prior

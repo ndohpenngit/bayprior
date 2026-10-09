@@ -30,7 +30,11 @@ regulatory report generation together in one integrated workflow. The FDA's
 - **Aggregate expert opinions** — Linear or logarithmic pooling of multiple
   expert priors with pairwise Bhattacharyya agreement diagnostics and
   cross-family compatibility validation.
-- **Diagnose prior-data conflict** — Box's p-value, surprise index,
+- **Derive priors from historical trials** — Meta-analytic-predictive (MAP)
+  priors from a random-effects meta-analysis, with an explicit prior on
+  between-trial heterogeneity.
+- **Diagnose prior-data conflict** — Box's p-value (Normal approximation or
+  exact prior predictive), S-value, surprise index, KL divergence,
   Bhattacharyya overlap, and multivariate Mahalanobis distance, supporting
   **binary, continuous, Poisson/count, and survival** data types.
 - **Quantify sensitivity** — Posterior conclusions evaluated across
@@ -50,7 +54,7 @@ regulatory report generation together in one integrated workflow. The FDA's
 | **Prior Elicitation** | Quantile matching, moment matching, SHELF roulette for Beta / Normal / Gamma / Log-Normal / **Exponential** / **Weibull** | Fitted density plot + parameter table | Structured expert prior elicitation |
 | **Expert Pooling** | Linear and logarithmic opinion pooling with support compatibility validation | Consensus density overlay + Bhattacharyya matrix | Aggregate multi-expert beliefs |
 | **MAP Prior (Historical)** | Meta-analytic-predictive prior via random-effects meta-analysis, with an explicit prior on between-trial heterogeneity (tau) | Fitted prior + tau posterior plot | Derive an informative prior from historical trials |
-| **Conflict Diagnostics** | Box p-value, S-value (surprisal), surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, **Poisson**, and **survival** data | Prior-Likelihood-Posterior overlay | Detect prior misspecification |
+| **Conflict Diagnostics** | Box p-value (Normal approximation or exact prior predictive), S-value (surprisal), surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, **Poisson**, and **survival** data | Prior-Likelihood-Posterior overlay | Detect prior misspecification |
 | **Mahalanobis Check** | Two-endpoint multivariate conflict test | Chi-sq p-value + per-parameter z-scores | Co-primary endpoint trials |
 | **Sensitivity Analysis** | Hyperparameter grid over posterior mean, SD, CrI width, Pr(efficacy); independent data entry | Tornado plot + influence heatmap | Demonstrate robustness to regulators |
 | **Sceptical Prior** | Spiegelhalter-Freedman centred-at-null prior | Prior density + summary statistics | Conservative regulatory sensitivity |
@@ -111,6 +115,13 @@ Conflict detection follows Box (1980). Complementary metrics are computed:
 - **Bhattacharyya overlap** — distributional overlap between prior and normalised likelihood.
 - **KL divergence** — information-theoretic distance from prior to likelihood.
 
+By default the Box p-value uses a Normal approximation to the prior and the
+likelihood. `prior_conflict(..., exact = TRUE)` instead uses the exact prior
+predictive distribution where one has a closed form: Beta-Binomial (Beta prior,
+binary data) and Gamma-Poisson / Negative Binomial (Gamma prior, Poisson or
+survival data). Other combinations fall back to the Normal approximation with
+a message, and `$box_pvalue_method` reports which was used.
+
 Four data types are supported:
 
 | Data type | Conjugate update | Typical endpoint |
@@ -135,6 +146,16 @@ prior with a vague Normal component. The **sceptical prior**
 (Spiegelhalter & Freedman, 1994) is centred at the null treatment effect.
 The **power prior** (Ibrahim & Chen, 2000) down-weights historical data by
 delta in (0, 1], calibrated to achieve a target Bayes Factor.
+
+---
+
+## Shiny application
+
+`run_app()` launches the full workflow as an interactive app (also available
+as a [live demo](https://ndohpenn-bayprior.share.connect.posit.cloud)). The
+Welcome page shows the analytical workflow, tracks which steps you have
+completed, and can load a synthetic Phase II example (TRIAL-001) so you can
+try the conflict check straight away.
 
 ---
 
@@ -170,9 +191,17 @@ e1  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
 e2  <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
 agg <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.6, 0.4))
 
-# Conflict diagnostics
+# Conflict diagnostics (add exact = TRUE for the exact prior predictive p-value)
 cd <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
 print(cd)
+
+# Derive a MAP prior from historical trials (log-odds scale)
+hist_prior <- map_prior(
+  y  = qlogis(c(0.28, 0.35, 0.31)),   # historical response rates, as log-odds
+  se = c(0.30, 0.26, 0.34),           # their standard errors
+  outcome_type = "single_arm_log_odds"
+)
+plot(hist_prior)
 
 # Sensitivity analysis
 sa <- sensitivity_grid(
@@ -218,6 +247,7 @@ run_app()
 | `sensitivity-analysis` | Grid sensitivity, tornado plots, CrI tracking |
 | `robust-priors` | MAP priors from historical trials, robust mixture, sceptical, and power priors |
 | `regulatory-reporting` | Report generation and compliance checklist |
+| `using-with-rstanarm-brms` | Passing bayprior priors to `rstanarm` and `brms` models |
 
 ```r
 browseVignettes("bayprior")
@@ -229,7 +259,7 @@ browseVignettes("bayprior")
 
 [![Documentation](https://img.shields.io/badge/documentation-bayprior-blue?logo=quarto&logoColor=white)](https://ndohpenngit.github.io/bayprior/)
 
-Full **[documentation](https://ndohpenngit.github.io/bayprior/)** — vignettes, function reference, changelog, and cheat sheet.
+Full **[documentation](https://ndohpenngit.github.io/bayprior/)** — vignettes, changelog, and cheat sheet. Function help is available in R via `help(package = "bayprior")` or `?bayprior`.
 
 ---
 
@@ -248,6 +278,7 @@ By contributing to this project, you agree to abide by its terms.
 - Greenland, S. (2023). Divergence versus decision P-values: A distinction worth making in theory and keeping in practice. *Scandinavian Journal of Statistics*, 50(1), 54-88.
 - Oakley, J. E. & O'Hagan, A. (2010). *SHELF: the Sheffield Elicitation Framework*. University of Sheffield.
 - Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in clinical trials with historical control information. *Biometrics*, 70, 1023-1032.
+- Neuenschwander, B., Capkun-Niggli, G., Branson, M. & Spiegelhalter, D. J. (2010). Summarizing historical information on controls in clinical trials. *Clinical Trials*, 7(1), 5-18.
 - Roever, C., Bender, R., Dias, S., Schmid, C. H., Schmidli, H., Sturtz, S., Weber, S. & Friede, T. (2021). On weakly informative prior distributions for the heterogeneity parameter in Bayesian random-effects meta-analysis. *Research Synthesis Methods*, 12(4), 448-474.
 - Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for regression models. *Statistical Science*, 15, 46-60.
 - Spiegelhalter, D. J., Freedman, L. S. & Parmar, M. K. B. (1994). Bayesian approaches to randomized trials. *JRSS-A*, 157, 357-416.
