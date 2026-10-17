@@ -67,14 +67,20 @@ summary.bayprior <- function(object, ...) {
 #' @param ... Ignored.
 #' @return Invisibly returns the input \code{bayprior_conflict} object.
 #'   Called for its side effect of printing conflict diagnostic statistics
-#'   including Box p-value, surprise index, information divergence,
-#'   Bhattacharyya overlap, and colour-coded conflict severity.
+#'   including Box p-value, S-value (surprisal), surprise index, information
+#'   divergence, Bhattacharyya overlap, and colour-coded conflict severity.
 #' @export
 print.bayprior_conflict <- function(x, ...) {
   .bp_h1("Prior-Data Conflict Diagnostics")
   .bp_h2(paste0("Prior: ", x$prior$label))
   cat("\n")
-  .bp_li("Box's p-value       : ", round(x$box_pvalue, 4))
+  .bp_li("Box's p-value       : ", paste0(
+    round(x$box_pvalue, 4),
+    switch(x$box_pvalue_method %||% "", exact = " (exact)",
+           numerical = " (numerical)", " (Normal approx.)")))
+  if (!is.null(x$s_value) && is.numeric(x$s_value)) {
+    .bp_li("S-value (bits)      : ", round(x$s_value, 2))
+  }
   .bp_li("Surprise index      : ", round(x$surprise_index, 4))
   .bp_li("KL divergence       : ", round(x$kl_prior_likelihood, 4))
   .bp_li("Overlap coefficient : ", round(x$overlap, 4))
@@ -82,6 +88,7 @@ print.bayprior_conflict <- function(x, ...) {
   .bp_li("Conflict severity   : ", sev_label)
   cat("\n")
   .bp_alert(x$recommendation)
+  if (!is.null(x$box_pvalue_caution)) .bp_alert(paste("Caution:", x$box_pvalue_caution))
   invisible(x)
 }
 

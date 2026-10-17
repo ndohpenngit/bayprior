@@ -26,6 +26,7 @@ JRSS
 Kullback
 Leibler
 McConway
+Moshonov
 Nelder
 Neuenschwander
 Niggli
@@ -80,8 +81,10 @@ nonlinearly
 pandoc
 parameterised
 params
+pnorm
 poisson
 posterior's
+predictives
 prior's
 propto
 pvalue

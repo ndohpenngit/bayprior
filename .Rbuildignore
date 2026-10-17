@@ -34,3 +34,4 @@
 ^paper$
 ^codecov\.yml$
 ^s_value_issue\.md$
+^validation$

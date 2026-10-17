@@ -1,4 +1,4 @@
-## Update to bayprior 0.3.2
+## Update to bayprior 0.4.0
 
 This is an update of bayprior from 0.3.2 to 0.4.0. See NEWS.md for details.
 The main changes are:
@@ -31,14 +31,14 @@ The main changes are:
 
 ## R CMD check results
 
-TODO: paste the final result lines from the last `devtools::check()` /
-win-builder / R-hub runs on the exact tarball being submitted, e.g.
-"0 errors | 0 warnings | 0 notes". Do not submit with this line unedited.
+0 errors | 0 warnings | 1 note
+
+* "checking for future file timestamps ... NOTE: unable to verify current time".
 
 ## Test environments
 
-TODO: list the environments actually used for this release (local OS and R
-version, GitHub Actions matrix, win-builder devel/release, R-hub).
+* local macOS (aarch64-apple-darwin20), R 4.4.2
+* win-builder: R-devel (2026-10-08 r90650 ucrt)
 
 ## Downstream dependencies
 

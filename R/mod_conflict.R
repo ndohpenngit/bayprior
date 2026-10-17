@@ -45,17 +45,20 @@ mod_conflict_ui <- function(id) {
       numericInput(ns("alpha"), "Significance level (alpha)",
                    0.05, 0.001, 0.2, 0.005),
       shinyWidgets::prettyCheckbox(
-        ns("exact"), "Use exact prior predictive distribution",
-        value = FALSE, icon = icon("check"), status = "success",
+        ns("exact"), "Use exact prior predictive distribution where available",
+        value = TRUE, icon = icon("check"), status = "success",
         animation = "smooth"
       ),
       tags$p(class = "text-muted", style = "font-size:11px; margin-top:-8px;",
              icon("circle-info"),
-             " Replaces the Normal-approximation Box p-value with the exact",
-             " Beta-Binomial (binary data) or Gamma-Poisson (count data)",
-             " prior predictive distribution where available. Falls back to",
-             " the Normal approximation -- with a notification -- for data",
-             " types or prior families without a closed-form exact check."),
+             " Uses the prior predictive distribution (Beta-Binomial for",
+             " binary data, Gamma-Poisson for count and survival data;",
+             " mixtures and other proper priors by numerical integration)",
+             " for the Box p-value. The Normal approximation can flag",
+             " conflict too often for informative priors with small",
+             " samples. Unchecking uses it throughout; cases that cannot be",
+             " computed this way also use it, with a caution when counts",
+             " are small, and the result card says which was used."),
       tags$hr(),
       tags$div(
         class = "btn-tip-wrap",
@@ -135,15 +138,16 @@ mod_conflict_server <- function(id, shared, active_prior) {
       r <- withCallingHandlers(
         tryCatch(
           prior_conflict(p, data_sum(), alpha = input$alpha,
-                         exact = isTRUE(input$exact)),
+                         # NULL = exact where a closed form exists (silent
+                         # fallback otherwise); FALSE = Normal approximation.
+                         exact = if (isTRUE(input$exact)) NULL else FALSE),
           error = function(e) {
             showNotification(paste("Error:", conditionMessage(e)), type = "error")
             NULL
           }),
-        # prior_conflict() signals a plain message() (not a warning) when
-        # exact = TRUE was requested but no closed-form check applies to
-        # this prior/data combination -- surface it, since a message()
-        # is otherwise invisible in a deployed Shiny app.
+        # prior_conflict() can signal a plain message() (not a warning);
+        # surface it, since a message() is otherwise invisible in a
+        # deployed Shiny app.
         message = function(m) {
           showNotification(conditionMessage(m), type = "warning", duration = 10)
           invokeRestart("muffleMessage")
@@ -194,6 +198,8 @@ mod_conflict_server <- function(id, shared, active_prior) {
                 style = "font-size:10px; font-weight:400; opacity:0.85;",
                 if (identical(r$box_pvalue_method, "exact"))
                   "exact prior predictive"
+                else if (identical(r$box_pvalue_method, "numerical"))
+                  "prior predictive (numerical)"
                 else
                   "Normal approximation"
               )
@@ -222,7 +228,7 @@ mod_conflict_server <- function(id, shared, active_prior) {
                 icon("circle-info", style = "font-size:11px; color:#ccc; cursor:help;"),
                 tags$span(class = "info-tip-text",
                   "Standardised distance between prior mean and data. ",
-                  "> 2 = moderate, > 3 = high surprise. Differs from S-value.")
+                  "> 2 = moderate, > 3 = high surprise. Differs from S-value above.")
               )
             ),
             icon  = icon("bolt"), color = "yellow", width = 3),
@@ -247,6 +253,10 @@ mod_conflict_server <- function(id, shared, active_prior) {
           tags$strong(glue::glue("Severity: {toupper(r$conflict_severity)}. ")),
           r$recommendation
         ),
+        if (!is.null(r$box_pvalue_caution))
+          tags$div(class = "alert alert-warning", style = "margin:10px 0;",
+                   icon("triangle-exclamation"), " ",
+                   tags$strong("Caution: "), r$box_pvalue_caution),
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
           title = tagList(

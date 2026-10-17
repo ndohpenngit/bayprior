@@ -54,7 +54,7 @@ regulatory report generation together in one integrated workflow. The FDA's
 | **Prior Elicitation** | Quantile matching, moment matching, SHELF roulette for Beta / Normal / Gamma / Log-Normal / **Exponential** / **Weibull** | Fitted density plot + parameter table | Structured expert prior elicitation |
 | **Expert Pooling** | Linear and logarithmic opinion pooling with support compatibility validation | Consensus density overlay + Bhattacharyya matrix | Aggregate multi-expert beliefs |
 | **MAP Prior (Historical)** | Meta-analytic-predictive prior via random-effects meta-analysis, with an explicit prior on between-trial heterogeneity (tau) | Fitted prior + tau posterior plot | Derive an informative prior from historical trials |
-| **Conflict Diagnostics** | Box p-value (Normal approximation or exact prior predictive), S-value (surprisal), surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, **Poisson**, and **survival** data | Prior-Likelihood-Posterior overlay | Detect prior misspecification |
+| **Conflict Diagnostics** | Box p-value (exact prior predictive where available, otherwise Normal approximation), S-value (surprisal), surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, **Poisson**, and **survival** data | Prior-Likelihood-Posterior overlay | Detect prior misspecification |
 | **Mahalanobis Check** | Two-endpoint multivariate conflict test | Chi-sq p-value + per-parameter z-scores | Co-primary endpoint trials |
 | **Sensitivity Analysis** | Hyperparameter grid over posterior mean, SD, CrI width, Pr(efficacy); independent data entry | Tornado plot + influence heatmap | Demonstrate robustness to regulators |
 | **Sceptical Prior** | Spiegelhalter-Freedman centred-at-null prior | Prior density + summary statistics | Conservative regulatory sensitivity |
@@ -115,12 +115,13 @@ Conflict detection follows Box (1980). Complementary metrics are computed:
 - **Bhattacharyya overlap** — distributional overlap between prior and normalised likelihood.
 - **KL divergence** — information-theoretic distance from prior to likelihood.
 
-By default the Box p-value uses a Normal approximation to the prior and the
-likelihood. `prior_conflict(..., exact = TRUE)` instead uses the exact prior
-predictive distribution where one has a closed form: Beta-Binomial (Beta prior,
-binary data) and Gamma-Poisson / Negative Binomial (Gamma prior, Poisson or
-survival data). Other combinations fall back to the Normal approximation with
-a message, and `$box_pvalue_method` reports which was used.
+The Box p-value uses the exact prior predictive distribution wherever one has
+a closed form: Beta-Binomial (Beta prior, binary data) and Gamma-Poisson /
+Negative Binomial (Gamma prior, Poisson or survival data). Other combinations
+use a Normal approximation to the prior and the likelihood, and
+`$box_pvalue_method` reports which was used. `exact = FALSE` forces the
+approximation, which can flag conflict too often for informative priors with
+small samples.
 
 Four data types are supported:
 
@@ -191,7 +192,7 @@ e1  <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
 e2  <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
 agg <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.6, 0.4))
 
-# Conflict diagnostics (add exact = TRUE for the exact prior predictive p-value)
+# Conflict diagnostics (exact prior predictive p-value where available; exact = FALSE forces the approximation)
 cd <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
 print(cd)
 

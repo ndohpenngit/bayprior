@@ -485,8 +485,8 @@ con &lt;- aggregate_experts(
       <div class="section-body">
 
         <div class="fn">
-          <div class="fn-sig">prior_conflict(prior, data_summary, alpha, exact)</div>
-          <div class="fn-desc">Box p-value, S-value, surprise index, KL divergence, Bhattacharyya overlap. <code>exact = TRUE</code> uses the exact prior predictive for Beta-Binomial and Gamma-Poisson cases.</div>
+          <div class="fn-sig">prior_conflict(prior, data_summary, alpha, exact = NULL)</div>
+          <div class="fn-desc">Box p-value, S-value, surprise index, KL divergence, Bhattacharyya overlap. The Box p-value is exact (prior predictive) for Beta-Binomial and Gamma-Poisson cases; <code>exact = FALSE</code> forces the Normal approximation.</div>
           <div class="args">
             <span class="arg">Binary: </span><span class="arg req">type="binary"</span><span class="arg req">x</span><span class="arg req">n</span><br/>
             <span class="arg">Continuous: </span><span class="arg req">type="continuous"</span><span class="arg req">x</span><span class="arg req">sd</span><span class="arg req">n</span>
