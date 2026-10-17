@@ -1,3 +1,64 @@
+# bayprior (development version)
+
+## Changes to default behaviour
+
+* `prior_conflict()` now computes `box_pvalue` (and the `s_value` derived
+  from it) from the **exact** prior predictive distribution by default
+  wherever a closed form exists: Beta-Binomial (Beta prior, `type =
+  "binary"`) and Gamma-Poisson / Negative Binomial (Gamma prior, `type =
+  "poisson"` or `"survival"`). The `exact` argument now defaults to `NULL`
+  (exact where available, silent fallback to the Normal approximation
+  otherwise); `exact = TRUE` additionally messages on fallback and
+  `exact = FALSE` reproduces the Normal-approximation results of 0.4.0 and
+  earlier. The exact check requires whole-number counts (and, for binary
+  data, a whole-number sample size); otherwise the Normal approximation is
+  used. `$box_pvalue_method` reports which was used.
+
+  Reason: a simulation study (see `validation/`) found that the Normal
+  approximation, whose standard error is estimated from the observed
+  proportion or count, can reject far more often than its nominal level when
+  there is no prior-data conflict, for informative priors and small samples.
+  For example, for a Beta(5, 45) prior with n = 10 and no conflict, the
+  approximation flagged conflict in about 39% of simulated datasets at the
+  5% level, because zero observed events (probable under the prior) yield a
+  zero standard error and a small approximate p-value. The exact version's
+  rejection rate stayed at or below the nominal level in all simulated
+  settings. Results for moderate samples and weakly informative priors are
+  essentially unchanged.
+
+* The prior predictive p-value now also covers **mixture priors** (e.g.
+  `robust_prior()`, and linear pooling from `aggregate_experts()`): the
+  predictive is the weighted mixture of the component predictives, exact for
+  Beta (binary) or Gamma (Poisson/survival) components. Other proper priors
+  (Normal, lognormal, Weibull, exponential, or a Normal vague component) are
+  handled by equal-probability quadrature over the prior, truncated to the
+  parameter space; `$box_pvalue_method` is then `"numerical"`. The
+  definition of the p-value is the same throughout (total predictive
+  probability of outcomes no more probable than the observed one). In the
+  simulation (`validation/sim_mixture.R`), pooled-consensus mixtures with
+  the Normal approximation rejected up to 43% of the time at the 5% level
+  under no conflict; the prior predictive version never exceeded 5%. For
+  lognormal, Weibull and exponential priors on a rate (`validation/
+  sim_numerical.R`, 84 cells) the numerical p-value never exceeded the
+  nominal level either (the approximation reached 63%). At equal size, the
+  prior predictive p-value has the same average power as the old
+  approximation, but less power against downward shifts for skewed priors
+  (`validation/sim_power.R`; see `REPORT_boxp.md` for the full comparison).
+
+* New field `$box_pvalue_caution` on `prior_conflict()` results: set when
+  the Normal approximation produced the p-value for discrete data with zero
+  or all events, or fewer than 10 events or non-events. Shown in `print()`
+  and in the app.
+
+* `conflict_severity` is now classified on the reported `box_pvalue`:
+  `"severe"` below 2 * pnorm(-3) (about 0.0027), `"mild"` below `alpha`.
+  This equals the earlier rule (`surprise_index >= 3`) whenever the Normal
+  approximation is used, and avoids mixing an exact p-value with an
+  approximate distance otherwise.
+
+* Shiny app (Conflict module): the "exact prior predictive" option is now
+  on by default; unchecking it uses the Normal approximation throughout.
+
 # bayprior 0.4.0
 
 ## New features

@@ -4,7 +4,7 @@
 \alias{prior_conflict}
 \title{Compute prior-data conflict diagnostics}
 \usage{
-prior_conflict(prior, data_summary, alpha = 0.05, exact = FALSE)
+prior_conflict(prior, data_summary, alpha = 0.05, exact = NULL)
 }
 \arguments{
 \item{prior}{A \code{bayprior} object.}
@@ -23,35 +23,45 @@ or observed mean (continuous).}
 \item{alpha}{Numeric. Significance level for the Box p-value flag.
 Default \code{0.05}.}
 
-\item{exact}{Logical. If \code{TRUE}, \code{box_pvalue} (and the
-\code{s_value} derived from it) are computed from the \strong{exact}
-prior predictive distribution rather than the default Normal
-approximation to both the prior and the data likelihood, for prior
-family/data-type combinations where a closed form exists (currently: a
-Beta prior with \code{type = "binary"} data, via the Beta-Binomial
-distribution; a Gamma prior with \code{type = "poisson"} or
-\code{type = "survival"} data, via the Negative Binomial distribution
--- Gamma-Poisson and Gamma-Exponential conjugacy are the same model
-under this package's (events, exposure) parameterisation, so both data
-types share the one exact check). \code{surprise_index},
-\code{kl_prior_likelihood}, and \code{overlap} are unaffected -- they
-are defined with respect to the Normal-approximated prior and
-likelihood regardless of \code{exact}, since that is how this package
-defines them (see Details). For an unsupported prior/data-type
-combination, \code{exact = TRUE} falls back to the Normal
-approximation with a message rather than erroring; check
-\code{$box_pvalue_method} on the returned object to see which was
-used. Default \code{FALSE}, matching this function's behaviour prior
-to the exact option being added.}
+\item{exact}{\code{NULL} (the default), \code{TRUE}, or \code{FALSE}.
+Controls how \code{box_pvalue} (and the \code{s_value} derived from it)
+is computed.
+\describe{
+\item{\code{NULL} (default)}{Use the \strong{exact} prior predictive
+distribution whenever a closed form exists, and the Normal
+approximation otherwise, silently. Check \code{$box_pvalue_method}
+on the returned object to see which was used.}
+\item{\code{TRUE}}{As \code{NULL}, but signal a message when the
+prior/data combination has no closed-form check and the Normal
+approximation is used instead.}
+\item{\code{FALSE}}{Always use the Normal approximation to both the
+prior and the data likelihood (the behaviour of bayprior 0.4.0 and
+earlier).}
+}
+Closed forms exist for a Beta prior with \code{type = "binary"} data
+(Beta-Binomial) and for a Gamma prior with \code{type = "poisson"} or
+\code{type = "survival"} data (Negative Binomial; Gamma-Poisson and
+Gamma-Exponential conjugacy are the same model under this package's
+(events, exposure) parameterisation). The exact check also requires
+whole-number counts; otherwise the Normal approximation is used.
+\code{surprise_index}, \code{kl_prior_likelihood}, and \code{overlap}
+are unaffected by \code{exact} -- they are defined with respect to the
+Normal-approximated prior and likelihood (see Details).}
 }
 \value{
 An object of class \code{bayprior_conflict} containing:
 \describe{
 \item{\code{box_pvalue}}{Box's prior predictive p-value.}
-\item{\code{box_pvalue_method}}{\code{"exact"} or
+\item{\code{box_pvalue_method}}{\code{"exact"} (closed-form prior
+predictive), \code{"numerical"} (the same prior predictive p-value,
+with the predictive computed by quadrature) or
 \code{"normal_approx"}, indicating how \code{box_pvalue} (and
 hence \code{s_value}) was computed. Always \code{"normal_approx"}
 when \code{exact = FALSE}.}
+\item{\code{box_pvalue_caution}}{\code{NULL}, or a short message
+when the Normal approximation produced \code{box_pvalue} for
+discrete data with a boundary (zero or all events) or small
+(fewer than 10) counts, where it can be anti-conservative.}
 \item{\code{s_value}}{Surprisal, \eqn{-\log_2(\text{box\_pvalue})},
 in bits. See Details.}
 \item{\code{surprise_index}}{Standardised distance between prior mean
@@ -87,6 +97,53 @@ accept/reject decision. The two are correlated but nonlinearly related:
 \code{s_value} grows faster than \code{surprise_index} as evidence
 strengthens, since it derives from \code{box_pvalue}'s tail probability,
 not from \code{z} directly.
+
+\strong{Mixture priors.} A linear mixture of Beta (binary data) or Gamma
+(Poisson/survival data) components, such as a \code{\link{robust_prior}}
+or a linearly pooled consensus from \code{\link{aggregate_experts}}, has
+as prior predictive the weighted mixture of its components' predictives,
+so its p-value is exact as well. \code{severity} is classified on the
+reported \code{box_pvalue}: \code{"mild"} for \code{alpha > p >= 0.0027}
+and \code{"severe"} below \code{0.0027} (the two-sided Normal tail
+beyond 3 standard deviations).
+
+The numerical integration uses 4,000 (count data) to 40,000 (binary data,
+small \code{n}) quadrature points, so the p-value is accurate to roughly
+1e-5 in the predictive probabilities. Run time grows with the number of
+possible counts: well under a second typically, a few seconds when the count
+support reaches several thousand (for example a heavy-tailed prior with
+exposure in the hundreds), where the Normal approximation is also adequate.
+
+\strong{Why exact is the default.} The Normal approximation estimates the
+sampling standard error from the observed data (for example
+\eqn{\sqrt{\hat p(1-\hat p)/n}}), which is zero when no events are
+observed. For an informative prior and a small sample, an observation of
+zero events can be common under the prior predictive distribution yet
+receive a very small approximate p-value, so the approximate check can
+flag conflict far more often than its nominal level when there is none.
+The exact prior predictive p-value does not have this problem: it is
+computed from the prior predictive distribution itself, and its rejection
+rate under no conflict is at most the nominal level (it can be below it
+because the data are discrete). The two agree closely for moderate
+samples and weakly informative priors. Use \code{exact = FALSE} to
+reproduce the Normal-approximation results of earlier versions.
+
+The exact p-value is the prior predictive check of Box (1980) in the form
+used by Evans and Moshonov (2006): the total prior predictive probability
+of the outcomes that are no more probable than the observed one. The
+Normal approximation with a plug-in standard error is a convenience
+approximation to it, not part of either definition.
+
+\strong{What the check can and cannot tell you.} In the package's
+simulation study (see the \code{validation} folder of the source
+repository), the check had little power against true values within about
+one prior standard deviation of the prior mean, whichever version was used,
+so a non-significant result is weak evidence that a prior is adequate. For
+skewed priors the probability ordering can also be less sensitive to true
+values below the prior mean than to values above it, because low counts
+(including zero) are probable under a right-skewed prior predictive
+distribution. Use the result together with \code{\link{sensitivity_grid}}
+and judgement about the source of the prior, not as a stand-alone test.
 }
 \examples{
 prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments",
@@ -96,6 +153,9 @@ print(cd)
 
 }
 \references{
+Evans, M. and Moshonov, H. (2006). Checking for prior-data conflict.
+\emph{Bayesian Analysis}, 1(4).
+
 Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling
 and robustness. \emph{Journal of the Royal Statistical Society A}, 143,
 383-430.

@@ -18,7 +18,8 @@
 #' \strong{Model.} Trial \eqn{i} contributes \eqn{y_i \sim
 #' \mathrm{Normal}(\theta_i, se_i^2)}, with random effects \eqn{\theta_i \sim
 #' \mathrm{Normal}(\mu, \tau^2)} and a proper (vague) prior \eqn{\mu \sim
-#' \mathrm{Normal}(0, \code{mu_prior_sd}^2)}. Marginalising \eqn{\theta_i}
+#' \mathrm{Normal}(0, \sigma_\mu^2)}, where \eqn{\sigma_\mu} is
+#' \code{mu_prior_sd}. Marginalising \eqn{\theta_i}
 #' gives \eqn{y_i \sim \mathrm{Normal}(\mu, se_i^2 + \tau^2)} independently
 #' across trials -- the standard random-effects meta-analysis model. An
 #' explicit prior on \eqn{\tau} (half-normal or half-Cauchy, via

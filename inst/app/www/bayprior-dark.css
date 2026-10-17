@@ -295,3 +295,50 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease,
               border-color 0.3s ease, box-shadow 0.3s ease;
 }
+
+
+/* ==== Look M gradients in dark mode ==========================================
+   The rules above set background-color with !important; gradients live in
+   background-image and are driven by the --bp-grad-* variables defined in
+   custom.css (dark variants under body.dark-mode). */
+body.dark-mode .sidebar-menu > li.active > a {
+  background-color: #22D3EE !important; color: #06203A !important;
+  border-left-color: transparent !important;
+}
+body.dark-mode .sidebar-menu > li.active > a .fa,
+body.dark-mode .sidebar-menu > li.active > a svg { color: #06203A !important; }
+body.dark-mode .sidebar-menu > li:not(.active) > a:hover {
+  background-color: #0f3460 !important;
+}
+body.dark-mode .box.box-primary > .box-header { background-image: var(--bp-grad-box); }
+body.dark-mode .bp-welcome-box.box.box-primary > .box-header { background-image: var(--bp-grad-welcome); }
+
+/* Header alignment: the 2px bottom border made the navbar 52px tall against a
+   50px logo, leaving a small step where they meet. Same total height for both. */
+body.dark-mode .main-header .logo,
+body.dark-mode .main-header .navbar {
+  box-sizing: border-box !important;
+  height: 50px !important;
+  min-height: 50px !important;
+}
+body.dark-mode .main-header .logo { line-height: 46px !important; }
+body.dark-mode .main-header .sidebar-toggle { height: 48px; }
+
+/* ── Modal dialogs (e.g. "Replace the pooled consensus prior?") ──────────────
+   Were unstyled in dark mode: white panel with light inherited text.        */
+body.dark-mode .modal-content {
+  background-color: #16213e !important;
+  color: #E3E8F2 !important;
+  border: 1px solid #2C3A5E;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer { border-color: #2C3A5E !important; }
+body.dark-mode .modal-title,
+body.dark-mode .modal-body,
+body.dark-mode .modal-body p { color: #E3E8F2 !important; }
+body.dark-mode .modal-header .close,
+body.dark-mode .modal-header .btn-close { color: #E3E8F2; opacity: .8; text-shadow: none; }
+body.dark-mode .modal-footer .btn-default {
+  background-color: #1F2E52 !important; border-color: #2C3A5E !important; color: #E3E8F2 !important;
+}

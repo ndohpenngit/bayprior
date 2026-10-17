@@ -503,6 +503,8 @@ golem_add_external_resources <- function() {
     tags$link(rel = "stylesheet", type = "text/css",
               href = "www/custom.css"),
     tags$link(rel = "stylesheet", type = "text/css",
+              href = "www/bp-live.css"),
+    tags$link(rel = "stylesheet", type = "text/css",
               href = "www/bayprior-dark.css")
   )
 }

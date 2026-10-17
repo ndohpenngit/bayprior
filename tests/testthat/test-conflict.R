@@ -40,13 +40,87 @@ test_that("prior_conflict errors on non-bayprior input", {
 
 # -- exact = TRUE ----------------------------------------------------------
 
-test_that("prior_conflict(exact = FALSE) is unchanged (default behaviour)", {
+test_that("prior_conflict(exact = FALSE) reproduces the Normal approximation of 0.4.0", {
   prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
-  cd    <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
+  cd    <- prior_conflict(prior, list(type = "binary", x = 18, n = 40), exact = FALSE)
   expect_equal(cd$box_pvalue_method, "normal_approx")
   expect_equal(cd$box_pvalue, 2 * stats::pnorm(-abs(
     (18 / 40 - cd$prior_mean) / sqrt(cd$prior_sd^2 + cd$obs_se^2)
   )))
+})
+
+test_that("default exact = NULL uses the exact p-value where a closed form exists", {
+  prior_b <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  ds_b    <- list(type = "binary", x = 18, n = 40)
+  expect_equal(prior_conflict(prior_b, ds_b)$box_pvalue_method, "exact")
+  expect_equal(prior_conflict(prior_b, ds_b)$box_pvalue,
+               prior_conflict(prior_b, ds_b, exact = TRUE)$box_pvalue)
+
+  prior_g <- elicit_gamma(mean = 5, sd = 2, method = "moments")
+  expect_equal(prior_conflict(prior_g, list(type = "poisson", x = 15, n = 3))$box_pvalue_method,
+               "exact")
+  expect_equal(prior_conflict(prior_g, list(type = "survival", x = 15, n = 3))$box_pvalue_method,
+               "exact")
+})
+
+test_that("default exact = NULL falls back to the approximation silently", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  expect_no_message(
+    cd <- prior_conflict(prior, list(type = "continuous", x = 0.4, sd = 0.15, n = 40))
+  )
+  expect_equal(cd$box_pvalue_method, "normal_approx")
+})
+
+test_that("non-whole-number counts fall back to the approximation rather than mis-indexing", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  expect_no_message(
+    cd <- prior_conflict(prior, list(type = "binary", x = 17.5, n = 40))
+  )
+  expect_equal(cd$box_pvalue_method, "normal_approx")
+  expect_message(
+    prior_conflict(prior, list(type = "binary", x = 17.5, n = 40), exact = TRUE),
+    "no closed-form exact prior predictive"
+  )
+  # x outside 0..n (or a fractional n) is also unsupported by the exact check
+  expect_null(.exact_box_pvalue(prior, "binary", x = 41, n = 40))
+  expect_null(.exact_box_pvalue(prior, "binary", x = 5, n = 40.5))
+})
+
+test_that("`exact` is validated", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  expect_error(prior_conflict(prior, list(type = "binary", x = 18, n = 40), exact = "yes"),
+               "NULL, TRUE, or FALSE")
+  expect_error(prior_conflict(prior, list(type = "binary", x = 18, n = 40), exact = NA),
+               "NULL, TRUE, or FALSE")
+})
+
+test_that("zero events under an informative prior is not flagged as conflict (regression)", {
+  # Beta(5, 45) prior (mean 0.1), n = 10, x = 0. Zero events has prior
+  # predictive probability ~0.38, so there is no evidence of conflict. The
+  # Normal approximation gave p ~ 0.017 here because its standard error is
+  # estimated from the observed proportion (zero at x = 0); the exact
+  # p-value is 1. In simulation this single outcome made the approximation
+  # reject in ~39% of conflict-free datasets at the 5% level.
+  prior <- elicit_beta(mean = 0.1, sd = sqrt(0.1 * 0.9 / 51), method = "moments")
+  ds    <- list(type = "binary", x = 0, n = 10)
+  cd    <- prior_conflict(prior, ds)
+  expect_equal(cd$box_pvalue_method, "exact")
+  expect_equal(cd$box_pvalue, 1)
+  expect_false(cd$conflict_flag)
+  # the approximation (0.4.0 behaviour) flags it, which is the defect
+  expect_lt(prior_conflict(prior, ds, exact = FALSE)$box_pvalue, 0.05)
+})
+
+test_that("exact p-value is size-controlled under the prior predictive (Beta-Binomial)", {
+  # Under no conflict (theta ~ prior), P(p_exact <= alpha) must not exceed alpha.
+  a <- 5; b <- 45; n <- 10
+  prior <- elicit_beta(mean = a / (a + b), sd = sqrt(a * b / ((a + b)^2 * (a + b + 1))),
+                       method = "moments")
+  k   <- 0:n
+  pmf <- exp(lchoose(n, k) + lbeta(k + a, n - k + b) - lbeta(a, b))
+  pe  <- vapply(k, function(x) prior_conflict(prior, list(type = "binary", x = x, n = n))$box_pvalue,
+                numeric(1))
+  for (al in c(0.05, 0.10)) expect_lte(sum(pmf[pe < al]), al + 1e-12)
 })
 
 test_that("prior_conflict(exact = TRUE) computes the exact Beta-Binomial p-value", {
@@ -66,7 +140,7 @@ test_that("prior_conflict(exact = TRUE) computes the exact Beta-Binomial p-value
   # The exact and Normal-approximation p-values should differ measurably
   # for this (meaningfully skewed) Beta(7.6, 14.1) prior -- guards against
   # exact = TRUE silently no-op'ing back to the approximation.
-  cd_approx <- prior_conflict(prior, list(type = "binary", x = 18, n = 40))
+  cd_approx <- prior_conflict(prior, list(type = "binary", x = 18, n = 40), exact = FALSE)
   expect_gt(abs(cd$box_pvalue - cd_approx$box_pvalue), 0.01)
 })
 
@@ -121,7 +195,7 @@ test_that("prior_conflict(exact = TRUE) falls back to the approximation, with a 
 test_that("prior_conflict(exact = TRUE) leaves surprise_index, kl, and overlap unaffected", {
   prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
   interim <- list(type = "binary", x = 18, n = 40)
-  cd_approx <- prior_conflict(prior, interim)
+  cd_approx <- prior_conflict(prior, interim, exact = FALSE)
   cd_exact  <- prior_conflict(prior, interim, exact = TRUE)
   expect_equal(cd_exact$surprise_index, cd_approx$surprise_index)
   expect_equal(cd_exact$kl_prior_likelihood, cd_approx$kl_prior_likelihood)
@@ -320,4 +394,121 @@ test_that("survival conjugate update gives Gamma posterior", {
   expect_equal(post$dist, "gamma")
   expect_equal(post$params$shape, prior$params$shape + 20, tolerance = 1e-6)
   expect_equal(post$params$rate,  prior$params$rate  + 400, tolerance = 1e-6)
+})
+
+# -- Mixture / numerical prior predictive (development) -----------------------
+
+# Brute-force reference: probability-ordered p-value from an explicit pmf.
+.ref_p <- function(pmf, x) sum(pmf[pmf <= pmf[x + 1] * (1 + 1e-8)])
+
+test_that("mixture of Betas gets the exact weighted Beta-Binomial p-value", {
+  p1 <- elicit_beta(mean = 0.3, sd = 0.10, method = "moments")
+  p2 <- elicit_beta(mean = 0.5, sd = 0.15, method = "moments")
+  mix <- suppressWarnings(elicit_mixture(list(p1, p2), weights = c(0.7, 0.3)))
+  n <- 25
+  bb <- function(p) {
+    k <- 0:n
+    exp(lchoose(n, k) + lbeta(k + p$params$alpha, n - k + p$params$beta) -
+          lbeta(p$params$alpha, p$params$beta))
+  }
+  pmf <- 0.7 * bb(p1) + 0.3 * bb(p2)
+  for (x in c(0, 4, 8, 15, 25)) {
+    r <- prior_conflict(mix, list(type = "binary", x = x, n = n))
+    expect_equal(r$box_pvalue_method, "exact")
+    expect_equal(r$box_pvalue, .ref_p(pmf, x), tolerance = 1e-8)
+  }
+})
+
+test_that("mixture of Gammas gets the exact weighted Negative Binomial p-value", {
+  g1 <- elicit_gamma(mean = 2, sd = 0.5, method = "moments")
+  g2 <- elicit_gamma(mean = 4, sd = 1.0, method = "moments")
+  mix <- suppressWarnings(elicit_mixture(list(g1, g2), weights = c(0.6, 0.4)))
+  n <- 10
+  nb <- function(g) stats::dnbinom(0:400, size = g$params$shape,
+                                   prob = g$params$rate / (g$params$rate + n))
+  pmf <- 0.6 * nb(g1) + 0.4 * nb(g2)
+  r <- prior_conflict(mix, list(type = "poisson", x = 45, n = n))
+  expect_equal(r$box_pvalue_method, "exact")
+  expect_equal(r$box_pvalue, .ref_p(pmf, 45), tolerance = 1e-6)
+})
+
+test_that("robust prior (Beta + Normal vague) uses the numerical predictive", {
+  b <- elicit_beta(mean = 0.3, sd = 0.10, method = "moments")
+  rp <- suppressWarnings(robust_prior(b, vague_weight = 0.2))
+  r <- prior_conflict(rp, list(type = "binary", x = 0, n = 10))
+  expect_equal(r$box_pvalue_method, "numerical")
+  expect_null(r$box_pvalue_caution)
+  # reference: 0.8 * BetaBinomial + 0.2 * (Normal truncated to [0,1]) predictive
+  n <- 10; k <- 0:n
+  bb <- exp(lchoose(n, k) + lbeta(k + b$params$alpha, n - k + b$params$beta) -
+              lbeta(b$params$alpha, b$params$beta))
+  v <- rp$components[[2]]$params
+  th <- seq(5e-6, 1 - 5e-6, by = 1e-5)
+  w <- stats::dnorm(th, v$mu, v$sigma); w <- w / sum(w)
+  vg <- vapply(k, function(kk) sum(w * stats::dbinom(kk, n, th)), numeric(1))
+  expect_equal(r$box_pvalue, .ref_p(0.8 * bb + 0.2 * vg, 0), tolerance = 1e-4)
+})
+
+test_that("numerical path reproduces closed forms for conjugate priors", {
+  b <- elicit_beta(mean = 0.3, sd = 0.10, method = "moments")
+  a <- .predictive_pmf(b, "binary", 20, 5)
+  q <- .predictive_pmf_numeric(b, "binary", 20, 5)
+  expect_lt(max(abs(a - q)), 1e-5)
+  g <- elicit_gamma(mean = 2, sd = 0.5, method = "moments")
+  a <- .predictive_pmf(g, "poisson", 10, 5)
+  q <- .predictive_pmf_numeric(g, "poisson", 10, 5)
+  m <- min(length(a), length(q))
+  expect_lt(max(abs(a[1:m] - q[1:m])), 1e-5)
+})
+
+test_that("non-conjugate single priors (lognormal rate) are handled numerically", {
+  ln <- elicit_lognormal(mean = 2, sd = 0.5, method = "moments")
+  r <- prior_conflict(ln, list(type = "poisson", x = 8, n = 10))
+  expect_equal(r$box_pvalue_method, "numerical")
+  expect_true(r$box_pvalue > 0 && r$box_pvalue <= 1)
+})
+
+test_that("exact = FALSE still returns the Normal approximation for mixtures", {
+  b <- elicit_beta(mean = 0.3, sd = 0.10, method = "moments")
+  rp <- suppressWarnings(robust_prior(b, vague_weight = 0.2))
+  r <- prior_conflict(rp, list(type = "binary", x = 0, n = 10), exact = FALSE)
+  expect_equal(r$box_pvalue_method, "normal_approx")
+  expect_match(r$box_pvalue_caution, "boundary")
+})
+
+test_that("caution is raised for approximate p-values with small counts only", {
+  p <- elicit_normal(mean = 0.3, sd = 0.1, method = "moments")
+  # continuous data: approximation is exact, no caution
+  r <- prior_conflict(p, list(type = "continuous", x = 0.4, n = 30, sd = 0.2))
+  expect_null(r$box_pvalue_caution)
+  b <- elicit_beta(mean = 0.3, sd = 0.10, method = "moments")
+  r <- prior_conflict(b, list(type = "binary", x = 6, n = 20), exact = FALSE)
+  expect_match(r$box_pvalue_caution, "Small observed counts")
+  r <- prior_conflict(b, list(type = "binary", x = 300, n = 1000), exact = FALSE)
+  expect_null(r$box_pvalue_caution)
+})
+
+test_that("severity follows the reported p-value on one scale", {
+  b <- elicit_beta(mean = 0.3, sd = 0.10, method = "moments")
+  r <- prior_conflict(b, list(type = "binary", x = 38, n = 40))
+  expect_equal(r$conflict_severity, "severe")
+  expect_lt(r$box_pvalue, 2 * stats::pnorm(-3))
+  # the earlier rule coincides with the new one under the approximation
+  r0 <- prior_conflict(b, list(type = "binary", x = 12, n = 30), exact = FALSE)
+  old <- if (r0$box_pvalue >= 0.05) "none" else if (r0$surprise_index < 3) "mild" else "severe"
+  expect_equal(r0$conflict_severity, old)
+})
+
+test_that("Gamma prior with shape <= 1 (heavy geometric tail) still gets an exact p", {
+  g <- elicit_gamma(mean = 1, sd = 1, method = "moments")  # shape 1
+  n <- 500
+  pmf <- stats::dnbinom(0:60000, size = g$params$shape,
+                        prob = g$params$rate / (g$params$rate + n))
+  pmf <- pmf / sum(pmf)
+  for (x in c(0, 100, 1500, 4000)) {
+    r <- prior_conflict(g, list(type = "poisson", x = x, n = n))
+    expect_equal(r$box_pvalue_method, "exact")
+    expect_equal(r$box_pvalue, sum(pmf[pmf <= pmf[x + 1] * (1 + 1e-8)]),
+                 tolerance = 1e-6)
+  }
 })

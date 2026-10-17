@@ -11,8 +11,8 @@ in clinical trial settings. Implements SHELF-style expert elicitation
 (quantile matching, roulette method, moment matching) across six
 distribution families, linear and logarithmic expert pooling with
 compatibility validation, meta-analytic-predictive (MAP) priors derived from
-historical trials, prior-data conflict diagnostics (Box p-value with an
-optional exact prior predictive version, S-value, surprise index, KL
+historical trials, prior-data conflict diagnostics (Box p-value, exact
+prior predictive where available, S-value, surprise index, KL
 divergence, Bhattacharyya overlap, Mahalanobis check) for binary,
 continuous, Poisson/count, and survival data types, sensitivity
 analyses with tornado and influence plots, sceptical/robust/power priors,

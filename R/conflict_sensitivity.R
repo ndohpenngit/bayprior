@@ -1,88 +1,146 @@
-#' Exact Beta-Binomial prior predictive p-value (internal)
+#' Prior predictive probability mass function (internal)
 #'
-#' Box's (1980) prior predictive check computed exactly for a Beta prior
-#' against binomial data, with no Normal approximation to either the prior
-#' or the data likelihood. Used by \code{\link{prior_conflict}} when
-#' \code{exact = TRUE} and the prior/data-type combination supports it
-#' (currently: a Beta-family prior with \code{type = "binary"} data).
+#' Closed-form prior predictive pmf of the observed count for the families
+#' that have one: Beta prior with binary data (Beta-Binomial) and Gamma
+#' prior with Poisson/survival data (Negative Binomial). A (linear) mixture
+#' of such priors has the weighted mixture of the component predictives as
+#' its prior predictive, so mixtures -- robust priors from
+#' \code{\link{robust_prior}} and pooled consensus priors from
+#' \code{\link{aggregate_experts}} -- are handled exactly too, provided
+#' every component is supported.
 #'
-#' @details
-#' The prior predictive distribution of the observed event count under a
-#' Beta(\code{alpha}, \code{beta}) prior and Binomial(\code{n}) sampling is
-#' Beta-Binomial: \eqn{P(X = k) = \binom{n}{k}
-#' \mathrm{B}(k + \alpha, n - k + \beta) / \mathrm{B}(\alpha, \beta)}. The
-#' two-sided p-value sums the probability of every outcome at least as
-#' extreme as the observed one, defined (as is standard for a discrete
-#' predictive check with no natural ordering) by probability itself: every
-#' outcome whose prior predictive probability is no greater than that of
-#' the observed outcome. This matches \code{\link{prior_conflict}}'s
-#' \code{box_pvalue} definition exactly in the large-sample, symmetric-prior
-#' limit, and differs from it (see the package's companion vignette,
-#' \code{vignette("exact-vs-approximate-conflict")}) whenever the Beta
-#' prior is meaningfully skewed, at any sample size -- not only small ones.
+#' @param prior A \code{bayprior} object.
+#' @param type Data type.
+#' @param n Sample size / exposure.
+#' @param x Observed count; used only to make sure the (truncated) count
+#'   support of a Negative Binomial predictive reaches the observation.
 #'
-#' @param alpha_p,beta_p Beta prior shape parameters.
-#' @param x Observed event count.
-#' @param n Sample size.
-#'
-#' @return A single numeric p-value in \eqn{(0, 1]}.
+#' @return A numeric vector of probabilities for counts \code{0, 1, ...},
+#'   summing to 1, or \code{NULL} if the prior has no supported closed form
+#'   (or its truncated tail would lose more than 1e-6 of the mass).
 #'
 #' @keywords internal
 #' @noRd
-.exact_box_pvalue_beta_binomial <- function(alpha_p, beta_p, x, n) {
-  k <- 0:n
-  log_pmf <- lchoose(n, k) + lbeta(k + alpha_p, n - k + beta_p) - lbeta(alpha_p, beta_p)
-  pmf <- exp(log_pmf)
-  pmf <- pmf / sum(pmf)  # guard against floating-point drift in the sum
-  p_obs <- pmf[x + 1]
-  # Numerical tolerance on the "at least as extreme" comparison, since
-  # p_obs and other pmf entries are floating-point sums of log-scale terms
-  # and an exact `<=` can otherwise exclude p_obs itself due to rounding.
-  sum(pmf[pmf <= p_obs * (1 + 1e-8)])
+.predictive_pmf <- function(prior, type, n, x) {
+  if (identical(prior$dist, "beta") && identical(type, "binary")) {
+    a <- prior$params$alpha; b <- prior$params$beta
+    k <- 0:n
+    pmf <- exp(lchoose(n, k) + lbeta(k + a, n - k + b) - lbeta(a, b))
+    return(pmf / sum(pmf))
+  }
+  if (identical(prior$dist, "gamma") && type %in% c("poisson", "survival")) {
+    # Gamma-Poisson and Gamma-Exponential conjugacy coincide under this
+    # package's (x = events, n = exposure) parameterisation, matching the
+    # Normal-approximation branch in prior_conflict().
+    size <- prior$params$shape
+    prob <- prior$params$rate / (prior$params$rate + n)
+    # Truncate where the remaining tail mass is below 1e-12. (A fixed
+    # multiple of the SD is not enough for shape <= 1, where the tail is
+    # geometric.)
+    q_hi  <- stats::qnbinom(1 - 1e-12, size = size, prob = prob)
+    k_max <- max(x, q_hi) + 1
+    if (!is.finite(k_max) || k_max > 5e6) return(NULL)
+    pmf <- stats::dnbinom(0:k_max, size = size, prob = prob)
+    if (!is.finite(sum(pmf)) || sum(pmf) < 1 - 1e-6) return(NULL)
+    return(pmf / sum(pmf))
+  }
+  if (identical(prior$dist, "mixture") && !is.null(prior$components) &&
+      length(prior$components) == length(prior$weights)) {
+    pmfs <- lapply(prior$components, .predictive_pmf, type = type, n = n, x = x)
+    if (any(vapply(pmfs, is.null, logical(1)))) return(NULL)
+    len <- max(lengths(pmfs))
+    pad <- function(p) c(p, numeric(len - length(p)))
+    mat <- vapply(pmfs, pad, numeric(len))
+    pmf <- as.numeric(mat %*% prior$weights)
+    pmf <- pmf / sum(pmf)
+    attr(pmf, "numerical") <- any(vapply(pmfs, function(p)
+      isTRUE(attr(p, "numerical")), logical(1)))
+    return(pmf)
+  }
+  .predictive_pmf_numeric(prior, type, n, x)
 }
 
-#' Exact Gamma-Poisson (Negative Binomial) prior predictive p-value (internal)
+#' Prior predictive pmf by equal-probability quadrature (internal)
 #'
-#' The Poisson/count-data analogue of
-#' \code{\link{.exact_box_pvalue_beta_binomial}}: exact for a Gamma-family
-#' prior on a Poisson rate against event counts observed over exposure
-#' \code{n}, with no Normal approximation. The prior predictive distribution
-#' of the event count is Negative Binomial with size \code{alpha_p} and
-#' probability \code{beta_p / (beta_p + n)} (Gamma-Poisson conjugacy).
+#' For a single proper prior without a conjugate closed form (a Normal,
+#' lognormal, Weibull or exponential prior, or a Beta prior with count data,
+#' and so on), the prior predictive pmf \eqn{P(X = k) = \int p(k \mid
+#' \theta)\pi(\theta)\,d\theta} is evaluated by the midpoint rule on the
+#' prior's own probability scale: \eqn{\theta_j = Q((j - 1/2)/N)}, each with
+#' weight \eqn{1/N}. This handles densities that are singular at a boundary
+#' and costs a fixed number of evaluations. A prior whose support extends
+#' beyond the parameter space (a Normal on a probability, or on a rate) is
+#' truncated to that space and renormalised, i.e. the prior is read as
+#' proper on the parameter space. The definition of the p-value is
+#' unchanged; only the way the predictive is computed differs.
 #'
-#' @param alpha_p,beta_p Gamma prior shape/rate parameters (rate
-#'   parameterisation, matching \code{\link{elicit_gamma}}).
-#' @param x Observed event count.
-#' @param n Total exposure (person-time).
-#'
-#' @return A single numeric p-value in \eqn{(0, 1]}.
-#'
+#' @inheritParams .predictive_pmf
+#' @return A pmf with attribute \code{numerical = TRUE}, or \code{NULL}
+#'   when unsupported or when the grid cannot resolve the likelihood.
 #' @keywords internal
 #' @noRd
-.exact_box_pvalue_gamma_poisson <- function(alpha_p, beta_p, x, n) {
-  nb_size <- alpha_p
-  nb_prob <- beta_p / (beta_p + n)
-  # Upper truncation point chosen far enough into the tail that the
-  # omitted probability mass is negligible (< 1e-12) for any x actually
-  # supplied -- the Negative Binomial's tail decays geometrically, so a
-  # generous multiple of (x, mean, sd) is more than sufficient.
-  nb_mean  <- nb_size * (1 - nb_prob) / nb_prob
-  nb_sd    <- sqrt(nb_size * (1 - nb_prob)) / nb_prob
-  k_max    <- max(x, ceiling(nb_mean + 12 * nb_sd)) + 1
-  k <- 0:k_max
-  pmf <- stats::dnbinom(k, size = nb_size, prob = nb_prob)
+.predictive_pmf_numeric <- function(prior, type, n, x) {
+  dist <- prior$dist; p <- prior$params
+  if (is.null(p) || !dist %in% c("beta", "normal", "gamma", "lognormal",
+                                 "exponential", "weibull")) return(NULL)
+  cdf <- switch(dist,
+    beta = function(q) stats::pbeta(q, p$alpha, p$beta),
+    normal = function(q) stats::pnorm(q, p$mu, p$sigma),
+    gamma = function(q) stats::pgamma(q, p$shape, p$rate),
+    lognormal = function(q) stats::plnorm(q, p$meanlog, p$sdlog),
+    exponential = function(q) stats::pexp(q, rate = p$rate),
+    weibull = function(q) stats::pweibull(q, p$shape, p$scale))
+  qf <- switch(dist,
+    beta = function(u) stats::qbeta(u, p$alpha, p$beta),
+    normal = function(u) stats::qnorm(u, p$mu, p$sigma),
+    gamma = function(u) stats::qgamma(u, p$shape, p$rate),
+    lognormal = function(u) stats::qlnorm(u, p$meanlog, p$sdlog),
+    exponential = function(u) stats::qexp(u, rate = p$rate),
+    weibull = function(u) stats::qweibull(u, p$shape, p$scale))
+  binary <- identical(type, "binary")
+  lo <- 0
+  hi <- if (binary) 1 else Inf
+  u_lo <- cdf(lo); u_hi <- if (is.finite(hi)) cdf(hi) else 1
+  if (!is.finite(u_lo) || !is.finite(u_hi) || u_hi - u_lo < 1e-6) return(NULL)
+  N <- if (binary) as.integer(min(40000, floor(2e7 / (n + 1)))) else 4000L
+  u <- u_lo + (seq_len(N) - 0.5) / N * (u_hi - u_lo)
+  theta <- qf(u)
+  theta <- pmin(pmax(theta, if (binary) 1e-12 else 1e-12), if (binary) 1 - 1e-12 else Inf)
+  if (any(!is.finite(theta))) return(NULL)
+  if (binary) {
+    if (n > 2000) return(NULL)
+    k <- 0:n
+    pmf <- numeric(length(k))
+    for (blk in split(seq_len(N), ceiling(seq_len(N) / 500))) {
+      pmf <- pmf + rowSums(vapply(theta[blk], function(t)
+        stats::dbinom(k, n, t), numeric(length(k))))
+    }
+  } else {
+    lam_max <- max(theta) * n
+    k_max <- max(x, stats::qpois(1 - 1e-10, lam_max)) + 1
+    if (!is.finite(k_max) || k_max > 20000 || N * (k_max + 1) > 1e8) return(NULL)
+    k <- 0:k_max
+    pmf <- numeric(length(k))
+    for (blk in split(seq_len(N), ceiling(seq_len(N) / 200))) {
+      pmf <- pmf + rowSums(vapply(theta[blk], function(t)
+        stats::dpois(k, t * n), numeric(length(k))))
+    }
+  }
+  pmf <- pmf / N
+  if (!is.finite(sum(pmf)) || sum(pmf) < 1 - 1e-6) return(NULL)
   pmf <- pmf / sum(pmf)
-  p_obs <- pmf[x + 1]
-  sum(pmf[pmf <= p_obs * (1 + 1e-8)])
+  attr(pmf, "numerical") <- TRUE
+  pmf
 }
 
 #' Dispatch to an exact prior predictive p-value where one exists (internal)
 #'
-#' Used by \code{\link{prior_conflict}} when \code{exact = TRUE}. Returns
-#' \code{NULL} (rather than erroring) when the prior family and data type
-#' combination has no closed-form exact check implemented yet, so the
-#' caller can fall back to the Normal-approximation \code{box_pvalue} with
-#' a message rather than fail.
+#' Used by \code{\link{prior_conflict}}. Returns \code{NULL} (rather than
+#' erroring) when the prior family and data type combination has no
+#' closed-form prior predictive, so the caller can fall back to the
+#' Normal-approximation \code{box_pvalue}. The p-value is the
+#' probability-ordered one: the total prior predictive probability of all
+#' outcomes no more probable than the observed one.
 #'
 #' @param prior A \code{bayprior} object.
 #' @param type Data type (\code{data_summary$type}).
@@ -94,26 +152,33 @@
 #' @keywords internal
 #' @noRd
 .exact_box_pvalue <- function(prior, type, x, n) {
-  if (identical(prior$dist, "beta") && identical(type, "binary")) {
-    return(.exact_box_pvalue_beta_binomial(
-      prior$params$alpha, prior$params$beta, x, n
-    ))
+  # The exact checks are defined for whole-number counts and (for binary
+  # data) a whole-number sample size with 0 <= x <= n. Anything else, or a
+  # support so large that enumerating it is impractical (where the Normal
+  # approximation is accurate anyway), is reported as "unsupported" so the
+  # caller can fall back rather than index a probability table wrongly.
+  whole <- function(v) is.numeric(v) && length(v) == 1L && is.finite(v) &&
+    abs(v - round(v)) < 1e-8
+  if (!whole(x) || x < 0) return(NULL)
+  if (identical(type, "binary")) {
+    if (!whole(n) || n < 1 || x > n || n > 1e6) return(NULL)
+  } else if (type %in% c("poisson", "survival")) {
+    if (!is.numeric(n) || length(n) != 1L || !is.finite(n) || n <= 0) return(NULL)
+  } else {
+    # Normal-Normal (continuous data) is already exact under the existing
+    # Normal machinery; no separate exact path is needed.
+    return(NULL)
   }
-  if (identical(prior$dist, "gamma") && type %in% c("poisson", "survival")) {
-    # Gamma-Poisson and Gamma-Exponential conjugacy are the same model
-    # under this package's (x = events, n = exposure/follow-up time)
-    # parameterisation -- prior_conflict()'s own Normal-approximation path
-    # already treats "poisson" and "survival" identically (see the
-    # `type %in% c("poisson", "survival")` branch below), so the exact
-    # Negative-Binomial prior predictive applies unchanged to survival data.
-    return(.exact_box_pvalue_gamma_poisson(
-      prior$params$shape, prior$params$rate, x, n
-    ))
-  }
-  # Normal-Normal (continuous data with a Normal prior) is already exact
-  # under prior_conflict()'s existing Normal-approximation machinery -- no
-  # separate exact path is needed there.
-  NULL
+  pmf <- .predictive_pmf(prior, type, n, x)
+  if (is.null(pmf) || x + 1 > length(pmf)) return(NULL)
+  p_obs <- pmf[x + 1]
+  # Numerical tolerance on the "at least as extreme" comparison, since
+  # p_obs and other pmf entries are floating-point sums of log-scale terms
+  # and an exact `<=` can otherwise exclude p_obs itself due to rounding.
+  # Quadrature carries a little more error, hence the looser tolerance.
+  tol <- if (isTRUE(attr(pmf, "numerical"))) 1e-6 else 1e-8
+  structure(min(1, sum(pmf[pmf <= p_obs * (1 + tol)])),
+            numerical = isTRUE(attr(pmf, "numerical")))
 }
 
 #' Compute prior-data conflict diagnostics
@@ -137,34 +202,44 @@
 #'   }
 #' @param alpha Numeric. Significance level for the Box p-value flag.
 #'   Default \code{0.05}.
-#' @param exact Logical. If \code{TRUE}, \code{box_pvalue} (and the
-#'   \code{s_value} derived from it) are computed from the \strong{exact}
-#'   prior predictive distribution rather than the default Normal
-#'   approximation to both the prior and the data likelihood, for prior
-#'   family/data-type combinations where a closed form exists (currently: a
-#'   Beta prior with \code{type = "binary"} data, via the Beta-Binomial
-#'   distribution; a Gamma prior with \code{type = "poisson"} or
-#'   \code{type = "survival"} data, via the Negative Binomial distribution
-#'   -- Gamma-Poisson and Gamma-Exponential conjugacy are the same model
-#'   under this package's (events, exposure) parameterisation, so both data
-#'   types share the one exact check). \code{surprise_index},
-#'   \code{kl_prior_likelihood}, and \code{overlap} are unaffected -- they
-#'   are defined with respect to the Normal-approximated prior and
-#'   likelihood regardless of \code{exact}, since that is how this package
-#'   defines them (see Details). For an unsupported prior/data-type
-#'   combination, \code{exact = TRUE} falls back to the Normal
-#'   approximation with a message rather than erroring; check
-#'   \code{$box_pvalue_method} on the returned object to see which was
-#'   used. Default \code{FALSE}, matching this function's behaviour prior
-#'   to the exact option being added.
+#' @param exact \code{NULL} (the default), \code{TRUE}, or \code{FALSE}.
+#'   Controls how \code{box_pvalue} (and the \code{s_value} derived from it)
+#'   is computed.
+#'   \describe{
+#'     \item{\code{NULL} (default)}{Use the \strong{exact} prior predictive
+#'       distribution whenever a closed form exists, and the Normal
+#'       approximation otherwise, silently. Check \code{$box_pvalue_method}
+#'       on the returned object to see which was used.}
+#'     \item{\code{TRUE}}{As \code{NULL}, but signal a message when the
+#'       prior/data combination has no closed-form check and the Normal
+#'       approximation is used instead.}
+#'     \item{\code{FALSE}}{Always use the Normal approximation to both the
+#'       prior and the data likelihood (the behaviour of bayprior 0.4.0 and
+#'       earlier).}
+#'   }
+#'   Closed forms exist for a Beta prior with \code{type = "binary"} data
+#'   (Beta-Binomial) and for a Gamma prior with \code{type = "poisson"} or
+#'   \code{type = "survival"} data (Negative Binomial; Gamma-Poisson and
+#'   Gamma-Exponential conjugacy are the same model under this package's
+#'   (events, exposure) parameterisation). The exact check also requires
+#'   whole-number counts; otherwise the Normal approximation is used.
+#'   \code{surprise_index}, \code{kl_prior_likelihood}, and \code{overlap}
+#'   are unaffected by \code{exact} -- they are defined with respect to the
+#'   Normal-approximated prior and likelihood (see Details).
 #'
 #' @return An object of class \code{bayprior_conflict} containing:
 #'   \describe{
 #'     \item{\code{box_pvalue}}{Box's prior predictive p-value.}
-#'     \item{\code{box_pvalue_method}}{\code{"exact"} or
+#'     \item{\code{box_pvalue_method}}{\code{"exact"} (closed-form prior
+#'       predictive), \code{"numerical"} (the same prior predictive p-value,
+#'       with the predictive computed by quadrature) or
 #'       \code{"normal_approx"}, indicating how \code{box_pvalue} (and
 #'       hence \code{s_value}) was computed. Always \code{"normal_approx"}
 #'       when \code{exact = FALSE}.}
+#'     \item{\code{box_pvalue_caution}}{\code{NULL}, or a short message
+#'       when the Normal approximation produced \code{box_pvalue} for
+#'       discrete data with a boundary (zero or all events) or small
+#'       (fewer than 10) counts, where it can be anti-conservative.}
 #'     \item{\code{s_value}}{Surprisal, \eqn{-\log_2(\text{box\_pvalue})},
 #'       in bits. See Details.}
 #'     \item{\code{surprise_index}}{Standardised distance between prior mean
@@ -194,7 +269,57 @@
 #' strengthens, since it derives from \code{box_pvalue}'s tail probability,
 #' not from \code{z} directly.
 #'
+#' \strong{Mixture priors.} A linear mixture of Beta (binary data) or Gamma
+#' (Poisson/survival data) components, such as a \code{\link{robust_prior}}
+#' or a linearly pooled consensus from \code{\link{aggregate_experts}}, has
+#' as prior predictive the weighted mixture of its components' predictives,
+#' so its p-value is exact as well. \code{severity} is classified on the
+#' reported \code{box_pvalue}: \code{"mild"} for \code{alpha > p >= 0.0027}
+#' and \code{"severe"} below \code{0.0027} (the two-sided Normal tail
+#' beyond 3 standard deviations).
+#'
+#' The numerical integration uses 4,000 (count data) to 40,000 (binary data,
+#' small \code{n}) quadrature points, so the p-value is accurate to roughly
+#' 1e-5 in the predictive probabilities. Run time grows with the number of
+#' possible counts: well under a second typically, a few seconds when the count
+#' support reaches several thousand (for example a heavy-tailed prior with
+#' exposure in the hundreds), where the Normal approximation is also adequate.
+#'
+#' \strong{Why exact is the default.} The Normal approximation estimates the
+#' sampling standard error from the observed data (for example
+#' \eqn{\sqrt{\hat p(1-\hat p)/n}}), which is zero when no events are
+#' observed. For an informative prior and a small sample, an observation of
+#' zero events can be common under the prior predictive distribution yet
+#' receive a very small approximate p-value, so the approximate check can
+#' flag conflict far more often than its nominal level when there is none.
+#' The exact prior predictive p-value does not have this problem: it is
+#' computed from the prior predictive distribution itself, and its rejection
+#' rate under no conflict is at most the nominal level (it can be below it
+#' because the data are discrete). The two agree closely for moderate
+#' samples and weakly informative priors. Use \code{exact = FALSE} to
+#' reproduce the Normal-approximation results of earlier versions.
+#'
+#' The exact p-value is the prior predictive check of Box (1980) in the form
+#' used by Evans and Moshonov (2006): the total prior predictive probability
+#' of the outcomes that are no more probable than the observed one. The
+#' Normal approximation with a plug-in standard error is a convenience
+#' approximation to it, not part of either definition.
+#'
+#' \strong{What the check can and cannot tell you.} In the package's
+#' simulation study (see the \code{validation} folder of the source
+#' repository), the check had little power against true values within about
+#' one prior standard deviation of the prior mean, whichever version was used,
+#' so a non-significant result is weak evidence that a prior is adequate. For
+#' skewed priors the probability ordering can also be less sensitive to true
+#' values below the prior mean than to values above it, because low counts
+#' (including zero) are probable under a right-skewed prior predictive
+#' distribution. Use the result together with \code{\link{sensitivity_grid}}
+#' and judgement about the source of the prior, not as a stand-alone test.
+#'
 #' @references
+#' Evans, M. and Moshonov, H. (2006). Checking for prior-data conflict.
+#' \emph{Bayesian Analysis}, 1(4).
+#'
 #' Box, G. E. P. (1980). Sampling and Bayes' inference in scientific modelling
 #' and robustness. \emph{Journal of the Royal Statistical Society A}, 143,
 #' 383-430.
@@ -211,10 +336,15 @@
 #'
 #' @importFrom rlang %||% abort
 #' @export
-prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = FALSE) {
+prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
 
   if (!inherits(prior, "bayprior")) {
     rlang::abort("`prior` must be a bayprior object.")
+  }
+
+  if (!is.null(exact) &&
+      !(is.logical(exact) && length(exact) == 1L && !is.na(exact))) {
+    rlang::abort("`exact` must be NULL, TRUE, or FALSE.")
   }
 
   type <- data_summary$type %||% "binary"
@@ -245,23 +375,27 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = FALSE) {
 
   # Box's prior predictive p-value (Normal approximation -- always computed,
   # since it is needed below for surprise_index/severity regardless of
-  # `exact`, and as the fallback when `exact = TRUE` has no closed form for
+  # `exact`, and as the fallback when no closed form exists for
   # this prior family/data-type combination).
   pred_sd <- sqrt(prior_sd^2 + obs_se^2)
   z       <- (obs_mean - prior_mean) / pred_sd
   box_p   <- 2 * stats::pnorm(-abs(z))
   box_pvalue_method <- "normal_approx"
 
-  if (isTRUE(exact)) {
+  # exact = NULL (default): exact where a closed form exists, silently
+  # falling back to the approximation otherwise; exact = TRUE: same, but
+  # with a message on fallback; exact = FALSE: approximation only.
+  if (is.null(exact) || isTRUE(exact)) {
     exact_p <- .exact_box_pvalue(prior, type, x, n)
     if (!is.null(exact_p)) {
-      box_p <- exact_p
-      box_pvalue_method <- "exact"
-    } else {
+      box_pvalue_method <- if (isTRUE(attr(exact_p, "numerical"))) "numerical" else "exact"
+      box_p <- as.numeric(exact_p)
+    } else if (isTRUE(exact)) {
       message(
         "prior_conflict(): exact = TRUE requested, but no closed-form ",
-        "exact prior predictive is implemented for a '", prior$dist,
-        "' prior with type = '", type, "' data. Falling back to the ",
+        "exact prior predictive is available for a '", prior$dist,
+        "' prior with type = '", type, "' data (or the counts are not ",
+        "whole numbers). Falling back to the ",
         "Normal approximation for box_pvalue (see $box_pvalue_method on ",
         "the returned object)."
       )
@@ -286,12 +420,38 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = FALSE) {
   # Bhattacharyya overlap
   overlap <- .bhattacharyya_normal(prior_mean, prior_sd, obs_mean, obs_se)
 
-  # Severity classification
+  # Severity classification, on the same p-value that is reported (exact or
+  # approximate). "Severe" is p < 2 * pnorm(-3) (about 0.0027), which is
+  # exactly the earlier "surprise >= 3" rule whenever the Normal
+  # approximation is in use, and now also applies consistently to exact
+  # p-values rather than mixing an exact p with an approximate distance.
+  severe_p <- 2 * stats::pnorm(-3)
   severity <- dplyr::case_when(
-    box_p >= alpha               ~ "none",
-    box_p < alpha & surprise < 3 ~ "mild",
-    TRUE                         ~ "severe"
+    box_p >= alpha  ~ "none",
+    box_p >= severe_p ~ "mild",
+    TRUE            ~ "severe"
   )
+
+  # Caution: the Normal approximation is anti-conservative for discrete data
+  # with informative priors and small or boundary counts (see the validation
+  # study shipped in the repository). Flag when it is what produced the
+  # p-value in that regime, so the result is not read as calibrated.
+  box_pvalue_caution <- NULL
+  if (identical(box_pvalue_method, "normal_approx") &&
+      type %in% c("binary", "poisson", "survival")) {
+    n_other <- if (type == "binary") n - x else Inf
+    if (x == 0 || n_other == 0) {
+      box_pvalue_caution <- paste0(
+        "Observed count is at the boundary (", if (x == 0) "0 events" else
+        "all events", "); the Normal-approximation p-value is unreliable ",
+        "here and no exact prior predictive is available for this prior.")
+    } else if (min(x, n_other) < 10) {
+      box_pvalue_caution <- paste0(
+        "Small observed counts (fewer than 10 events or non-events); the ",
+        "Normal-approximation p-value can be anti-conservative and no ",
+        "exact prior predictive is available for this prior.")
+    }
+  }
 
   recommendation <- switch(severity,
     none = glue::glue(
@@ -315,6 +475,7 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = FALSE) {
     list(
       box_pvalue          = box_p,
       box_pvalue_method   = box_pvalue_method,
+      box_pvalue_caution  = box_pvalue_caution,
       s_value             = s_value,
       surprise_index      = surprise,
       kl_prior_likelihood = kl,

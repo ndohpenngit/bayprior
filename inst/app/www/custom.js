@@ -34,6 +34,14 @@ $(document).ready(function () {
     }
   });
 
+  /* ── Welcome live panel: Pause / Play (hover also pauses, via CSS) ──────── */
+  $(document).on('click', '.bpl-pause', function () {
+    var $root = $(this).closest('.bpl');
+    var paused = $root.toggleClass('is-paused').hasClass('is-paused');
+    $(this).attr('aria-pressed', paused ? 'true' : 'false')
+           .attr('aria-label', paused ? 'Play the animation' : 'Pause the animation');
+  });
+
   /* ── Chip counter update helper (roulette module) ───────────────────────── */
   Shiny.addCustomMessageHandler('update_chip_count', function (msg) {
     $('#' + msg.id).text(msg.value);

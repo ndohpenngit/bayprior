@@ -1,6 +1,6 @@
 Package: bayprior
 Title: Bayesian Prior Elicitation, Diagnostics, and Regulatory Reporting
-Version: 0.4.0
+Version: 0.4.0.9000
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0003-9054-465X"))
@@ -9,8 +9,8 @@ Description: A toolkit for constructing, validating, and justifying Bayesian pri
   matching, the roulette method, and moment matching across six distribution
   families, linear and logarithmic expert pooling, meta-analytic-predictive
   (MAP) priors derived from historical trials, prior-data conflict
-  diagnostics including the Box p-value (with an exact prior predictive
-  option for selected prior and data combinations), an exploratory
+  diagnostics including the Box p-value (computed from the exact prior
+  predictive distribution where one has a closed form), an exploratory
   surprisal (S-value) companion to it, surprise index, information
   divergence, and Mahalanobis distance, sensitivity analyses with tornado
   and influence heatmap plots, sceptical, robust, and power priors, and

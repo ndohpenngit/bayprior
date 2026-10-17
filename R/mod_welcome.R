@@ -8,8 +8,9 @@
 }
 
 #' @noRd
-.welcome_start <- function(title, text, action, done = FALSE) {
-  tags$div(class = paste("bp-start-card", if (done) "bp-start-card--done"),
+.welcome_start <- function(title, text, action, done = FALSE, warm = FALSE) {
+  tags$div(class = paste("bp-start-card", if (done) "bp-start-card--done",
+                         if (warm) "bp-start-card--warm"),
     tags$div(class = "bp-start-title",
              if (done) tags$span(class = "bp-tick", icon("circle-check")),
              title),
@@ -46,7 +47,8 @@
         "A synthetic Phase II oncology trial: two experts, pooled, ready for
          the interim conflict check.",
         actionButton(ns("load_example"), "Load example",
-                     class = "btn btn-outline btn-sm"))
+                     class = "btn btn-warm btn-sm"),
+        warm = TRUE)
     ))
   }
   tagList(
@@ -86,6 +88,7 @@ mod_welcome_ui <- function(id) {
   fluidRow(
     shinydashboard::box(
       width = 8, status = "primary", solidHeader = TRUE,
+      class = "bp-welcome-box",
       title = tagList(icon("house"), " Welcome to bayprior"),
       tags$div(class = "bp-welcome",
       tags$p(class = "lead",
@@ -93,13 +96,11 @@ mod_welcome_ui <- function(id) {
          historical data, conflict diagnostics, sensitivity analysis, and
          regulatory reporting."
       ),
-      tags$p(class = "bp-glance",
-        "Informed by the FDA's 2026 draft guidance and EMA's 2026 concept
-         paper on Bayesian methods in clinical development. Six distribution
-         families, three elicitation methods, four data types (binary,
-         continuous, Poisson, survival), and HTML, PDF or Word reports."
-      ),
-      tags$hr(),
+      tags$hr(class = "bp-divider"),
+      # Compact, package-specific live panel (static HTML + CSS animation;
+      # illustrative only, pausable). See inst/app/www/bp-live.{html,css}.
+      shiny::includeHTML(app_sys("app/www/bp-live.html")),
+      tags$hr(class = "bp-divider"),
       tags$h5(class = "bp-h", "Analytical Workflow"),
 
       # -- Workflow diagram: live (shows completed steps) and clickable ------
@@ -116,7 +117,7 @@ mod_welcome_ui <- function(id) {
           });
       ")),
 
-      tags$hr(),
+      tags$hr(class = "bp-divider"),
       tags$h5(class = "bp-h", "Learn more"),
       tags$div(
         style = "display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;",
