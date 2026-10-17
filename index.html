@@ -277,7 +277,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><strong>Conflict Diagnostics</strong></td>
-<td>Box p-value (Normal approximation or exact prior predictive), S-value (surprisal), surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, <strong>Poisson</strong>, and <strong>survival</strong> data</td>
+<td>Box p-value (exact prior predictive where available, otherwise Normal approximation), S-value (surprisal), surprise index, KL divergence, Bhattacharyya overlap; binary, continuous, <strong>Poisson</strong>, and <strong>survival</strong> data</td>
 <td>Prior-Likelihood-Posterior overlay</td>
 <td>Detect prior misspecification</td>
 </tr>
@@ -389,7 +389,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Bhattacharyya overlap</strong> — distributional overlap between prior and normalised likelihood.</li>
 <li><strong>KL divergence</strong> — information-theoretic distance from prior to likelihood.</li>
 </ul>
-<p>By default the Box p-value uses a Normal approximation to the prior and the likelihood. <code>prior_conflict(..., exact = TRUE)</code> instead uses the exact prior predictive distribution where one has a closed form: Beta-Binomial (Beta prior, binary data) and Gamma-Poisson / Negative Binomial (Gamma prior, Poisson or survival data). Other combinations fall back to the Normal approximation with a message, and <code>$box_pvalue_method</code> reports which was used.</p>
+<p>The Box p-value uses the exact prior predictive distribution wherever one has a closed form: Beta-Binomial (Beta prior, binary data) and Gamma-Poisson / Negative Binomial (Gamma prior, Poisson or survival data). Other combinations use a Normal approximation to the prior and the likelihood, and <code>$box_pvalue_method</code> reports which was used. <code>exact = FALSE</code> forces the approximation, which can flag conflict too often for informative priors with small samples.</p>
 <p>Four data types are supported:</p>
 <table class="caption-top table">
 <colgroup>

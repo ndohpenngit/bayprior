@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Ndoh Penn">
-<meta name="dcterms.date" content="2026-10-09">
+<meta name="dcterms.date" content="2026-10-17">
 
 <title>Prior-Data Conflict Diagnostics – bayprior</title>
 <style>
@@ -283,7 +283,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 9, 2026</p>
+      <p class="date">October 17, 2026</p>
     </div>
   </div>
   
@@ -364,13 +364,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: Response rate 
 
-• Box's p-value       : 0.8408
+• Box's p-value       : 0.6892 (exact)
+• S-value (bits)      : 0.54
 • Surprise index      : 0.2009
 • KL divergence       : 0.1683
 • Overlap coefficient : 0.9682
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.841, S-value = 0.25 bits). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.689, S-value = 0.54 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -385,13 +386,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: Response rate 
 
-• Box's p-value       : 0.1167
+• Box's p-value       : 0.0986 (exact)
+• S-value (bits)      : 3.34
 • Surprise index      : 1.5689
 • KL divergence       : 3.265
 • Overlap coefficient : 0.5331
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.117, S-value = 3.1 bits). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.099, S-value = 3.34 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -406,13 +408,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: Response rate 
 
-• Box's p-value       : 0
+• Box's p-value       : 0 (exact)
+• S-value (bits)      : 17.41
 • Surprise index      : 5.0954
 • KL divergence       : 61.1374
 • Overlap coefficient : 0.0014
 • Conflict severity   : SEVERE
 
-!  Severe prior-data conflict detected (Box p = 0, S-value = 21.45 bits, surprise = 5.1). Re-elicitation or use of a robust/sceptical prior is strongly recommended. </code></pre>
+!  Severe prior-data conflict detected (Box p = 0, S-value = 17.41 bits, surprise = 5.1). Re-elicitation or use of a robust/sceptical prior is strongly recommended. </code></pre>
 </div>
 </div>
 <hr>
@@ -427,16 +430,16 @@ window.Quarto = {
 <p><strong>Interpretation:</strong> <span class="math inline">\(p &lt; 0.05\)</span> flags conflict at the 5% level.</p>
 <section id="exact-prior-predictive-version" class="level3">
 <h3 class="anchored" data-anchor-id="exact-prior-predictive-version">Exact prior predictive version</h3>
-<p>By default the p-value above uses a Normal approximation to the prior and to the likelihood. Setting <code>exact = TRUE</code> replaces it with the exact prior predictive distribution where one has a closed form: Beta-Binomial (a Beta prior with <code>type = "binary"</code> data) and Gamma-Poisson / Negative Binomial (a Gamma prior with <code>type = "poisson"</code> or <code>"survival"</code> data). The approximation is usually adequate, but it can differ noticeably for small samples, extreme proportions, or sparse counts, which are exactly the cases where a regulator may ask how the p-value was obtained.</p>
+<p>The formula above is the Normal approximation to the prior and to the likelihood. Where the prior predictive distribution has a closed form, <code>prior_conflict()</code> uses it instead by default: Beta-Binomial (a Beta prior with <code>type = "binary"</code> data) and Gamma-Poisson / Negative Binomial (a Gamma prior with <code>type = "poisson"</code> or <code>"survival"</code> data). The approximation is usually adequate for moderate samples and weakly informative priors, but for an informative prior and a small sample it can flag conflict much more often than its nominal level when there is none (for example when zero events are observed, which the approximation treats as having zero sampling variability). The exact version does not have this problem: it is the prior predictive check of Box (1980) in the form used by Evans and Moshonov (2006), the total prior predictive probability of outcomes no more probable than the observed one. Use <code>exact = FALSE</code> to obtain the approximation, for instance to reproduce results from bayprior 0.4.0 or earlier.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cd_approx <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">35</span>, <span class="at">n =</span> <span class="dv">40</span>)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>cd_exact <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">35</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">exact        =</span> <span class="cn">TRUE</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">35</span>, <span class="at">n =</span> <span class="dv">40</span>),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">exact        =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>cd_exact <span class="ot">&lt;-</span> <span class="fu">prior_conflict</span>(</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior        =</span> prior,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_summary =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"binary"</span>, <span class="at">x =</span> <span class="dv">35</span>, <span class="at">n =</span> <span class="dv">40</span>)   <span class="co"># default: exact</span></span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">method     =</span> <span class="fu">c</span>(cd_approx<span class="sc">$</span>box_pvalue_method, cd_exact<span class="sc">$</span>box_pvalue_method),</span>
@@ -449,7 +452,7 @@ window.Quarto = {
 2         exact   5.74e-06    17.4</code></pre>
 </div>
 </div>
-<p>For prior and data combinations without a closed-form check, <code>exact = TRUE</code> falls back to the Normal approximation with a message, and <code>$box_pvalue_method</code> records which version was used (<code>"exact"</code> or <code>"normal_approx"</code>). The other diagnostics below are not affected by <code>exact</code>.</p>
+<p>For prior and data combinations without a closed-form check, the Normal approximation is used (with <code>exact = TRUE</code>, with a message), and <code>$box_pvalue_method</code> records which version was used (<code>"exact"</code> or <code>"normal_approx"</code>). The other diagnostics below are not affected by <code>exact</code>.</p>
 </section>
 </section>
 <section id="s-value-surprisal" class="level2">
@@ -578,7 +581,8 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: Log odds ratio 
 
-• Box's p-value       : 0.618
+• Box's p-value       : 0.618 (Normal approx.)
+• S-value (bits)      : 0.69
 • Surprise index      : 0.4986
 • KL divergence       : 109.4035
 • Overlap coefficient : 0.3618
@@ -630,13 +634,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: Adverse event rate (per person-year) 
 
-• Box's p-value       : 0.665
+• Box's p-value       : 1 (exact)
+• S-value (bits)      : 0
 • Surprise index      : 0.433
 • KL divergence       : 0.8257
 • Overlap coefficient : 0.888
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.665, S-value = 0.59 bits). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 1, S-value = 0 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -651,13 +656,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: Adverse event rate (per person-year) 
 
-• Box's p-value       : 0.0041
+• Box's p-value       : 0.0046 (exact)
+• S-value (bits)      : 7.75
 • Surprise index      : 2.8677
 • KL divergence       : 7.8152
 • Overlap coefficient : 0.1279
 • Conflict severity   : MILD
 
-!  Mild prior-data conflict detected (Box p = 0.004, S-value = 7.92 bits, surprise = 2.87). Consider reporting a sensitivity analysis with a more diffuse prior. </code></pre>
+!  Mild prior-data conflict detected (Box p = 0.005, S-value = 7.75 bits, surprise = 2.87). Consider reporting a sensitivity analysis with a more diffuse prior. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -717,13 +723,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: OS hazard rate 
 
-• Box's p-value       : 1
+• Box's p-value       : 0.3769 (numerical)
+• S-value (bits)      : 1.41
 • Surprise index      : 0
 • KL divergence       : 8.0021
 • Overlap coefficient : 0.6526
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 1, S-value = 0 bits). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.377, S-value = 1.41 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -738,13 +745,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: OS hazard rate 
 
-• Box's p-value       : 0.0622
+• Box's p-value       : 0.0535 (numerical)
+• S-value (bits)      : 4.22
 • Surprise index      : 1.865
 • KL divergence       : 15.2181
 • Overlap coefficient : 0.344
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.062, S-value = 4.01 bits). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.054, S-value = 4.22 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -776,13 +784,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: OS hazard rate (Gamma prior) 
 
-• Box's p-value       : 1
+• Box's p-value       : 0.7251 (exact)
+• S-value (bits)      : 0.46
 • Surprise index      : 0
 • KL divergence       : 0.5184
 • Overlap coefficient : 0.9229
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 1, S-value = 0 bits). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.725, S-value = 0.46 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <hr>
@@ -805,7 +814,7 @@ window.Quarto = {
 </section>
 <section id="mixture-prior-conflict" class="level1">
 <h1>Mixture Prior Conflict</h1>
-<p>All diagnostics work transparently with mixture priors via a Normal approximation from the mixture’s <code>fit_summary</code>:</p>
+<p>Mixture priors (robust priors, pooled consensus) are supported throughout. The Box p-value uses the mixture’s prior predictive distribution, the weighted mixture of the components’ predictives (exact for Beta or Gamma components; computed by numerical integration if a component such as the Normal vague part of a robust prior has no conjugate form, with that component truncated to the parameter space). The other diagnostics use a Normal approximation from the mixture’s <code>fit_summary</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>e1 <span class="ot">&lt;-</span> <span class="fu">elicit_beta</span>(<span class="at">mean =</span> <span class="fl">0.25</span>, <span class="at">sd =</span> <span class="fl">0.08</span>, <span class="at">method =</span> <span class="st">"moments"</span>,</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">expert_id =</span> <span class="st">"E1"</span>, <span class="at">label =</span> <span class="st">"ORR"</span>)</span>
@@ -819,13 +828,14 @@ window.Quarto = {
 -- Prior-Data Conflict Diagnostics --
    Prior: Linear pooled consensus prior 
 
-• Box's p-value       : 0.4016
+• Box's p-value       : 0.2986 (exact)
+• S-value (bits)      : 1.74
 • Surprise index      : 0.8387
 • KL divergence       : 1.5818
 • Overlap coefficient : 0.7942
 • Conflict severity   : NONE
 
-!  No evidence of prior-data conflict (Box p = 0.402, S-value = 1.32 bits). The prior appears consistent with the observed data. </code></pre>
+!  No evidence of prior-data conflict (Box p = 0.299, S-value = 1.74 bits). The prior appears consistent with the observed data. </code></pre>
 </div>
 </div>
 <hr>
@@ -891,6 +901,7 @@ i  No multivariate prior-data conflict detected (Mahalanobis D = 2.094, p = 0.11
 <section id="references" class="level1">
 <h1>References</h1>
 <ul>
+<li>Evans, M. and Moshonov, H. (2006). Checking for prior-data conflict. <em>Bayesian Analysis</em>, 1(4).</li>
 <li>Box, G. E. P. (1980). Sampling and Bayes’ inference in scientific modelling and robustness. <em>JRSS-A</em>, 143, 383–430.</li>
 <li>Bhattacharyya, A. (1943). On a measure of divergence between two statistical populations. <em>Bulletin of the Calcutta Mathematical Society</em>, 35, 99–109.</li>
 <li>Greenland, S. (2023). Divergence versus decision P-values: A distinction worth making in theory and keeping in practice. <em>Scandinavian Journal of Statistics</em>, 50(1), 54–88.</li>
