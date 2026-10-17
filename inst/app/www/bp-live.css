@@ -1,0 +1,91 @@
+/* bayprior welcome-page live panel -------------------------------------------
+   Pure CSS animation; 3 slides x 12 s in a 36 s loop. Illustrative only:
+   it never reads app state. Pausing: hover, or the Pause/Play button
+   (custom.js toggles .is-paused). Text sizes are deliberately small so the
+   panel stays secondary to the app's own content.                          */
+.bpl { font-family: Arial, Helvetica, sans-serif; }
+.bpl svg text { font-family: Arial, Helvetica, sans-serif; }
+.bpl:hover *, .bpl.is-paused * { animation-play-state: paused !important; }
+.bpl-controls {
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  margin-bottom: 4px;
+}
+.bpl-tag { font-size: 9px; letter-spacing: .12em; color: #8FA2D6; }
+.bpl-pause {
+  display: inline-flex; align-items: center; gap: 5px; height: 24px;
+  padding: 0 9px; border-radius: 12px; cursor: pointer;
+  background: rgba(255,255,255,.08); color: #E2E8F8;
+  border: 1px solid rgba(255,255,255,.22); font-size: 11px; line-height: 1;
+}
+.bpl-pause:hover { background: rgba(255,255,255,.16); }
+.bpl-pause:focus-visible { outline: 2px solid #22D3EE; outline-offset: 2px; }
+.bpl-ico-play, .bpl-lab-play { display: none; }
+.bpl.is-paused .bpl-ico-play, .bpl.is-paused .bpl-lab-play { display: inline; }
+.bpl.is-paused .bpl-ico-pause, .bpl.is-paused .bpl-lab-pause { display: none; }
+.bpl-dots { display: inline-flex; align-items: center; gap: 4px; }
+.bpl-dots > span { display: inline-block; height: 8px; width: 8px; border-radius: 4px; background: #2B3C75; }
+
+.bpl-w0{animation:bpl-w0 36s infinite}
+.bpl-w1{animation:bpl-w1 36s infinite}
+.bpl-w2{animation:bpl-w2 36s infinite}
+.bpl-d0{animation:bpl-d0 36s infinite}
+.bpl-d1{animation:bpl-d1 36s infinite}
+.bpl-d2{animation:bpl-d2 36s infinite}
+@keyframes bpl-w0{0%,32%{opacity:1}34%,98%{opacity:0}100%{opacity:1}}
+@keyframes bpl-w1{0%,32%{opacity:0}34%,65%{opacity:1}67%,100%{opacity:0}}
+@keyframes bpl-w2{0%,65%{opacity:0}67%,98%{opacity:1}100%{opacity:0}}
+@keyframes bpl-d0{0%,32%{background:#22D3EE;width:24px}34%,98%{background:#2B3C75;width:8px}100%{background:#22D3EE;width:24px}}
+@keyframes bpl-d1{0%,32%{background:#2B3C75;width:8px}34%,65%{background:#22D3EE;width:24px}67%,100%{background:#2B3C75;width:8px}}
+@keyframes bpl-d2{0%,65%{background:#2B3C75;width:8px}67%,98%{background:#22D3EE;width:24px}100%{background:#2B3C75;width:8px}}
+.bpl-dr{stroke-dasharray:1; stroke-dashoffset:1; fill-opacity:0}
+.bpl-glow{filter:drop-shadow(0 0 5px currentColor)}
+.bpl-ch{animation:bpl-ch 12s cubic-bezier(.3,.7,.4,1) infinite}
+.bpl-fit{animation:bpl-fit 12s linear infinite}
+.bpl-fl{animation:bpl-fl 12s infinite}
+.bpl-k1{animation:bpl-k1 12s infinite}
+.bpl-k2{animation:bpl-k2 12s infinite}
+@keyframes bpl-ch{0%{opacity:0;transform:translateY(-80px)}6%{opacity:1;transform:translateY(5px)}9%{transform:translateY(0)}86%{opacity:1;transform:translateY(0)}88%,100%{opacity:0;transform:translateY(0)}}
+@keyframes bpl-fit{0%,46%{stroke-dashoffset:1;fill-opacity:0;opacity:1}60%{stroke-dashoffset:0;fill-opacity:0}66%,92%{stroke-dashoffset:0;fill-opacity:1;opacity:1}97%,100%{stroke-dashoffset:0;fill-opacity:1;opacity:0}}
+@keyframes bpl-fl{0%,60%{opacity:0}66%,92%{opacity:1}97%,100%{opacity:0}}
+@keyframes bpl-k1{0%,44%{opacity:1}50%,96%{opacity:0}100%{opacity:1}}
+@keyframes bpl-k2{0%,48%{opacity:0}56%,92%{opacity:1}97%,100%{opacity:0}}
+.bpl-sa{color:#60A5FA;animation:bpl-sa 12s linear infinite}
+.bpl-sb{color:#C4B5FD;animation:bpl-sb 12s linear infinite}
+.bpl-sl{color:#22D3EE;animation:bpl-sl 12s linear infinite}
+.bpl-sg{color:#22D3EE;animation:bpl-sg 12s linear infinite}
+@keyframes bpl-sa{0%,2%{stroke-dashoffset:1;fill-opacity:0;opacity:1}14%{stroke-dashoffset:0;fill-opacity:0}20%,92%{stroke-dashoffset:0;fill-opacity:1;opacity:1}98%,100%{stroke-dashoffset:0;fill-opacity:1;opacity:0}}
+@keyframes bpl-sb{0%,18%{stroke-dashoffset:1;fill-opacity:0;opacity:1}30%{stroke-dashoffset:0;fill-opacity:0}36%,92%{stroke-dashoffset:0;fill-opacity:1;opacity:1}98%,100%{stroke-dashoffset:0;fill-opacity:1;opacity:0}}
+@keyframes bpl-sl{0%,44%{stroke-dashoffset:1;fill-opacity:0;opacity:1}56%{stroke-dashoffset:0;fill-opacity:0}60%,66%{stroke-dashoffset:0;fill-opacity:1;opacity:1}72%,100%{stroke-dashoffset:0;fill-opacity:1;opacity:0}}
+@keyframes bpl-sg{0%,68%{stroke-dashoffset:1;fill-opacity:0;opacity:1}80%{stroke-dashoffset:0;fill-opacity:0}84%,92%{stroke-dashoffset:0;fill-opacity:1;opacity:1}98%,100%{stroke-dashoffset:0;fill-opacity:1;opacity:0}}
+.bpl-la{animation:bpl-la 12s infinite}
+.bpl-lb{animation:bpl-lb 12s infinite}
+.bpl-lbd{animation:bpl-lbd 12s infinite}
+.bpl-ll{animation:bpl-ll 12s infinite}
+.bpl-lg{animation:bpl-lg 12s infinite}
+@keyframes bpl-la{0%,12%{opacity:0}18%,92%{opacity:1}98%,100%{opacity:0}}
+@keyframes bpl-lb{0%,28%{opacity:0}34%,92%{opacity:1}98%,100%{opacity:0}}
+@keyframes bpl-lbd{0%,36%{opacity:0}42%,46%{opacity:1}52%,100%{opacity:0}}
+@keyframes bpl-ll{0%,56%{opacity:0}61%,66%{opacity:1}71%,100%{opacity:0}}
+@keyframes bpl-lg{0%,80%{opacity:0}85%,92%{opacity:1}98%,100%{opacity:0}}
+.bpl-q0{animation:bpl-q0 12s infinite}
+.bpl-q1{animation:bpl-q1 12s infinite}
+.bpl-q2{animation:bpl-q2 12s infinite}
+@keyframes bpl-q0{0%,44%{opacity:1}49%,98%{opacity:0}100%{opacity:1}}
+@keyframes bpl-q1{0%,46%{opacity:0}52%,66%{opacity:1}71%,100%{opacity:0}}
+@keyframes bpl-q2{0%,68%{opacity:0}76%,92%{opacity:1}98%,100%{opacity:0}}
+.bpl-rp{color:#60A5FA;animation:bpl-rp 12s linear infinite}
+.bpl-rc{color:#94A3B8;animation:bpl-rc 12s linear infinite}
+.bpl-rr{color:#22D3EE;animation:bpl-rr 12s linear infinite}
+@keyframes bpl-rp{0%{stroke-dashoffset:1;fill-opacity:0;opacity:1}10%{stroke-dashoffset:0;fill-opacity:0}16%,40%{stroke-dashoffset:0;fill-opacity:1;opacity:1}50%,92%{stroke-dashoffset:0;fill-opacity:1;opacity:.35}98%,100%{stroke-dashoffset:0;fill-opacity:1;opacity:0}}
+@keyframes bpl-rc{0%,48%{stroke-dashoffset:1;opacity:1}60%{stroke-dashoffset:0}64%,92%{stroke-dashoffset:0;opacity:1}98%,100%{stroke-dashoffset:0;opacity:0}}
+@keyframes bpl-rr{0%,52%{stroke-dashoffset:1;fill-opacity:0;opacity:1}66%{stroke-dashoffset:0;fill-opacity:0}72%,92%{stroke-dashoffset:0;fill-opacity:1;opacity:1}98%,100%{stroke-dashoffset:0;fill-opacity:1;opacity:0}}
+.bpl-mk{animation:bpl-mk 12s cubic-bezier(.6,0,.3,1) infinite}
+.bpl-c1{animation:bpl-c1 12s infinite}
+.bpl-c2{animation:bpl-c2 12s infinite}
+.bpl-lr{animation:bpl-c2 12s infinite}
+.bpl-bar{transform-origin:left center; animation:bpl-bar 12s cubic-bezier(.6,0,.3,1) infinite}
+@keyframes bpl-mk{0%,36%{transform:translateX(80px)}50%,92%{transform:translateX(430px)}100%{transform:translateX(80px)}}
+@keyframes bpl-c1{0%,38%{opacity:1}44%,94%{opacity:0}100%{opacity:1}}
+@keyframes bpl-c2{0%,48%{opacity:0}54%,92%{opacity:1}97%,100%{opacity:0}}
+@keyframes bpl-bar{0%,36%{transform:scaleX(.8)}50%,92%{transform:scaleX(.005)}100%{transform:scaleX(.8)}}
+@media (prefers-reduced-motion: reduce){.bpl-pause{display:none}.bpl-w0,.bpl-w1,.bpl-w2,.bpl-d0,.bpl-d1,.bpl-d2,.bpl-ch,.bpl-fit,.bpl-fl,.bpl-k1,.bpl-k2,.bpl-sa,.bpl-sb,.bpl-sl,.bpl-sg,.bpl-la,.bpl-lb,.bpl-lbd,.bpl-ll,.bpl-lg,.bpl-q0,.bpl-q1,.bpl-q2,.bpl-rp,.bpl-rc,.bpl-rr,.bpl-mk,.bpl-c1,.bpl-c2,.bpl-lr,.bpl-bar{animation:none}.bpl-dr{stroke-dashoffset:0;fill-opacity:1}.bpl-w1,.bpl-w2{display:none}.bpl-w0{opacity:1}.bpl-ch,.bpl-fl,.bpl-k2{opacity:1}.bpl-k1{opacity:0}.bpl-d0{background:#22D3EE;width:24px}.bpl-d1,.bpl-d2{background:#2B3C75;width:8px}}

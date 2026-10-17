@@ -290,3 +290,87 @@ body.dark-mode .box.box-solid.box-warning > .box-header { background: #8A5300; }
 }
 .shiny-notification-error   { border-left-color: var(--bp-danger); }
 .shiny-notification-warning { border-left-color: var(--bp-amber-ink); }
+
+
+/* ==== Look M: gradients and warm accents (0.4.0.9000) ======================
+   Colour means state. The analytical workflow stays neutral; only the
+   reactive is-done step turns emerald. Gradients are chrome only.          */
+:root {
+  --bp-grad-box:    linear-gradient(90deg, #0F3460 0%, #1D4ED8 100%);
+  --bp-grad-welcome:linear-gradient(90deg, #0F3460 0%, #1D4ED8 55%, #0E7490 100%);
+  --bp-grad-btn:    linear-gradient(90deg, #1D4ED8 0%, #0E7490 100%);
+  --bp-grad-btn-h:  linear-gradient(90deg, #1A44BC 0%, #0B6279 100%);
+}
+body.dark-mode {
+  --bp-grad-box:    linear-gradient(90deg, #0f3460 0%, #185FA5 100%);
+  --bp-grad-welcome:linear-gradient(90deg, #0f3460 0%, #185FA5 60%, #0E6A80 100%);
+  --bp-grad-btn:    linear-gradient(90deg, #1D4ED8 0%, #0E7490 100%);
+  --bp-grad-btn-h:  linear-gradient(90deg, #1A44BC 0%, #0B6279 100%);
+}
+.box.box-primary > .box-header,
+.box.box-solid.box-primary > .box-header { background-image: var(--bp-grad-box); }
+.bp-welcome-box.box.box-primary > .box-header,
+.bp-welcome-box.box.box-solid.box-primary > .box-header { background-image: var(--bp-grad-welcome); }
+
+/* Active sidebar item: cyan pill with dark text (9:1) */
+.skin-blue .sidebar-menu > li.active > a {
+  background: #22D3EE; color: #06203A; border-left-color: transparent;
+  border-radius: 8px; margin: 0 8px; font-weight: 600;
+}
+.skin-blue .sidebar-menu > li.active > a > .fa,
+.skin-blue .sidebar-menu > li.active > a > svg { color: #06203A; }
+
+/* Primary buttons: gradient, AA with white text */
+.btn.btn-primary {
+  background-image: var(--bp-grad-btn); border-color: transparent; color: #fff;
+}
+.btn.btn-primary:hover, .btn.btn-primary:focus {
+  background-image: var(--bp-grad-btn-h); border-color: transparent; color: #fff;
+}
+
+/* Warm "Load example" card: a quiet tint, not a banner */
+.bp-start-card--warm {
+  background: linear-gradient(135deg, #FFFAEB 0%, #FFF3E3 100%);
+  border-color: #F3D9A8;
+}
+.bp-start-card--warm .bp-start-title { color: #6B4210; }
+.bp-start-card--warm .bp-start-text  { color: #6B5A42; }
+.btn.btn-warm, .btn.btn-warm:focus {
+  background: transparent; border: 1px solid #D9962B; color: #7A4A00; font-weight: 600;
+}
+.btn.btn-warm:hover { background: rgba(245, 179, 1, .16); color: #5E3800; }
+body.dark-mode .bp-start-card--warm {
+  background: linear-gradient(135deg, rgba(251,191,36,.08) 0%, rgba(249,115,22,.04) 100%);
+  border-color: rgba(251,191,36,.30);
+}
+body.dark-mode .bp-start-card--warm .bp-start-title { color: #F3DFA2; }
+body.dark-mode .bp-start-card--warm .bp-start-text  { color: #B7C3D8; }
+body.dark-mode .btn.btn-warm, body.dark-mode .btn.btn-warm:focus {
+  background: rgba(251,191,36,.10); border-color: rgba(251,191,36,.55); color: #FDE68A;
+}
+body.dark-mode .btn.btn-warm:hover { background: rgba(251,191,36,.20); }
+
+/* Empty "Active prior" badge: warm, still not an error. Fitted stays emerald. */
+.bp-prior-card--empty {
+  border: 1px dashed rgba(251, 191, 36, 0.55);
+  background: linear-gradient(135deg, rgba(251,191,36,.20) 0%, rgba(249,115,22,.08) 100%);
+  color: #EADFC4;
+}
+.bp-prior-card--empty .bp-prior-title { color: #FDE68A; }
+
+/* Live panel spacing inside the welcome box */
+.bp-welcome .bpl { margin: 4px auto 16px; max-width: 560px; }
+
+/* Fitted "Active prior" badge: translucent emerald, matching the warm empty state */
+.bp-prior-card--fitted {
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  background: linear-gradient(135deg, rgba(52,211,153,.22) 0%, rgba(16,185,129,.08) 100%);
+  color: #D5F5E8; box-shadow: none;
+}
+.bp-prior-card--fitted .bp-prior-title { color: #A7F3D0; }
+
+/* Section dividers on the Welcome tab */
+.bp-welcome hr.bp-divider {
+  border: 0; border-top: 1px solid var(--bp-line);
+  margin: 14px 0 18px; opacity: 1;
+}
