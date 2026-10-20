@@ -4,15 +4,24 @@
 \alias{plot_tornado}
 \title{Tornado plot of prior influence on posterior quantities}
 \usage{
-plot_tornado(sensitivity, title = "Prior influence on posterior estimates")
+plot_tornado(
+  sensitivity,
+  title = "Prior influence on posterior estimates",
+  interactive = FALSE
+)
 }
 \arguments{
 \item{sensitivity}{A \code{bayprior_sensitivity} object.}
 
 \item{title}{Character. Plot title.}
+
+\item{interactive}{Logical. If \code{TRUE}, return an interactive
+\pkg{plotly} object with readable hover text instead of a static
+\code{ggplot}. Default \code{FALSE}.}
 }
 \value{
-A \code{ggplot} object.
+A \code{ggplot} object, or a \code{plotly} object when
+\code{interactive = TRUE}.
 }
 \description{
 Tornado plot of prior influence on posterior quantities

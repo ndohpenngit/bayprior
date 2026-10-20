@@ -4,7 +4,12 @@
 \alias{plot_sensitivity}
 \title{Plot sensitivity analysis results}
 \usage{
-plot_sensitivity(sensitivity, target = NULL, highlight_reference = TRUE)
+plot_sensitivity(
+  sensitivity,
+  target = NULL,
+  highlight_reference = TRUE,
+  interactive = FALSE
+)
 }
 \arguments{
 \item{sensitivity}{A \code{bayprior_sensitivity} object.}
@@ -12,9 +17,14 @@ plot_sensitivity(sensitivity, target = NULL, highlight_reference = TRUE)
 \item{target}{Character. Which target quantity to plot.}
 
 \item{highlight_reference}{Logical. Default \code{TRUE}.}
+
+\item{interactive}{Logical. If \code{TRUE}, return an interactive
+\pkg{plotly} object with readable hover text instead of a static
+\code{ggplot}. Default \code{FALSE}.}
 }
 \value{
-A \code{ggplot} object.
+A \code{ggplot} object, or a \code{plotly} object when
+\code{interactive = TRUE}.
 }
 \description{
 Plot sensitivity analysis results

@@ -149,18 +149,18 @@ test_that(".density_grid aborts when every mixture component has an unusable fit
 
 # -- .apply_plotly_theme() -- zero prior coverage -----------------------------
 
-test_that(".apply_plotly_theme sets a white background and does not error on a minimal plotly-like object", {
+test_that(".apply_plotly_theme sets a transparent background and does not error on a minimal plotly-like object", {
   fake_plotly <- list(x = list(layout = list(shapes = list(
     list(type = "rect", fillcolor = "#000000")
   ))))
   out <- .apply_plotly_theme(fake_plotly)
-  expect_equal(out$x$layout$paper_bgcolor, "#ffffff")
-  expect_equal(out$x$layout$plot_bgcolor,  "#ffffff")
-  expect_equal(out$x$layout$shapes[[1]]$fillcolor, "#ffffff")
+  expect_equal(out$x$layout$paper_bgcolor, "rgba(0,0,0,0)")
+  expect_equal(out$x$layout$plot_bgcolor,  "rgba(0,0,0,0)")
+  expect_equal(out$x$layout$shapes[[1]]$fillcolor, "rgba(0,0,0,0)")
 })
 
 test_that(".apply_plotly_theme handles a plotly object with no shapes", {
   fake_plotly <- list(x = list(layout = list()))
   out <- .apply_plotly_theme(fake_plotly)
-  expect_equal(out$x$layout$paper_bgcolor, "#ffffff")
+  expect_equal(out$x$layout$paper_bgcolor, "rgba(0,0,0,0)")
 })
