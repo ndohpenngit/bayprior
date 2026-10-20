@@ -8,10 +8,9 @@ body.dark-mode {
   color: #e0e0e0 !important;
 }
 
-body.dark-mode .js-plotly-plot {
-  background-color: #ffffff !important;
-  filter: invert(1) hue-rotate(180deg);
-}
+/* Plots are re-coloured natively by bpThemePlotly() in app_ui.R: transparent
+   panel on the card colour, light text, navy grid. No colour inversion. */
+body.dark-mode .js-plotly-plot { background-color: transparent !important; filter: none; }
 
 /* ── Sidebar ───────────────────────────────────────────────── */
 body.dark-mode .main-sidebar,
