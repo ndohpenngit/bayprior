@@ -374,3 +374,33 @@ body.dark-mode .btn.btn-warm:hover { background: rgba(251,191,36,.20); }
   border: 0; border-top: 1px solid var(--bp-line);
   margin: 14px 0 18px; opacity: 1;
 }
+
+
+/* ==== Sensitivity tab ======================================================= */
+/* Observed-data chip: theme-aware (replaces inline #f8f9fa) */
+.bp-datachip {
+  background: var(--bp-surface); border: 1px solid var(--bp-line);
+  color: var(--bp-text); border-radius: 4px; padding: 6px 10px; margin-top: 4px;
+}
+/* Small explanatory note under the prior banner */
+.bp-note { font-size: 11.5px; line-height: 1.4; color: var(--bp-muted); margin: 0 0 8px; }
+
+/* radioGroupButtons (shinyWidgets): every button carries the status colour, so
+   selected and unselected looked alike. Unselected = quiet outline; selected =
+   filled (gradient for primary, steel for info). Dark mode keeps its own colours
+   from bayprior-dark.css (those rules use !important on the colours only). */
+.btn-group-container-sw .btn:not(.active),
+.btn-group > .btn.radiobtn:not(.active) {
+  background-color: var(--bp-surface); background-image: none;
+  color: var(--bp-heading); border: 1px solid var(--bp-line);
+}
+.btn-group-container-sw .btn:not(.active):hover,
+.btn-group > .btn.radiobtn:not(.active):hover {
+  background-color: var(--bp-step-hover); color: var(--bp-heading);
+}
+.btn-group-container-sw .btn.active,
+.btn-group > .btn.radiobtn.active {
+  color: #fff; border-color: transparent; font-weight: 600;
+}
+.btn-group-container-sw .btn-info.active,
+.btn-group > .btn.radiobtn.btn-info.active { background-color: #2B5A8C; background-image: none; }
