@@ -1,44 +1,26 @@
-## Update to bayprior 0.4.0
+## Update to bayprior 0.5.0
 
-This is an update of bayprior from 0.3.2 to 0.4.0. See NEWS.md for details.
-The main changes are:
-
-* `prior_conflict()` gains an `exact` argument (default `FALSE`, so existing
-  behaviour is unchanged). `exact = TRUE` uses the exact prior predictive
-  distribution (Beta-Binomial, Gamma-Poisson/Negative Binomial) for the Box
-  p-value where one has a closed form, and falls back to the Normal
-  approximation with a message otherwise.
-
-* Added `map_prior()`: derives a meta-analytic-predictive (MAP) prior from
-  historical trial summaries via a random-effects meta-analysis, with an
-  explicit prior on the between-trial heterogeneity parameter tau
-  (Schmidli et al., 2014). The meta-analysis engine is implemented in base
-  R; no new hard dependency is introduced.
-
-* Added `historical_effect_sizes()`, an optional wrapper around
-  `metafor::escalc()`. `metafor` is listed under `Suggests` only and is
-  guarded by `requireNamespace(..., quietly = TRUE)`.
-
-* Added `resolve_tau_prior()` and `plot_tau_posterior()` in support of the
-  above.
-
-* `prior_conflict()` now also reports `s_value`, the surprisal
-  `-log2(box_pvalue)` in bits, alongside the Box p-value.
-
-* Shiny app: new "MAP Prior (Historical)" module, a restyled interface, a
-  live workflow overview on the Welcome page, and a confirmation step
-  before a fitted prior replaces a pooled consensus prior.
+This updates bayprior from 0.4.0 (accepted 2026-10-10). It follows the previous
+release closely because simulations showed that the default Box p-value in
+0.4.0 can flag prior-data conflict far more often than its nominal level for
+informative priors and small samples. `prior_conflict()` now uses the exact
+prior predictive distribution by default, which changes default results
+(see NEWS.md). `plot_sensitivity()` and `plot_tornado()` gain an
+`interactive` argument (default unchanged), and the Shiny app is updated.
+No new dependencies.
 
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
 
-* "checking for future file timestamps ... NOTE: unable to verify current time".
+* checking for future file timestamps ... NOTE: unable to verify current
+  time (local environment).
 
 ## Test environments
 
 * local macOS (aarch64-apple-darwin20), R 4.4.2
-* win-builder: R-devel (2026-10-08 r90650 ucrt)
+* win-builder: R 4.6.1 (2026-06-24 ucrt) and R-devel (2026-10-18 r90707
+  ucrt): Status OK for both
 
 ## Downstream dependencies
 

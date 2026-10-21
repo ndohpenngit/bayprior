@@ -1,4 +1,4 @@
-# bayprior (development version)
+# bayprior 0.5.0
 
 ## Changes to default behaviour
 
@@ -58,6 +58,25 @@
 
 * Shiny app (Conflict module): the "exact prior predictive" option is now
   on by default; unchecking it uses the Normal approximation throughout.
+
+## New features
+
+* `plot_sensitivity()` and `plot_tornado()` gain an `interactive` argument.
+  The default (`FALSE`) returns a ggplot object exactly as before;
+  `interactive = TRUE` returns a plotly object with readable tooltips
+  (rounded values and parameter labels instead of raw column names) and, for
+  the tornado plot, an explicit title and subtitle.
+
+## Shiny app
+
+* Sensitivity module: plots are interactive with formatted tooltips, the
+  range sliders no longer show tick marks, a note is shown when the prior is
+  a mixture (the analysis uses a moment-matched working prior), and the
+  "Analysis type" and outcome buttons clearly distinguish the selected option.
+
+* Dark mode: plotly plots are now recoloured natively instead of through a
+  CSS colour-inversion filter, so plot colours and hover labels are correct
+  and plots no longer flash light after an analysis is run.
 
 # bayprior 0.4.0
 
