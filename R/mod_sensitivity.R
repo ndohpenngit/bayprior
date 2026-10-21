@@ -77,10 +77,18 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       cls <- if (is.null(p)) "alert-warning" else "alert-success"
       msg <- if (is.null(p)) "No prior available." else
         glue::glue("{p$label} ({toupper(p$dist)})")
-      tags$div(class = paste("alert", cls),
-               style = "font-size:12px; padding:6px;",
-               if (is.null(p)) icon("exclamation-triangle") else icon("check"),
-               " ", msg)
+      tagList(
+        tags$div(class = paste("alert", cls),
+                 style = "font-size:12px; padding:6px;",
+                 if (is.null(p)) icon("exclamation-triangle") else icon("check"),
+                 " ", msg),
+        if (!is.null(p) && identical(p$dist, "mixture"))
+          tags$p(class = "bp-note",
+                 icon("info-circle"),
+                 " Mixture prior: the grid varies the parameters of a",
+                 " single-distribution working approximation of the mixture,",
+                 " not of each component.")
+      )
     })
 
     # -- Sensitivity compatibility check --------------------------------------
@@ -111,7 +119,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       hi  <- max(lo + 0.01, round(v * 4, 2))
       val <- c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2)))
       sliderInput(ns("p1_range"), glue::glue("Range for {nm}"),
-        lo, hi, val, max(0.001, round(v * 0.05, 3)))
+        lo, hi, val, max(0.001, round(v * 0.05, 3)), ticks = FALSE)
     })
 
     output$param2_ui <- renderUI({
@@ -121,7 +129,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       hi  <- max(lo + 0.01, round(v * 4, 2))
       val <- c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2)))
       sliderInput(ns("p2_range"), glue::glue("Range for {nm}"),
-        lo, hi, val, max(0.001, round(v * 0.05, 3)))
+        lo, hi, val, max(0.001, round(v * 0.05, 3)), ticks = FALSE)
     })
 
     observeEvent(active_prior()$dist, {
@@ -167,7 +175,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
           tags$small(style = "color:#888; font-style:italic;",
                      "Using data from Conflict Diagnostics:"),
           tags$div(
-            style = "background:#f8f9fa; border-radius:4px; padding:6px 10px; margin-top:4px;",
+            class = "bp-datachip",
             tags$small(summary_text)
           )
         )
@@ -354,16 +362,16 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
 
     output$tornado_plot <- plotly::renderPlotly({
       req(shared$sensitivity)
-      gp <- .suppress_mix(plot_tornado(shared$sensitivity))
-      plotly::ggplotly(gp) |> .apply_plotly_theme()
+      .suppress_mix(plot_tornado(shared$sensitivity, interactive = TRUE)) |>
+        .apply_plotly_theme()
     })
 
     output$influence_plot <- plotly::renderPlotly({
       req(shared$sensitivity, input$outcome)
-      gp <- .suppress_mix(
-        plot_sensitivity(shared$sensitivity, target = input$outcome)
-      )
-      plotly::ggplotly(gp) |> .apply_plotly_theme()
+      .suppress_mix(
+        plot_sensitivity(shared$sensitivity, target = input$outcome,
+                         interactive = TRUE)
+      ) |> .apply_plotly_theme()
     })
   })
 }

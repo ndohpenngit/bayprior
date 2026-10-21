@@ -112,11 +112,37 @@ plot_prior_likelihood <- function(prior,
 #' @param sensitivity A \code{bayprior_sensitivity} object.
 #' @param target Character. Which target quantity to plot.
 #' @param highlight_reference Logical. Default \code{TRUE}.
-#' @return A \code{ggplot} object.
+#' @param interactive Logical. If \code{TRUE}, return an interactive
+#'   \pkg{plotly} object with readable hover text instead of a static
+#'   \code{ggplot}. Default \code{FALSE}.
+#' @return A \code{ggplot} object, or a \code{plotly} object when
+#'   \code{interactive = TRUE}.
 #' @export
 plot_sensitivity <- function(sensitivity,
                              target = NULL,
-                             highlight_reference = TRUE) {
+                             highlight_reference = TRUE,
+                             interactive = FALSE) {
+  if (!interactive) {
+    return(.sensitivity_gg(sensitivity, target, highlight_reference,
+                           tooltip = FALSE))
+  }
+  .mute_text_aes({
+    gp <- .sensitivity_gg(sensitivity, target, highlight_reference,
+                          tooltip = TRUE)
+    plotly::ggplotly(gp, tooltip = "text")
+  })
+}
+
+#' @noRd
+.mute_text_aes <- function(expr) {
+  withCallingHandlers(expr, warning = function(w) {
+    if (grepl("unknown aesthetics", conditionMessage(w), fixed = TRUE))
+      invokeRestart("muffleWarning")
+  })
+}
+
+#' @noRd
+.sensitivity_gg <- function(sensitivity, target, highlight_reference, tooltip) {
 
   if (!inherits(sensitivity, "bayprior_sensitivity"))
     rlang::abort("`sensitivity` must be a bayprior_sensitivity object.")
@@ -125,41 +151,70 @@ plot_sensitivity <- function(sensitivity,
   grid    <- sensitivity$grid
   params  <- names(sensitivity$param_grid)
   ref_row <- sensitivity$reference_row
-
-  # Professional axis label -- replace snake_case with readable title
   target_label <- .target_label(target)
+  fmt <- function(v) format(round(v, 3), nsmall = 0, trim = TRUE)
 
   if (length(params) == 1) {
-    p <- ggplot2::ggplot(
-      grid, ggplot2::aes(x = .data[[params[1]]], y = .data[[target]])
-    ) +
+    if (tooltip)
+      grid$.tip <- sprintf("%s = %s\n%s: %s", params[1], fmt(grid[[params[1]]]),
+                           target_label, fmt(grid[[target]]))
+    aes_line <- if (tooltip)
+      ggplot2::aes(x = .data[[params[1]]], y = .data[[target]], text = .data[[".tip"]], group = 1)
+    else ggplot2::aes(x = .data[[params[1]]], y = .data[[target]])
+    p <- ggplot2::ggplot(grid, aes_line) +
       ggplot2::geom_line(colour = "#185FA5", linewidth = 1) +
       ggplot2::geom_ribbon(
         ggplot2::aes(ymin = min(.data[[target]], na.rm = TRUE),
                      ymax = .data[[target]]),
         fill = "#185FA5", alpha = 0.12
       )
-    if (highlight_reference)
-      p <- p + ggplot2::geom_point(data = grid[ref_row, , drop = FALSE],
+    if (highlight_reference) {
+      r <- grid[ref_row, , drop = FALSE]
+      if (tooltip)
+        r$.tip <- sprintf("Reference prior\n%s = %s\n%s: %s", params[1],
+                          fmt(r[[params[1]]]), target_label, fmt(r[[target]]))
+      aes_ref <- if (tooltip)
+        ggplot2::aes(x = .data[[params[1]]], y = .data[[target]], text = .data[[".tip"]])
+      else ggplot2::aes(x = .data[[params[1]]], y = .data[[target]])
+      p <- p + ggplot2::geom_point(data = r, mapping = aes_ref,
+                                   inherit.aes = FALSE,
                                    colour = "#D85A30", size = 3, shape = 18)
+    }
     p + ggplot2::labs(
       title = glue::glue("Sensitivity: {target_label} vs {params[1]}"),
       x = params[1], y = target_label
     ) + ggplot2::theme_minimal(base_size = 13)
 
   } else if (length(params) == 2) {
-    p <- ggplot2::ggplot(
-      grid, ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
-                         fill = .data[[target]])
-    ) +
+    if (tooltip)
+      grid$.tip <- sprintf("%s = %s\n%s = %s\n%s: %s",
+                           params[1], fmt(grid[[params[1]]]),
+                           params[2], fmt(grid[[params[2]]]),
+                           target_label, fmt(grid[[target]]))
+    aes_tile <- if (tooltip)
+      ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
+                   fill = .data[[target]], text = .data[[".tip"]])
+    else ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
+                      fill = .data[[target]])
+    p <- ggplot2::ggplot(grid, aes_tile) +
       ggplot2::geom_tile() +
       ggplot2::scale_fill_gradientn(
         colours = c("#042C53", "#185FA5", "#9FE1CB", "#1D9E75"),
         name    = target_label)
-    if (highlight_reference)
+    if (highlight_reference) {
+      r <- grid[ref_row, , drop = FALSE]
+      if (tooltip)
+        r$.tip <- sprintf("Reference prior\n%s = %s\n%s = %s\n%s: %s",
+                          params[1], fmt(r[[params[1]]]),
+                          params[2], fmt(r[[params[2]]]),
+                          target_label, fmt(r[[target]]))
+      aes_ref <- if (tooltip)
+        ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]], text = .data[[".tip"]])
+      else ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]])
       p <- p + ggplot2::geom_point(
-        data = grid[ref_row, , drop = FALSE],
+        data = r, mapping = aes_ref, inherit.aes = FALSE,
         colour = "#D85A30", size = 4, shape = 23, fill = "#D85A30")
+    }
     p + ggplot2::labs(
       title = glue::glue("Sensitivity heatmap: {target_label}"),
       x = params[1], y = params[2]
@@ -175,18 +230,36 @@ plot_sensitivity <- function(sensitivity,
 #'
 #' @param sensitivity A \code{bayprior_sensitivity} object.
 #' @param title Character. Plot title.
-#' @return A \code{ggplot} object.
+#' @param interactive Logical. If \code{TRUE}, return an interactive
+#'   \pkg{plotly} object with readable hover text instead of a static
+#'   \code{ggplot}. Default \code{FALSE}.
+#' @return A \code{ggplot} object, or a \code{plotly} object when
+#'   \code{interactive = TRUE}.
 #' @export
 plot_tornado <- function(sensitivity,
-                         title = "Prior influence on posterior estimates") {
+                         title = "Prior influence on posterior estimates",
+                         interactive = FALSE) {
+  subtitle <- "Bar width = range across sensitivity grid.\nBlue dot = reference prior."
+  if (!interactive) return(.tornado_gg(sensitivity, title, subtitle, tooltip = FALSE))
+  .mute_text_aes({
+    gp <- .tornado_gg(sensitivity, NULL, NULL, tooltip = TRUE)
+    plotly::ggplotly(gp, tooltip = "text")
+  }) |>
+    .plotly_title(title, gsub("\n", "<br>", subtitle, fixed = TRUE)) |>
+    plotly::layout(margin = list(t = 80))
+}
+
+#' @noRd
+.tornado_gg <- function(sensitivity, title, subtitle, tooltip) {
 
   scores <- sensitivity$influence_scores
   grid   <- sensitivity$grid
+  fmt <- function(v) format(round(v, 3), nsmall = 0, trim = TRUE)
 
   df <- purrr::imap_dfr(scores, function(range_val, nm) {
     vals <- grid[[nm]]
     data.frame(
-      target    = .target_label(nm),   # human-readable label, e.g. "Posterior mean"
+      target    = .target_label(nm),
       ref_value = grid[[nm]][sensitivity$reference_row],
       lower     = min(vals, na.rm = TRUE),
       upper     = max(vals, na.rm = TRUE),
@@ -195,21 +268,20 @@ plot_tornado <- function(sensitivity,
   })
   df        <- df[order(df$influence, decreasing = TRUE), ]
   df$target <- factor(df$target, levels = rev(df$target))
+  df$tip <- sprintf("%s\nReference prior: %s\nRange across grid: %s to %s",
+                    df$target, fmt(df$ref_value), fmt(df$lower), fmt(df$upper))
+
+  seg <- if (tooltip) ggplot2::aes(x = lower, xend = upper, yend = target, text = .data[["tip"]])
+         else ggplot2::aes(x = lower, xend = upper, yend = target)
+  pt  <- if (tooltip) ggplot2::aes(x = ref_value, text = .data[["tip"]])
+         else ggplot2::aes(x = ref_value)
 
   ggplot2::ggplot(df, ggplot2::aes(y = target)) +
-    ggplot2::geom_segment(
-      ggplot2::aes(x = lower, xend = upper, yend = target),
-      linewidth = 5, colour = "#B5D4F4", lineend = "round"
-    ) +
-    ggplot2::geom_point(ggplot2::aes(x = ref_value),
-                        colour = "#185FA5", size = 3) +
+    ggplot2::geom_segment(seg, linewidth = 5, colour = "#B5D4F4", lineend = "round") +
+    ggplot2::geom_point(pt, colour = "#185FA5", size = 3) +
     ggplot2::labs(
       title    = title,
-      subtitle = paste(
-        "Bar width = range across sensitivity grid.",
-        "Blue dot = reference prior.",
-        sep = "\n"
-      ),
+      subtitle = subtitle,
       x        = "Posterior estimate range",
       y        = NULL
     ) +
@@ -252,9 +324,12 @@ plot.bayprior <- function(x, ...) {
 
 #' @export
 plot.bayprior_conflict <- function(x, ...) {
-  # Uses the family-aware density/range helpers shared with the rest of
-  # the package's plotting (not a Beta-specific density call), so this
-  # works for any of the six elicitable families, not just Beta.
+  # Previously hardcoded to Beta: stats::dbeta(grid, p$alpha, p$beta) would
+  # error for any other family (p$alpha/p$beta are NULL for Normal, Gamma,
+  # Lognormal, Exponential, Weibull priors), and the grid range was clamped
+  # to (0, 1) regardless of family, which is wrong even for a Normal prior
+  # with negative support (e.g. a log-odds-ratio prior). Uses the same
+  # family-aware helpers as the rest of the package's plotting instead.
   # The grid must span both the prior's range and the likelihood's range --
   # not just the prior's. This plot exists specifically to visualise
   # prior-data conflict; using only the prior's range meant that in a

@@ -403,6 +403,14 @@ test_that("historical_effect_sizes warns on NA effect sizes (e.g. zero-cell coun
   skip_if_not_installed("metafor")
   zero_trials <- data.frame(ai = c(0, 10), bi = c(30, 20), ci = c(5, 8), di = c(35, 27))
   expect_warning(
-    historical_effect_sizes("log_or", zero_trials, add = 0, to = "none")
+    withCallingHandlers(
+      historical_effect_sizes("log_or", zero_trials, add = 0, to = "none"),
+      warning = function(w) {
+        if (!grepl("NA effect sizes", conditionMessage(w), fixed = TRUE)) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    ),
+    "NA effect sizes"
   )
 })

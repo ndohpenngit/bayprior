@@ -367,14 +367,14 @@
       }
     },
     "bayprior": {
-      "Source": "github",
-      "Repository": null,
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
       "description": {
         "Package": "bayprior",
         "Title": "Bayesian Prior Elicitation, Diagnostics, and Regulatory\nReporting",
-        "Version": "0.4.0",
+        "Version": "0.5.0",
         "Authors@R": "\n    person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0009-0003-9054-465X\"))",
-        "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\n  in clinical trial settings. Implements expert elicitation via quantile\n  matching, the roulette method, and moment matching across six distribution\n  families, linear and logarithmic expert pooling, meta-analytic-predictive\n  (MAP) priors derived from historical trials, prior-data conflict\n  diagnostics including the Box p-value (with an exact prior predictive\n  option for selected prior and data combinations), an exploratory\n  surprisal (S-value) companion to it, surprise index, information\n  divergence, and Mahalanobis distance, sensitivity analyses with tornado\n  and influence heatmap plots, sceptical, robust, and power priors, and\n  automated prior justification reports. Includes a fully modular 'Shiny'\n  application for interactive use.\n  Methods based on O'Hagan et al. (2006, ISBN:9780470029886),\n  Box (1980) <doi:10.2307/2982063>,\n  Greenland (2023) <doi:10.1111/sjos.12625>,\n  Oakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\n  Schmidli et al. (2014) <doi:10.1111/biom.12242>,\n  Neuenschwander et al. (2010) <doi:10.1177/1740774509356002>,\n  Roever et al. (2021) <doi:10.1002/jrsm.1475>,\n  Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\n  Spiegelhalter et al. (1994) <doi:10.2307/2983527>.",
+        "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\n  in clinical trial settings. Implements expert elicitation via quantile\n  matching, the roulette method, and moment matching across six distribution\n  families, linear and logarithmic expert pooling, meta-analytic-predictive\n  (MAP) priors derived from historical trials, prior-data conflict\n  diagnostics including the Box p-value (computed from the exact prior\n  predictive distribution where one has a closed form), an exploratory\n  surprisal (S-value) companion to it, surprise index, information\n  divergence, and Mahalanobis distance, sensitivity analyses with tornado\n  and influence heatmap plots, sceptical, robust, and power priors, and\n  automated prior justification reports. Includes a fully modular 'Shiny'\n  application for interactive use.\n  Methods based on O'Hagan et al. (2006, ISBN:9780470029886),\n  Box (1980) <doi:10.2307/2982063>,\n  Greenland (2023) <doi:10.1111/sjos.12625>,\n  Oakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\n  Schmidli et al. (2014) <doi:10.1111/biom.12242>,\n  Neuenschwander et al. (2010) <doi:10.1177/1740774509356002>,\n  Roever et al. (2021) <doi:10.1002/jrsm.1475>,\n  Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\n  Spiegelhalter et al. (1994) <doi:10.2307/2983527>.",
         "License": "GPL-3",
         "URL": "https://github.com/ndohpenngit/bayprior",
         "BugReports": "https://github.com/ndohpenngit/bayprior/issues",
@@ -386,24 +386,15 @@
         "Config/testthat/edition": "3",
         "Encoding": "UTF-8",
         "Language": "en-GB",
-        "Roxygen": "list(markdown = TRUE)",
         "RoxygenNote": "7.3.3",
         "SystemRequirements": "Quarto CLI (>= 1.5, https://quarto.org)",
-        "RemoteType": "github",
-        "RemoteHost": "api.github.com",
-        "RemoteRepo": "bayprior",
-        "RemoteUsername": "ndohpenngit",
-        "RemoteRef": "main",
-        "RemoteSha": "2c7592c9c58283e6f1cb9fbe4ff51a15a5daaf3e",
-        "GithubRepo": "bayprior",
-        "GithubUsername": "ndohpenngit",
-        "GithubRef": "main",
-        "GithubSHA1": "2c7592c9c58283e6f1cb9fbe4ff51a15a5daaf3e",
         "NeedsCompilation": "no",
-        "Packaged": "2026-10-09 11:43:51 UTC; ndohpenn",
-        "Author": "Ndoh Penn [aut, cre] (<https://orcid.org/0009-0003-9054-465X>)",
+        "Packaged": "2026-10-20 21:06:23 UTC; ndohpenn",
+        "Author": "Ndoh Penn [aut, cre] (ORCID: <https://orcid.org/0009-0003-9054-465X>)",
         "Maintainer": "Ndoh Penn <ndohpenn9@gmail.com>",
-        "Built": "R 4.4.2; ; 2026-10-09 11:43:51 UTC; unix"
+        "Repository": "CRAN",
+        "Date/Publication": "2026-10-20 21:30:02 UTC",
+        "Built": "R 4.4.2; ; 2026-10-21 12:10:57 UTC; unix"
       }
     },
     "brew": {
@@ -4715,7 +4706,7 @@
       "checksum": "d41d8cd98f00b204e9800998ecf8427e"
     },
     ".Rbuildignore": {
-      "checksum": "510ffbcba37476c77d2aaace4708ea70"
+      "checksum": "f79aa55c6d7127d68b033fa158eb5491"
     },
     "app.R": {
       "checksum": "7d37328408a952250717c26713fee3b7"
@@ -4727,19 +4718,25 @@
       "checksum": "3df907b50c4f00bc26ee6d988e0c849f"
     },
     "DESCRIPTION": {
-      "checksum": "47464d64fd8ab9e3b3acd583dce0ce23"
+      "checksum": "a97defe24f90e619c7a48038cd4f12f7"
     },
     "dev/01_start.R": {
       "checksum": "bebcf086db3e03cc332ac4728fee8d2d"
     },
     "inst/app/www/bayprior-dark.css": {
-      "checksum": "16d85abf2a529be748516e79ef20e04d"
+      "checksum": "600587dc76f19d715c3fd15c45f3f87f"
+    },
+    "inst/app/www/bp-live.css": {
+      "checksum": "75486e31bfe80396d0f8acd8e8539635"
+    },
+    "inst/app/www/bp-live.html": {
+      "checksum": "9059246662d6f8b1b4ec6d541a5c2909"
     },
     "inst/app/www/custom.css": {
-      "checksum": "e8d09ee21832b66a5f6b5be749b1a3f7"
+      "checksum": "f4fb6077e91ba65f4e4b0732eeb48e12"
     },
     "inst/app/www/custom.js": {
-      "checksum": "8d22cc9034de0c52d8fbe234c70bec6f"
+      "checksum": "9d5951050d7aac6f0ab9c9ecca68481d"
     },
     "inst/app/www/favicon.png": {
       "checksum": "04d853a5ad702e43e3e23ca282a11294"
@@ -4757,7 +4754,7 @@
       "checksum": "4e71f6a95ca723fd0635f23bfc48a99c"
     },
     "inst/WORDLIST": {
-      "checksum": "f0d0f367a833a194e0be19e4a9d100ca"
+      "checksum": "95a2afe2db096fd8b788935e9551c7bb"
     },
     "man/aggregate_experts.Rd": {
       "checksum": "9e42f7630f20698686519c3f96781810"
@@ -4766,7 +4763,7 @@
       "checksum": "276c6f0583e0d5000187ab63486ea9ea"
     },
     "man/bayprior.Rd": {
-      "checksum": "3087966168d070d33792b109be837f84"
+      "checksum": "dcb03c170172f2373b4e5a6d4235a3f6"
     },
     "man/calibrate_power_prior.Rd": {
       "checksum": "337df8e1064b6cd867d145bcd93b7211"
@@ -4817,19 +4814,19 @@
       "checksum": "953110f609e5e1d27f38fea2a7642ff7"
     },
     "man/map_prior.Rd": {
-      "checksum": "f20554a33eff1b568c6d2ab27bb12dba"
+      "checksum": "cf7bc05402990972e91868dae08d6f15"
     },
     "man/plot_prior_likelihood.Rd": {
       "checksum": "47687ed25b8f5badc45bb7f80895489b"
     },
     "man/plot_sensitivity.Rd": {
-      "checksum": "9368faa0c495551685bfd68dfbf13885"
+      "checksum": "675bfbb56e1f47793360cb8257936f06"
     },
     "man/plot_tau_posterior.Rd": {
       "checksum": "e519f8da85bde165e0c047ae0e938550"
     },
     "man/plot_tornado.Rd": {
-      "checksum": "d2d17c709598104cafcc085ac2e97566"
+      "checksum": "4eee996d51a01884642a9cbec0e4ac47"
     },
     "man/plot.bayprior_power_prior.Rd": {
       "checksum": "111d48b693fd0f3edb402733a82183f8"
@@ -4838,7 +4835,7 @@
       "checksum": "374273fbdf4b6772c1a6b6dcfd719409"
     },
     "man/print.bayprior_conflict.Rd": {
-      "checksum": "58b680e7eeb7dca8d5817fee87e49242"
+      "checksum": "afdb783158f83b66929bd4ea9c381cab"
     },
     "man/print.bayprior_power_prior.Rd": {
       "checksum": "a2b0feb927f02de98dc47e4abe0b75f1"
@@ -4847,7 +4844,7 @@
       "checksum": "5b19cf0c2c4f35aa5d79868d6f8f4f1d"
     },
     "man/prior_conflict.Rd": {
-      "checksum": "93815eb0ce6e2b044ad2d4263c2d5b75"
+      "checksum": "588da46ceecc18a8ec8834b0a20c70b9"
     },
     "man/prior_report.Rd": {
       "checksum": "39ced7bd0869866cb1209f4bd3177449"
@@ -4913,16 +4910,16 @@
       "checksum": "171b4d6a0dab5497c7dd3c019f5670a8"
     },
     "R/app_ui.R": {
-      "checksum": "528b20fae2a194405c05f76253317cb3"
+      "checksum": "4f820dee72a083a9c5ad06c5fc9b65df"
     },
     "R/bayprior-package.R": {
-      "checksum": "74d7415d6de0d3663c5af434daf52842"
+      "checksum": "54589b58c3e3fd58e911ff5910894db1"
     },
     "R/conflict_mahalanobis.R": {
       "checksum": "79733d5cda8e7aa52b2c39a753239218"
     },
     "R/conflict_sensitivity.R": {
-      "checksum": "212998a8ca693c7821f341a5731fe2db"
+      "checksum": "ed7ccc6be854be0b886bdf56a8799d31"
     },
     "R/elicitation_roulette.R": {
       "checksum": "dd5321505c06dc8534cd6f5688fc9e92"
@@ -4934,13 +4931,13 @@
       "checksum": "30c06b6f8ad8308933f14fdbee1035f4"
     },
     "R/map_prior.R": {
-      "checksum": "a713ab3b908a0e57e237d73a4f12be93"
+      "checksum": "76558ec9cdda9fab6e00dc6eaf290e4a"
     },
     "R/methods.R": {
-      "checksum": "99864aa4c48f6b7dc39662635c0480f4"
+      "checksum": "21b68c6577528f5667722973bf870fd0"
     },
     "R/mod_conflict.R": {
-      "checksum": "93861d146283c37f0b0def62c73c3370"
+      "checksum": "6a32ddf15227b64e3125062ae7964e39"
     },
     "R/mod_elicitation.R": {
       "checksum": "c58e983a220484579d14a4774a8722df"
@@ -4961,13 +4958,13 @@
       "checksum": "155dfaefb900522bd1ade86d9d383a32"
     },
     "R/mod_sensitivity.R": {
-      "checksum": "c332b2f6b851f110c98d783abb4469c0"
+      "checksum": "0ea46cd05cbd55f8ba2f666586a72cdd"
     },
     "R/mod_welcome.R": {
-      "checksum": "718a8ca409b85a0938fa74e2be14442e"
+      "checksum": "f867ac7d809011259ad85e55d603ad77"
     },
     "R/plotting.R": {
-      "checksum": "9f3e2d1fe9a4f17014f5aca5e6cedb68"
+      "checksum": "05696f8c449e05c50d23c391bee52330"
     },
     "R/prior_report.R": {
       "checksum": "ed20156d5516db5528c9ed672ff1930a"
@@ -4982,7 +4979,7 @@
       "checksum": "d31f09cd4924d02eb58e746beffbcc6d"
     },
     "R/zzz_patches.R": {
-      "checksum": "1fb58e035e7ecb211e2bce148c3f990f"
+      "checksum": "0d86728c0c630a04cf5487a91844bb85"
     },
     "tests/spelling.R": {
       "checksum": "0622a97a2aaa3c342f09636052c2d7f5"
@@ -5012,7 +5009,7 @@
       "checksum": "e87c062283f661773fe1c0500212c8c0"
     },
     "tests/testthat/_snaps/plots-snapshots/plot-power-prior-calib.svg": {
-      "checksum": "7d967390867ef55a5d4311602ea26b5c"
+      "checksum": "6584d6ca6f19f06b1a03b60faf1936d3"
     },
     "tests/testthat/_snaps/plots-snapshots/plot-robust-prior.svg": {
       "checksum": "17887f32f2f42613451c2319b886ec01"
@@ -5027,7 +5024,7 @@
       "checksum": "e9e3f2d5542c5fcf6c5b8deb23f6519a"
     },
     "tests/testthat/test-conflict.R": {
-      "checksum": "a3e167f947f76cc0b5600e45f75d014f"
+      "checksum": "654a0dd58c6ba465af15e4470148099d"
     },
     "tests/testthat/test-edge-cases.R": {
       "checksum": "52ac4679df00bbae4f1d8a7c86e98789"
@@ -5039,10 +5036,10 @@
       "checksum": "1b0f5e9dfb2c5f2e967072e19743a0b0"
     },
     "tests/testthat/test-map-prior.R": {
-      "checksum": "b9c66993bd22e799259fd8fbafd75ea2"
+      "checksum": "445f3f9475fe62252801ac55d04c0798"
     },
     "tests/testthat/test-patches.R": {
-      "checksum": "ef96b0667014c5dc1252488b68e7c94f"
+      "checksum": "eb8cf5dd23c2418e0f96753410e1f709"
     },
     "tests/testthat/test-plots-snapshots.R": {
       "checksum": "cb816a49034dc58624b03a141da3a808"
@@ -5057,7 +5054,7 @@
       "checksum": "cdbe3054599aaa34ec5cb03b961b0ab4"
     },
     "tests/testthat/test-sensitivity.R": {
-      "checksum": "2deeecf3c4b24bc42231a7c34b02a898"
+      "checksum": "d4feaec383cef7bc2d2b31ea5744bef0"
     },
     "tests/testthat/test-shiny-modules.R": {
       "checksum": "b65e231e9eb2a1e3403ce7f49919419c"
@@ -5067,6 +5064,51 @@
     },
     "tests/testthat/testthat.R": {
       "checksum": "864f4627c07ab18947fb5d272fddd65d"
+    },
+    "validation/fig_type1_error.png": {
+      "checksum": "2179bc6c70676ee3c5d02dac0b918f2f"
+    },
+    "validation/README.md": {
+      "checksum": "1021e6b86b9e4230a11b4e8d45630cee"
+    },
+    "validation/REPORT_boxp.md": {
+      "checksum": "e166bfd59b39e4155fce4f2b4e808ff5"
+    },
+    "validation/results_boxp.csv": {
+      "checksum": "5c0db0d9abe3e4c5b6d3ae2e06c4cfba"
+    },
+    "validation/results_mixture.csv": {
+      "checksum": "794343fdfc2d25eb849caf5125c76cb3"
+    },
+    "validation/results_numerical.csv": {
+      "checksum": "3ea24225284586933557bbecbae29640"
+    },
+    "validation/results_power.csv": {
+      "checksum": "8ec1d88a9818392687e61eeb6a28824b"
+    },
+    "validation/sessionInfo_boxp.txt": {
+      "checksum": "e8ce6d9fc7ea6134b8fefef6e7d22c5a"
+    },
+    "validation/sim_boxp.R": {
+      "checksum": "81884bf51a6f74371f179e3109067c65"
+    },
+    "validation/sim_mixture.R": {
+      "checksum": "ed9e8a3c88657ea7752985083c4307ea"
+    },
+    "validation/sim_numerical.R": {
+      "checksum": "9c00a44818975542a684456950824b42"
+    },
+    "validation/sim_power.R": {
+      "checksum": "9b988846bab4755b2e2c81f820b08cb1"
+    },
+    "validation/verification_mc.csv": {
+      "checksum": "94f90cc6b5869ab3b6753513c61bb13f"
+    },
+    "validation/verification_numerical_mc.csv": {
+      "checksum": "19d65b1176d94abf1bc4fccb11e54955"
+    },
+    "validation/verification_power_mc.csv": {
+      "checksum": "6e66fd004c13e3a69702e44d28b1f892"
     }
   },
   "users": null

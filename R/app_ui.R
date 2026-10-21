@@ -138,26 +138,110 @@ app_ui <- function(request) {
               return document.body.classList.contains('dark-mode');
             }
 
-            // Restore Plotly axis/text colours when switching to light mode.
-            function relayoutPlotly() {
-              var fg   = '#444444';
-              var grid = '#eeeeee';
+            // Hover text: round long numbers, drop repeated lines (ggplotly repeats the
+            // colour and fill mappings, and prints values like 0.5297278173).
+            function bpTidyText(s) {
+              if (typeof s !== 'string') return s;
+              var seen = {}, out = [];
+              s.split('<br />').forEach(function(l) {
+                if (!seen[l]) { seen[l] = 1; out.push(l); }
+              });
+              return out.join('<br />').replace(
+                /-?\\d+\\.\\d{5,}(?:e[+-]?\\d+)?|-?\\d+(?:\\.\\d+)?e[+-]?\\d+/gi,
+                function(m) { return String(Number(parseFloat(m).toPrecision(3))); });
+            }
+            function bpTidyHover(el) {
+              try {
+                (el.data || []).forEach(function(t, i) {
+                  var tx = t.text;
+                  if (!tx) return;
+                  var isArr = Array.isArray(tx);
+                  var first = isArr ? tx[0] : tx;
+                  if (typeof first !== 'string' || bpTidyText(first) === first) return;
+                  Plotly.restyle(el, {text: [isArr ? tx.map(bpTidyText) : bpTidyText(tx)]}, [i]);
+                });
+              } catch (e) {}
+            }
+
+            function bpThemePlotly() {
+              var dark = isDark();
+              var mode = dark ? 'dark' : 'light';
+              var c = dark
+                ? {paper: 'rgba(0,0,0,0)', fg: '#E3E8F2', grid: '#2C3A5E', leg: 'rgba(0,0,0,0)'}
+                : {paper: '#ffffff',       fg: '#444444', grid: '#eeeeee', leg: '#f8f8f8'};
+              if (typeof Plotly === 'undefined') return;
               document.querySelectorAll('.js-plotly-plot').forEach(function(el) {
+                // Re-theme straight after every draw (no visible light frame).
+                if (!el.dataset.bpHook && typeof el.on === 'function') {
+                  el.dataset.bpHook = '1';
+                  el.on('plotly_afterplot', bpThemePlotly);
+                }
+                var fl = el._fullLayout;
+                if (!fl || el.__bpBusy) return;
+                // Inline !important beats any stylesheet, so a stale or cached dark
+                // css that still inverts plots cannot turn the panel black.
+                el.style.setProperty('filter', 'none', 'important');
+                el.style.setProperty('background-color',
+                                     dark ? 'transparent' : '#ffffff', 'important');
+                // Done already? Compare with what the layout reported right after our
+                // last pass (Plotly normalises colour strings, so never compare to c.paper).
+                if (el.__bpMode === mode && el.__bpPaper === fl.paper_bgcolor) return;
+                el.__bpBusy = true;       // our own relayout fires afterplot: ignore it
+                var done = function() {
+                  el.__bpMode = mode;
+                  el.__bpPaper = el._fullLayout ? el._fullLayout.paper_bgcolor : null;
+                  el.__bpBusy = false;
+                };
                 try {
-                  Plotly.relayout(el, {
-                    paper_bgcolor: '#ffffff', plot_bgcolor: '#ffffff',
-                    'font.color': fg,
-                    'xaxis.gridcolor': grid, 'xaxis.linecolor': grid,
-                    'xaxis.zerolinecolor': grid, 'xaxis.tickfont.color': fg,
-                    'xaxis.titlefont.color': fg,
-                    'yaxis.gridcolor': grid, 'yaxis.linecolor': grid,
-                    'yaxis.zerolinecolor': grid, 'yaxis.tickfont.color': fg,
-                    'yaxis.titlefont.color': fg,
-                    'legend.bgcolor': '#f8f8f8', 'legend.font.color': fg
+                  bpTidyHover(el);
+                  var u = {
+                    paper_bgcolor: c.paper, plot_bgcolor: c.paper,
+                    'font.color': c.fg, 'title.font.color': c.fg,
+                    'legend.bgcolor': c.leg, 'legend.font.color': c.fg
+                  };
+                  ['xaxis', 'yaxis'].forEach(function(ax) {
+                    if (!fl[ax]) return;
+                    u[ax + '.gridcolor'] = c.grid; u[ax + '.linecolor'] = c.grid;
+                    u[ax + '.zerolinecolor'] = c.grid; u[ax + '.tickfont.color'] = c.fg;
+                    u[ax + '.title.font.color'] = c.fg;
                   });
-                } catch(e) {}
+                  (fl.annotations || []).forEach(function(a, i) {
+                    u['annotations[' + i + '].font.color'] = c.fg;
+                  });
+                  // A horizontal legend at the top sat on top of the title: give the
+                  // title its own band and put the legend just above the panel.
+                  if (fl.legend && fl.legend.orientation === 'h' &&
+                      fl.title && fl.title.text) {
+                    u['legend.y'] = 1.02; u['legend.yanchor'] = 'bottom';
+                    u['legend.x'] = 0; u['legend.xanchor'] = 'left';
+                    u['margin.t'] = Math.max((fl.margin && fl.margin.t) || 0, 92);
+                  }
+                  var idx = [];
+                  (el.data || []).forEach(function(t, i) {
+                    if (t.marker && t.marker.colorbar) idx.push(i);
+                  });
+                  Plotly.relayout(el, u).then(function() {
+                    if (!idx.length) return;
+                    return Plotly.restyle(el, {
+                      'marker.colorbar.tickfont.color': c.fg,
+                      'marker.colorbar.title.font.color': c.fg
+                    }, idx);
+                  }).then(done, done);
+                } catch (e) { done(); }
               });
             }
+            // Plotly draws on its own surface. Dark mode re-colours it natively (transparent
+            // panel, light text, navy grid) instead of inverting a white canvas to black.
+            function relayoutPlotly() { bpThemePlotly(); }
+            (function() {
+              var t = null;
+              function watch() {
+                new MutationObserver(function() {
+                  if (!t) t = requestAnimationFrame(function() { t = null; bpThemePlotly(); });
+                }).observe(document.body, {childList: true, subtree: true});
+              }
+              if (document.body) watch(); else document.addEventListener('DOMContentLoaded', watch);
+            })();
 
             // -- Three-state theme: auto | dark | light ---------------------
             // State is stored in localStorage:
@@ -199,6 +283,7 @@ app_ui <- function(request) {
                   '<span style=\"font-size:9px;opacity:0.6;margin-left:4px;\">' +
                   (osDark ? '(dark)' : '(light)') + '</span>';
               }
+              bpThemePlotly();
               if (window.Shiny && typeof Shiny.setInputValue === 'function')
                 Shiny.setInputValue('app_theme', isDark() ? 'dark' : 'light',
                                     {priority:'event'});
@@ -415,22 +500,6 @@ app_ui <- function(request) {
           // -- Clipboard helper -------------------------------------------
 
           // -- Plot save helper -------------------------------------------
-        ")),
-
-        # Inline dark mode Plotly fix -- invert filter at compositor level
-        # This overrides Plotly's inline SVG styles which CSS selectors cannot touch
-        tags$style(HTML("
-          /* White background on the container div so the CSS filter has
-             a solid surface to invert -- transparent SVG fill bleeds the
-             dark box colour through, which inverts to lavender.
-             White inverted = black = correct dark background. */
-          body.dark-mode .js-plotly-plot {
-            background-color: #ffffff !important;
-            filter: invert(1) hue-rotate(180deg);
-          }
-          body.dark-mode .js-plotly-plot .modebar {
-            filter: invert(1) hue-rotate(180deg);
-          }
         ")),
 
         shinydashboard::tabItems(

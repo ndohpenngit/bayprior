@@ -97,7 +97,7 @@
 
 
 # -- .apply_plotly_theme -------------------------------------------------------
-# Sets a WHITE background explicitly.
+# Sets a transparent background explicitly (see below).
 # In dark mode, CSS filter: invert(1) hue-rotate(180deg) on .js-plotly-plot
 # turns white -> black and preserves data colours via hue-rotate.
 # In light mode, white background looks correct as-is (no filter applied).
@@ -105,19 +105,34 @@
   # plotly::layout() appends to layoutAttrs which gets merged at render time.
   # ggplotly() pre-sets paper_bgcolor/plot_bgcolor and wins the merge.
   # Direct mutation of p$x$layout is the only way to reliably override them.
-  p$x$layout$paper_bgcolor <- "#ffffff"
-  p$x$layout$plot_bgcolor  <- "#ffffff"
+  # Transparent, not white: the card behind the plot supplies the colour (white
+  # in light mode, navy in dark mode), so a freshly drawn plot never flashes a
+  # white panel before the theme script recolours it.
+  p$x$layout$paper_bgcolor <- "rgba(0,0,0,0)"
+  p$x$layout$plot_bgcolor  <- "rgba(0,0,0,0)"
 
   # Also clear any background shapes ggplotly inserts
   if (is.list(p$x$layout$shapes)) {
     p$x$layout$shapes <- lapply(p$x$layout$shapes, function(s) {
-      if (identical(s$type, "rect")) s$fillcolor <- "#ffffff"
+      if (identical(s$type, "rect")) s$fillcolor <- "rgba(0,0,0,0)"
       s
     })
   }
 
   p
 }
+
+
+# -- .plotly_title -------------------------------------------------------------
+# ggplotly() drops ggplot subtitles; set title + subtitle explicitly.
+.plotly_title <- function(p, title, subtitle = NULL, size = 15) {
+  txt <- if (is.null(subtitle)) title else
+    paste0(title, "<br><sup>", subtitle, "</sup>")
+  plotly::layout(p,
+    title  = list(text = txt, x = 0.02, xanchor = "left", font = list(size = size)),
+    margin = list(t = 60))
+}
+
 # Returns list(x, y) of grid points and density values for plotting.
 #' Determine an appropriate (lo, hi) support range for a prior (internal)
 #'

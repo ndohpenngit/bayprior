@@ -769,3 +769,118 @@ test_that("sensitivity_cri computes prob_efficacy via the Gamma branch", {
   expect_true("prob_efficacy" %in% names(cri_sa$grid))
   expect_false(all(is.na(cri_sa$grid$prob_efficacy)))
 })
+
+# -- Sensitivity plots ---------------------------------------------------------
+
+.sens_fixture <- function(n_params = 2) {
+  if (n_params == 1) {
+    prior <- elicit_exponential(mean = 2.0, method = "moments")
+    return(suppressMessages(sensitivity_grid(
+      prior, list(type = "poisson", x = 8, n = 20),
+      list(rate = seq(0.2, 1.0, by = 0.2)),
+      target = "posterior_mean", threshold = 0.5
+    )))
+  }
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  suppressMessages(sensitivity_grid(
+    prior, list(type = "binary", x = 15, n = 50),
+    list(alpha = seq(2, 6, length.out = 6), beta = seq(4, 12, length.out = 6)),
+    target = c("posterior_mean", "prob_efficacy")
+  ))
+}
+
+.hover_text <- function(p) {
+  b <- plotly::plotly_build(p)
+  unlist(lapply(b$x$data, function(tr) tr$text), use.names = FALSE)
+}
+
+test_that("static plots are ggplots; interactive = TRUE returns plotly", {
+  skip_if_not_installed("plotly")
+  s <- .sens_fixture()
+  expect_s3_class(plot_sensitivity(s, target = "posterior_mean"), "ggplot")
+  expect_s3_class(plot_tornado(s), "ggplot")
+  expect_s3_class(plot_sensitivity(s, target = "posterior_mean",
+                                   interactive = TRUE), "plotly")
+  expect_s3_class(plot_tornado(s, interactive = TRUE), "plotly")
+})
+
+test_that("interactive plots emit no warnings", {
+  skip_if_not_installed("plotly")
+  s <- .sens_fixture()
+  expect_no_warning(plot_sensitivity(s, target = "posterior_mean", interactive = TRUE))
+  expect_no_warning(plot_sensitivity(.sens_fixture(1), target = "posterior_mean",
+                                     interactive = TRUE))
+  expect_no_warning(plot_tornado(s, interactive = TRUE))
+})
+
+test_that("static plots carry no tooltip aesthetic", {
+  p <- plot_sensitivity(.sens_fixture(), target = "posterior_mean")
+  aes_names <- unlist(lapply(p$layers, function(l) names(l$mapping)))
+  expect_false("text" %in% aes_names)
+})
+
+test_that("heatmap tooltip uses labels and rounded values", {
+  skip_if_not_installed("plotly")
+  txt <- .hover_text(plot_sensitivity(.sens_fixture(2), target = "posterior_mean",
+                                      interactive = TRUE))
+  expect_true(any(grepl("Reference prior", txt)))
+  expect_true(any(grepl("Posterior mean", txt)))
+  expect_false(any(grepl("#[0-9A-Fa-f]{6}", txt)))
+  expect_false(any(grepl("posterior_mean", txt)))
+  nums <- unlist(regmatches(txt, gregexpr("[0-9]+\\.[0-9]+", txt)))
+  expect_true(all(nchar(sub("^[0-9]+\\.", "", nums)) <= 3))
+})
+
+test_that("line-plot tooltip works for a single varied parameter", {
+  skip_if_not_installed("plotly")
+  s <- .sens_fixture(1)
+  expect_length(names(s$param_grid), 1L)
+  txt <- .hover_text(plot_sensitivity(s, target = "posterior_mean",
+                                      interactive = TRUE))
+  expect_true(any(grepl("Reference prior", txt)))
+  expect_true(any(grepl("rate = ", txt)))
+})
+
+test_that("interactive tornado shows reference value, range, title and subtitle", {
+  skip_if_not_installed("plotly")
+  p   <- plot_tornado(.sens_fixture(2), interactive = TRUE)
+  txt <- .hover_text(p)
+  expect_true(any(grepl("Reference prior: ", txt)))
+  expect_true(any(grepl("Range across grid: .+ to ", txt)))
+  title <- plotly::plotly_build(p)$x$layout$title$text
+  expect_match(title, "Prior influence on posterior estimates")
+  expect_match(title, "<sup>", fixed = TRUE)
+})
+
+test_that("plots raise no tidy-eval warnings", {
+  for (np in c(2, 1)) {
+    s <- .sens_fixture(np)
+    w <- character()
+    withCallingHandlers(
+      {
+        plot_sensitivity(s, target = "posterior_mean")
+        plot_tornado(s)
+        .sensitivity_gg(s, "posterior_mean", TRUE, tooltip = TRUE)
+        .tornado_gg(s, NULL, NULL, tooltip = TRUE)
+      },
+      warning = function(x) {
+        w <<- c(w, conditionMessage(x)); invokeRestart("muffleWarning")
+      }
+    )
+    expect_false(any(grepl("discouraged", w)))
+  }
+})
+
+test_that("plot_sensitivity rejects non-sensitivity input", {
+  expect_error(plot_sensitivity(list()), "bayprior_sensitivity")
+})
+
+test_that(".plotly_title sets title and subtitle", {
+  skip_if_not_installed("plotly")
+  mk <- function() plotly::plot_ly(x = 1:3, y = 1:3, type = "scatter", mode = "lines")
+  b <- plotly::plotly_build(.plotly_title(mk(), "Main title", "Sub title"))
+  expect_match(b$x$layout$title$text, "Main title<br><sup>Sub title</sup>",
+               fixed = TRUE)
+  b2 <- plotly::plotly_build(.plotly_title(mk(), "Only"))
+  expect_identical(b2$x$layout$title$text, "Only")
+})
