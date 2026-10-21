@@ -46,7 +46,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-7100700a5d4657facf49b32369185e6d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-c90739be8f7cfc715edd05b31d5b7e7f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -165,14 +165,16 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#bayprior-development-version" id="toc-bayprior-development-version" class="nav-link active" data-scroll-target="#bayprior-development-version">bayprior (development version)</a>
+  <li><a href="#bayprior-0.5.0" id="toc-bayprior-0.5.0" class="nav-link active" data-scroll-target="#bayprior-0.5.0">bayprior 0.5.0</a>
   <ul class="collapse">
   <li><a href="#changes-to-default-behaviour" id="toc-changes-to-default-behaviour" class="nav-link" data-scroll-target="#changes-to-default-behaviour">Changes to default behaviour</a></li>
+  <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
+  <li><a href="#shiny-app" id="toc-shiny-app" class="nav-link" data-scroll-target="#shiny-app">Shiny app</a></li>
   </ul></li>
   <li><a href="#bayprior-0.4.0" id="toc-bayprior-0.4.0" class="nav-link" data-scroll-target="#bayprior-0.4.0">bayprior 0.4.0</a>
   <ul class="collapse">
-  <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
-  <li><a href="#shiny-app" id="toc-shiny-app" class="nav-link" data-scroll-target="#shiny-app">Shiny app</a></li>
+  <li><a href="#new-features-1" id="toc-new-features-1" class="nav-link" data-scroll-target="#new-features-1">New features</a></li>
+  <li><a href="#shiny-app-1" id="toc-shiny-app-1" class="nav-link" data-scroll-target="#shiny-app-1">Shiny app</a></li>
   </ul></li>
   <li><a href="#bayprior-0.3.2" id="toc-bayprior-0.3.2" class="nav-link" data-scroll-target="#bayprior-0.3.2">bayprior 0.3.2</a>
   <ul class="collapse">
@@ -224,7 +226,7 @@ ul.task-list li input[type="checkbox"] {
   </ul></li>
   <li><a href="#bayprior-0.2.3" id="toc-bayprior-0.2.3" class="nav-link" data-scroll-target="#bayprior-0.2.3">bayprior 0.2.3</a>
   <ul class="collapse">
-  <li><a href="#new-features-1" id="toc-new-features-1" class="nav-link" data-scroll-target="#new-features-1">New features</a></li>
+  <li><a href="#new-features-2" id="toc-new-features-2" class="nav-link" data-scroll-target="#new-features-2">New features</a></li>
   <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a></li>
   <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests">Tests</a></li>
   </ul></li>
@@ -239,13 +241,13 @@ ul.task-list li input[type="checkbox"] {
   </ul></li>
   <li><a href="#bayprior-0.2.0" id="toc-bayprior-0.2.0" class="nav-link" data-scroll-target="#bayprior-0.2.0">bayprior 0.2.0</a>
   <ul class="collapse">
-  <li><a href="#new-features-2" id="toc-new-features-2" class="nav-link" data-scroll-target="#new-features-2">New features</a></li>
+  <li><a href="#new-features-3" id="toc-new-features-3" class="nav-link" data-scroll-target="#new-features-3">New features</a></li>
   <li><a href="#bug-fixes-2" id="toc-bug-fixes-2" class="nav-link" data-scroll-target="#bug-fixes-2">Bug fixes</a></li>
   </ul></li>
   <li><a href="#bayprior-0.1.2" id="toc-bayprior-0.1.2" class="nav-link" data-scroll-target="#bayprior-0.1.2">bayprior 0.1.2</a>
   <ul class="collapse">
   <li><a href="#bug-fixes-3" id="toc-bug-fixes-3" class="nav-link" data-scroll-target="#bug-fixes-3">Bug fixes</a></li>
-  <li><a href="#new-features-3" id="toc-new-features-3" class="nav-link" data-scroll-target="#new-features-3">New features</a></li>
+  <li><a href="#new-features-4" id="toc-new-features-4" class="nav-link" data-scroll-target="#new-features-4">New features</a></li>
   </ul></li>
   <li><a href="#bayprior-0.1.1" id="toc-bayprior-0.1.1" class="nav-link" data-scroll-target="#bayprior-0.1.1">bayprior 0.1.1</a>
   <ul class="collapse">
@@ -260,8 +262,8 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<section id="bayprior-development-version" class="level1">
-<h1>bayprior (development version)</h1>
+<section id="bayprior-0.5.0" class="level1">
+<h1>bayprior 0.5.0</h1>
 <section id="changes-to-default-behaviour" class="level2">
 <h2 class="anchored" data-anchor-id="changes-to-default-behaviour">Changes to default behaviour</h2>
 <ul>
@@ -273,11 +275,24 @@ ul.task-list li input[type="checkbox"] {
 <li><p>Shiny app (Conflict module): the “exact prior predictive” option is now on by default; unchecking it uses the Normal approximation throughout.</p></li>
 </ul>
 </section>
+<section id="new-features" class="level2">
+<h2 class="anchored" data-anchor-id="new-features">New features</h2>
+<ul>
+<li><code>plot_sensitivity()</code> and <code>plot_tornado()</code> gain an <code>interactive</code> argument. The default (<code>FALSE</code>) returns a ggplot object exactly as before; <code>interactive = TRUE</code> returns a plotly object with readable tooltips (rounded values and parameter labels instead of raw column names) and, for the tornado plot, an explicit title and subtitle.</li>
+</ul>
+</section>
+<section id="shiny-app" class="level2">
+<h2 class="anchored" data-anchor-id="shiny-app">Shiny app</h2>
+<ul>
+<li><p>Sensitivity module: plots are interactive with formatted tooltips, the range sliders no longer show tick marks, a note is shown when the prior is a mixture (the analysis uses a moment-matched working prior), and the “Analysis type” and outcome buttons clearly distinguish the selected option.</p></li>
+<li><p>Dark mode: plotly plots are now recoloured natively instead of through a CSS colour-inversion filter, so plot colours and hover labels are correct and plots no longer flash light after an analysis is run.</p></li>
+</ul>
+</section>
 </section>
 <section id="bayprior-0.4.0" class="level1">
 <h1>bayprior 0.4.0</h1>
-<section id="new-features" class="level2">
-<h2 class="anchored" data-anchor-id="new-features">New features</h2>
+<section id="new-features-1" class="level2">
+<h2 class="anchored" data-anchor-id="new-features-1">New features</h2>
 <ul>
 <li><p><code>prior_conflict()</code> gains an <code>exact</code> argument (default <code>FALSE</code>, matching prior behaviour exactly). <code>exact = TRUE</code> replaces the Normal approximation to the prior and to the data likelihood – used by default for <code>box_pvalue</code> and the <code>s_value</code> derived from it – with the exact prior predictive distribution, for the prior family/data-type combinations where one has a closed form: Beta-Binomial (a Beta prior against <code>type = "binary"</code> data) and Gamma-Poisson/Negative Binomial (a Gamma prior against <code>type = "poisson"</code> or <code>type = "survival"</code> data – both reduce to the same events/exposure model, so one exact check covers both). The Normal-Normal case (<code>type = "continuous"</code> against a Normal prior) was already exact and needs no separate path. For prior family/data-type combinations with no closed-form check implemented, <code>exact = TRUE</code> falls back to the Normal approximation with a message rather than erroring; <code>$box_pvalue_method</code> on the returned object reports which was used (“exact” or “normal_approx”). <code>surprise_index</code>, <code>kl_prior_likelihood</code>, and <code>overlap</code> are unaffected by <code>exact</code>, since they are defined with respect to the Normal-approximated prior and likelihood regardless.</p></li>
 <li><p>Added <code>map_prior()</code>: derives a meta-analytic-predictive (MAP) prior from historical trial summaries via a random-effects meta-analysis, with an explicit prior on the between-trial heterogeneity parameter tau (Schmidli et al., 2014). The meta-analysis engine is implemented entirely in base R: the posterior of mu given tau has a closed form, so the only numerical step is a one-dimensional integral over tau (<code>stats::integrate()</code>/<code>stats::optimize()</code>/<code>stats::uniroot()</code>, all base</p>
@@ -289,8 +304,8 @@ ul.task-list li input[type="checkbox"] {
 <li><p><code>prior_conflict()</code> now also reports <code>s_value</code>, the surprisal <code>-log2(box_pvalue)</code> in bits – an exploratory, continuous companion to the existing Box p-value / thresholded <code>conflict_severity</code> classification, since prior-data conflict checks are typically not powered for a binary accept/reject decision. Reported alongside (not instead of) the existing diagnostics in the console <code>print()</code> method, the Shiny Conflict Diagnostics tab, and the <code>prior_report()</code> regulatory report.</p></li>
 </ul>
 </section>
-<section id="shiny-app" class="level2">
-<h2 class="anchored" data-anchor-id="shiny-app">Shiny app</h2>
+<section id="shiny-app-1" class="level2">
+<h2 class="anchored" data-anchor-id="shiny-app-1">Shiny app</h2>
 <ul>
 <li><p>Restyled the app around the package palette (navy and emerald). The stylesheet <code>custom.css</code> shipped with the app but was never linked, so it had no effect; it is now loaded, with dark-mode variants. Result tiles, box headers, alerts, and notifications use colour for status only, and text colours were checked for WCAG AA contrast.</p></li>
 <li><p>The Welcome page workflow diagram is now live: steps link to their panels and show completed steps. A “Start here” panel (elicit, derive from historical trials, or load the TRIAL-001 example) becomes “Next steps” once a prior exists. The Report step is marked complete after a report is generated and reopens when the prior or any analysis changes.</p></li>
@@ -452,8 +467,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="bayprior-0.2.3" class="level1">
 <h1>bayprior 0.2.3</h1>
-<section id="new-features-1" class="level2">
-<h2 class="anchored" data-anchor-id="new-features-1">New features</h2>
+<section id="new-features-2" class="level2">
+<h2 class="anchored" data-anchor-id="new-features-2">New features</h2>
 <ul>
 <li>Poisson data type in Power Prior Calibration.</li>
 <li>Prior-data compatibility warning in Power Prior module.</li>
@@ -512,8 +527,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="bayprior-0.2.0" class="level1">
 <h1>bayprior 0.2.0</h1>
-<section id="new-features-2" class="level2">
-<h2 class="anchored" data-anchor-id="new-features-2">New features</h2>
+<section id="new-features-3" class="level2">
+<h2 class="anchored" data-anchor-id="new-features-3">New features</h2>
 <ul>
 <li><p><code>elicit_exponential()</code> – Exponential(rate) prior for hazard rates and Poisson rate priors. Supports moments, rate, and quantile methods.</p></li>
 <li><p><code>elicit_weibull()</code> – Weibull(shape, scale) prior for survival times. Supports moments, params, and quantile methods.</p></li>
@@ -546,8 +561,8 @@ ul.task-list li input[type="checkbox"] {
 <li><p>Fixed <code>prior_report()</code> missing <code>@param</code> documentation for plot arguments.</p></li>
 </ul>
 </section>
-<section id="new-features-3" class="level2">
-<h2 class="anchored" data-anchor-id="new-features-3">New features</h2>
+<section id="new-features-4" class="level2">
+<h2 class="anchored" data-anchor-id="new-features-4">New features</h2>
 <ul>
 <li><p>Added robust, sceptical, and power prior arguments to <code>prior_report()</code>.</p></li>
 <li><p>Added bayprior hex logo to Shiny app header and browser favicon.</p></li>
