@@ -499,6 +499,7 @@ mod_power_server <- function(id, shared, active_prior, base_prior) {
         })
       res(r)
       if (!is.null(r)) {
+        attr(r, "bp_args") <- list(historical_data = hist_d, current_data = curr_d)
         shared$current_prior <- r$power_prior
         shared$power_prior   <- r
       }

@@ -301,6 +301,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
             invokeRestart("muffleMessage")
         }
       )
+      if (!is.null(res)) attr(res, "bp_args") <- list(data_summary = data_sum)
       shared$sensitivity <- res
       shinyjs::runjs("bpToast('Sensitivity analysis complete &#10003;', 'info', 3000);")
     })
@@ -368,10 +369,9 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
 
     output$influence_plot <- plotly::renderPlotly({
       req(shared$sensitivity, input$outcome)
-      .suppress_mix(
-        plot_sensitivity(shared$sensitivity, target = input$outcome,
-                         interactive = TRUE)
-      ) |> .apply_plotly_theme()
+      .suppress_mix(plot_sensitivity(shared$sensitivity, target = input$outcome,
+                                     interactive = TRUE)) |>
+        .apply_plotly_theme()
     })
   })
 }
