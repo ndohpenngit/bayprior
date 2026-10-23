@@ -2,38 +2,38 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/NEWS.html</loc>
-    <lastmod>2026-10-21T13:11:55.705Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.519Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/sensitivity-analysis.html</loc>
-    <lastmod>2026-10-21T13:11:55.718Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.536Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/regulatory-reporting.html</loc>
-    <lastmod>2026-10-21T13:11:55.718Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.536Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/conflict-diagnostics.html</loc>
-    <lastmod>2026-10-21T13:11:55.718Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.536Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/index.html</loc>
-    <lastmod>2026-10-21T13:11:55.706Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.521Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/bayprior-introduction.html</loc>
-    <lastmod>2026-10-21T13:11:55.717Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.535Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/prior-elicitation.html</loc>
-    <lastmod>2026-10-21T13:11:55.718Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.536Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/robust-priors.html</loc>
-    <lastmod>2026-10-21T13:11:55.718Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.536Z</lastmod>
   </url>
   <url>
     <loc>https://ndohpenngit.github.io/bayprior/vignettes/using-with-rstanarm-brms.html</loc>
-    <lastmod>2026-10-21T13:11:55.718Z</lastmod>
+    <lastmod>2026-10-23T19:56:28.536Z</lastmod>
   </url>
 </urlset>

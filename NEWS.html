@@ -165,16 +165,20 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#bayprior-0.5.0" id="toc-bayprior-0.5.0" class="nav-link active" data-scroll-target="#bayprior-0.5.0">bayprior 0.5.0</a>
+  <li><a href="#bayprior-development-version" id="toc-bayprior-development-version" class="nav-link active" data-scroll-target="#bayprior-development-version">bayprior (development version)</a>
+  <ul class="collapse">
+  <li><a href="#shiny-app" id="toc-shiny-app" class="nav-link" data-scroll-target="#shiny-app">Shiny app</a></li>
+  </ul></li>
+  <li><a href="#bayprior-0.5.0" id="toc-bayprior-0.5.0" class="nav-link" data-scroll-target="#bayprior-0.5.0">bayprior 0.5.0</a>
   <ul class="collapse">
   <li><a href="#changes-to-default-behaviour" id="toc-changes-to-default-behaviour" class="nav-link" data-scroll-target="#changes-to-default-behaviour">Changes to default behaviour</a></li>
   <li><a href="#new-features" id="toc-new-features" class="nav-link" data-scroll-target="#new-features">New features</a></li>
-  <li><a href="#shiny-app" id="toc-shiny-app" class="nav-link" data-scroll-target="#shiny-app">Shiny app</a></li>
+  <li><a href="#shiny-app-1" id="toc-shiny-app-1" class="nav-link" data-scroll-target="#shiny-app-1">Shiny app</a></li>
   </ul></li>
   <li><a href="#bayprior-0.4.0" id="toc-bayprior-0.4.0" class="nav-link" data-scroll-target="#bayprior-0.4.0">bayprior 0.4.0</a>
   <ul class="collapse">
   <li><a href="#new-features-1" id="toc-new-features-1" class="nav-link" data-scroll-target="#new-features-1">New features</a></li>
-  <li><a href="#shiny-app-1" id="toc-shiny-app-1" class="nav-link" data-scroll-target="#shiny-app-1">Shiny app</a></li>
+  <li><a href="#shiny-app-2" id="toc-shiny-app-2" class="nav-link" data-scroll-target="#shiny-app-2">Shiny app</a></li>
   </ul></li>
   <li><a href="#bayprior-0.3.2" id="toc-bayprior-0.3.2" class="nav-link" data-scroll-target="#bayprior-0.3.2">bayprior 0.3.2</a>
   <ul class="collapse">
@@ -262,6 +266,19 @@ ul.task-list li input[type="checkbox"] {
 
 
 
+<section id="bayprior-development-version" class="level1">
+<h1>bayprior (development version)</h1>
+<section id="shiny-app" class="level2">
+<h2 class="anchored" data-anchor-id="shiny-app">Shiny app</h2>
+<ul>
+<li><p>New <strong>Session</strong> menu in the header, next to the theme toggle, to save the current work to a <code>.rds</code> file and load it back from any tab. Loading restores the priors, the expert pool, the MAP prior and the report details. Conflict, sensitivity and robust / power results are saved in the file but are not restored; rerun them after loading. Session files are validated on load (format, version, expected contents and size).</p></li>
+<li><p>Export Report: new <strong>Export R script</strong> button that writes a script reproducing the analysis (elicitation inputs, expert pooling, MAP prior, robust, sceptical and power priors, prior-data conflict and sensitivity analyses). Steps that cannot be written as code are included as comments.</p></li>
+<li><p>Export Report: required fields are marked, a readiness checklist shows what is still missing, and the action buttons are restyled for light and dark mode.</p></li>
+<li><p>Roulette: a fitted prior now also becomes the base prior, so Sensitivity and the robust / power pages use it.</p></li>
+<li><p>Conflict Diagnostics no longer fails when no result is produced.</p></li>
+</ul>
+</section>
+</section>
 <section id="bayprior-0.5.0" class="level1">
 <h1>bayprior 0.5.0</h1>
 <section id="changes-to-default-behaviour" class="level2">
@@ -281,8 +298,8 @@ ul.task-list li input[type="checkbox"] {
 <li><code>plot_sensitivity()</code> and <code>plot_tornado()</code> gain an <code>interactive</code> argument. The default (<code>FALSE</code>) returns a ggplot object exactly as before; <code>interactive = TRUE</code> returns a plotly object with readable tooltips (rounded values and parameter labels instead of raw column names) and, for the tornado plot, an explicit title and subtitle.</li>
 </ul>
 </section>
-<section id="shiny-app" class="level2">
-<h2 class="anchored" data-anchor-id="shiny-app">Shiny app</h2>
+<section id="shiny-app-1" class="level2">
+<h2 class="anchored" data-anchor-id="shiny-app-1">Shiny app</h2>
 <ul>
 <li><p>Sensitivity module: plots are interactive with formatted tooltips, the range sliders no longer show tick marks, a note is shown when the prior is a mixture (the analysis uses a moment-matched working prior), and the “Analysis type” and outcome buttons clearly distinguish the selected option.</p></li>
 <li><p>Dark mode: plotly plots are now recoloured natively instead of through a CSS colour-inversion filter, so plot colours and hover labels are correct and plots no longer flash light after an analysis is run.</p></li>
@@ -304,8 +321,8 @@ ul.task-list li input[type="checkbox"] {
 <li><p><code>prior_conflict()</code> now also reports <code>s_value</code>, the surprisal <code>-log2(box_pvalue)</code> in bits – an exploratory, continuous companion to the existing Box p-value / thresholded <code>conflict_severity</code> classification, since prior-data conflict checks are typically not powered for a binary accept/reject decision. Reported alongside (not instead of) the existing diagnostics in the console <code>print()</code> method, the Shiny Conflict Diagnostics tab, and the <code>prior_report()</code> regulatory report.</p></li>
 </ul>
 </section>
-<section id="shiny-app-1" class="level2">
-<h2 class="anchored" data-anchor-id="shiny-app-1">Shiny app</h2>
+<section id="shiny-app-2" class="level2">
+<h2 class="anchored" data-anchor-id="shiny-app-2">Shiny app</h2>
 <ul>
 <li><p>Restyled the app around the package palette (navy and emerald). The stylesheet <code>custom.css</code> shipped with the app but was never linked, so it had no effect; it is now loaded, with dark-mode variants. Result tiles, box headers, alerts, and notifications use colour for status only, and text colours were checked for WCAG AA contrast.</p></li>
 <li><p>The Welcome page workflow diagram is now live: steps link to their panels and show completed steps. A “Start here” panel (elicit, derive from historical trials, or load the TRIAL-001 example) becomes “Next steps” once a prior exists. The Report step is marked complete after a report is generated and reopens when the prior or any analysis changes.</p></li>
