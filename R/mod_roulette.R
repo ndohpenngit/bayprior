@@ -173,8 +173,9 @@ mod_roulette_server <- function(id, shared) {
       if (!is.null(pr) && !is.null(shared$consensus)) {
         pending(pr)
         showModal(.consensus_modal(session$ns))
-      } else {
+      } else if (!is.null(pr)) {
         shared$current_prior <- pr
+        shared$base_prior    <- pr
       }
     })
     observeEvent(input$use_new, {

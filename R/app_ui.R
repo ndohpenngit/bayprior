@@ -32,7 +32,8 @@ app_ui <- function(request) {
           )
         ),
 
-        # Theme toggle in the header navbar
+        # Session menu (save / load) and theme toggle in the header navbar
+        mod_session_ui("session"),
         tags$li(
           class = "dropdown",
           style = "padding-top:2px;",

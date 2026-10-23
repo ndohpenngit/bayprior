@@ -114,6 +114,8 @@ a:focus-visible, button:focus-visible, .btn:focus-visible,
 }
 .bp-start-more { margin: 4px 2px 0; font-size: 12px; }
 .bp-start-more a { color: var(--bp-muted); text-decoration: underline; }
+.bp-start .bp-start-more { margin-bottom: 14px; }
+.bp-start .shiny-file-input-progress { display: none; }
 .bp-start-card--done { border-left: 4px solid var(--bp-done); }
 .bp-start-title .bp-tick { color: var(--bp-done); margin-right: 6px; }
 
@@ -404,3 +406,37 @@ body.dark-mode .btn.btn-warm:hover { background: rgba(251,191,36,.20); }
 }
 .btn-group-container-sw .btn-info.active,
 .btn-group > .btn.radiobtn.btn-info.active { background-color: #2B5A8C; background-image: none; }
+
+/* -- Header "Session" menu (mod_session) -------------------------------------
+   The toggle reuses .theme-toggle-btn (pill on the navy header). The menu is a
+   Bootstrap dropdown, so keyboard, outside-click and aria-expanded come free. */
+.bp-session .bp-session-toggle { margin-right: 4px; }
+.bp-session .bp-session-toggle .caret { margin-left: 2px; }
+.bp-session .bp-session-toggle:focus-visible,
+.bp-session .bp-session-link:focus-visible { outline: 2px solid var(--bp-emerald); outline-offset: 1px; }
+.bp-session.open > .bp-session-toggle { background: rgba(255,255,255,0.15) !important; }
+
+.bp-session-menu {
+  min-width: 260px; padding: 6px 0; margin-top: 4px;
+  background: var(--bp-surface); border: 1px solid var(--bp-line); border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+.bp-session-menu > li > a.bp-session-link {
+  display: flex; flex-direction: column; gap: 2px; padding: 8px 14px;
+  color: var(--bp-text); background: transparent; white-space: normal;
+}
+.bp-session-menu > li > a.bp-session-link:hover,
+.bp-session-menu > li > a.bp-session-link:focus { background: var(--bp-step-hover); color: var(--bp-text); }
+.bp-session-item { font-size: 13px; font-weight: 700; color: var(--bp-heading); }
+.bp-session-item .fa, .bp-session-item .fas { width: 16px; margin-right: 4px; }
+.bp-session-sub { font-size: 11.5px; font-weight: 400; color: var(--bp-muted); padding-left: 24px; }
+.bp-session-menu > li.divider { background-color: var(--bp-line); margin: 4px 0; }
+.bp-session-note { padding: 6px 14px 4px; font-size: 11.5px; line-height: 1.4; color: var(--bp-muted); }
+.bp-session-menu a.shinyjs-disabled,
+.bp-session-menu a[disabled] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+/* Hidden file picker: in the DOM (so Shiny uploads), invisible to everyone. */
+.bp-session-file {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  opacity: 0; pointer-events: none;
+}

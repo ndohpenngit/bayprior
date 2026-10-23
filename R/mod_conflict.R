@@ -153,6 +153,9 @@ mod_conflict_server <- function(id, shared, active_prior) {
           invokeRestart("muffleMessage")
         }
       )
+      if (is.null(r)) return(invisible(NULL))
+      attr(r, "bp_args") <- list(alpha = input$alpha,
+                                 exact = if (isTRUE(input$exact)) NULL else FALSE)
       res(r)
       shared$conflict <- r
       sev <- toupper(r$conflict_severity)

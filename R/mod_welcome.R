@@ -141,7 +141,9 @@ mod_welcome_ui <- function(id) {
       )
       )
     ),
-    column(4, tags$div(class = "bp-start", uiOutput(ns("start"))))
+    column(4, tags$div(class = "bp-start",
+      uiOutput(ns("start"))
+    ))
   )
 }
 
