@@ -1,3 +1,28 @@
+# bayprior (development version)
+
+## Shiny app
+
+* New **Session** menu in the header, next to the theme toggle, to save the
+  current work to a `.rds` file and load it back from any tab. Loading
+  restores the priors, the expert pool, the MAP prior and the report
+  details. Conflict, sensitivity and robust / power results are saved in the
+  file but are not restored; rerun them after loading. Session files are
+  validated on load (format, version, expected contents and size).
+
+* Export Report: new **Export R script** button that writes a script
+  reproducing the analysis (elicitation inputs, expert pooling, MAP prior,
+  robust, sceptical and power priors, prior-data conflict and sensitivity
+  analyses). Steps that cannot be written as code are included as comments.
+
+* Export Report: required fields are marked, a readiness checklist shows
+  what is still missing, and the action buttons are restyled for light and
+  dark mode.
+
+* Roulette: a fitted prior now also becomes the base prior, so Sensitivity
+  and the robust / power pages use it.
+
+* Conflict Diagnostics no longer fails when no result is produced.
+
 # bayprior 0.5.0
 
 ## Changes to default behaviour
