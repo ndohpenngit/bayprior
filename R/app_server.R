@@ -215,5 +215,7 @@ app_server <- function(input, output, session) {
   mod_robust_server("robust",           shared = shared, active_prior = active_prior, base_prior = base_prior)
   mod_power_server("power",             shared = shared, active_prior = active_prior, base_prior = base_prior)
   mod_sceptical_server("sceptical",     shared = shared)
-  mod_report_server("report",           shared = shared, active_prior = active_prior)
+  report <- mod_report_server("report", shared = shared, active_prior = active_prior)
+  mod_session_server("session", shared = shared,
+                     report_meta = report$meta, restore_meta = report$restore)
 }

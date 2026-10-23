@@ -1,18 +1,20 @@
 #' @noRd
 mod_report_ui <- function(id) {
   ns <- NS(id)
+  req_label <- function(text) tagList(text, tags$span(class = "bp-req", " *"))
   fluidRow(
     shinydashboard::box(
       width = 5, status = "primary", solidHeader = TRUE,
       title = tagList(icon("file-lines"), " Trial Metadata"),
-      uiOutput(ns("session_summary")),
-      tags$hr(),
-      textInput(ns("trial_name"),   "Trial / protocol number", placeholder = "TRIAL-001"),
-      textInput(ns("indication"),   "Therapeutic indication",  placeholder = "e.g. NSCLC"),
-      textInput(ns("sponsor"),      "Sponsor",                 placeholder = "BioPharma Ltd"),
-      textInput(ns("statistician"), "Responsible statistician"),
+      textInput(ns("trial_name"),   req_label("Trial / protocol number"),
+                placeholder = "TRIAL-001"),
+      textInput(ns("indication"),   req_label("Therapeutic indication"),
+                placeholder = "e.g. NSCLC"),
+      textInput(ns("sponsor"),      "Sponsor", placeholder = "BioPharma Ltd"),
+      textInput(ns("statistician"), req_label("Responsible statistician")),
       dateInput(ns("report_date"),  "Report date", value = Sys.Date()),
-      textAreaInput(ns("notes"), "Notes / scientific rationale", rows = 4)
+      textAreaInput(ns("notes"), "Notes / scientific rationale", rows = 4),
+      tags$p(class = "bp-note", "* Required for a complete record.")
     ),
     column(7,
       shinydashboard::box(
@@ -25,21 +27,21 @@ mod_report_ui <- function(id) {
         title = tagList(icon("file-export"), " Generate"),
         shinyWidgets::radioGroupButtons(
           ns("fmt"), "Output format",
-          # docx added alongside html and pdf
           choices  = c("HTML" = "html", "PDF" = "pdf", "Word (.docx)" = "docx"),
           justified = TRUE, status = "primary"
         ),
         tags$br(),
         downloadButton(ns("dl_report"), "Download Prior Justification Report",
-                       class = "btn-success btn-block btn-lg"),
+                       class = "bp-btn-primary btn-block btn-lg"),
         tags$hr(),
-        downloadButton(ns("dl_rdata"), "Save session (.RData)",
-                       class = "btn-default btn-block"),
+        downloadButton(ns("dl_script"), "Export R script",
+                       class = "bp-btn-secondary btn-block"),
+        uiOutput(ns("script_hint")),
         tags$br(),
         tags$small(class = "text-muted",
-          icon("info-circle"), " Report follows the FDA's 2026 draft guidance
-          and EMA's 2026 concept paper on Bayesian methods in clinical
-          development.")
+          icon("info-circle"), " Report is structured with reference to the FDA's 2026 draft
+          guidance and EMA's 2026 concept paper on Bayesian methods in
+          clinical development.")
       )
     )
   )
@@ -49,27 +51,22 @@ mod_report_ui <- function(id) {
 mod_report_server <- function(id, shared, active_prior) {
   moduleServer(id, function(input, output, session) {
 
-    output$session_summary <- renderUI({
-      p <- active_prior()
-      items <- list(
-        .status_item(!is.null(p),
-          if (!is.null(p)) glue::glue("Prior: {p$label} ({toupper(p$dist)})")
-          else "No prior fitted"),
-        .status_item(!is.null(shared$map_prior),
-          if (!is.null(shared$map_prior))
-            glue::glue("MAP prior: {shared$map_prior$n_trials} historical trial(s)")
-          else "MAP prior: not derived"),
-        .status_item(!is.null(shared$conflict),
-          if (!is.null(shared$conflict))
-            glue::glue("Conflict: severity = {toupper(shared$conflict$conflict_severity)}")
-          else "Conflict diagnostics: not run"),
-        .status_item(!is.null(shared$sensitivity),
-          if (!is.null(shared$sensitivity))
-            glue::glue("Sensitivity: {length(shared$sensitivity$target)} target(s)")
-          else "Sensitivity analysis: not run")
-      )
-      tags$ul(class = "list-unstyled", style = "font-size:12px;", items)
-    })
+    required_fields <- c(trial_name   = "trial / protocol number",
+                         indication   = "therapeutic indication",
+                         statistician = "responsible statistician")
+    example_values  <- c("TRIAL-001", "BioPharma Ltd")
+
+    missing_fields <- function() {
+      filled <- vapply(names(required_fields), function(f) {
+        nzchar(trimws(input[[f]] %||% ""))
+      }, logical(1))
+      unname(required_fields[!filled])
+    }
+
+    has_example_values <- function() {
+      any(trimws(c(input$trial_name %||% "", input$sponsor %||% "")) %in%
+            example_values)
+    }
 
     output$contents_checklist <- renderUI({
       p     <- active_prior()
@@ -79,50 +76,77 @@ mod_report_server <- function(id, shared, active_prior) {
       has_r <- !is.null(shared$robust_prior) ||
                !is.null(shared$sceptical_prior) ||
                !is.null(shared$power_prior)
-      has_map <- !is.null(shared$map_prior)
+      has_map    <- has_p && identical(p$prior_type, "map")
+      map_unused <- !is.null(shared$map_prior) && !has_map
       has_n <- nzchar(input$notes %||% "")
 
-      .item <- function(done, label, optional = FALSE) {
-        col   <- if (done) "#1D9E75" else if (optional) "#f0ad4e" else "#dc3545"
-        ico   <- if (done) "circle-check" else if (optional) "circle-minus" else "circle-xmark"
-        tip   <- if (done) "Complete" else if (optional) "Optional \u2014 not run" else "Required \u2014 not done"
-        tags$li(
-          style = "margin-bottom:5px; display:flex; align-items:center; gap:8px;",
-          icon(ico, style = paste0("color:", col, "; font-size:13px;")),
-          tags$span(style = paste0("font-size:12px; color:", if (done) "#333" else "#777", ";"),
-                    label),
-          tags$span(style = paste0("font-size:10px; color:", col, "; margin-left:auto;"),
-                    tip)
-        )
+      spec <- list(
+        list(has_p,   "Prior fitted and density plotted",      FALSE),
+        list(has_p,   "Expert / source identified",            FALSE),
+        list(has_map, "MAP prior derived from historical trials", TRUE),
+        list(has_map, "Heterogeneity (tau) posterior plotted",    TRUE),
+        list(has_c,   "Prior-data conflict assessed",          TRUE),
+        list(has_c,   "Prior-Likelihood-Posterior overlay",    TRUE),
+        list(has_s,   "Sensitivity analysis performed",        TRUE),
+        list(has_s,   "Tornado plot and heatmap",              TRUE),
+        list(has_r,   "Robust / sceptical prior computed",     TRUE),
+        list(has_n,   "Statistician's narrative notes",        TRUE),
+        list(TRUE,    "Guidance-alignment checklist (FDA/EMA)", FALSE)
+      )
+
+      item <- function(done, label, optional) {
+        state <- if (done) "done" else if (optional) "optional" else "required"
+        ico   <- switch(state, done = "circle-check", optional = "circle-minus",
+                        required = "circle-xmark")
+        tag   <- switch(state, done = "Complete", optional = "Not included",
+                        required = "Required \u2014 not done")
+        tags$li(class = paste0("bp-chk bp-chk-", state),
+                icon(ico),
+                tags$span(class = "bp-chk-label", label),
+                tags$span(class = "bp-chk-tag", tag))
+      }
+      items <- lapply(spec, function(r) item(r[[1L]], r[[2L]], r[[3L]]))
+      n_opt <- sum(vapply(spec, function(r) isTRUE(r[[3L]]) && !r[[1L]],
+                          logical(1)))
+
+      missing <- missing_fields()
+      banner <- if (!has_p) {
+        list("error", "circle-xmark", "Fit a prior before generating report")
+      } else if (length(missing)) {
+        list("warn", "circle-exclamation",
+             paste0("Metadata incomplete: ", paste(missing, collapse = ", "),
+                    ". The report can still be generated."))
+      } else if (has_example_values()) {
+        list("warn", "circle-exclamation",
+             "Trial metadata contains example values; replace them before using the report.")
+      } else {
+        list("ok", "circle-check", "Ready to generate report")
       }
 
       tagList(
-        tags$ul(
-          class = "list-unstyled",
-          style = "margin:0;",
-          .item(has_p,  "Prior fitted and density plotted"),
-          .item(has_p,  "Expert / source identified"),
-          .item(has_map, "MAP prior derived from historical trials", optional = !has_map),
-          .item(has_map, "Heterogeneity (tau) posterior plotted",    optional = !has_map),
-          .item(has_c,  "Prior-data conflict assessed",    optional = !has_c),
-          .item(has_c,  "Prior-Likelihood-Posterior overlay", optional = !has_c),
-          .item(has_s,  "Sensitivity analysis performed",  optional = !has_s),
-          .item(has_s,  "Tornado plot and heatmap",        optional = !has_s),
-          .item(has_r,  "Robust / sceptical prior computed", optional = !has_r),
-          .item(has_n,  "Statistician's narrative notes",  optional = !has_n),
-          .item(TRUE,   "FDA/EMA compliance checklist")
-        ),
-        tags$div(
-          style = "margin-top:10px; padding:8px 10px; border-radius:4px; font-size:11px;",
-          style = if (has_p)
-            "background:#EFF8F0; border-left:3px solid #1D9E75; color:#1A7A4A;"
-          else
-            "background:#FFF3F3; border-left:3px solid #dc3545; color:#C0392B;",
-          if (has_p)
-            tagList(icon("circle-check"), " Ready to generate report")
-          else
-            tagList(icon("circle-xmark"), " Fit a prior before generating report")
-        )
+        if (has_p) {
+          label <- p$label %||% "Prior"
+          tags$p(class = "bp-note",
+                 tags$strong("Prior documented: "),
+                 paste0(label, " (", toupper(p$dist), ")",
+                        if (has_map)
+                          paste0(", derived from ", p$n_trials,
+                                 " historical trial(s) (MAP)")))
+        },
+        if (map_unused) {
+          tags$p(class = "bp-note",
+                 icon("circle-info"),
+                 paste0(" A MAP prior from ", shared$map_prior$n_trials,
+                        " historical trial(s) exists but is not the active ",
+                        "prior, so it is not included in the report."))
+        },
+        tags$ul(class = "list-unstyled", style = "margin:0;", items),
+        if (n_opt > 0L) {
+          tags$p(class = "bp-note", style = "margin-top:6px;",
+                 paste0(n_opt, " optional section(s) not included."))
+        },
+        tags$div(class = paste0("bp-ready bp-ready-", banner[[1L]]),
+                 icon(banner[[2L]]), tags$span(banner[[3L]]))
       )
     })
 
@@ -143,6 +167,14 @@ mod_report_server <- function(id, shared, active_prior) {
                            type = "error")
           return(NULL)
         }
+        if (length(missing_fields()))
+          showNotification(
+            paste0("Metadata incomplete: ",
+                   paste(missing_fields(), collapse = ", "), "."),
+            type = "warning", duration = 8)
+        if (has_example_values())
+          showNotification("Trial metadata contains example values.",
+                           type = "warning", duration = 8)
 
         prior_plot   <- tryCatch(plot(p), error = function(e) NULL)
         overlay_plot <- if (!is.null(shared$conflict))
@@ -215,18 +247,53 @@ mod_report_server <- function(id, shared, active_prior) {
       }
     )
 
-    output$dl_rdata <- downloadHandler(
-      filename = function() paste0("bayprior_session_", Sys.Date(), ".RData"),
+    script_info <- reactive({
+      .bp_export_script(shared$consensus %||% shared$base_prior,
+                       conflict    = shared$conflict,
+                       sensitivity = shared$sensitivity,
+                       robust      = shared$robust_prior,
+                       sceptical   = shared$sceptical_prior,
+                       power       = shared$power_prior,
+                       active      = active_prior())
+    })
+
+    observe(shinyjs::toggleState("dl_script", condition = isTRUE(script_info()$ok)))
+
+    output$script_hint <- renderUI({
+      i <- script_info()
+      if (!isTRUE(i$ok))
+        tags$small(class = "text-muted", style = "display:block; margin-top:4px;", i$reason)
+    })
+
+    output$dl_script <- downloadHandler(
+      filename = function() paste0("bayprior_analysis_", format(Sys.Date(), "%Y%m%d"), ".R"),
       content  = function(file) {
-        session_data <- list(
-          current_prior = shared$current_prior,
-          expert_pool   = shared$expert_pool,
-          consensus     = shared$consensus,
-          conflict      = shared$conflict,
-          sensitivity   = shared$sensitivity,
-          map_prior     = shared$map_prior
-        )
-        save(session_data, file = file)
+        i <- script_info()
+        writeLines(if (isTRUE(i$ok)) i$text else paste0("# Not exported: ", i$reason),
+                   file, useBytes = TRUE)
+      }
+    )
+
+    # Used by the header Session menu (mod_session): read the form to save it,
+    # refill it after a session is loaded.
+    list(
+      meta = shiny::reactive(list(
+        trial_name   = input$trial_name,
+        indication   = input$indication,
+        sponsor      = input$sponsor,
+        statistician = input$statistician,
+        notes        = input$notes,
+        report_date  = as.character(input$report_date)
+      )),
+      restore = function(m) {
+        for (f in intersect(c("trial_name", "indication", "sponsor", "statistician"),
+                            names(m)))
+          shiny::updateTextInput(session, f, value = m[[f]])
+        if (!is.null(m$notes))
+          shiny::updateTextAreaInput(session, "notes", value = m$notes)
+        if (!is.null(m$report_date))
+          shiny::updateDateInput(session, "report_date", value = as.Date(m$report_date))
+        invisible(NULL)
       }
     )
   })
