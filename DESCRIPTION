@@ -1,6 +1,6 @@
 Package: bayprior
 Title: Bayesian Prior Elicitation, Diagnostics, and Regulatory Reporting
-Version: 0.5.0
+Version: 0.5.0.9000
 Authors@R:
     person("Ndoh", "Penn", email = "ndohpenn9@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0003-9054-465X"))
