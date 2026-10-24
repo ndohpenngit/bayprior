@@ -367,34 +367,28 @@
       }
     },
     "bayprior": {
-      "Source": "CRAN",
-      "Repository": "https://cran.rstudio.com",
+      "Source": "github",
+      "Repository": null,
       "description": {
         "Package": "bayprior",
-        "Title": "Bayesian Prior Elicitation, Diagnostics, and Regulatory\nReporting",
+        "Title": "Bayesian Prior Elicitation, Diagnostics, and Regulatory Reporting",
         "Version": "0.5.0",
-        "Authors@R": "\n    person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0009-0003-9054-465X\"))",
-        "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\n  in clinical trial settings. Implements expert elicitation via quantile\n  matching, the roulette method, and moment matching across six distribution\n  families, linear and logarithmic expert pooling, meta-analytic-predictive\n  (MAP) priors derived from historical trials, prior-data conflict\n  diagnostics including the Box p-value (computed from the exact prior\n  predictive distribution where one has a closed form), an exploratory\n  surprisal (S-value) companion to it, surprise index, information\n  divergence, and Mahalanobis distance, sensitivity analyses with tornado\n  and influence heatmap plots, sceptical, robust, and power priors, and\n  automated prior justification reports. Includes a fully modular 'Shiny'\n  application for interactive use.\n  Methods based on O'Hagan et al. (2006, ISBN:9780470029886),\n  Box (1980) <doi:10.2307/2982063>,\n  Greenland (2023) <doi:10.1111/sjos.12625>,\n  Oakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\n  Schmidli et al. (2014) <doi:10.1111/biom.12242>,\n  Neuenschwander et al. (2010) <doi:10.1177/1740774509356002>,\n  Roever et al. (2021) <doi:10.1002/jrsm.1475>,\n  Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\n  Spiegelhalter et al. (1994) <doi:10.2307/2983527>.",
+        "Authors@R": "person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\ncomment = c(ORCID = \"0009-0003-9054-465X\"))",
+        "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\nin clinical trial settings. Implements expert elicitation via quantile\nmatching, the roulette method, and moment matching across six distribution\nfamilies, linear and logarithmic expert pooling, meta-analytic-predictive\n(MAP) priors derived from historical trials, prior-data conflict\ndiagnostics including the Box p-value (computed from the exact prior\npredictive distribution where one has a closed form), an exploratory\nsurprisal (S-value) companion to it, surprise index, information\ndivergence, and Mahalanobis distance, sensitivity analyses with tornado\nand influence heatmap plots, sceptical, robust, and power priors, and\nautomated prior justification reports. Includes a fully modular 'Shiny'\napplication for interactive use.\nMethods based on O'Hagan et al. (2006, ISBN:9780470029886),\nBox (1980) <doi:10.2307/2982063>,\nGreenland (2023) <doi:10.1111/sjos.12625>,\nOakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\nSchmidli et al. (2014) <doi:10.1111/biom.12242>,\nNeuenschwander et al. (2010) <doi:10.1177/1740774509356002>,\nRoever et al. (2021) <doi:10.1002/jrsm.1475>,\nIbrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\nSpiegelhalter et al. (1994) <doi:10.2307/2983527>.",
         "License": "GPL-3",
         "URL": "https://github.com/ndohpenngit/bayprior",
         "BugReports": "https://github.com/ndohpenngit/bayprior/issues",
         "Depends": "R (>= 4.1.0)",
-        "Imports": "cli (>= 3.6.0), config (>= 0.3.1), dplyr (>= 1.1.0), DT (>=\n0.27), ggplot2 (>= 3.4.0), glue (>= 1.6.2), golem (>= 0.4.1),\nplotly (>= 4.10.1), purrr (>= 1.0.0), rlang (>= 1.2.0), shiny\n(>= 1.7.4), shinycssloaders (>= 1.0.0), shinydashboard (>=\n0.7.2), shinyjs (>= 2.1.0), shinyWidgets (>= 0.7.6), stats",
-        "Suggests": "brms, htmlwidgets (>= 1.5.4), knitr (>= 1.40), metafor (>=\n4.0.0), patchwork (>= 1.1.0), quarto (>= 1.4), rmarkdown (>=\n2.20), rstanarm, shinytest2 (>= 0.3.1), spelling (>= 2.2.0),\ntestthat (>= 3.0.0), vdiffr (>= 1.0.0), withr (>= 2.5.0)",
+        "Imports": "cli (>= 3.6.0),\nconfig (>= 0.3.1),\ndplyr (>= 1.1.0),\nDT (>= 0.27),\nggplot2 (>= 3.4.0),\nglue (>= 1.6.2),\ngolem (>= 0.4.1),\nplotly (>= 4.10.1),\npurrr (>= 1.0.0),\nrlang (>= 1.2.0),\nshiny (>= 1.7.4),\nshinycssloaders (>= 1.0.0),\nshinydashboard (>= 0.7.2),\nshinyjs (>= 2.1.0),\nshinyWidgets (>= 0.7.6),\nstats",
+        "Suggests": "brms,\nhtmlwidgets (>= 1.5.4),\nknitr (>= 1.40),\nmetafor (>= 4.0.0),\npatchwork (>= 1.1.0),\nquarto (>= 1.4),\nrmarkdown (>= 2.20),\nrstanarm,\nshinytest2 (>= 0.3.1),\nspelling (>= 2.2.0),\ntestthat (>= 3.0.0),\nvdiffr (>= 1.0.0),\nwithr (>= 2.5.0)",
         "VignetteBuilder": "knitr",
         "Config/Needs/vignettes": "knitr, rmarkdown, rstanarm, brms",
         "Config/testthat/edition": "3",
         "Encoding": "UTF-8",
         "Language": "en-GB",
+        "Roxygen": "list(markdown = TRUE)",
         "RoxygenNote": "7.3.3",
-        "SystemRequirements": "Quarto CLI (>= 1.5, https://quarto.org)",
-        "NeedsCompilation": "no",
-        "Packaged": "2026-10-20 21:06:23 UTC; ndohpenn",
-        "Author": "Ndoh Penn [aut, cre] (ORCID: <https://orcid.org/0009-0003-9054-465X>)",
-        "Maintainer": "Ndoh Penn <ndohpenn9@gmail.com>",
-        "Repository": "CRAN",
-        "Date/Publication": "2026-10-20 21:30:02 UTC",
-        "Built": "R 4.4.2; ; 2026-10-21 12:10:57 UTC; unix"
+        "SystemRequirements": "Quarto CLI (>= 1.5, https://quarto.org)"
       }
     },
     "brew": {
@@ -4733,7 +4727,7 @@
       "checksum": "9059246662d6f8b1b4ec6d541a5c2909"
     },
     "inst/app/www/custom.css": {
-      "checksum": "f4fb6077e91ba65f4e4b0732eeb48e12"
+      "checksum": "d826ee1a703b82aa4696795189c849f4"
     },
     "inst/app/www/custom.js": {
       "checksum": "9d5951050d7aac6f0ab9c9ecca68481d"
@@ -4748,7 +4742,7 @@
       "checksum": "7b535b95f67e6ff0f8112527e4d1db1a"
     },
     "inst/quarto/templates/prior_report/prior_report.qmd": {
-      "checksum": "14423d61e1f0b433a1091bac27c0fd90"
+      "checksum": "6d6b28bcb113b7083e756b7a1972547b"
     },
     "inst/quarto/templates/template.yaml": {
       "checksum": "4e71f6a95ca723fd0635f23bfc48a99c"
@@ -4907,10 +4901,10 @@
       "checksum": "19dafdc722f93df4c4ea9065c5d762f9"
     },
     "R/app_server.R": {
-      "checksum": "171b4d6a0dab5497c7dd3c019f5670a8"
+      "checksum": "8bba1a9fde863870e7602d33dacee57b"
     },
     "R/app_ui.R": {
-      "checksum": "4f820dee72a083a9c5ad06c5fc9b65df"
+      "checksum": "a5b1d88314be20f04e629161d9adc342"
     },
     "R/bayprior-package.R": {
       "checksum": "54589b58c3e3fd58e911ff5910894db1"
@@ -4927,6 +4921,9 @@
     "R/elicitation.R": {
       "checksum": "dcddee53092be8cc50a723510cdd1f81"
     },
+    "R/export_script.R": {
+      "checksum": "bec51770ce4854669804053e740b3725"
+    },
     "R/globals.R": {
       "checksum": "30c06b6f8ad8308933f14fdbee1035f4"
     },
@@ -4937,7 +4934,7 @@
       "checksum": "21b68c6577528f5667722973bf870fd0"
     },
     "R/mod_conflict.R": {
-      "checksum": "6a32ddf15227b64e3125062ae7964e39"
+      "checksum": "a3e53523f6ae50b8d4d8dbec0ee6b88d"
     },
     "R/mod_elicitation.R": {
       "checksum": "c58e983a220484579d14a4774a8722df"
@@ -4949,19 +4946,22 @@
       "checksum": "d1d5ffe718c0bfaaa0a15d99cbe89c2b"
     },
     "R/mod_report.R": {
-      "checksum": "c9c541e5da509e57c038deed0000ddb3"
+      "checksum": "e1b6b2f0a050ef1f6460ca29e7606de7"
     },
     "R/mod_robust_priors.R": {
-      "checksum": "799bd45bac285544ab11901f661e6c23"
+      "checksum": "721e9eb2f22b73d84c25a8a46a3b82cf"
     },
     "R/mod_roulette.R": {
-      "checksum": "155dfaefb900522bd1ade86d9d383a32"
+      "checksum": "63aad20716717f4eca27b3db449407a8"
     },
     "R/mod_sensitivity.R": {
-      "checksum": "0ea46cd05cbd55f8ba2f666586a72cdd"
+      "checksum": "cfc873f2c6640397baa98a03e73f92a7"
+    },
+    "R/mod_session.R": {
+      "checksum": "09ef15dc1f63aeed0e0c42f68e141753"
     },
     "R/mod_welcome.R": {
-      "checksum": "f867ac7d809011259ad85e55d603ad77"
+      "checksum": "bc7d595aff7a526578f637f9856b519a"
     },
     "R/plotting.R": {
       "checksum": "05696f8c449e05c50d23c391bee52330"
@@ -4974,6 +4974,9 @@
     },
     "R/run_app.R": {
       "checksum": "7506ad2bdb4653efcf0930284c7f2401"
+    },
+    "R/session_io.R": {
+      "checksum": "b3b5ad2edae8e72a01f067a9f82ce1d1"
     },
     "R/validation_utils.R": {
       "checksum": "d31f09cd4924d02eb58e746beffbcc6d"
@@ -5032,6 +5035,9 @@
     "tests/testthat/test-elicitation.R": {
       "checksum": "360200123a73627478251e2ced8e0d27"
     },
+    "tests/testthat/test-export-script.R": {
+      "checksum": "460e2224871b1b1befff2f4d7f8cb768"
+    },
     "tests/testthat/test-integration.R": {
       "checksum": "1b0f5e9dfb2c5f2e967072e19743a0b0"
     },
@@ -5055,6 +5061,9 @@
     },
     "tests/testthat/test-sensitivity.R": {
       "checksum": "d4feaec383cef7bc2d2b31ea5744bef0"
+    },
+    "tests/testthat/test-session-io.R": {
+      "checksum": "061321f0bfad062c84ff40673f4a5873"
     },
     "tests/testthat/test-shiny-modules.R": {
       "checksum": "b65e231e9eb2a1e3403ce7f49919419c"
