@@ -156,7 +156,6 @@ test_that("the header Session menu saves and loads, including the report form", 
 test_that("Save is unavailable until there is a prior", {
   skip_if_not_installed("shinyjs")
   shiny::testServer(mod_session_server, args = list(shared = empty_shared()), {
-    expect_match(output$save_sub, "first")
     expect_error(output$save)
   })
 })
@@ -182,4 +181,28 @@ test_that("the Session menu renders the expected controls", {
   expect_match(html, "session-save", fixed = TRUE)
   expect_match(html, "session-load_file", fixed = TRUE)
   expect_match(html, "bpSessionLoad", fixed = TRUE)
+  expect_match(html, "session-new", fixed = TRUE)
+})
+
+test_that("New session reloads straight away when there is nothing to lose", {
+  skip_if_not_installed("shinyjs")
+  n <- 0L
+  shiny::testServer(mod_session_server,
+    args = list(shared = empty_shared(), reload = function() n <<- n + 1L), {
+      session$setInputs(new = 1L)
+      expect_equal(n, 1L)
+    })
+})
+
+test_that("New session asks first when there is work, and reloads only on confirm", {
+  skip_if_not_installed("shinyjs")
+  n <- 0L
+  shiny::testServer(mod_session_server,
+    args = list(shared = mk_shared_from(mk_state()), reload = function() n <<- n + 1L), {
+      session$setInputs(new = 1L)
+      expect_equal(n, 0L)
+      expect_true(file.exists(output$save_first))
+      session$setInputs(confirm_new = 1L)
+      expect_equal(n, 1L)
+    })
 })
