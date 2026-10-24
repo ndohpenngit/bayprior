@@ -372,7 +372,7 @@
       "description": {
         "Package": "bayprior",
         "Title": "Bayesian Prior Elicitation, Diagnostics, and Regulatory Reporting",
-        "Version": "0.5.0",
+        "Version": "0.5.0.9000",
         "Authors@R": "person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\ncomment = c(ORCID = \"0009-0003-9054-465X\"))",
         "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\nin clinical trial settings. Implements expert elicitation via quantile\nmatching, the roulette method, and moment matching across six distribution\nfamilies, linear and logarithmic expert pooling, meta-analytic-predictive\n(MAP) priors derived from historical trials, prior-data conflict\ndiagnostics including the Box p-value (computed from the exact prior\npredictive distribution where one has a closed form), an exploratory\nsurprisal (S-value) companion to it, surprise index, information\ndivergence, and Mahalanobis distance, sensitivity analyses with tornado\nand influence heatmap plots, sceptical, robust, and power priors, and\nautomated prior justification reports. Includes a fully modular 'Shiny'\napplication for interactive use.\nMethods based on O'Hagan et al. (2006, ISBN:9780470029886),\nBox (1980) <doi:10.2307/2982063>,\nGreenland (2023) <doi:10.1111/sjos.12625>,\nOakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\nSchmidli et al. (2014) <doi:10.1111/biom.12242>,\nNeuenschwander et al. (2010) <doi:10.1177/1740774509356002>,\nRoever et al. (2021) <doi:10.1002/jrsm.1475>,\nIbrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\nSpiegelhalter et al. (1994) <doi:10.2307/2983527>.",
         "License": "GPL-3",
@@ -4712,7 +4712,7 @@
       "checksum": "3df907b50c4f00bc26ee6d988e0c849f"
     },
     "DESCRIPTION": {
-      "checksum": "a97defe24f90e619c7a48038cd4f12f7"
+      "checksum": "d08931eefed10bea85c7fd0f254cc6ff"
     },
     "dev/01_start.R": {
       "checksum": "bebcf086db3e03cc332ac4728fee8d2d"
