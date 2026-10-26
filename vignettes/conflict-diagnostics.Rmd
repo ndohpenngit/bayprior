@@ -182,12 +182,21 @@ $$\text{BC} = \exp\!\left(
 knitr::kable(data.frame(
   Diagnostic        = c("Box p-value", "Surprise index",
                         "KL divergence", "Bhattacharyya overlap"),
-  `No conflict`     = c(">= 0.05", "< 2",    "< 0.5", "> 0.6"),
-  `Mild conflict`   = c("0.01-0.05", "2-3",   "0.5-1", "0.3-0.6"),
-  `Severe conflict` = c("< 0.01",   "> 3",    "> 1",   "< 0.3"),
+  `No conflict`     = c(">= 0.05",   "< 2",    "< 0.5", "> 0.6"),
+  `Mild conflict`   = c("0.0027-0.05", "2-3",   "0.5-1", "0.3-0.6"),
+  `Severe conflict` = c("< 0.0027",  "> 3",    "> 1",   "< 0.3"),
   check.names = FALSE
 ), align = "lrrr")
 ```
+
+Only the Box p-value determines `conflict_severity` (at the default
+`alpha = 0.05`; "severe" is $p < 2\Phi(-3) \approx 0.0027$, the two-sided
+tail area of a 3-standard-deviation surprise). The other three columns are
+rough guides to reading the standardised distance, the divergence and the
+overlap; they are conventions of this package, not calibrated cut-offs, and
+we know of no published calibration for them. A p-value above `alpha` is the
+absence of a flag, not evidence that the prior and the data agree: with a
+small sample the check has little power to detect conflict.
 
 `s_value` is intentionally absent from this table: it is reported as a
 continuous, exploratory companion to `box_pvalue`, not as a fifth

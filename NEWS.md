@@ -7,7 +7,9 @@
   restores the priors, the expert pool, the MAP prior and the report
   details. Conflict, sensitivity and robust / power results are saved in the
   file but are not restored; rerun them after loading. Session files are
-  validated on load (format, version, expected contents and size).
+  validated on load (format, version, expected contents and size). The menu
+  also has **New session**, which clears everything after a confirmation
+  (with an option to save first).
 
 * Export Report: new **Export R script** button that writes a script
   reproducing the analysis (elicitation inputs, expert pooling, MAP prior,
@@ -22,6 +24,70 @@
   and the robust / power pages use it.
 
 * Conflict Diagnostics no longer fails when no result is produced.
+
+* Sensitivity: the default grid is now built in terms of the prior rather
+  than its raw hyperparameters, for Beta, Gamma and Normal priors. Prior
+  strength (the effective sample size) is varied from 0.5x to 2x the
+  elicited value, and the prior mean is shifted by up to +/-1 prior SD;
+  both can be changed, and the mean can be held fixed. The previous grid
+  (each hyperparameter scaled by 0.5x to 2x on its own) is still available
+  as "Hyperparameters", and is the only option for other families. That
+  old grid moved the prior mean and the strength together, so for a
+  Beta(6.7, 11.9) prior it covered prior means of 0.12 to 0.69 and
+  effective sample sizes of 9 to 37, and its influence scores mostly
+  reflected how wide the grid was. A note under the grid settings now shows
+  the range of prior mean and effective sample size that the grid covers.
+  **Influence scores from earlier versions are not comparable with the new
+  default**; rerun the analysis. The reference prior is now exactly one of
+  the grid points.
+
+## Sensitivity analysis
+
+* `sensitivity_grid()` and `sensitivity_cri()` accept `param_grid` as a data
+  frame with one row per grid point, so hyperparameters can vary together
+  (for example prior strength at a fixed mean). Other columns are carried
+  into the result. Lists of vectors work as before. Plots of such a grid use
+  the prior mean and strength as axes, and the exported R script writes the
+  grid as a `data.frame()`.
+
+## Documentation and wording
+
+* `prior_conflict()$recommendation` no longer says that the prior "appears
+  consistent with the observed data" when no conflict is flagged; it now says
+  that no evidence of conflict was detected, that a large p-value does not
+  show the prior is correct, and that with a small sample the check has little
+  power to detect conflict. This text is shown in the app and in reports.
+
+* The conflict vignette's threshold table now matches the code: "severe" is
+  Box p below about 0.0027 (not 0.01), and it states that only the Box
+  p-value determines `conflict_severity` and that the other cut-offs are
+  conventions, not calibrated thresholds.
+
+* The sensitivity vignette now states that influence scores depend on the
+  grid and on the scale of the quantity, and that the bands are a rule of
+  thumb.
+
+## Reports
+
+* The conflict section states the observed data used (events and sample
+  size, or mean, SD and n), and the severity row has its own interpretation
+  instead of repeating the value.
+
+* Sensitivity section: the influence column now uses the three bands from
+  the sensitivity vignette (not sensitive below 0.05, moderate up to 0.15,
+  sensitive above), stated in the caption as a rule of thumb. The report
+  also describes the grid that was varied (in terms of prior mean and
+  effective sample size), the threshold behind
+  `prob_efficacy`, and a note that a mixture prior is analysed through a
+  single-family working prior.
+
+* Conflict section: a note explains that a p-value above alpha means
+  conflict was not flagged, not that prior and data agree, and that only the
+  Box p-value determines the severity class.
+
+* The guidance-alignment row "Alternative priors considered" now reflects
+  whether a robust, sceptical or power prior was computed (it used to say
+  "See above" whenever a sensitivity analysis existed).
 
 # bayprior 0.5.0
 
