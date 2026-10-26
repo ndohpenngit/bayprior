@@ -15,9 +15,28 @@ mod_sensitivity_ui <- function(id) {
       uiOutput(ns("data_entry_ui")),
       tags$hr(),
 
-      uiOutput(ns("param1_ui")),
-      uiOutput(ns("param2_ui")),
+      uiOutput(ns("design_ui")),
+      # Prior-strength grid (default for beta, gamma and normal priors)
+      conditionalPanel(
+        condition = sprintf("input['%s'] === 'strength'", ns("grid_design")),
+        sliderInput(ns("strength_range"),
+                    "Prior strength (x elicited value)",
+                    0.25, 4, c(0.5, 2), 0.05, ticks = FALSE),
+        checkboxInput(ns("vary_mean"), "Also vary the prior mean", TRUE),
+        conditionalPanel(
+          condition = sprintf("input['%s']", ns("vary_mean")),
+          sliderInput(ns("shift_sd"), "Prior mean shift (+/- prior SDs)",
+                      0.25, 3, 1, 0.25, ticks = FALSE)
+        )
+      ),
+      # Hyperparameter ranges (other families, or chosen explicitly)
+      conditionalPanel(
+        condition = sprintf("input['%s'] !== 'strength'", ns("grid_design")),
+        uiOutput(ns("param1_ui")),
+        uiOutput(ns("param2_ui"))
+      ),
       sliderInput(ns("grid_size"), "Grid points per axis", 5, 50, 20, 5),
+      uiOutput(ns("grid_note")),
       tags$hr(),
       shinyWidgets::radioGroupButtons(
         ns("analysis_type"), "Analysis type",
@@ -89,6 +108,54 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
                  " single-distribution working approximation of the mixture,",
                  " not of each component.")
       )
+    })
+
+    # Single-family working prior (moment-matched for mixtures)
+    working <- reactive({
+      p <- active_prior()
+      if (is.null(p)) return(NULL)
+      tryCatch(suppressMessages(suppressWarnings(
+        .mixture_working_prior(p, quiet = TRUE))), error = function(e) NULL)
+    })
+
+    design_ok   <- reactive(.design_supported(working()))
+    design_mode <- reactive(
+      if (isTRUE(design_ok()) && identical(input$grid_design, "strength"))
+        "strength" else "hyper")
+
+    # Strength grid for the current settings (pure arithmetic, cheap)
+    strength_pg <- function() {
+      n <- input$grid_size %||% 20L
+      .strength_grid(working(),
+                     scale    = input$strength_range %||% c(0.5, 2),
+                     n_scale  = n,
+                     shift_sd = if (isTRUE(input$vary_mean)) input$shift_sd %||% 1 else 0,
+                     n_shift  = n)
+    }
+
+    output$design_ui <- renderUI({
+      req(design_ok())
+      shinyWidgets::radioGroupButtons(
+        ns("grid_design"), "Grid design",
+        choices  = c("Prior strength" = "strength", "Hyperparameters" = "hyper"),
+        selected = "strength", justified = TRUE, status = "primary", size = "sm")
+    })
+
+    # What the grid covers, in prior terms (mean and effective sample size)
+    output$grid_note <- renderUI({
+      w <- working(); req(w, design_ok())
+      txt <- if (identical(design_mode(), "strength")) {
+        g <- strength_pg()
+        .grid_note_text(w, g, attr(g, "design"))
+      } else {
+        req(input$p1_range, input$p2_range)
+        nm <- pnames()
+        g  <- expand.grid(input$p1_range, input$p2_range)
+        names(g) <- c(nm$p1, nm$p2)
+        .grid_note_text(w, g)
+      }
+      if (is.null(txt)) return(NULL)
+      tags$p(class = "bp-note", icon("info-circle"), " ", txt)
     })
 
     # -- Sensitivity compatibility check --------------------------------------
@@ -226,6 +293,8 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
     # Reset results whenever ANY input changes -- prevents stale results
     observeEvent(
       list(active_prior(), input$p1_range, input$p2_range,
+           input$grid_design, input$strength_range, input$vary_mean,
+           input$shift_sd,
            input$grid_size, input$analysis_type,
            input$threshold, input$targets, input$cri_level,
            input$sens_data_type,
@@ -238,7 +307,8 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
     )
 
     observeEvent(input$run_btn, {
-      p <- active_prior(); req(p, input$p1_range, input$p2_range)
+      p <- active_prior(); req(p)
+      if (identical(design_mode(), "hyper")) req(input$p1_range, input$p2_range)
 
       # Compatibility check -- block if error-level incompatibility
       compat <- .check_sensitivity_compat(p)
@@ -272,13 +342,17 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         )
       }
       nm <- pnames()
-      pg <- setNames(
-        list(
-          seq(input$p1_range[1], input$p1_range[2], length.out = input$grid_size),
-          seq(input$p2_range[1], input$p2_range[2], length.out = input$grid_size)
-        ),
-        c(nm$p1, nm$p2)
-      )
+      pg <- if (identical(design_mode(), "strength")) {
+        strength_pg()
+      } else {
+        setNames(
+          list(
+            seq(input$p1_range[1], input$p1_range[2], length.out = input$grid_size),
+            seq(input$p2_range[1], input$p2_range[2], length.out = input$grid_size)
+          ),
+          c(nm$p1, nm$p2)
+        )
+      }
 
       run_fn <- if (isTRUE(input$analysis_type == "cri")) {
         function() sensitivity_cri(p, data_sum, pg,

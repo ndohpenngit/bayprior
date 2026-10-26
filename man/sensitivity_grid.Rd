@@ -19,7 +19,12 @@ sensitivity_grid(
 
 \item{param_grid}{Named list of numeric vectors, one per hyperparameter
 to vary. Names must match hyperparameter names in \code{prior$params}.
-Example: \code{list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1))}.}
+Example: \code{list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1))}.
+The vectors are crossed into a full grid. A data frame is also accepted,
+with one row per grid point and a column for each hyperparameter; the
+rows are used as given, so hyperparameters can vary together (for
+example prior strength at a fixed mean). Any other columns are carried
+into the result unchanged.}
 
 \item{target}{Character vector. Which posterior quantities to compute.
 Any of \code{"posterior_mean"}, \code{"posterior_sd"},

@@ -253,8 +253,13 @@
     v <- var_of(sensitivity$prior)
     if (!is.null(v) && !is.null(ds) && !is.null(sensitivity$param_grid)) {
       g <- sensitivity$param_grid
-      grid <- c("param_grid <- list(",
-                paste0("  ", names(g), " = ", vapply(g, .bp_grid_code, character(1)),
+      # A data-frame grid (hyperparameters moving together) must be exported as
+      # one, or the script would cross the columns into a different grid.
+      is_df <- is.data.frame(g)
+      g <- as.list(g)
+      grid <- c(if (is_df) "param_grid <- data.frame(" else "param_grid <- list(",
+                paste0("  ", names(g), " = ",
+                       vapply(g, if (is_df) .bp_c else .bp_grid_code, character(1)),
                        c(rep(",", length(g) - 1L), "")),
                 ")")
       cri <- !is.null(sensitivity$cri_level)

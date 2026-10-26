@@ -141,6 +141,30 @@ plot_sensitivity <- function(sensitivity,
   })
 }
 
+# Axes of a sensitivity plot. A prior-strength grid (see .strength_grid())
+# is drawn against the prior mean and strength rather than the raw
+# hyperparameters, which move together on it.
+#' @noRd
+.sens_axes <- function(sensitivity) {
+  grid <- sensitivity$grid
+  dc <- intersect(c("prior_mean", "prior_strength"), names(grid))
+  if (length(dc) > 0L) {
+    varied <- dc[vapply(dc, function(p)
+      length(unique(round(grid[[p]], 10))) > 1L, logical(1))]
+    if (length(varied) > 0L) return(varied)
+  }
+  names(sensitivity$param_grid)
+}
+
+#' @noRd
+.sens_axis_label <- function(p, sensitivity) {
+  d <- attr(sensitivity$param_grid, "design")
+  switch(p,
+    prior_mean     = "Prior mean",
+    prior_strength = d$strength_short %||% "Prior strength",
+    p)
+}
+
 #' @noRd
 .sensitivity_gg <- function(sensitivity, target, highlight_reference, tooltip) {
 
@@ -149,14 +173,15 @@ plot_sensitivity <- function(sensitivity,
   if (is.null(target)) target <- sensitivity$target[1]
 
   grid    <- sensitivity$grid
-  params  <- names(sensitivity$param_grid)
+  params  <- .sens_axes(sensitivity)
+  plabs   <- vapply(params, .sens_axis_label, character(1), sensitivity = sensitivity)
   ref_row <- sensitivity$reference_row
   target_label <- .target_label(target)
   fmt <- function(v) format(round(v, 3), nsmall = 0, trim = TRUE)
 
   if (length(params) == 1) {
     if (tooltip)
-      grid$.tip <- sprintf("%s = %s\n%s: %s", params[1], fmt(grid[[params[1]]]),
+      grid$.tip <- sprintf("%s = %s\n%s: %s", plabs[1], fmt(grid[[params[1]]]),
                            target_label, fmt(grid[[target]]))
     aes_line <- if (tooltip)
       ggplot2::aes(x = .data[[params[1]]], y = .data[[target]], text = .data[[".tip"]], group = 1)
@@ -171,7 +196,7 @@ plot_sensitivity <- function(sensitivity,
     if (highlight_reference) {
       r <- grid[ref_row, , drop = FALSE]
       if (tooltip)
-        r$.tip <- sprintf("Reference prior\n%s = %s\n%s: %s", params[1],
+        r$.tip <- sprintf("Reference prior\n%s = %s\n%s: %s", plabs[1],
                           fmt(r[[params[1]]]), target_label, fmt(r[[target]]))
       aes_ref <- if (tooltip)
         ggplot2::aes(x = .data[[params[1]]], y = .data[[target]], text = .data[[".tip"]])
@@ -181,15 +206,15 @@ plot_sensitivity <- function(sensitivity,
                                    colour = "#D85A30", size = 3, shape = 18)
     }
     p + ggplot2::labs(
-      title = glue::glue("Sensitivity: {target_label} vs {params[1]}"),
-      x = params[1], y = target_label
+      title = glue::glue("Sensitivity: {target_label} vs {plabs[1]}"),
+      x = plabs[1], y = target_label
     ) + ggplot2::theme_minimal(base_size = 13)
 
   } else if (length(params) == 2) {
     if (tooltip)
       grid$.tip <- sprintf("%s = %s\n%s = %s\n%s: %s",
-                           params[1], fmt(grid[[params[1]]]),
-                           params[2], fmt(grid[[params[2]]]),
+                           plabs[1], fmt(grid[[params[1]]]),
+                           plabs[2], fmt(grid[[params[2]]]),
                            target_label, fmt(grid[[target]]))
     aes_tile <- if (tooltip)
       ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
@@ -201,12 +226,15 @@ plot_sensitivity <- function(sensitivity,
       ggplot2::scale_fill_gradientn(
         colours = c("#042C53", "#185FA5", "#9FE1CB", "#1D9E75"),
         name    = target_label)
+    # strength values are log-spaced, so tile them on a log axis
+    if (identical(params[2], "prior_strength"))
+      p <- p + ggplot2::scale_y_log10()
     if (highlight_reference) {
       r <- grid[ref_row, , drop = FALSE]
       if (tooltip)
         r$.tip <- sprintf("Reference prior\n%s = %s\n%s = %s\n%s: %s",
-                          params[1], fmt(r[[params[1]]]),
-                          params[2], fmt(r[[params[2]]]),
+                          plabs[1], fmt(r[[params[1]]]),
+                          plabs[2], fmt(r[[params[2]]]),
                           target_label, fmt(r[[target]]))
       aes_ref <- if (tooltip)
         ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]], text = .data[[".tip"]])
@@ -217,7 +245,7 @@ plot_sensitivity <- function(sensitivity,
     }
     p + ggplot2::labs(
       title = glue::glue("Sensitivity heatmap: {target_label}"),
-      x = params[1], y = params[2]
+      x = plabs[1], y = plabs[2]
     ) + ggplot2::theme_minimal(base_size = 13)
 
   } else {

@@ -185,6 +185,26 @@ has_robust    <- !is.null(rob_prior) || !is.null(scep_prior) || !is.null(pow_res
   as.character(x[[1L]])
 }
 
+# One-line description of the observed data behind the conflict check.
+.describe_data <- function(ds) {
+  if (!is.list(ds)) return("")
+  num <- function(v) suppressWarnings(as.numeric(v)[1L])
+  x <- num(ds$x); n <- num(ds$n); s <- num(ds$sd)
+  fmt <- function(v, d = 4) format(signif(v, d), trim = TRUE)
+  type <- .safe_chr(ds$type, fallback = "binary")
+  if (is.na(x) || is.na(n)) return("")
+  switch(type,
+    binary = paste0(fmt(x), " events in ", fmt(n), " participants (observed ",
+                    "proportion ", fmt(x / n, 3), ")"),
+    continuous = paste0("mean ", fmt(x), if (!is.na(s)) paste0(", SD ", fmt(s)),
+                        ", n = ", fmt(n)),
+    poisson = paste0(fmt(x), " events over ", fmt(n), " units of exposure ",
+                     "(observed rate ", fmt(x / n, 3), ")"),
+    survival = paste0(fmt(x), " events over ", fmt(n), " units of follow-up ",
+                      "time (observed rate ", fmt(x / n, 3), ")"),
+    "")
+}
+
 .fs <- function(s, nm) {
   v <- s[[nm]]
   if (is.null(v) || length(v) == 0L) NA_real_
@@ -535,13 +555,40 @@ if (has_conf) {
         else if (ov < 0.6) "Moderate overlap"
         else "Good overlap"
       },
-      toupper(.safe_chr(cd$conflict_severity))
+      switch(.safe_chr(cd$conflict_severity, fallback = "none"),
+             none   = paste0("Not flagged: p >= alpha = ", cd$alpha),
+             mild   = paste0("Mild: 0.0027 <= p < alpha = ", cd$alpha),
+             severe = "Severe: p < 0.0027 (about 3 SD)",
+             "-")
     ),
     stringsAsFactors = FALSE
   )
   rownames(df_conf) <- NULL
   kable(df_conf, caption = "Prior-data conflict diagnostics",
         align = "llr", row.names = FALSE)
+}
+```
+
+```{r conflict-data}
+#| results: asis
+if (has_conf) {
+  .dd <- .describe_data(cd$data_summary)
+  if (nzchar(.dd)) cat("\n**Observed data used:** ", .dd, ".\n\n", sep = "")
+}
+```
+
+```{r conflict-reading-note}
+#| results: asis
+if (has_conf) {
+  .callout("note", paste0(
+    "A p-value above alpha means conflict was not flagged; it does not show ",
+    "that the prior is correct or that prior and data agree; with a small ",
+    "sample the check has little power to detect conflict. Only the Box ",
+    "p-value determines ",
+    "the severity class. The cut-offs used to read the surprise index, KL ",
+    "divergence and overlap are conventions of this package, not calibrated ",
+    "thresholds."
+  ))
 }
 ```
 
@@ -602,6 +649,18 @@ if (!has_sens) {
 }
 ```
 
+```{r sensitivity-working-prior}
+#| results: asis
+if (has_sens && has_prior && identical(pr$dist, "mixture")) {
+  .callout("note", paste0(
+    "The prior is a mixture. The sensitivity analysis varies the ",
+    "hyperparameters of a single-family working prior with the same mean ",
+    "and SD as the mixture; when the family cannot be matched from a mean ",
+    "and SD (Exponential, Weibull), the dominant component is used instead."
+  ))
+}
+```
+
 ### Influence of Prior Hyperparameters
 
 ```{r sensitivity-influence}
@@ -613,13 +672,53 @@ if (has_sens) {
   df_sens <- data.frame(
     Target    = nms,
     Range     = as.character(.safe_round(sc, 5)),
-    Sensitive = ifelse(is.na(sc) | sc > 0.05, "Yes", "No"),
+    Influence = ifelse(is.na(sc), "Not computed",
+                  ifelse(sc < 0.05, "Not sensitive",
+                    ifelse(sc <= 0.15, "Moderate", "Sensitive"))),
     stringsAsFactors = FALSE
   )
   rownames(df_sens) <- NULL
   kable(df_sens,
-        caption = "Posterior sensitivity to prior hyperparameters",
+        caption = paste0("Posterior sensitivity to prior hyperparameters ",
+                         "(range of each quantity across the grid; rule of ",
+                         "thumb: below 0.05 not sensitive, 0.05 to 0.15 ",
+                         "moderate, above 0.15 sensitive)"),
         align = "lrr", row.names = FALSE)
+}
+```
+
+```{r sensitivity-grid-note}
+#| results: asis
+if (has_sens) {
+  pg <- sa$param_grid
+  # What the grid covers in prior terms (mean, effective sample size); older
+  # installed versions of the package do not have this helper.
+  note_fn <- tryCatch(get(".sensitivity_grid_note", envir = asNamespace("bayprior")),
+                      error = function(e) NULL)
+  grid_note <- if (is.function(note_fn)) tryCatch(note_fn(sa), error = function(e) NULL)
+  if (!is.null(attr(pg, "design"))) {
+    # prior-strength grid: describe it in prior terms, not as raw hyperparameters
+    if (!is.null(grid_note)) cat("\n**Grid varied:** ", grid_note, "  \n", sep = "")
+  } else if (is.list(pg) && length(pg) > 0L) {
+    gdesc <- vapply(names(pg), function(nm) {
+      v <- suppressWarnings(as.numeric(pg[[nm]]))
+      v <- v[is.finite(v)]
+      if (length(v) == 0L) return(NA_character_)
+      paste0(nm, " from ", format(signif(min(v), 3), trim = TRUE), " to ",
+             format(signif(max(v), 3), trim = TRUE), " (", length(v), " values)")
+    }, character(1))
+    gdesc <- gdesc[!is.na(gdesc)]
+    if (length(gdesc))
+      cat("\n**Grid varied:** ", paste(gdesc, collapse = "; "), ".  \n", sep = "")
+    if (!is.null(grid_note)) cat(grid_note, "  \n", sep = "")
+  }
+  thr <- suppressWarnings(as.numeric(sa$threshold)[1L])
+  if (!is.na(thr))
+    cat("**prob_efficacy** is Pr(theta > ", format(signif(thr, 3), trim = TRUE),
+        ") under the posterior.  \n", sep = "")
+  cat("The scores are absolute ranges on the scale of each quantity, so they ",
+      "depend on the grid above; the bands are a rule of thumb for quantities ",
+      "on a 0 to 1 scale and are not calibrated cut-offs.\n\n", sep = "")
 }
 ```
 
@@ -766,7 +865,7 @@ df_comp <- data.frame(
     ifelse(has_conf,   "Complete",  "Not run"),
     ifelse(has_sens,   "Complete",  "Not run"),
     ifelse(has_sens,   "Complete",  "Not run"),
-    ifelse(has_sens,   "See above", "Not run"),
+    ifelse(has_robust, "Complete",  "Not run"),
     ifelse(has_robust, "Complete",  "Not run"),
     "Complete"
   ),

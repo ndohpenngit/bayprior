@@ -17,7 +17,9 @@ sensitivity_cri(
 
 \item{data_summary}{Named list as for \code{\link{prior_conflict}}.}
 
-\item{param_grid}{Named list of numeric vectors, one per hyperparameter.}
+\item{param_grid}{Named list of numeric vectors, one per hyperparameter,
+or a data frame with one row per grid point (see
+\code{\link{sensitivity_grid}}).}
 
 \item{cri_level}{Numeric in (0, 1). Credible interval level. Default
 \code{0.95}.}

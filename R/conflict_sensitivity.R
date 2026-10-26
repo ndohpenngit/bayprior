@@ -455,9 +455,10 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
 
   recommendation <- switch(severity,
     none = glue::glue(
-      "No evidence of prior-data conflict (Box p = {round(box_p, 3)}, ",
-      "S-value = {round(s_value, 2)} bits). ",
-      "The prior appears consistent with the observed data."
+      "No evidence of prior-data conflict was detected (Box p = ",
+      "{round(box_p, 3)}, S-value = {round(s_value, 2)} bits). ",
+      "A large p-value does not show that the prior is correct; with a ",
+      "small sample the check has little power to detect conflict."
     ),
     mild = glue::glue(
       "Mild prior-data conflict detected (Box p = {round(box_p, 3)}, ",
@@ -597,6 +598,11 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
 #' @param param_grid  Named list of numeric vectors, one per hyperparameter
 #'   to vary. Names must match hyperparameter names in \code{prior$params}.
 #'   Example: \code{list(alpha = seq(1, 8, 0.5), beta = seq(2, 20, 1))}.
+#'   The vectors are crossed into a full grid. A data frame is also accepted,
+#'   with one row per grid point and a column for each hyperparameter; the
+#'   rows are used as given, so hyperparameters can vary together (for
+#'   example prior strength at a fixed mean). Any other columns are carried
+#'   into the result unchanged.
 #' @param target Character vector. Which posterior quantities to compute.
 #'   Any of \code{"posterior_mean"}, \code{"posterior_sd"},
 #'   \code{"prob_efficacy"}.
@@ -699,8 +705,10 @@ sensitivity_grid <- function(prior,
     }
   }
 
-  # Build full Cartesian grid (after any name remapping above)
-  grid_df <- do.call(expand.grid, param_grid)
+  # Build the grid after any name remapping above: a Cartesian product of the
+  # supplied vectors, or the rows of a data frame (coupled grid) as given.
+  grid_is_df <- is.data.frame(param_grid)
+  grid_df <- if (grid_is_df) param_grid else do.call(expand.grid, param_grid)
 
   # Identify reference row closest to working prior's parameters.
   # mapply() returns a plain vector when param_grid has only one entry,
@@ -722,6 +730,7 @@ sensitivity_grid <- function(prior,
 
     row    <- grid_df[i, , drop = FALSE]
     params <- as.list(row)
+    if (grid_is_df) params <- params[valid_names]
 
     # Build temporary prior at this grid point
     tmp_prior <- tryCatch(
@@ -842,7 +851,9 @@ sensitivity_grid <- function(prior,
 #'
 #' @param prior        A \code{bayprior} object (the reference prior).
 #' @param data_summary Named list as for \code{\link{prior_conflict}}.
-#' @param param_grid   Named list of numeric vectors, one per hyperparameter.
+#' @param param_grid   Named list of numeric vectors, one per hyperparameter,
+#'   or a data frame with one row per grid point (see
+#'   \code{\link{sensitivity_grid}}).
 #' @param cri_level    Numeric in (0, 1). Credible interval level. Default
 #'   \code{0.95}.
 #' @param threshold    Optional numeric. Computes \code{Pr(theta > threshold)}
@@ -915,7 +926,8 @@ sensitivity_cri <- function(prior,
     }
   }
 
-  grid_df <- do.call(expand.grid, param_grid)
+  grid_is_df <- is.data.frame(param_grid)
+  grid_df <- if (grid_is_df) param_grid else do.call(expand.grid, param_grid)
 
   # Reference row: closest grid point to working prior's current parameters
   ref_diffs <- vapply(valid_names, function(nm) {
@@ -934,6 +946,7 @@ sensitivity_cri <- function(prior,
   results <- purrr::map_dfr(seq_len(nrow(grid_df)), function(i) {
     row    <- grid_df[i, , drop = FALSE]
     params <- as.list(row)
+    if (grid_is_df) params <- params[valid_names]
 
     tmp_prior <- tryCatch(
       .make_bayprior(working_prior$dist, params, working_prior$method,
