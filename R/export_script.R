@@ -50,10 +50,10 @@
       label = lab)))
   }
 
-  if (p$dist %in% c("mixture", "log_pool")) {
+  if (p$dist %in% c("mixture", "log_pool") || !is.null(p$pool_inputs)) {
     ag <- p$aggregation
     w <- ag$weights
-    comps <- p$components
+    comps <- if (is.null(p$components)) p$pool_inputs$components else p$components
     if (is.null(ag) || is.null(w) || length(w) != length(comps))
       return(.bp_fail(paste0("Only pooled expert priors are exported; ",
                              "other mixtures (for example robust mixtures) are not yet supported.")))

@@ -366,7 +366,8 @@ test_that("sensitivity_grid does not error on a logarithmically pooled
                     expert_id = "E2")
   pool_log <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
                                 method = "logarithmic")
-  expect_true(is.null(pool_log$fit_summary$sd))
+  # the log pool of Beta priors is now a Beta prior with a proper SD
+  expect_false(is.null(pool_log$fit_summary$sd))
 
   # This previously crashed with "argument is of length zero" because
   # is.na(NULL) inside the working_prior if() condition returns a

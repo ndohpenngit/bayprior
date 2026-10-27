@@ -32,7 +32,7 @@
 .check_prior_data_compat <- function(prior, data_summary) {
 
   type <- data_summary$type
-  dist <- if (prior$dist == "mixture")
+  dist <- if (prior$dist %in% c("mixture", "log_pool"))
     prior$components[[which.max(prior$weights)]]$dist
   else
     prior$dist

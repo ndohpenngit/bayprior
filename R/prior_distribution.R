@@ -65,3 +65,17 @@
   if (anyNA(qs)) return(s)
   c(s, list(q025 = qs[1], q500 = qs[2], q975 = qs[3]))
 }
+
+#' Check pooling / mixture weights: numeric, finite, non-negative, sum to 1.
+#' @noRd
+.check_weights <- function(weights, k, arg = "weights") {
+  if (!is.numeric(weights) || length(weights) != k)
+    rlang::abort(sprintf("`%s` must be a numeric vector of length %d.", arg, k))
+  if (anyNA(weights) || any(!is.finite(weights)))
+    rlang::abort(sprintf("`%s` must not contain NA or non-finite values.", arg))
+  if (any(weights < 0))
+    rlang::abort(sprintf("`%s` must be non-negative.", arg))
+  if (abs(sum(weights) - 1) > 1e-6)
+    rlang::abort(sprintf("`%s` must sum to 1.", arg))
+  invisible(weights)
+}

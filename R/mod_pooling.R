@@ -137,7 +137,7 @@ mod_pooling_server <- function(id, shared, active_prior) {
     output$consensus_plot <- plotly::renderPlotly({
       req(shared$consensus)
       con  <- shared$consensus
-      pool <- con$components
+      pool <- if (is.null(con$components)) con$pool_inputs$components else con$components
       nms  <- names(pool) %||% paste0("Expert_", seq_along(pool))
       fig  <- plotly::plot_ly()
       for (i in seq_along(pool)) {
@@ -149,8 +149,10 @@ mod_pooling_server <- function(id, shared, active_prior) {
         c(p$fit_summary$q025, p$fit_summary$q975))), na.rm = TRUE)
       x_seq <- seq(x_rng[1], x_rng[2], length.out = 500)
       wts   <- con$aggregation$weights
-      y_mix <- Reduce("+", lapply(seq_along(pool), function(i)
-        wts[i] * .eval_density_vec(pool[[i]], x_seq)))
+      # The consensus curve is the pooled prior itself: the weighted mixture for
+      # linear pooling, the closed-form (or numerically normalised) geometric
+      # pool for logarithmic pooling.
+      y_mix <- .eval_density_vec(con, x_seq)
       fig <- plotly::add_lines(fig, x = x_seq, y = y_mix, name = "Consensus",
                                line = list(color = "#1D9E75", width = 3))
       plotly::layout(fig,
