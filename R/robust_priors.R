@@ -394,38 +394,6 @@ plot.bayprior_power_prior <- function(x, ...) {
     rlang::abort(glue::glue("`delta` must be in (0, 1]; got {delta}."))
   }
 
-  if (base_prior$dist == "beta" && type == "binary") {
-    a_new <- base_prior$params$alpha + delta * x
-    b_new <- base_prior$params$beta  + delta * (n - x)
-    return(.make_bayprior("beta", list(alpha = a_new, beta = b_new),
-                          "power_prior", base_prior$expert_id,
-                          base_prior$label, list(delta = delta)))
-  }
-
-  if (base_prior$dist == "normal") {
-    obs_mean  <- x
-    obs_se    <- (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
-    prior_var <- base_prior$params$sigma^2
-    lik_var   <- obs_se^2
-    post_var  <- 1 / (1 / prior_var + 1 / lik_var)
-    post_mean <- post_var * (base_prior$params$mu / prior_var +
-                               obs_mean / lik_var)
-    return(.make_bayprior("normal",
-                          list(mu = post_mean, sigma = sqrt(post_var)),
-                          "power_prior", base_prior$expert_id,
-                          base_prior$label, list(delta = delta)))
-  }
-
-  if (base_prior$dist == "gamma" &&
-      type %in% c("continuous", "poisson")) {
-    x_sum     <- hist_data$x_sum %||% (x * n)
-    shape_new <- base_prior$params$shape + delta * x_sum
-    rate_new  <- base_prior$params$rate  + delta * n
-    return(.make_bayprior("gamma", list(shape = shape_new, rate = rate_new),
-                          "power_prior", base_prior$expert_id,
-                          base_prior$label, list(delta = delta)))
-  }
-
   if (base_prior$dist == "lognormal") {
     log_obs_mean <- if (isTRUE(hist_data$log_scale)) x else log(x)
     raw_sd       <- hist_data$sd %||% base_prior$fit_summary$sd
@@ -442,101 +410,31 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  if (base_prior$dist == "mixture") {
-    components <- base_prior$components
-    weights    <- base_prior$weights
+  # Raising the likelihood to the power delta is the same as shrinking the
+  # information in the data: counts and the sample size are multiplied by delta
+  # (binomial, Poisson, survival), or only the sample size for a mean of
+  # continuous data. The power prior is then the ordinary conjugate update with
+  # these data, which also gives exact mixture weights (see .log_marglik()).
+  scaled <- hist_data
+  if (type %in% c("binary", "poisson", "survival")) scaled$x <- delta * x
+  if (!is.null(hist_data$x_sum)) scaled$x_sum <- delta * hist_data$x_sum
+  scaled$n <- delta * n
+  post <- .conjugate_update(base_prior, scaled)
 
-    updated <- lapply(components, function(comp) {
-      tryCatch(.power_prior_update(comp, hist_data, delta),
-               error = function(e) NULL)
-    })
-
-    keep <- !vapply(updated, is.null, logical(1))
-    if (!any(keep)) {
-      rlang::abort(glue::glue(
-        "Power prior update failed for all mixture components ",
-        "(dist = 'mixture', type = '{type}', delta = {delta}). ",
-        "Check that at least one component supports data type '{type}'."
-      ))
-    }
-    updated <- updated[keep]
-    weights <- weights[keep]
-
-    obs_mean_h <- if (type == "binary") x / n else x
-    obs_se_h   <- if (type == "binary") {
-      sqrt(obs_mean_h * (1 - obs_mean_h) / (n * delta))
-    } else {
-      (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
-    }
-    obs_se_h <- max(obs_se_h, 1e-8)
-
-    log_marg <- vapply(components[keep], function(comp) {
-      stats::dnorm(obs_mean_h,
-                   mean = comp$fit_summary$mean,
-                   sd   = sqrt(comp$fit_summary$sd^2 + obs_se_h^2),
-                   log  = TRUE)
-    }, numeric(1))
-
-    log_wts     <- log(weights) + log_marg
-    new_weights <- exp(log_wts - max(log_wts))
-    new_weights <- new_weights / sum(new_weights)
-
-    post_means <- vapply(updated, function(p) p$fit_summary$mean, numeric(1))
-    post_sds   <- vapply(updated, function(p) p$fit_summary$sd,   numeric(1))
-    mix_mean   <- sum(new_weights * post_means)
-    mix_sd     <- sqrt(sum(new_weights *
-                           (post_sds^2 + (post_means - mix_mean)^2)))
-
-    return(structure(
-      list(
-        dist        = "mixture",
-        params      = list(weights = new_weights),
-        components  = updated,
-        weights     = new_weights,
-        method      = "power_prior",
-        expert_id   = base_prior$expert_id,
-        label       = base_prior$label,
-        input       = list(delta = delta),
-        fit_summary = list(
-          mean = mix_mean,
-          sd   = mix_sd,
-          q025 = mix_mean - 1.96 * mix_sd,
-          q500 = mix_mean,
-          q975 = mix_mean + 1.96 * mix_sd
-        )
-      ),
-      class = "bayprior"
-    ))
+  relabel <- function(p) {
+    p$method <- "power_prior"
+    p$input  <- list(delta = delta)
+    if (identical(p$dist, "mixture"))
+      p$components <- lapply(p$components, relabel)
+    p
   }
-
-  rlang::abort(glue::glue(
-    "Power prior update not implemented for dist = '{base_prior$dist}' + ",
-    "type = '{type}'."
-  ))
+  relabel(post)
 }
 
 
 .marginal_bf <- function(power_prior, base_prior, current_data) {
-  type     <- current_data$type %||% "binary"
-  n        <- current_data$n
-  x        <- current_data$x
-  obs_mean <- if (type == "binary")   x / n else
-              if (type == "poisson")  x / n else x
-  obs_se   <- if (type == "binary") {
-    sqrt(obs_mean * (1 - obs_mean) / n)
-  } else if (type == "poisson") {
-    sqrt(obs_mean / n)
-  } else {
-    (current_data$sd %||% power_prior$fit_summary$sd) / sqrt(n)
-  }
-  obs_se <- max(obs_se, 1e-8)
-
-  .log_pred <- function(pr) {
-    stats::dnorm(obs_mean,
-                 mean = pr$fit_summary$mean,
-                 sd   = sqrt(pr$fit_summary$sd^2 + obs_se^2),
-                 log  = TRUE)
-  }
-
-  exp(.log_pred(power_prior) - .log_pred(base_prior))
+  sd_obs <- current_data$sd %||% power_prior$fit_summary$sd
+  lp <- .log_marglik(power_prior, current_data, sd = sd_obs)
+  lb <- .log_marglik(base_prior,  current_data, sd = sd_obs)
+  exp(as.numeric(lp) - as.numeric(lb))
 }

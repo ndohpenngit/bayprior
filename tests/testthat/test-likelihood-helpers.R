@@ -65,3 +65,34 @@ test_that("mixture weights for binary data equal the Beta-binomial posterior wei
   lm <- c(lbeta(2 + 12, 8 + 8) - lbeta(2, 8), lbeta(8 + 12, 2 + 8) - lbeta(8, 2)) + log(c(.7, .3))
   expect_equal(post$weights, exp(lm - max(lm)) / sum(exp(lm - max(lm))), tolerance = 1e-12)
 })
+
+test_that("power prior: Poisson counts and Normal-on-rate use delta correctly", {
+  g <- mk("gamma", shape = 2, rate = 3)
+  pp <- .power_prior_update(g, list(type = "poisson", x = 20, n = 10), delta = 0.5)
+  expect_equal(pp$params, list(shape = 2 + 10, rate = 3 + 5))
+  expect_identical(pp$method, "power_prior")
+  expect_equal(pp$input$delta, 0.5)
+  # Normal prior on a rate: likelihood summary is rate = x/n, SE = sqrt(x)/n / sqrt(delta)
+  nm <- mk("normal", mu = 2, sigma = 1)
+  pn <- .power_prior_update(nm, list(type = "poisson", x = 20, n = 10), delta = 0.25)
+  se <- sqrt(20) / 10 / sqrt(0.25)
+  w <- (1 / se^2) / (1 + 1 / se^2)
+  expect_equal(pn$params$mu, (1 - w) * 2 + w * 2, tolerance = 1e-10)
+  expect_equal(pn$params$sigma, sqrt(1 / (1 + 1 / se^2)), tolerance = 1e-10)
+})
+
+test_that("power prior mixture weights are the delta-power marginals", {
+  mix <- elicit_mixture(list(mk("beta", alpha = 2, beta = 8),
+                             mk("beta", alpha = 8, beta = 2)), weights = c(.5, .5))
+  d <- 0.3; h <- list(type = "binary", x = 12, n = 20)
+  pp <- .power_prior_update(mix, h, d)
+  lm <- c(lbeta(2 + d * 12, 8 + d * 8) - lbeta(2, 8), lbeta(8 + d * 12, 2 + d * 8) - lbeta(8, 2))
+  expect_equal(pp$weights, exp(lm) / sum(exp(lm)), tolerance = 1e-12)
+})
+
+test_that(".marginal_bf equals the ratio of exact marginals", {
+  b <- mk("beta", alpha = 2, beta = 2); pw <- mk("beta", alpha = 10, beta = 6)
+  cur <- list(type = "binary", x = 7, n = 12)
+  expect_equal(.marginal_bf(pw, b, cur),
+               exp((lbeta(17, 11) - lbeta(10, 6)) - (lbeta(9, 7) - lbeta(2, 2))), tolerance = 1e-12)
+})
