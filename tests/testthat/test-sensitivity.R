@@ -567,19 +567,31 @@ test_that("sensitivity_grid refuses a Weibull prior with binary data", {
 
 # -- .conjugate_update(): Gamma + continuous data -----------------------------
 
-test_that(".conjugate_update Gamma + continuous data recovers the total via
-           x_sum (falling back to x * n when x_sum is absent)", {
+test_that(".conjugate_update Gamma + continuous data: x_sum is conjugate, a mean is not", {
   gp <- elicit_gamma(mean = 2, sd = 1, method = "moments")
-  post <- .conjugate_update(gp, list(type = "continuous", x = 1.8, n = 25))
+  # a total of counts: conjugate
+  cz <- .conjugate_update(gp, list(type = "continuous", x_sum = 45, n = 25))
+  expect_equal(cz$params$shape, gp$params$shape + 45)
+  expect_equal(cz$params$rate,  gp$params$rate  + 25)
+  # a mean with an SD (Normal likelihood): posterior by grid, matched to a Gamma
+  ds <- list(type = "continuous", x = 1.8, sd = 0.9, n = 25)
+  post <- .conjugate_update(gp, ds)
   expect_equal(post$dist, "gamma")
-  expect_equal(post$params$shape, gp$params$shape + 1.8 * 25)
-  expect_equal(post$params$rate,  gp$params$rate  + 25)
+  se <- 0.9 / 5
+  f <- function(t) dgamma(t, gp$params$shape, gp$params$rate) * dnorm(1.8, t, se)
+  Z <- integrate(f, 0, Inf)$value
+  m <- integrate(function(t) t * f(t), 0, Inf)$value / Z
+  v <- integrate(function(t) (t - m)^2 * f(t), 0, Inf)$value / Z
+  expect_equal(post$fit_summary$mean, m, tolerance = 1e-3)
+  expect_equal(post$fit_summary$sd, sqrt(v), tolerance = 1e-3)
+  # a missing SD is an error, not a silent borrow of the prior SD
+  expect_error(.conjugate_update(gp, list(type = "continuous", x = 1.8, n = 25)), "standard deviation")
 })
 
 test_that("sensitivity_grid: Gamma prior with continuous data works end to end", {
   gp <- elicit_gamma(mean = 2, sd = 1, method = "moments")
   sa <- sensitivity_grid(
-    gp, list(type = "continuous", x = 1.8, n = 25),
+    gp, list(type = "continuous", x = 1.8, sd = 0.9, n = 25),
     list(shape = seq(1, 4, 1), rate = seq(0.5, 2, 0.5)),
     target = "posterior_mean"
   )

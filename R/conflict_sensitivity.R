@@ -398,7 +398,7 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
   # Likelihood parameters -- approximate as Normal for analytic diagnostics.
   # See .normal_obs(): the SE is adjusted by half an event only at 0 or n
   # events (where the plain SE would be 0), and floored at 1e-8.
-  o <- .normal_obs(data_summary, scale = bin_scale, sd = prior_sd)
+  o <- .normal_obs(data_summary, scale = bin_scale)
   obs_mean <- o$mean
   obs_se   <- o$se
 
@@ -1203,7 +1203,7 @@ sensitivity_cri <- function(prior,
   if (prior$dist == "normal") {
     o <- .normal_obs(data_summary,
                      scale = if (identical(type, "binary")) .binary_scale(prior, data_summary) else NA_character_,
-                     sd = prior$fit_summary$sd)
+                     sd = NULL)
     obs_mean <- o$mean; obs_se <- o$se
     obs_se    <- max(obs_se, 1e-8)
     prior_var <- prior$params$sigma^2
@@ -1234,17 +1234,8 @@ sensitivity_cri <- function(prior,
   if (prior$dist == "weibull") {
     prior_mean <- prior$fit_summary$mean
     prior_sd   <- prior$fit_summary$sd
-    if (type %in% c("poisson", "survival")) {
-      obs_mean_w <- x / n
-      obs_se_w   <- sqrt(x) / n
-    } else if (type == "binary") {
-      obs_mean_w <- x / n
-      obs_se_w   <- sqrt(obs_mean_w * (1 - obs_mean_w) / n)
-    } else {
-      obs_mean_w <- x
-      obs_se_w   <- (data_summary$sd %||% prior_sd) / sqrt(n)
-    }
-    obs_se_w   <- max(obs_se_w, 1e-8)
+    ow <- .normal_obs(data_summary)
+    obs_mean_w <- ow$mean; obs_se_w <- ow$se
     prior_var  <- prior_sd^2
     lik_var    <- obs_se_w^2
     post_var   <- 1 / (1 / prior_var + 1 / lik_var)
@@ -1266,17 +1257,32 @@ sensitivity_cri <- function(prior,
                           "posterior", prior$expert_id, prior$label, list()))
   }
 
-  # -- Gamma ------------------------------------------------------------------
-  # For continuous data, x is the observed mean (not a total count), so the
-  # total must be recovered before updating the Gamma rate. Prefer an
-  # explicit x_sum field when available (e.g. Poisson count data) and fall
-  # back to n * x otherwise.
+  # -- Gamma / continuous data --------------------------------------------------
+  # With a total `x_sum` of Poisson-type counts the update is conjugate
+  # (shape + x_sum, rate + n). A Gamma prior on a positive mean with a Normal
+  # likelihood for the observed mean (x, sd, n) is not conjugate, and treating
+  # the mean as a count total (shape + n * x) is wrong, so the posterior is
+  # computed on a grid and matched to a Gamma by its mean and variance.
   if (prior$dist == "gamma" && type == "continuous") {
-    x_sum      <- data_summary$x_sum %||% (x * n)
-    shape_post <- prior$params$shape + x_sum
-    rate_post  <- prior$params$rate  + n
-    return(.make_bayprior("gamma", list(shape = shape_post, rate = rate_post),
-                          "posterior", prior$expert_id, prior$label, list()))
+    if (!is.null(data_summary$x_sum)) {
+      return(.make_bayprior("gamma",
+                            list(shape = prior$params$shape + data_summary$x_sum,
+                                 rate  = prior$params$rate  + n),
+                            "posterior", prior$expert_id, prior$label, list()))
+    }
+    o  <- .normal_obs(data_summary)
+    lo <- min(stats::qgamma(1e-6, prior$params$shape, prior$params$rate), o$mean - 10 * o$se)
+    hi <- max(stats::qgamma(1 - 1e-6, prior$params$shape, prior$params$rate), o$mean + 10 * o$se)
+    th <- seq(max(lo, 1e-10), hi, length.out = 20001)
+    ld <- stats::dgamma(th, prior$params$shape, prior$params$rate, log = TRUE) +
+      stats::dnorm(o$mean, th, o$se, log = TRUE)
+    w  <- exp(ld - max(ld)); w <- w / sum(w)
+    m  <- sum(w * th); v <- sum(w * (th - m)^2)
+    if (!is.finite(m) || !is.finite(v) || v <= 0 || m <= 0)
+      rlang::abort("Could not compute the posterior of a Gamma prior with continuous data.")
+    return(.make_bayprior("gamma", list(shape = m^2 / v, rate = m / v),
+                          "posterior (gamma approximation)", prior$expert_id,
+                          prior$label, list()))
   }
 
   # -- Mixture -- update each component and re-weight by marginal likelihood ---
@@ -1311,7 +1317,7 @@ sensitivity_cri <- function(prior,
     # Beta / Gamma / Normal-continuous components, numerical integration of the
     # exact likelihood otherwise; see .log_marglik()). One data SD is shared by
     # all components, so the weights do not depend on a component's own SD.
-    mix_sd_obs <- data_summary$sd %||% prior$fit_summary$sd
+    mix_sd_obs <- data_summary$sd
     mix_scale_arg <- if (identical(type, "binary")) data_summary$binary_scale else NA_character_
     log_marg <- vapply(components[keep], function(comp) {
       as.numeric(.log_marglik(comp, data_summary, sd = mix_sd_obs,
@@ -1363,17 +1369,8 @@ sensitivity_cri <- function(prior,
     ))
   }
 
-  if (type %in% c("poisson", "survival")) {
-    obs_mean <- x / n
-    obs_se   <- sqrt(x) / n
-  } else if (type == "binary") {
-    obs_mean <- x / n
-    obs_se   <- sqrt(obs_mean * (1 - obs_mean) / n)
-  } else {
-    obs_mean <- x
-    obs_se   <- (data_summary$sd %||% prior_sd) / sqrt(n)
-  }
-  obs_se <- max(obs_se, 1e-8)
+  o <- .normal_obs(data_summary)
+  obs_mean <- o$mean; obs_se <- o$se
 
   prior_var <- prior_sd^2
   lik_var   <- obs_se^2

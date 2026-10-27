@@ -40,8 +40,11 @@
     m  <- x / n
     se <- sqrt(max(x, 0.5)) / n / sqrt(delta)
   } else {
+    sdv <- data_summary$sd %||% sd
+    if (is.null(sdv) || !is.finite(sdv) || sdv <= 0)
+      rlang::abort("Continuous data need the observed standard deviation (`sd`).")
     m  <- x
-    se <- (data_summary$sd %||% sd) / sqrt(n * delta)
+    se <- sdv / sqrt(n * delta)
   }
   list(mean = m, se = max(se, 1e-8))
 }
@@ -63,7 +66,7 @@
 
   if (identical(prior$dist, "mixture")) {
     parts <- lapply(prior$components, .log_marglik, data_summary = data_summary,
-                    delta = delta, sd = sd %||% prior$fit_summary$sd,
+                    delta = delta, sd = sd,
                     scale = scale, n_quad = n_quad)
     meth <- vapply(parts, function(p) attr(p, "method"), character(1))
     return(tag(lse(log(prior$weights) + unlist(parts)),
@@ -89,7 +92,7 @@
                  (a + delta * x) * log(b + delta * n), "exact"))
   }
   if (d == "normal" && identical(type, "continuous")) {
-    o <- .normal_obs(data_summary, sd = sd %||% prior$fit_summary$sd, delta = delta)
+    o <- .normal_obs(data_summary, sd = sd, delta = delta)
     return(tag(stats::dnorm(o$mean, p$mu, sqrt(p$sigma^2 + o$se^2), log = TRUE), "exact"))
   }
 
@@ -128,7 +131,7 @@
       } else if (type %in% c("poisson", "survival")) {
         delta * (x * log(pmax(th, 1e-300)) - n * th)
       } else {
-        o <- .normal_obs(data_summary, sd = sd %||% prior$fit_summary$sd, delta = delta)
+        o <- .normal_obs(data_summary, sd = sd, delta = delta)
         stats::dnorm(o$mean, th, o$se, log = TRUE)
       }
       if (all(is.finite(ll)))
@@ -137,7 +140,7 @@
   }
 
   # last resort: Normal approximation of the likelihood
-  o <- .normal_obs(data_summary, scale = scale, sd = sd %||% prior$fit_summary$sd,
+  o <- .normal_obs(data_summary, scale = scale, sd = sd,
                    delta = delta)
   tag(stats::dnorm(o$mean, prior$fit_summary$mean,
                    sqrt(prior$fit_summary$sd^2 + o$se^2), log = TRUE),
