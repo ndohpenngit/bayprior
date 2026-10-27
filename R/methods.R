@@ -17,7 +17,8 @@ print.bayprior <- function(x, ...) {
     )
     .bp_li("Distribution : ", toupper(x$dist))
     .bp_li("Parameters   : ", param_str)
-    .bp_li("Method       : ", paste(x$method, "elicitation"))
+    .bp_li("Method       : ", if (identical(x$method, "log_pool")) "logarithmic pool"
+                              else paste(x$method, "elicitation"))
     .bp_li("Expert       : ", x$expert_id)
     s <- x$fit_summary
     .bp_li("Mean (SD)    : ", paste0(round(s$mean, 4), " (", round(s$sd, 4), ")"))

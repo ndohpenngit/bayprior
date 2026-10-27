@@ -1,4 +1,33 @@
-# bayprior (development version)
+# bayprior 0.6.0
+
+This release corrects statistical defects found in a review of the package.
+**Several results change**, so analyses saved or reported with 0.5.x should be
+rerun. The changes that alter results are listed here and described under
+"Statistical corrections (breaking)".
+
+## Breaking changes
+
+* `map_prior()` returns the predictive prior for a new trial (wider than the
+  posterior of the population mean it used to return). It stops for a
+  half-Cauchy prior on tau with fewer than 3 trials (infinite variance).
+* Mixture posteriors (robust priors, linear pools, power priors) use exact
+  marginal likelihoods for their weights, and their 95% intervals come from the
+  mixture distribution function, not mean +/- 1.96 SD.
+* Power priors are the conjugate update with the likelihood raised to the power
+  delta. Poisson, survival and Normal-on-a-rate data were wrong before.
+* `aggregate_experts(method = "logarithmic")` returns the exact pooled prior in
+  the experts' family (its `dist` is now the family name, not `"log_pool"`).
+  Negative, missing or non-finite weights are rejected.
+* Family/data pairings with no likelihood (for example Beta with continuous
+  data) are refused instead of warning.
+* `robust_prior()` builds its vague component in the informative prior's
+  family (`Beta(1, 1)` for a Beta prior).
+* `prior_conflict()`: `surprise_index` follows the reported p-value
+  (`surprise_index_normal` keeps the old distance); the likelihood SE is no
+  longer about zero at 0 or n events; continuous data need `sd`.
+* A Gamma prior with a continuous mean is no longer updated as a count total.
+* Sensitivity influence is classified in posterior-SD units.
+
 
 ## Shiny app
 
@@ -38,8 +67,9 @@
   functions (`dev/make_bp_live.R`). The pooling panel quotes the
   Bhattacharyya agreement used by the Pooling tab (0.43) instead of an overlap
   area, and the robust-prior panel uses the prior from the chip example, labels
-  both estimates as posterior means (40% and 73%) and shows the posterior
-  weight on the informative part (3%).
+  both estimates as posterior means (40% and 74%) and shows the posterior
+  weight on the informative part (3%). The robust prior in this panel now uses
+  the `Beta(1, 1)` vague component.
 
 * Sensitivity: the default grid is now built in terms of the prior rather
   than its raw hyperparameters, for Beta, Gamma and Normal priors. Prior
@@ -57,8 +87,7 @@
   default**; rerun the analysis. The reference prior is now exactly one of
   the grid points.
 
-## Bug fixes
-
+## Statistical corrections (breaking)
 
 * **Breaking: mixture posterior weights now use exact marginal likelihoods.**
   Mixture priors updated with Poisson or survival data previously used the

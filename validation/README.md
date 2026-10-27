@@ -34,4 +34,4 @@ Notes for a reviewer:
 - Every method compared is computed with the package's own functions, except where a script says otherwise (the independent predictive calculations in Parts B and E, and the candidate "boundary-safe" approximation, which is not implemented in the package).
 - Seeds are fixed in each script; deterministic Parts (D, F) need no seed.
 - `../validation_pilot/pilot.R`, if present, is the small pilot used to size the grid; it is not part of the reported results.
-- The report is a working document and has not been peer reviewed.
+- The report is a working document and has not been peer reviewed.- `verify_mixture_posterior.R` compares the mixture and power-prior posteriors (exact marginal-likelihood weights, exact mixture quantiles) with brute-force numerical integration; results in `verification_mixture_posterior.csv`.
