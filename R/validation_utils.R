@@ -28,74 +28,62 @@
 # -- Prior-data type compatibility --------------------------------------------
 # Returns a list: list(ok = TRUE/FALSE, msg = "...")
 
+#' Is the prior family a valid description of a parameter of the likelihood for
+#' this data type? Pairings with no likelihood (a Beta prior with continuous
+#' data, a Gamma prior with a proportion, ...) are refused: the package used to
+#' warn and continue with a Normal approximation of the prior's moments, which
+#' has no statistical meaning. The result has `ok = FALSE` and
+#' `severity = "error"`; `.assert_prior_data_compat()` aborts on it.
 #' @noRd
 .check_prior_data_compat <- function(prior, data_summary) {
 
-  type <- data_summary$type
-  dist <- if (prior$dist %in% c("mixture", "log_pool"))
-    prior$components[[which.max(prior$weights)]]$dist
-  else
-    prior$dist
+  type <- data_summary$type %||% "binary"
+  dists <- if (prior$dist %in% c("mixture", "log_pool", "pool"))
+    unique(vapply(prior$components, function(k) k$dist, character(1)))
+  else prior$dist
 
-  # Compatibility matrix
   compat <- list(
     beta        = c("binary"),
-    normal      = c("binary", "continuous"),
+    normal      = c("binary", "continuous", "poisson", "survival"),
+    # Families on the positive half-line describe a rate, hazard or positive
+    # mean; they have no meaning for a probability.
     gamma       = c("poisson", "survival", "continuous"),
-    lognormal   = c("continuous"),
-    exponential = c("poisson", "survival"),
-    weibull     = c("survival", "poisson", "continuous")
+    lognormal   = c("poisson", "survival", "continuous"),
+    exponential = c("poisson", "survival", "continuous"),
+    weibull     = c("poisson", "survival", "continuous")
   )
-
-  recommended <- compat[[dist]]
-
-  if (is.null(recommended)) {
-    return(list(ok = TRUE, msg = NULL, severity = "none"))
-  }
-
-  if (type %in% recommended) {
-    return(list(ok = TRUE, msg = NULL, severity = "none"))
-  }
-
-  # Not in recommended - build a helpful message
-  dist_label <- switch(dist,
-    beta        = "Beta",
-    normal      = "Normal",
-    gamma       = "Gamma",
-    lognormal   = "Log-Normal",
-    exponential = "Exponential",
-    weibull     = "Weibull",
-    toupper(dist)
-  )
-
+  labels <- c(beta = "Beta", normal = "Normal", gamma = "Gamma",
+              lognormal = "Log-Normal", exponential = "Exponential",
+              weibull = "Weibull")
   type_label <- switch(type,
     binary     = "binary (events/n)",
     continuous = "continuous (mean/SD/n)",
     poisson    = "Poisson/count (events/exposure)",
     survival   = "survival (events/follow-up)",
-    type
-  )
+    type)
+  type_short <- c(binary = "binary", continuous = "continuous",
+                  poisson = "Poisson/count", survival = "survival")
 
-  rec_label <- paste(
-    vapply(recommended, function(r) switch(r,
-      binary     = "binary",
-      continuous = "continuous",
-      poisson    = "Poisson/count",
-      survival   = "survival",
-      r
-    ), character(1)),
-    collapse = " or "
-  )
+  for (dist in dists) {
+    recommended <- compat[[dist]]
+    if (is.null(recommended) || type %in% recommended) next
+    rec_label <- paste(type_short[recommended], collapse = " or ")
+    msg <- paste0(
+      "A ", labels[[dist]] %||% dist, " prior cannot be combined with ",
+      type_label, " data: it describes a parameter of a ", rec_label,
+      " likelihood. Choose a data type that matches the prior, or re-elicit ",
+      "the prior with a family that suits these data."
+    )
+    return(list(ok = FALSE, msg = msg, severity = "error"))
+  }
+  list(ok = TRUE, msg = NULL, severity = "none")
+}
 
-  msg <- paste0(
-    "Compatibility warning: a ", dist_label, " prior is typically used with ",
-    rec_label, " data, not ", type_label, ". ",
-    "The analysis will proceed using a Normal approximation, but results ",
-    "may be less reliable. Consider re-eliciting with a more appropriate ",
-    "prior family."
-  )
-
-  list(ok = TRUE, msg = msg, severity = "warning")
+#' @noRd
+.assert_prior_data_compat <- function(prior, data_summary) {
+  chk <- .check_prior_data_compat(prior, data_summary)
+  if (!chk$ok) rlang::abort(chk$msg)
+  invisible(chk)
 }
 
 # -- Expert pooling compatibility ---------------------------------------------

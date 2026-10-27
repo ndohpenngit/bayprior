@@ -412,54 +412,34 @@ test_that("sensitivity_cri moment-matches a linearly pooled mixture prior
 # warning shown elsewhere in the package, which promises a Normal
 # approximation. Now falls back to one instead of erroring.
 
-test_that(".conjugate_update falls back to a Normal-approximation posterior
-           for an unsupported family/type pairing, with a message", {
+test_that(".conjugate_update refuses a family/data pairing without a likelihood", {
   beta_prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
-  expect_message(
-    post <- .conjugate_update(beta_prior,
-                              list(type = "continuous", x = 0.45, sd = 0.18, n = 50)),
-    "approximated the posterior as Normal"
+  expect_error(
+    .conjugate_update(beta_prior, list(type = "continuous", x = 0.45, sd = 0.18, n = 50)),
+    "cannot be combined"
   )
-  expect_equal(post$dist, "normal")
-  expect_true(is.finite(post$params$mu))
-  expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
 })
 
-test_that(".conjugate_update mixture branch keeps components that only
-           succeed via the Normal-approximation fallback, instead of
-           dropping all of them and aborting", {
+test_that(".conjugate_update mixture refuses data none of its components can describe", {
   e1 <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
   e2 <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
   pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
                             method = "linear")
-  # Beta + continuous has no exact conjugate update; previously this meant
-  # every component failed and the mixture branch aborted with "Could not
-  # update any mixture component with the supplied data."
-  expect_no_error(
-    suppressMessages(
-      post <- .conjugate_update(pool,
-                                list(type = "continuous", x = 0.45, sd = 0.18, n = 50))
-    )
+  expect_error(
+    .conjugate_update(pool, list(type = "continuous", x = 0.45, sd = 0.18, n = 50)),
+    "Could not update any mixture component"
   )
-  expect_equal(post$dist, "mixture")
-  expect_equal(length(post$components), 2)
 })
 
-test_that("plot_prior_likelihood renders a posterior curve end to end for a
-           pooled Beta mixture against continuous data (the exact scenario
-           from the reported app crash)", {
+test_that("plot_prior_likelihood refuses a Beta mixture with continuous data", {
   e1 <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
   e2 <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
   pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
                             method = "linear")
-  expect_no_error(
-    suppressMessages(
-      p <- plot_prior_likelihood(pool,
-                                 list(type = "continuous", x = 0.45, sd = 0.18, n = 50),
-                                 show_posterior = TRUE)
-    )
+  expect_error(
+    suppressMessages(plot_prior_likelihood(pool,
+      list(type = "continuous", x = 0.45, sd = 0.18, n = 50), show_posterior = TRUE))
   )
-  expect_true(inherits(p, "gg") || inherits(p, "ggplot"))
 })
 
 test_that("plot_prior_likelihood does not silently clip the likelihood curve
@@ -561,13 +541,10 @@ test_that("sensitivity_cri aborts on an out-of-range cri_level", {
 
 # -- .conjugate_update(): Weibull branch, both data-type sub-paths -----------
 
-test_that(".conjugate_update Weibull Normal-approximation works for binary
-           data (obs_mean_w/obs_se_w computed as a proportion)", {
+test_that(".conjugate_update refuses a Weibull prior with binary data", {
   wp <- elicit_weibull(shape = 2, scale = 5, method = "params")
-  post <- .conjugate_update(wp, list(type = "binary", x = 14, n = 40))
-  expect_equal(post$dist, "normal")
-  expect_true(is.finite(post$params$mu))
-  expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
+  expect_error(.conjugate_update(wp, list(type = "binary", x = 14, n = 40)),
+               "cannot be combined")
 })
 
 test_that(".conjugate_update Weibull Normal-approximation works for
@@ -579,15 +556,13 @@ test_that(".conjugate_update Weibull Normal-approximation works for
   expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
 })
 
-test_that("sensitivity_grid: Weibull prior with binary data works end to end", {
+test_that("sensitivity_grid refuses a Weibull prior with binary data", {
   wp <- elicit_weibull(shape = 2, scale = 5, method = "params")
-  sa <- sensitivity_grid(
-    wp, list(type = "binary", x = 14, n = 40),
-    list(shape = seq(1, 3, 0.5), scale = seq(3, 7, 1)),
-    target = "posterior_mean"
-  )
-  expect_s3_class(sa, "bayprior_sensitivity")
-  expect_false(all(is.na(sa$grid$posterior_mean)))
+  expect_error(
+    sensitivity_grid(wp, list(type = "binary", x = 14, n = 40),
+                     list(shape = seq(1, 3, 0.5), scale = seq(3, 7, 1)),
+                     target = "posterior_mean"),
+    "cannot be combined")
 })
 
 # -- .conjugate_update(): Gamma + continuous data -----------------------------

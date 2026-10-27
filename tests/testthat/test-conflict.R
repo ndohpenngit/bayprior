@@ -193,12 +193,11 @@ test_that("default exact = NULL uses the exact p-value where a closed form exist
                "exact")
 })
 
-test_that("default exact = NULL falls back to the approximation silently", {
+test_that("a family/data pairing without a likelihood is refused", {
   prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
-  expect_no_message(
-    cd <- prior_conflict(prior, list(type = "continuous", x = 0.4, sd = 0.15, n = 40))
-  )
-  expect_equal(cd$box_pvalue_method, "normal_approx")
+  expect_error(
+    prior_conflict(prior, list(type = "continuous", x = 0.4, sd = 0.15, n = 40)),
+    "cannot be combined")
 })
 
 test_that("non-whole-number counts fall back to the approximation rather than mis-indexing", {
@@ -316,7 +315,7 @@ test_that("prior_conflict(exact = TRUE) applies the same exact check to survival
 test_that("prior_conflict(exact = TRUE) falls back to the approximation, with a message, when unsupported", {
   prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
   expect_message(
-    cd <- prior_conflict(prior, list(type = "continuous", x = 0.4, sd = 0.15, n = 40), exact = TRUE),
+    cd <- prior_conflict(prior, list(type = "binary", x = 17.5, n = 40), exact = TRUE),
     "no closed-form exact prior predictive"
   )
   expect_equal(cd$box_pvalue_method, "normal_approx")

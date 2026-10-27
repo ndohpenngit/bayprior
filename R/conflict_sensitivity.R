@@ -371,6 +371,8 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
     rlang::abort("`exact` must be NULL, TRUE, or FALSE.")
   }
 
+  .assert_prior_data_compat(prior, data_summary)
+
   type <- data_summary$type %||% "binary"
   n    <- data_summary$n
   x    <- data_summary$x
@@ -706,6 +708,7 @@ sensitivity_grid <- function(prior,
                               threshold = 0.30) {
 
   target <- match.arg(target, several.ok = TRUE)
+  if (inherits(prior, "bayprior")) .assert_prior_data_compat(prior, data_summary)
 
   type <- data_summary$type %||% "binary"
   n    <- data_summary$n
@@ -957,6 +960,8 @@ sensitivity_cri <- function(prior,
   if (!is.numeric(cri_level) || cri_level <= 0 || cri_level >= 1)
     rlang::abort("`cri_level` must be a number strictly between 0 and 1.")
 
+  .assert_prior_data_compat(prior, data_summary)
+
   alpha_lo <- (1 - cri_level) / 2
   alpha_hi <- 1 - alpha_lo
 
@@ -1175,6 +1180,7 @@ sensitivity_cri <- function(prior,
 }
 
 .conjugate_update <- function(prior, data_summary) {
+  if (!prior$dist %in% c("mixture", "log_pool")) .assert_prior_data_compat(prior, data_summary)
   type <- data_summary$type %||% "binary"
   n    <- data_summary$n
   x    <- data_summary$x
@@ -1210,7 +1216,7 @@ sensitivity_cri <- function(prior,
   # Exponential prior on rate is equivalent to Gamma(1, rate) parameterisation.
   # Conjugate update with Poisson/survival data: posterior is still Gamma.
   # Map to Gamma update: shape = 1 + x, rate = rate + n.
-  if (prior$dist == "exponential" && type %in% c("poisson", "survival", "binary")) {
+  if (prior$dist == "exponential" && type %in% c("poisson", "survival")) {
     # Represent as Gamma(1, lambda) for conjugate update
     lambda     <- prior$params$rate
     shape_post <- 1 + x
