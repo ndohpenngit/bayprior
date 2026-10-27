@@ -236,8 +236,15 @@ test_that("zero events under an informative prior is not flagged as conflict (re
   expect_equal(cd$box_pvalue_method, "exact")
   expect_equal(cd$box_pvalue, 1)
   expect_false(cd$conflict_flag)
-  # the approximation (0.4.0 behaviour) flags it, which is the defect
-  expect_lt(prior_conflict(prior, ds, exact = FALSE)$box_pvalue, 0.05)
+  # The 0.5.0 approximation flagged it (p ~ 0.017) because the SE collapsed to
+  # 1e-8 at x = 0. The SE now uses the continuity-adjusted proportion at the
+  # boundary, so the approximation no longer flags this outcome either.
+  ap <- prior_conflict(prior, ds, exact = FALSE)
+  expect_gt(ap$box_pvalue, 0.05)
+  expect_gt(ap$data_summary$n, 0)
+  o <- .normal_obs(ds)
+  expect_equal(o$se, sqrt((0.5 / 11) * (1 - 0.5 / 11) / 10))
+  expect_equal(o$mean, 0)
 })
 
 test_that("exact p-value is size-controlled under the prior predictive (Beta-Binomial)", {

@@ -392,27 +392,15 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
   bin_scale <- .binary_scale(prior, data_summary)
   on_logit  <- identical(bin_scale, "log_odds")
 
-  # Likelihood parameters -- approximate as Normal for analytic diagnostics
-  if (type == "binary" && on_logit) {
-    lo       <- .binary_logit(x, n)
-    obs_mean <- lo$mean
-    obs_se   <- lo$se
-  } else if (type == "binary") {
-    obs_mean <- x / n
-    obs_se   <- sqrt(obs_mean * (1 - obs_mean) / n)
-  } else if (type %in% c("poisson", "survival")) {
-    # Poisson: x events over exposure n; rate = x/n, SE via delta method
-    # Survival: x events over total follow-up n; hazard = x/n
-    obs_mean <- x / n
-    obs_se   <- sqrt(x) / n        # delta method: SE(x/n) = sqrt(x)/n
-  } else {
-    obs_mean <- x
-    obs_se   <- data_summary$sd / sqrt(n)
-  }
+  if (identical(type, "continuous") && is.null(data_summary$sd))
+    rlang::abort("Continuous data need the observed standard deviation (`sd`).")
 
-  # Guard against obs_se = 0 (e.g. all successes / all failures),
-  # which would cause division-by-zero in pred_sd, z, kl, and overlap.
-  obs_se <- max(obs_se, 1e-8)
+  # Likelihood parameters -- approximate as Normal for analytic diagnostics.
+  # See .normal_obs(): the SE is adjusted by half an event only at 0 or n
+  # events (where the plain SE would be 0), and floored at 1e-8.
+  o <- .normal_obs(data_summary, scale = bin_scale, sd = prior_sd)
+  obs_mean <- o$mean
+  obs_se   <- o$se
 
   # Box's prior predictive p-value (Normal approximation -- always computed,
   # since it is needed below for surprise_index/severity regardless of
