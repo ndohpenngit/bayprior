@@ -579,21 +579,19 @@ test_that("mixture of Gammas gets the exact weighted Negative Binomial p-value",
   expect_equal(r$box_pvalue, .ref_p(pmf, 45), tolerance = 1e-6)
 })
 
-test_that("robust prior (Beta + Normal vague) uses the numerical predictive", {
+test_that("robust prior (Beta + Beta(1,1) vague) has an exact predictive", {
   b <- elicit_beta(mean = 0.3, sd = 0.10, method = "moments")
   rp <- suppressWarnings(robust_prior(b, vague_weight = 0.2))
+  expect_equal(rp$components[[2]]$dist, "beta")
+  expect_equal(unlist(rp$components[[2]]$params), c(alpha = 1, beta = 1))
   r <- prior_conflict(rp, list(type = "binary", x = 0, n = 10))
-  expect_equal(r$box_pvalue_method, "numerical")
+  expect_equal(r$box_pvalue_method, "exact")
   expect_null(r$box_pvalue_caution)
-  # reference: 0.8 * BetaBinomial + 0.2 * (Normal truncated to [0,1]) predictive
+  # reference: 0.8 * BetaBinomial + 0.2 * uniform predictive 1 / (n + 1)
   n <- 10; k <- 0:n
   bb <- exp(lchoose(n, k) + lbeta(k + b$params$alpha, n - k + b$params$beta) -
               lbeta(b$params$alpha, b$params$beta))
-  v <- rp$components[[2]]$params
-  th <- seq(5e-6, 1 - 5e-6, by = 1e-5)
-  w <- stats::dnorm(th, v$mu, v$sigma); w <- w / sum(w)
-  vg <- vapply(k, function(kk) sum(w * stats::dbinom(kk, n, th)), numeric(1))
-  expect_equal(r$box_pvalue, .ref_p(0.8 * bb + 0.2 * vg, 0), tolerance = 1e-4)
+  expect_equal(r$box_pvalue, .ref_p(0.8 * bb + 0.2 / (n + 1), 0), tolerance = 1e-10)
 })
 
 test_that("numerical path reproduces closed forms for conjugate priors", {

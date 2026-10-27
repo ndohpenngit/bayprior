@@ -125,13 +125,13 @@
 }
 
 .bp_robust_code <- function(r, base) {
-  vsd <- r$components$vague$params$sigma
   if (!inherits(r, "bayprior") || !identical(r$prior_type, "robust") ||
-      !identical(r$informative, base) || is.null(vsd) || is.null(r$vague_weight))
+      !identical(r$informative, base) || is.null(r$robust_version) ||
+      is.null(r$vague_weight))
     return(NULL)
-  .bp_call("robust", "robust_prior", c(
-    informative = "prior", vague_weight = .bp_num(r$vague_weight),
-    vague_sd = .bp_num(vsd), label = .bp_chr(r$label)))
+  args <- c(informative = "prior", vague_weight = .bp_num(r$vague_weight))
+  if (!is.null(r$vague_sd_input)) args <- c(args, vague_sd = .bp_num(r$vague_sd_input))
+  .bp_call("robust", "robust_prior", c(args, label = .bp_chr(r$label)))
 }
 
 .bp_sceptical_code <- function(s) {

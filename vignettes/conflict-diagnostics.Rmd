@@ -390,9 +390,8 @@ cd_warn <- prior_conflict(
 Mixture priors (robust priors, pooled consensus) are supported throughout.
 The Box p-value uses the mixture's prior predictive distribution, the
 weighted mixture of the components' predictives (exact for Beta or Gamma
-components; computed by numerical integration if a component such as the
-Normal vague part of a robust prior has no conjugate form, with that
-component truncated to the parameter space). The other diagnostics use a
+components; computed by numerical integration if a component has no conjugate form,
+with that component truncated to the parameter space). The other diagnostics use a
 Normal approximation from the mixture's `fit_summary`:
 
 ```{r mixture-conflict}

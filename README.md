@@ -143,7 +143,7 @@ specifically — a key regulatory quantity.
 ### Robust and Power Priors
 
 The **robust mixture prior** (Schmidli et al., 2014) mixes the informative
-prior with a vague Normal component. The **sceptical prior**
+prior with a vague component in the same family (Beta(1, 1) for a Beta prior). The **sceptical prior**
 (Spiegelhalter & Freedman, 1994) is centred at the null treatment effect.
 The **power prior** (Ibrahim & Chen, 2000) down-weights historical data by
 delta in (0, 1], calibrated to achieve a target Bayes Factor.

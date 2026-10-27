@@ -124,22 +124,33 @@ sceptical_prior <- function(null_value = 0,
 #'   component (e.g. an elicited or historical prior).
 #' @param vague_weight Numeric in (0, 1). Weight assigned to the vague
 #'   (diffuse) component. Default \code{0.20} (80% informative, 20% vague).
-#' @param vague_sd    Numeric. SD of the vague Normal component (on the
-#'   natural scale). If \code{NULL}, defaults to 10x the informative prior's SD.
+#' @param vague_sd    Numeric. SD of the vague component (on the natural
+#'   scale). If \code{NULL}, a family-specific default is used (see Details).
 #' @param label       Character. Label for the robust prior.
 #'
 #' @return A \code{bayprior} object with \code{dist = "mixture"} and
 #'   \code{prior_type = "robust"}.
 #'
 #' @details
-#' The vague component is always a \strong{Normal distribution} centred at
-#' the informative prior's mean with SD = \code{vague_sd} (default: 10x the
-#' informative SD). When the informative prior is itself Normal, both
-#' components share the same family and the mixture density is computed
-#' analytically. For any other informative prior family (Beta, Gamma,
-#' Log-Normal, Exponential, Weibull), the components have \emph{different
-#' distribution families}, and the mixture density is \strong{computed
-#' numerically}. A warning is issued in this case.
+#' The vague component is chosen \strong{in the family of the informative
+#' prior's parameter space}, so that the mixture is conjugate, has exact
+#' posterior weights and puts no mass outside the parameter space:
+#' \itemize{
+#'   \item A pooled (mixture) informative prior uses the family of its
+#'     moment-matched single-family summary (see the sensitivity analysis).
+#'   \item Normal informative prior: a Normal with the same mean and SD
+#'     \code{vague_sd} (default 10 times the informative SD).
+#'   \item Beta: a \code{Beta(1, 1)} (uniform) component, as in RBesT. If
+#'     \code{vague_sd} is given, a Beta with the informative mean and that SD
+#'     (it must be below \code{sqrt(mean * (1 - mean))}).
+#'   \item Gamma, exponential, Weibull: a Gamma with the informative mean and
+#'     SD \code{vague_sd} (default: the larger of 10 times the informative SD
+#'     and the mean, so the shape is at most 1).
+#'   \item Log-Normal: a Log-Normal with the informative mean and SD
+#'     \code{vague_sd} (default 10 times the informative SD).
+#' }
+#' Earlier versions always used a Normal vague component, which for a Gamma
+#' prior with mean 0.2 put roughly 40\% of its mass below zero.
 #'
 #' @references
 #' Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in
@@ -166,16 +177,36 @@ robust_prior <- function(informative,
     rlang::abort("`vague_weight` must be strictly between 0 and 1.")
   }
 
+  # A pooled (mixture) informative prior gets a vague component in the family
+  # of its moment-matched single-family summary.
+  ref <- if (informative$dist %in% c("mixture", "log_pool"))
+    suppressWarnings(.mixture_working_prior(informative, quiet = TRUE)) else informative
   inf_mean <- informative$fit_summary$mean
   inf_sd   <- informative$fit_summary$sd
-  if (is.null(vague_sd)) vague_sd <- 10 * inf_sd
+  fam      <- ref$dist
+  lab <- informative$label
 
-  vague <- elicit_normal(
-    mean      = inf_mean,
-    sd        = vague_sd,
-    method    = "moments",
-    expert_id = "Vague component",
-    label     = informative$label
+  vague <- switch(fam,
+    beta = if (is.null(vague_sd)) {
+      as_prior("beta", list(alpha = 1, beta = 1), label = lab,
+               expert_id = "Vague component")
+    } else {
+      if (vague_sd >= sqrt(inf_mean * (1 - inf_mean)))
+        rlang::abort(paste0("`vague_sd` must be below sqrt(mean * (1 - mean)) = ",
+                            round(sqrt(inf_mean * (1 - inf_mean)), 4),
+                            " for a Beta vague component."))
+      elicit_beta(mean = inf_mean, sd = vague_sd, method = "moments",
+                  expert_id = "Vague component", label = lab)
+    },
+    lognormal = elicit_lognormal(mean = inf_mean,
+                                 sd = vague_sd %||% (10 * inf_sd),
+                                 method = "moments",
+                                 expert_id = "Vague component", label = lab),
+    gamma = , exponential = , weibull = elicit_gamma(
+      mean = inf_mean, sd = vague_sd %||% max(10 * inf_sd, inf_mean),
+      method = "moments", expert_id = "Vague component", label = lab),
+    elicit_normal(mean = inf_mean, sd = vague_sd %||% (10 * inf_sd),
+                  method = "moments", expert_id = "Vague component", label = lab)
   )
 
   result <- elicit_mixture(
@@ -184,6 +215,8 @@ robust_prior <- function(informative,
     label      = label
   )
   result$prior_type   <- "robust"
+  result$robust_version <- 2L            # family-matched vague component
+  result$vague_sd_input <- vague_sd      # NULL when the default was used
   result$vague_weight <- vague_weight
   result$informative  <- informative
   result

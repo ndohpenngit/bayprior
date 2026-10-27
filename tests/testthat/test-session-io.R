@@ -221,3 +221,13 @@ test_that("a MAP prior saved before the predictive fix is flagged on load", {
   expect_match(r2$note, "Derive it again on the MAP Prior tab", fixed = TRUE)
   expect_match(r2$note, "0.5.0", fixed = TRUE)
 })
+
+test_that("a robust prior saved before the family-matched vague part is flagged on load", {
+  b <- elicit_beta(mean = 0.3, sd = 0.1, method = "moments")
+  rp <- suppressWarnings(robust_prior(b))
+  r <- .bp_session_check(.bp_session_pack(list(current_prior = rp), version = "0.6.0"), version = "0.6.0")
+  expect_true(r$ok); expect_null(r$note)
+  rp$robust_version <- NULL
+  r2 <- .bp_session_check(.bp_session_pack(list(current_prior = rp), version = "0.5.0"), version = "0.6.0")
+  expect_match(r2$note, "Build it again on the Robust Priors tab", fixed = TRUE)
+})

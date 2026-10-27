@@ -182,6 +182,11 @@ mod_robust_ui <- function(id) {
                   min = 0.05, max = 0.50, value = 0.20, step = 0.05),
       numericInput(ns("vague_sd_mult"), "Vague SD = informative SD x",
                    value = 10, min = 2, max = 50, step = 1),
+      tags$small(class = "text-muted",
+        "The vague part is in the same family as the informative prior",
+        "(Beta: uniform Beta(1, 1) at the default of 10; Gamma/Weibull/",
+        "exponential: a Gamma; Log-Normal; Normal). A multiplier other than",
+        "10 sets the vague SD explicitly."),
       textInput(ns("label"), "Label", "Robust mixture prior"),
       tags$hr(),
       actionButton(ns("fit_btn"), "Build robust prior",
@@ -225,7 +230,10 @@ mod_robust_server <- function(id, shared, active_prior, base_prior) {
       # robust mixture itself after the first click, causing SD to compound
       # exponentially on each subsequent build.
       inf <- base_prior(); req(inf)
-      vsd <- input$vague_sd_mult * inf$fit_summary$sd
+      # The default multiplier lets the package choose a vague component in the
+      # right family (e.g. Beta(1, 1)); any other value sets the SD explicitly.
+      vsd <- if (isTRUE(all.equal(as.numeric(input$vague_sd_mult), 10))) NULL else
+        input$vague_sd_mult * inf$fit_summary$sd
       pr  <- tryCatch(
         robust_prior(inf, vague_weight = input$vague_weight,
                      vague_sd = vsd, label = input$label),

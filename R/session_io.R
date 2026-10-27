@@ -108,6 +108,19 @@
       "narrow as a prior for a new trial. Derive it again on the MAP Prior tab.")),
       collapse = " ")
 
+  # A robust prior saved before 0.6.0 has a Normal vague component, which can
+  # put mass outside the parameter space (Beta, Gamma, ...).
+  old_robust <- vapply(keep[intersect(c("consensus", "base_prior", "current_prior", "robust_prior"),
+                                      names(keep))],
+                       function(p) is.list(p) && identical(p$prior_type, "robust") &&
+                         is.null(p$robust_version), logical(1))
+  if (any(old_robust))
+    note <- paste(c(note, paste0(
+      "A robust prior in this session was built with an earlier version of ",
+      "bayprior that always used a Normal vague component. Build it again on ",
+      "the Robust Priors tab to use a vague component in the prior's own family.")),
+      collapse = " ")
+
   state <- list(
     expert_pool   = pool %||% list(),
     consensus     = keep$consensus,
