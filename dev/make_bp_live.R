@@ -15,12 +15,11 @@
 ##     (mean 30%), equal weights. Linear pool = equal mixture. Logarithmic pool =
 ##     the normalised geometric mean of the two densities. "Agreement" is the
 ##     Bhattacharyya coefficient used by the Pooling tab (.bc_coef()).
-##  3. Robust prior: the informative Beta from panel 1 plus the vague Normal
-##     component that robust_prior() builds (same mean, SD ten times larger),
-##     weights 80/20, restricted to the probability scale (0, 1). Data: 8
-##     responders in 10. Posterior = prior x binomial likelihood, evaluated
-##     numerically on a fine grid, so it does not depend on the Normal
-##     approximation used by .conjugate_update() for mixtures.
+##  3. Robust prior: the informative Beta from panel 1 plus the vague Beta(1, 1)
+##     component that robust_prior() builds for a Beta prior, weights 80/20.
+##     Data: 8 responders in 10. Posterior = prior x binomial likelihood,
+##     evaluated numerically on a fine grid (an independent check of the exact
+##     conjugate mixture update).
 
 html_file <- "inst/app/www/bp-live.html"
 css_file  <- "inst/app/www/bp-live.css"
@@ -108,15 +107,14 @@ inf  <- elicit_beta(mean = a0 / (a0 + b0),
                     sd   = sqrt(a0 * b0 / ((a0 + b0)^2 * (a0 + b0 + 1))),
                     method = "moments")
 rb   <- suppressWarnings(robust_prior(inf, vague_weight = 0.20))
-v_mu <- rb$components$vague$params$mu
-v_sd <- rb$components$vague$params$sigma
+v_a  <- rb$components$vague$params$alpha
+v_b  <- rb$components$vague$params$beta
 w_inf <- 0.80
 x_obs <- 8; n_obs <- 10
 
 th   <- seq(1e-6, 1 - 1e-6, length.out = 20001); dth <- th[2] - th[1]
 f_inf  <- function(t) stats::dbeta(t, inf$params$alpha, inf$params$beta)
-v_mass <- stats::pnorm(1, v_mu, v_sd) - stats::pnorm(0, v_mu, v_sd)
-f_vag  <- function(t) stats::dnorm(t, v_mu, v_sd) / v_mass      # truncated to (0, 1)
+f_vag  <- function(t) stats::dbeta(t, v_a, v_b)
 lik    <- function(t) stats::dbinom(x_obs, n_obs, t)
 
 prior_mix <- function(t) w_inf * f_inf(t) + (1 - w_inf) * f_vag(t)
@@ -155,7 +153,7 @@ write_utf8(css,  css_file)
 cat("Panel 2: means A/B/linear/log =", round(100 * c(mean_A, mean_B, mean_lin, mean_log), 1),
     "%; Bhattacharyya agreement =", round(bc, 3), "\n")
 cat("Panel 3: informative Beta(", round(inf$params$alpha, 2), ",", round(inf$params$beta, 2),
-    "), vague Normal(", round(v_mu, 3), ",", round(v_sd, 3), ") on (0,1)\n", sep = "")
+    "), vague Beta(", v_a, ",", v_b, ")\n", sep = "")
 cat("         standard posterior mean =", round(100 * mean_std, 1), "%; robust posterior mean =",
     round(100 * mean_rob, 1), "%; posterior weight on informative part =",
     round(100 * w_post, 2), "%\n")

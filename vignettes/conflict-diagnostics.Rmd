@@ -158,7 +158,10 @@ measure different things -- see `?prior_conflict` for the distinction.
 $$S = \left|\frac{\hat\theta - \mu_\pi}
 {\sqrt{\sigma_\pi^2 + \text{SE}^2}}\right|$$
 
-**Interpretation:** $S > 2$ moderate; $S > 3$ high surprise.
+**Interpretation:** $S > 2$ moderate; $S > 3$ high surprise. When the Box
+p-value is exact, `surprise_index` is the Normal-equivalent distance of that
+p-value, $\Phi^{-1}(1 - p/2)$, so it agrees with `box_pvalue` and the
+severity; `surprise_index_normal` keeps the distance above.
 
 ## 4. KL Divergence
 
@@ -368,19 +371,21 @@ prior_conflict(
 
 # Compatibility Validation
 
-bayprior warns when the prior family is atypical for the chosen data type,
-helping users avoid inadvertent misspecification:
+bayprior refuses a prior family that cannot describe the data type, rather
+than silently falling back to a Normal approximation of the prior's moments.
+A Beta prior describes a probability, so it needs binary data; a Gamma,
+lognormal, exponential or Weibull prior describes a positive rate or mean and
+cannot be combined with binary data; a Normal prior works with every data
+type:
 
-```{r compat-warning}
-# Warning: Beta prior with Poisson data is unusual
+```{r compat-error}
 prior_beta <- elicit_beta(mean = 0.15, sd = 0.06, method = "moments",
                            label = "Rate")
-# The app shows a warning notification; the function still runs with
-# a Normal approximation
-cd_warn <- prior_conflict(
-  prior_beta,
-  data_summary = list(type = "poisson", x = 15, n = 100)
-)
+res <- tryCatch(
+  prior_conflict(prior_beta,
+                 data_summary = list(type = "poisson", x = 15, n = 100)),
+  error = function(e) conditionMessage(e))
+res
 ```
 
 ---

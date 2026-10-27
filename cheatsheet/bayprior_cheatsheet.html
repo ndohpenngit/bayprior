@@ -630,7 +630,7 @@ plot_tau_posterior(m)   # tau posterior</div>
 
         <div class="fn">
           <div class="fn-sig">robust_prior(prior, vague_weight, ...)</div>
-          <div class="fn-desc">Schmidli et al. (2014) robust mixture: informative + vague Normal component.</div>
+          <div class="fn-desc">Schmidli et al. (2014) robust mixture: informative + vague component in the same family (Beta(1, 1) for a Beta prior).</div>
           <div class="args"><span class="arg req">prior</span><span class="arg req">vague_weight</span> 0-1, e.g. 0.20 = 20% vague</div>
           <div class="fn-ex">rob &lt;- robust_prior(p, vague_weight=0.20)
 plot(rob)   # density overlay</div>
