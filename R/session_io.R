@@ -95,6 +95,19 @@
   if (is.character(sv) && length(sv) == 1L && !is.null(cur) && !identical(sv, cur))
     note <- paste0("Saved with bayprior ", sv, "; you are running ", cur, ".")
 
+  # A MAP prior saved before 0.6.0 holds the posterior of the population mean,
+  # which is too narrow as a prior for a new trial (no between-trial variance).
+  stale <- vapply(keep[intersect(c("consensus", "base_prior", "current_prior", "map_prior"),
+                                 names(keep))],
+                  function(p) is.list(p) && identical(p$prior_type, "map") &&
+                    is.null(p$predictive), logical(1))
+  if (any(stale))
+    note <- paste(c(note, paste0(
+      "A MAP prior in this session was derived with an earlier version of ",
+      "bayprior that used the posterior of the population mean, which is too ",
+      "narrow as a prior for a new trial. Derive it again on the MAP Prior tab.")),
+      collapse = " ")
+
   state <- list(
     expert_pool   = pool %||% list(),
     consensus     = keep$consensus,

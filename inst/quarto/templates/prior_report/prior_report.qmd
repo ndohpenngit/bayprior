@@ -379,7 +379,13 @@ if (has_map) {
       if (identical(pr$tau_prior$family, "half_cauchy")) "Half-Cauchy"
       else "Half-Normal",
       "(0, ", .safe_round(pr$tau_prior$scale, 3),
-      ") prior on the heterogeneity parameter tau.\n\n", sep = "")
+      ") prior on the heterogeneity parameter tau. The prior is the ",
+      "predictive distribution of the parameter of a new trial (it includes ",
+      "the between-trial variance), matched to a Normal by its mean and SD",
+      if (!is.null(pr$mu_summary$sd))
+        paste0("; the SD of the population mean alone is ",
+               .safe_round(pr$mu_summary$sd, 3)),
+      ".\n\n", sep = "")
   print(kable(df_hist,
               caption = "Historical trial estimates used for the MAP prior",
               align = "lrr", row.names = FALSE))

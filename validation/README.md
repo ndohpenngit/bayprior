@@ -5,6 +5,7 @@ Reproducible simulation studies for bayprior (not part of the built package; lis
 - `sim_mixture.R`: Part D, calibration for mixture priors (robust, pooled), deterministic. Run `Rscript sim_mixture.R`.
 - `sim_numerical.R`: Part E, calibration of the numerical path (lognormal, Weibull, exponential priors on a rate), with an independent predictive calculation and a Monte Carlo spot check. Slow (about 30 minutes). Run `Rscript sim_numerical.R`.
 - `sim_power.R`: Part F, size-adjusted power (exact, mid-p, Normal approximation, boundary-safe approximation, equal-tail, likelihood-ratio oracle). Deterministic, about 1 minute.
+- `verify_map_predictive.R`: checks that `map_prior()` returns the predictive distribution of a new trial's parameter (mean, SD, quantiles) against a from-scratch Monte Carlo of the hierarchical model; writes `verification_map_predictive.csv`. About 1 minute.
 - `sim_boxp.R`: Parts A and B of the analysis plan (calibration of the Box prior predictive p-value, exact vs Normal approximation; S-value summaries) plus two independent verification checks. Run `Rscript sim_boxp.R` from this directory. `BAYPRIOR_SRC` selects the package source (default `../bayprior`; when this folder sits in the package repo root use `BAYPRIOR_SRC=.. Rscript sim_boxp.R`). `REPS` sets replications per cell (default 20000).
 - `results_boxp.csv` / `.rds`: one row per cell x alpha.
 - `verification_mc.csv`: exact p-values vs brute-force Monte Carlo from the generative model.

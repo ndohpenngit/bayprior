@@ -172,9 +172,20 @@ map <- map_prior(
 print(map)
 ```
 
-`map_prior()` returns an ordinary `bayprior` object (a Normal approximation
-to the marginal posterior of the meta-analytic mean, integrating over $\tau$),
-so it can be used exactly like any elicited prior:
+`map_prior()` returns an ordinary `bayprior` object, so it can be used exactly
+like any elicited prior. It is the **predictive** distribution of the parameter
+of a *new* trial, $\theta^* \sim \mathrm{Normal}(\mu, \tau^2)$, given the
+historical data, integrating over both $\mu$ and $\tau$, and matched by moments
+to a Normal. Its SD therefore includes the between-trial variance $\tau^2$ as
+well as the uncertainty about $\mu$, and is wider than the posterior SD of $\mu$
+alone (kept in `map$mu_summary`). The predictive distribution is a scale
+mixture of Normals and heavier-tailed than the Normal returned; its exact 2.5%,
+50% and 97.5% quantiles are in `map$predictive`.
+
+```{r map-predictive}
+c(prior_sd = map$fit_summary$sd, mu_only_sd = map$mu_summary$sd)
+unlist(map$predictive[c("q025", "q500", "q975")])
+```
 
 ```{r map-into-robust}
 rob_map <- robust_prior(map, vague_weight = 0.20)

@@ -32,6 +32,22 @@
 #' one-dimensional integral over \eqn{\tau \in [0, \infty)}, evaluated with
 #' \code{\link[stats]{integrate}} (adaptive quadrature).
 #'
+#' \strong{Prior for a new trial.} The MAP prior is the predictive
+#' distribution of the parameter of a \emph{new} trial,
+#' \eqn{\theta^* \sim \mathrm{Normal}(\mu, \tau^2)}, given the historical
+#' data, so it includes the between-trial variance \eqn{\tau^2} as well as
+#' the uncertainty about \eqn{\mu}: given \eqn{\tau},
+#' \eqn{\theta^* \sim \mathrm{Normal}(M(\tau), V(\tau) + \tau^2)}, and the
+#' result is averaged over the posterior of \eqn{\tau}. Its variance is
+#' \eqn{E[V + M^2 + \tau^2] - E[M]^2}. (The posterior of \eqn{\mu} alone
+#' describes the average effect, not a new trial, and is too narrow as a
+#' prior.) The predictive is a scale mixture of Normals, heavier-tailed than
+#' the Normal returned here, which matches its mean and SD; \code{$predictive}
+#' gives the exact quantiles. With a half-Cauchy prior on \eqn{\tau} and fewer
+#' than three trials the posterior of \eqn{\tau} decays like
+#' \eqn{\tau^{-(k+1)}} for \eqn{k} trials, the predictive variance is infinite,
+#' and the function stops with an error.
+#'
 #' The full \eqn{\tau} posterior (not just its effect on \eqn{\mu}) is
 #' retained in the returned object's \code{$tau_posterior} element, and can
 #' be visualised with \code{\link{plot_tau_posterior}} or exported as part
@@ -75,11 +91,17 @@
 #'   to any realistic effect-size scale; increase only if \code{1e4} units is
 #'   not actually vague for your outcome.
 #'
-#' @return A \code{bayprior} object (\code{dist = "normal"}, matched by
-#'   moments to the marginal posterior of \eqn{\mu}) with an additional
-#'   \code{prior_type = "map"} tag and a \code{$tau_posterior} element
-#'   (a data frame with columns \code{tau} and \code{density}) giving the
-#'   marginal posterior of the heterogeneity parameter.
+#' @return A \code{bayprior} object (\code{dist = "normal"}) with an additional
+#'   \code{prior_type = "map"} tag. Its mean and SD are those of the
+#'   \emph{predictive} distribution of the parameter of a new trial (see
+#'   Details), matched by moments to a Normal. Further elements:
+#'   \code{$mu_summary} (posterior mean and SD of the population mean
+#'   \eqn{\mu} alone, which is \strong{not} the prior for a new trial);
+#'   \code{$predictive} (the exact 2.5\%, 50\% and 97.5\% quantiles of the
+#'   predictive distribution, to judge the Normal approximation, which is
+#'   lighter-tailed); and \code{$tau_posterior}, a data frame with columns
+#'   \code{tau} and \code{density} giving the marginal posterior of the
+#'   heterogeneity parameter.
 #'
 #' @references
 #' Schmidli, H., Gsteiger, S., Roychoudhury, S., O'Hagan, A., Spiegelhalter,
@@ -149,19 +171,42 @@ map_prior <- function(y, se,
     stop("`tau_prior$scale` must be a single positive number.", call. = FALSE)
   }
 
+  # Half-Cauchy tau prior: the posterior density of tau decays like
+  # tau^-(k + 1) for k trials (the marginal likelihood like tau^-(k - 1), the
+  # prior like tau^-2), so E[tau^2 | y] -- and with it the variance of the
+  # predictive distribution for a new trial -- is infinite for k <= 2. Numerical
+  # integration can return a finite but meaningless value in that case, so the
+  # condition is checked here rather than left to the integrator.
+  if (identical(tau_family, "half_cauchy") && length(y) < 3) {
+    stop("A half-Cauchy prior for tau gives the predictive distribution for a ",
+         "new trial an infinite variance with fewer than 3 historical trials. ",
+         "Use a half-normal prior for tau, or supply at least 3 trials.",
+         call. = FALSE)
+  }
+
   fit <- .fit_map_posterior(
     y = y, se = se, tau_family = tau_family, tau_scale = tau_scale,
     mu_prior_mean = 0, mu_prior_sd = mu_prior_sd, tau_grid_n = tau_grid_n
   )
 
+  # The prior for a new trial is the PREDICTIVE distribution, which adds the
+  # between-trial variance tau^2 to the uncertainty about the mean mu; it is
+  # matched by moments to a Normal here. The posterior of mu alone (which
+  # ignores tau^2 and is too narrow as a prior for a new trial) is kept in
+  # $mu_summary.
   p <- as_prior(
-    "normal", list(mu = fit$mu_mean, sigma = fit$mu_sd),
+    "normal", list(mu = fit$pred_mean, sigma = fit$pred_sd),
     label = label, expert_id = "map_historical"
   )
   p$method     <- "map"
   p$prior_type <- "map"
   p$n_trials   <- length(y)
   p$historical_data <- list(y = y, se = se)
+  p$mu_summary    <- list(mean = fit$mu_mean, sd = fit$mu_sd)
+  p$predictive    <- list(approximation = "normal_moment_matched",
+                          q025 = unname(fit$pred_quantiles["q025"]),
+                          q500 = unname(fit$pred_quantiles["q500"]),
+                          q975 = unname(fit$pred_quantiles["q975"]))
   p$tau_posterior <- fit$tau_posterior
   p$tau_summary   <- list(mean = fit$tau_mean, median = fit$tau_median)
   p$tau_prior     <- list(family = tau_family, scale = tau_scale)
@@ -378,6 +423,40 @@ resolve_tau_prior <- function(outcome_type) {
   mu_mean <- mu_m1
   mu_sd   <- sqrt(max(mu_m2 - mu_m1^2, 0))
 
+  # Predictive distribution of the parameter of a NEW trial,
+  # theta* | tau, mu ~ Normal(mu, tau^2), marginalised over mu and tau:
+  #   theta* | tau, y ~ Normal(M(tau), V(tau) + tau^2).
+  # Its mean equals E[mu | y]; its variance adds the between-trial variance,
+  #   Var(theta*) = E[V + tau^2] + Var(M) = E[V + M^2 + tau^2] - mean^2.
+  # With a half-Cauchy tau prior the posterior of tau has a heavy tail and
+  # E[tau^2 | y] is infinite for fewer than 3 trials; the integral then diverges
+  # and the predictive SD does not exist, which is reported rather than hidden.
+  pred_m2 <- tryCatch(integral_0_inf(function(t) {
+    cp <- .map_conditional(t, y, se, mu_prior_mean, mu_prior_sd)
+    cp$V + cp$M^2 + t^2
+  }) / Z, error = function(e) NA_real_)
+  if (!is.finite(pred_m2)) {
+    stop("The predictive distribution for a new trial has no finite variance ",
+         "under this heterogeneity prior and ", length(y), " trial(s) (the ",
+         "posterior of tau is too heavy-tailed). Use a half-normal prior for ",
+         "tau, or more historical trials.", call. = FALSE)
+  }
+  pred_mean <- mu_m1
+  pred_sd   <- sqrt(max(pred_m2 - pred_mean^2, 0))
+
+  # Exact predictive quantiles (a scale mixture of Normals is heavier-tailed
+  # than the Normal that matches its mean and SD).
+  pred_cdf <- function(q) integral_0_inf(function(t) {
+    cp <- .map_conditional(t, y, se, mu_prior_mean, mu_prior_sd)
+    stats::pnorm(q, cp$M, sqrt(cp$V + t^2))
+  }) / Z
+  pred_q <- function(p) {
+    lo <- pred_mean - 12 * pred_sd; hi <- pred_mean + 12 * pred_sd
+    tryCatch(stats::uniroot(function(q) pred_cdf(q) - p, lower = lo, upper = hi,
+                            tol = 1e-9)$root, error = function(e) NA_real_)
+  }
+  pred_quantiles <- c(q025 = pred_q(0.025), q500 = pred_q(0.5), q975 = pred_q(0.975))
+
   # CDF and quantiles are computed in the SAME u-space as integral_0_inf()
   # above (u in [0,1), t = cc*u/(1-u)), rather than by integrating g_shifted()
   # directly over an a priori t-range. This matters: g_shifted() can be
@@ -416,6 +495,7 @@ resolve_tau_prior <- function(outcome_type) {
   tau_posterior <- data.frame(tau = tau_grid, density = g_shifted(tau_grid) / Z)
 
   list(mu_mean = mu_mean, mu_sd = mu_sd,
+       pred_mean = pred_mean, pred_sd = pred_sd, pred_quantiles = pred_quantiles,
        tau_mean = tau_mean, tau_median = tau_median,
        tau_posterior = tau_posterior)
 }

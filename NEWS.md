@@ -59,6 +59,21 @@
 
 ## Bug fixes
 
+* **Breaking: `map_prior()` now returns the predictive prior for a new trial.**
+  It returned the posterior of the population mean, which leaves out the
+  between-trial variance tau^2 and is too narrow as a prior for a new trial
+  (Schmidli et al. 2014 define the MAP prior as the predictive distribution).
+  The prior's mean is unchanged; its SD now includes tau^2 (about 0.41 instead
+  of 0.22 in a five-trial example), so borrowing is weaker and fewer conflicts
+  are flagged. The Normal is matched to the predictive mean and SD; the exact
+  predictive quantiles are in `$predictive`, and the posterior of the mean
+  alone in `$mu_summary`. A half-Cauchy tau prior with fewer than 3 trials gives
+  an infinite predictive variance and is refused. Verified against an
+  independent numerical reference (tests) and a Monte Carlo
+  (`validation/verify_map_predictive.R`). The MAP tab and report say what the
+  prior is, and sessions saved with an earlier version warn that a MAP prior
+  should be derived again. Rerun anything that used a MAP prior.
+
 * A Normal prior used with binary (events / n) data was compared with the raw
   proportion even when it is a log-odds prior, such as one from `map_prior()`.
   A historical-control prior of mean -0.862 and SD 0.335 against 18 events in
