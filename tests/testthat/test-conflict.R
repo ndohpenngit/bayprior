@@ -321,12 +321,23 @@ test_that("prior_conflict(exact = TRUE) falls back to the approximation, with a 
   expect_equal(cd$box_pvalue_method, "normal_approx")
 })
 
-test_that("prior_conflict(exact = TRUE) leaves surprise_index, kl, and overlap unaffected", {
+test_that("surprise_index follows the reported p-value; the Normal distance is kept", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  interim <- list(type = "binary", x = 18, n = 40)
+  a <- prior_conflict(prior, interim, exact = FALSE)
+  e <- prior_conflict(prior, interim, exact = TRUE)
+  expect_equal(a$surprise_index, a$surprise_index_normal)
+  expect_equal(e$surprise_index, qnorm(e$box_pvalue / 2, lower.tail = FALSE))
+  expect_equal(e$surprise_index_normal, a$surprise_index_normal)
+  # extreme conflict stays finite
+  expect_true(is.finite(prior_conflict(prior, list(type = "binary", x = 40, n = 40))$surprise_index))
+})
+
+test_that("prior_conflict(exact = TRUE) leaves kl and overlap unaffected", {
   prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
   interim <- list(type = "binary", x = 18, n = 40)
   cd_approx <- prior_conflict(prior, interim, exact = FALSE)
   cd_exact  <- prior_conflict(prior, interim, exact = TRUE)
-  expect_equal(cd_exact$surprise_index, cd_approx$surprise_index)
   expect_equal(cd_exact$kl_prior_likelihood, cd_approx$kl_prior_likelihood)
   expect_equal(cd_exact$overlap, cd_approx$overlap)
 })

@@ -256,8 +256,14 @@
 #'       (fewer than 10) counts, where it can be anti-conservative.}
 #'     \item{\code{s_value}}{Surprisal, \eqn{-\log_2(\text{box\_pvalue})},
 #'       in bits. See Details.}
-#'     \item{\code{surprise_index}}{Standardised distance between prior mean
-#'       and observed data.}
+#'     \item{\code{surprise_index}}{Standardised distance between prior and
+#'       data, on the scale of the reported \code{box_pvalue}:
+#'       \eqn{\Phi^{-1}(1 - p/2)}. It equals \eqn{|z|} when the Normal
+#'       approximation is used and stays consistent with \code{box_pvalue}
+#'       and \code{conflict_severity} when the p-value is exact.}
+#'     \item{\code{surprise_index_normal}}{The Normal-approximation distance
+#'       \eqn{|z|} between the prior mean and the observed estimate, in
+#'       prior-predictive SD units, whatever method gave \code{box_pvalue}.}
 #'     \item{\code{kl_prior_likelihood}}{KL divergence from prior to likelihood.}
 #'     \item{\code{overlap}}{Bhattacharyya overlap coefficient in \[0, 1\].}
 #'     \item{\code{conflict_severity}}{One of \code{"none"}, \code{"mild"},
@@ -282,8 +288,8 @@
 #'
 #' \code{s_value} and \code{surprise_index} are easily confused by name but
 #' measure different things. \code{surprise_index} is a \emph{distance}:
-#' how many prior-SD units the observed data sits from the prior mean
-#' (\code{abs(z)}). \code{s_value} is an \emph{evidence-strength}
+#' how many standard deviations from the prior the data sit, read from the
+#' p-value (\code{qnorm(1 - box_pvalue / 2)}). \code{s_value} is an \emph{evidence-strength}
 #' reparametrisation of \code{box_pvalue} itself, expressed in bits --
 #' intended as an exploratory companion to
 #' \code{box_pvalue} rather than a thresholded decision rule, since
@@ -441,7 +447,14 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
   # observed data, in prior-predictive SD units. Always the Normal-
   # approximation version (see `exact` argument docs above) -- it is not
   # redefined by an exact box_pvalue.
-  surprise <- abs(z)
+  surprise_normal <- abs(z)
+  # The reported surprise index is the Normal-equivalent distance of the
+  # reported p-value, qnorm(1 - p / 2): identical to |z| when the Normal
+  # approximation is used, and consistent with `box_pvalue` and `severity` when
+  # an exact or numerical p-value is. (|z| alone could say "within expected
+  # range" next to an exact p-value below alpha.)
+  surprise <- if (box_p > 0) stats::qnorm(box_p / 2, lower.tail = FALSE)
+              else stats::qnorm(.Machine$double.xmin / 2, lower.tail = FALSE)
 
   # Surprisal / S-value (Greenland, 2023): -log2(box_pvalue), reported as an
   # exploratory, continuous companion to box_pvalue rather than a thresholded
@@ -533,6 +546,7 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
       binary_scale_note   = binary_scale_note,
       s_value             = s_value,
       surprise_index      = surprise,
+      surprise_index_normal = surprise_normal,
       kl_prior_likelihood = kl,
       overlap             = overlap,
       conflict_severity   = severity,
