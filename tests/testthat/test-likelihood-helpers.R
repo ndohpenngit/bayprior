@@ -96,3 +96,20 @@ test_that(".marginal_bf equals the ratio of exact marginals", {
   expect_equal(.marginal_bf(pw, b, cur),
                exp((lbeta(17, 11) - lbeta(10, 6)) - (lbeta(9, 7) - lbeta(2, 2))), tolerance = 1e-12)
 })
+
+test_that("mixture fit_summary has exact quantiles, not mean +/- 1.96 SD", {
+  mix <- elicit_mixture(list(mk("beta", alpha = 2, beta = 20),
+                             mk("beta", alpha = 20, beta = 2)), weights = c(.5, .5))
+  fs <- mix$fit_summary
+  expect_true(all(c("q025", "q500", "q975") %in% names(fs)))
+  expect_equal(.prior_cdf(mix, fs$q025), 0.025, tolerance = 1e-8)
+  expect_equal(.prior_cdf(mix, fs$q975), 0.975, tolerance = 1e-8)
+  expect_gt(abs(fs$q025 - (fs$mean - 1.96 * fs$sd)), 0.05)
+  # posterior mixtures too
+  post <- .conjugate_update(mix, list(type = "binary", x = 3, n = 20))
+  expect_equal(.prior_cdf(post, post$fit_summary$q975), 0.975, tolerance = 1e-8)
+  # Monte Carlo agreement
+  set.seed(1); k <- sample(1:2, 2e5, TRUE)
+  z <- ifelse(k == 1, rbeta(2e5, 2, 20), rbeta(2e5, 20, 2))
+  expect_equal(unname(quantile(z, c(.025, .975))), c(fs$q025, fs$q975), tolerance = 0.01)
+})

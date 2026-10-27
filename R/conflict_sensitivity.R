@@ -1314,12 +1314,6 @@ sensitivity_cri <- function(prior,
     post_weights <- exp(log_post_wts - max(log_post_wts))
     post_weights <- post_weights / sum(post_weights)
 
-    # Mixture posterior summary
-    post_means <- vapply(post_components, function(p) p$fit_summary$mean, numeric(1))
-    post_sds   <- vapply(post_components, function(p) p$fit_summary$sd,   numeric(1))
-    mix_mean   <- sum(post_weights * post_means)
-    mix_sd     <- sqrt(sum(post_weights * (post_sds^2 + (post_means - mix_mean)^2)))
-
     return(structure(
       list(
         dist        = "mixture",
@@ -1330,13 +1324,7 @@ sensitivity_cri <- function(prior,
         expert_id   = prior$expert_id,
         label       = prior$label,
         input       = list(),
-        fit_summary = list(
-          mean = mix_mean,
-          sd   = mix_sd,
-          q025 = mix_mean - 1.96 * mix_sd,
-          q500 = mix_mean,
-          q975 = mix_mean + 1.96 * mix_sd
-        )
+        fit_summary = .mixture_fit_summary(post_components, post_weights)
       ),
       class = "bayprior"
     ))

@@ -657,7 +657,7 @@ elicit_mixture <- function(components, weights = NULL, label = "Mixture prior") 
       components  = components,
       weights     = weights,
       label       = label,
-      fit_summary = .mixture_summary(components, weights)
+      fit_summary = .mixture_fit_summary(components, weights)
     ),
     class = "bayprior"
   )
