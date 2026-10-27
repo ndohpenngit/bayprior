@@ -14,6 +14,9 @@
 #' @param n Sample size / exposure.
 #' @param x Observed count; used only to make sure the (truncated) count
 #'   support of a Negative Binomial predictive reaches the observation.
+#' @param logit Logical. For a Normal prior with binary data: read the prior
+#'   as a distribution on the log-odds scale (the success probability is then
+#'   the inverse logit of the parameter) instead of on the probability itself.
 #'
 #' @return A numeric vector of probabilities for counts \code{0, 1, ...},
 #'   summing to 1, or \code{NULL} if the prior has no supported closed form
@@ -21,7 +24,7 @@
 #'
 #' @keywords internal
 #' @noRd
-.predictive_pmf <- function(prior, type, n, x) {
+.predictive_pmf <- function(prior, type, n, x, logit = FALSE) {
   if (identical(prior$dist, "beta") && identical(type, "binary")) {
     a <- prior$params$alpha; b <- prior$params$beta
     k <- 0:n
@@ -46,7 +49,8 @@
   }
   if (identical(prior$dist, "mixture") && !is.null(prior$components) &&
       length(prior$components) == length(prior$weights)) {
-    pmfs <- lapply(prior$components, .predictive_pmf, type = type, n = n, x = x)
+    pmfs <- lapply(prior$components, .predictive_pmf, type = type, n = n, x = x,
+                   logit = logit)
     if (any(vapply(pmfs, is.null, logical(1)))) return(NULL)
     len <- max(lengths(pmfs))
     pad <- function(p) c(p, numeric(len - length(p)))
@@ -57,7 +61,7 @@
       isTRUE(attr(p, "numerical")), logical(1)))
     return(pmf)
   }
-  .predictive_pmf_numeric(prior, type, n, x)
+  .predictive_pmf_numeric(prior, type, n, x, logit = logit)
 }
 
 #' Prior predictive pmf by equal-probability quadrature (internal)
@@ -79,7 +83,7 @@
 #'   when unsupported or when the grid cannot resolve the likelihood.
 #' @keywords internal
 #' @noRd
-.predictive_pmf_numeric <- function(prior, type, n, x) {
+.predictive_pmf_numeric <- function(prior, type, n, x, logit = FALSE) {
   dist <- prior$dist; p <- prior$params
   if (is.null(p) || !dist %in% c("beta", "normal", "gamma", "lognormal",
                                  "exponential", "weibull")) return(NULL)
@@ -98,13 +102,18 @@
     exponential = function(u) stats::qexp(u, rate = p$rate),
     weibull = function(u) stats::qweibull(u, p$shape, p$scale))
   binary <- identical(type, "binary")
+  # A Normal prior on the log-odds is proper on the whole real line; the
+  # probability is its inverse logit, so nothing is truncated.
+  on_logit <- binary && isTRUE(logit) && identical(dist, "normal")
   lo <- 0
   hi <- if (binary) 1 else Inf
   u_lo <- cdf(lo); u_hi <- if (is.finite(hi)) cdf(hi) else 1
+  if (on_logit) { u_lo <- 0; u_hi <- 1 }
   if (!is.finite(u_lo) || !is.finite(u_hi) || u_hi - u_lo < 1e-6) return(NULL)
   N <- if (binary) as.integer(min(40000, floor(2e7 / (n + 1)))) else 4000L
   u <- u_lo + (seq_len(N) - 0.5) / N * (u_hi - u_lo)
   theta <- qf(u)
+  if (on_logit) theta <- stats::plogis(theta)
   theta <- pmin(pmax(theta, if (binary) 1e-12 else 1e-12), if (binary) 1 - 1e-12 else Inf)
   if (any(!is.finite(theta))) return(NULL)
   if (binary) {
@@ -146,12 +155,13 @@
 #' @param type Data type (\code{data_summary$type}).
 #' @param x,n Observed count/exposure, as used elsewhere in
 #'   \code{\link{prior_conflict}}.
+#' @param logit See \code{.predictive_pmf()}.
 #'
 #' @return A single numeric p-value, or \code{NULL} if unsupported.
 #'
 #' @keywords internal
 #' @noRd
-.exact_box_pvalue <- function(prior, type, x, n) {
+.exact_box_pvalue <- function(prior, type, x, n, logit = FALSE) {
   # The exact checks are defined for whole-number counts and (for binary
   # data) a whole-number sample size with 0 <= x <= n. Anything else, or a
   # support so large that enumerating it is impractical (where the Normal
@@ -169,7 +179,7 @@
     # Normal machinery; no separate exact path is needed.
     return(NULL)
   }
-  pmf <- .predictive_pmf(prior, type, n, x)
+  pmf <- .predictive_pmf(prior, type, n, x, logit = logit)
   if (is.null(pmf) || x + 1 > length(pmf)) return(NULL)
   p_obs <- pmf[x + 1]
   # Numerical tolerance on the "at least as extreme" comparison, since
@@ -236,6 +246,10 @@
 #'       \code{"normal_approx"}, indicating how \code{box_pvalue} (and
 #'       hence \code{s_value}) was computed. Always \code{"normal_approx"}
 #'       when \code{exact = FALSE}.}
+#'     \item{\code{binary_scale}, \code{binary_scale_note}}{Only for a Normal
+#'       prior with binary data: the scale the prior was read on
+#'       (\code{"log_odds"} or \code{"proportion"}) and a sentence saying so;
+#'       otherwise absent.}
 #'     \item{\code{box_pvalue_caution}}{\code{NULL}, or a short message
 #'       when the Normal approximation produced \code{box_pvalue} for
 #'       discrete data with a boundary (zero or all events) or small
@@ -256,6 +270,16 @@
 #'   }
 #'
 #' @details
+#' \strong{Normal prior with binary data.} Such a prior is read on the
+#' log-odds scale (as \code{\link{map_prior}} returns) unless its mean +/- 2 SD
+#' lies inside \eqn{[0, 1]}, in which case it is read as a prior on the
+#' proportion. The data are then compared as the observed log-odds (with a 0.5
+#' continuity correction at 0 or n events). Set
+#' \code{data_summary$binary_scale} to \code{"log_odds"} or
+#' \code{"proportion"} to override, and see \code{$binary_scale_note} in the
+#' result. A mixture whose parts are not all Normal keeps the probability
+#' reading for its Normal parts.
+#'
 #' \code{s_value} and \code{surprise_index} are easily confused by name but
 #' measure different things. \code{surprise_index} is a \emph{distance}:
 #' how many prior-SD units the observed data sits from the prior mean
@@ -355,8 +379,17 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
   prior_mean <- prior$fit_summary$mean
   prior_sd   <- prior$fit_summary$sd
 
+  # A Normal prior with binary data is on the log-odds scale (e.g. from
+  # map_prior()) or on the probability itself; see .binary_scale().
+  bin_scale <- .binary_scale(prior, data_summary)
+  on_logit  <- identical(bin_scale, "log_odds")
+
   # Likelihood parameters -- approximate as Normal for analytic diagnostics
-  if (type == "binary") {
+  if (type == "binary" && on_logit) {
+    lo       <- .binary_logit(x, n)
+    obs_mean <- lo$mean
+    obs_se   <- lo$se
+  } else if (type == "binary") {
     obs_mean <- x / n
     obs_se   <- sqrt(obs_mean * (1 - obs_mean) / n)
   } else if (type %in% c("poisson", "survival")) {
@@ -386,7 +419,7 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
   # falling back to the approximation otherwise; exact = TRUE: same, but
   # with a message on fallback; exact = FALSE: approximation only.
   if (is.null(exact) || isTRUE(exact)) {
-    exact_p <- .exact_box_pvalue(prior, type, x, n)
+    exact_p <- .exact_box_pvalue(prior, type, x, n, logit = on_logit)
     if (!is.null(exact_p)) {
       box_pvalue_method <- if (isTRUE(attr(exact_p, "numerical"))) "numerical" else "exact"
       box_p <- as.numeric(exact_p)
@@ -453,6 +486,21 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
     }
   }
 
+  binary_scale_note <- NULL
+  if (!is.na(bin_scale)) {
+    binary_scale_note <- if (on_logit) {
+      paste0("The Normal prior is read as a prior on the log-odds scale, so ",
+             "the data are compared as log-odds (observed ",
+             round(obs_mean, 3), ", SE ", round(obs_se, 3), "). To treat the ",
+             "prior as a distribution of the proportion itself, set ",
+             "binary_scale = \"proportion\" in data_summary.")
+    } else {
+      paste0("The Normal prior is read as a prior on the proportion itself. ",
+             "If it is on the log-odds scale (as map_prior() gives), set ",
+             "binary_scale = \"log_odds\" in data_summary.")
+    }
+  }
+
   recommendation <- switch(severity,
     none = glue::glue(
       "No evidence of prior-data conflict was detected (Box p = ",
@@ -463,7 +511,9 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
     mild = glue::glue(
       "Mild prior-data conflict detected (Box p = {round(box_p, 3)}, ",
       "S-value = {round(s_value, 2)} bits, surprise = {round(surprise, 2)}). ",
-      "Consider reporting a sensitivity analysis with a more diffuse prior."
+      "Consider reporting a sensitivity analysis that varies the prior's ",
+      "strength and mean, including a weaker prior (Sensitivity tab or ",
+      "sensitivity_grid())."
     ),
     severe = glue::glue(
       "Severe prior-data conflict detected (Box p = {round(box_p, 4)}, ",
@@ -477,6 +527,8 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
       box_pvalue          = box_p,
       box_pvalue_method   = box_pvalue_method,
       box_pvalue_caution  = box_pvalue_caution,
+      binary_scale        = if (is.na(bin_scale)) NULL else bin_scale,
+      binary_scale_note   = binary_scale_note,
       s_value             = s_value,
       surprise_index      = surprise,
       kl_prior_likelihood = kl,
@@ -607,7 +659,10 @@ prior_conflict <- function(prior, data_summary, alpha = 0.05, exact = NULL) {
 #'   Any of \code{"posterior_mean"}, \code{"posterior_sd"},
 #'   \code{"prob_efficacy"}.
 #' @param threshold Numeric. Efficacy threshold used in
-#'   \code{Pr(theta > threshold)}. Default \code{0.30}.
+#'   \code{Pr(theta > threshold)}. Default \code{0.30}. It is on the scale of
+#'   the parameter: for a Normal prior read as log-odds (see
+#'   \code{\link{prior_conflict}}) it is a log-odds, so use
+#'   \code{qlogis(rate)} for a response-rate threshold.
 #'
 #' @details
 #' The hyperparameter grid is defined over a single distribution family, so
@@ -661,6 +716,12 @@ sensitivity_grid <- function(prior,
   # the Shiny sensitivity module so UI defaults stay consistent with what
   # is actually analysed here.
   working_prior <- .mixture_working_prior(prior)
+
+  # A Normal prior with binary data: fix the scale (log-odds or proportion)
+  # once, from the reference prior, so every grid point is updated on the
+  # same scale (see .binary_scale()). `threshold` is then on that scale too.
+  bin_scale <- .binary_scale(working_prior, data_summary)
+  if (!is.na(bin_scale)) data_summary$binary_scale <- bin_scale
 
   # -- Auto-remap param_grid names to prior hyperparameter names ----------------
   #
@@ -834,6 +895,7 @@ sensitivity_grid <- function(prior,
       reference_row    = ref_row,
       influence_scores = influence,
       threshold        = threshold,
+      binary_scale     = if (is.na(bin_scale)) NULL else bin_scale,
       prior            = prior
     ),
     class = "bayprior_sensitivity"
@@ -857,7 +919,8 @@ sensitivity_grid <- function(prior,
 #' @param cri_level    Numeric in (0, 1). Credible interval level. Default
 #'   \code{0.95}.
 #' @param threshold    Optional numeric. Computes \code{Pr(theta > threshold)}
-#'   at each grid point if supplied.
+#'   at each grid point if supplied, on the scale of the parameter (a log-odds
+#'   for a Normal prior read as log-odds; see \code{\link{sensitivity_grid}}).
 #'
 #' @details
 #' As with \code{\link{sensitivity_grid}}, when \code{prior} is a mixture,
@@ -902,6 +965,11 @@ sensitivity_cri <- function(prior,
   # and the same fix applied to sensitivity_grid()), rather than discarding
   # all but the dominant component.
   working_prior <- .mixture_working_prior(prior)
+
+  # Fix the scale of a Normal prior with binary data once (see
+  # sensitivity_grid()); `threshold` is on that scale.
+  bin_scale <- .binary_scale(working_prior, data_summary)
+  if (!is.na(bin_scale)) data_summary$binary_scale <- bin_scale
 
   # Remap generic param names (e.g. "param1", "param2") to prior param names
   prior_param_names <- names(working_prior$params)
@@ -1035,6 +1103,7 @@ sensitivity_cri <- function(prior,
       influence_scores = influence,
       cri_level        = cri_level,
       threshold        = threshold,
+      binary_scale     = if (is.na(bin_scale)) NULL else bin_scale,
       prior            = prior
     ),
     class = "bayprior_sensitivity"
@@ -1063,6 +1132,48 @@ sensitivity_cri <- function(prior,
   exp(-(t1 + t2))
 }
 
+# Scale on which a Normal prior meets binary data (internal).
+#
+# A Normal prior used with binary events/n data is either a prior on the
+# log-odds (what map_prior(outcome_type = "single_arm_log_odds") returns and
+# what the multivariate tab expects for proportions) or, less often, a prior
+# on the proportion itself. The two cannot be told apart in general, so
+# `data_summary$binary_scale` ("log_odds", "proportion" or "auto", default)
+# can say which. "auto" reads the prior as a proportion only when its mean
+# +/- 2 SD lies inside [0, 1], and as log-odds otherwise.
+# Returns NA when the prior is not a Normal (or a mixture of Normals) or the
+# data are not binary. A mixture of different families (for example a robust
+# prior, whose vague Normal part is on the probability scale) is NA, so its
+# Normal parts keep the probability reading.
+#' @noRd
+.binary_scale <- function(prior, data_summary) {
+  if (!identical(data_summary$type %||% "binary", "binary")) return(NA_character_)
+  ask <- data_summary$binary_scale %||% "auto"
+  if (!is.character(ask) || length(ask) != 1L ||
+      !ask %in% c("auto", "log_odds", "proportion"))
+    rlang::abort("`binary_scale` must be \"auto\", \"log_odds\" or \"proportion\".")
+  comps <- if (identical(prior$dist, "mixture")) prior$components else list(prior)
+  if (is.null(comps) || !length(comps) ||
+      !all(vapply(comps, function(cc) identical(cc$dist, "normal"), logical(1))))
+    return(NA_character_)
+  if (ask != "auto") return(ask)
+  inside <- all(vapply(comps, function(cc) {
+    m <- cc$params$mu; s <- cc$params$sigma
+    is.finite(m) && is.finite(s) && m - 2 * s >= 0 && m + 2 * s <= 1
+  }, logical(1)))
+  if (inside) "proportion" else "log_odds"
+}
+
+# Observed log-odds and its standard error for x events in n (internal). At 0
+# or n events the 0.5 continuity correction keeps both finite.
+#' @noRd
+.binary_logit <- function(x, n) {
+  edge <- x <= 0 || x >= n
+  xa <- if (edge) x + 0.5 else x
+  na <- if (edge) n + 1 else n
+  list(mean = log(xa / (na - xa)), se = sqrt(1 / xa + 1 / (na - xa)))
+}
+
 .conjugate_update <- function(prior, data_summary) {
   type <- data_summary$type %||% "binary"
   n    <- data_summary$n
@@ -1077,9 +1188,30 @@ sensitivity_cri <- function(prior,
   }
 
   # -- Normal -----------------------------------------------------------------
+  # `x` is a mean only for continuous data. For Poisson and survival data it is
+  # a count, so the likelihood is summarised as a Normal on the rate (x / n).
+  # For binary data it is summarised on the log-odds or the proportion scale,
+  # whichever the prior is on (see .binary_scale()).
   if (prior$dist == "normal") {
-    obs_mean  <- x
-    obs_se    <- (data_summary$sd %||% prior$fit_summary$sd) / sqrt(n)
+    if (type %in% c("poisson", "survival")) {
+      obs_mean <- x / n
+      obs_se   <- sqrt(max(x, 0.5)) / n   # 0.5 avoids a zero SE at x = 0
+    } else if (type == "binary" &&
+               identical(.binary_scale(prior, data_summary), "log_odds")) {
+      lo       <- .binary_logit(x, n)
+      obs_mean <- lo$mean
+      obs_se   <- lo$se
+    } else if (type == "binary") {
+      obs_mean <- x / n
+      # The usual SE would be 0 at 0 or n events, so the SE uses the
+      # continuity-adjusted proportion (the mean does not).
+      p_adj    <- (x + 0.5) / (n + 1)
+      obs_se   <- sqrt(p_adj * (1 - p_adj) / n)
+    } else {
+      obs_mean <- x
+      obs_se   <- (data_summary$sd %||% prior$fit_summary$sd) / sqrt(n)
+    }
+    obs_se    <- max(obs_se, 1e-8)
     prior_var <- prior$params$sigma^2
     lik_var   <- obs_se^2
     post_var  <- 1 / (1 / prior_var + 1 / lik_var)
@@ -1158,6 +1290,16 @@ sensitivity_cri <- function(prior,
     components <- prior$components
     weights    <- prior$weights
 
+    # Scale for Normal parts with binary data is decided for the whole mixture
+    # (a mixture with a non-Normal part keeps the probability reading).
+    on_logit_mix <- FALSE
+    if (identical(type, "binary")) {
+      mix_scale <- .binary_scale(prior, data_summary)
+      if (is.na(mix_scale)) mix_scale <- "proportion"
+      data_summary$binary_scale <- mix_scale
+      on_logit_mix <- identical(mix_scale, "log_odds")
+    }
+
     # Update each component individually
     post_components <- lapply(components, function(comp) {
       tryCatch(.conjugate_update(comp, data_summary), error = function(e) NULL)
@@ -1174,11 +1316,17 @@ sensitivity_cri <- function(prior,
     # Re-weight components by marginal likelihood
     log_marg <- vapply(seq_along(post_components), function(i) {
       comp     <- components[keep][[i]]
-      obs_mean <- if (type == "binary") x / n else x
-      obs_se   <- if (type == "binary") {
-        sqrt(obs_mean * (1 - obs_mean) / n)
+      if (type == "binary" && on_logit_mix) {
+        lo       <- .binary_logit(x, n)
+        obs_mean <- lo$mean
+        obs_se   <- lo$se
       } else {
-        (data_summary$sd %||% comp$fit_summary$sd) / sqrt(n)
+        obs_mean <- if (type == "binary") x / n else x
+        obs_se   <- if (type == "binary") {
+          sqrt(obs_mean * (1 - obs_mean) / n)
+        } else {
+          (data_summary$sd %||% comp$fit_summary$sd) / sqrt(n)
+        }
       }
       stats::dnorm(obs_mean,
                    mean = comp$fit_summary$mean,

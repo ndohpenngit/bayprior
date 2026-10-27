@@ -136,7 +136,7 @@ test_that("plots use prior mean and strength as axes for a strength grid", {
   both <- suppressMessages(sensitivity_grid(p, ds, .strength_grid(p, shift_sd = 1)))
   g2 <- plot_sensitivity(both, target = "posterior_mean")
   expect_equal(unname(c(g2$labels$x, g2$labels$y)),
-               c("Prior mean", "Prior effective sample size"))
+               c("Prior mean", "Prior effective sample size\n(log scale)"))
   expect_s3_class(plot_tornado(both), "ggplot")
 })
 
@@ -196,4 +196,118 @@ test_that("sensitivity module uses a strength grid by default and the old grid o
   expect_true(is.list(out$res$param_grid) && !is.data.frame(out$res$param_grid))
   expect_equal(names(out$res$param_grid), c("alpha", "beta"))
   expect_match(out$note, "prior means")
+})
+
+test_that("grid note says 'working prior' for mixtures and flags a range excluding 1x", {
+  p <- beta_prior()
+  g <- .strength_grid(p, scale = c(0.5, 2), shift_sd = 0)
+  expect_match(.grid_note_text(p, g, attr(g, "design")), "elicited", fixed = TRUE)
+
+  mix <- structure(list(dist = "mixture"), class = "bayprior")
+  txt <- .grid_note_text(p, g, attr(g, "design"), source = mix)
+  expect_match(txt, "working prior", fixed = TRUE)
+  expect_false(grepl("elicited", txt, fixed = TRUE))
+
+  # 1x inside the range: no hint
+  expect_false(grepl("outside this strength range", .grid_note_text(p, g, attr(g, "design"))))
+  # 1x outside the range: hint, worded for the source
+  g2 <- .strength_grid(p, scale = c(1.5, 3), shift_sd = 0)
+  expect_match(.grid_note_text(p, g2, attr(g2, "design")),
+               "elicited prior (1x) is outside this strength range", fixed = TRUE)
+  expect_match(.grid_note_text(p, g2, attr(g2, "design"), source = mix),
+               "working prior (1x) is outside", fixed = TRUE)
+})
+
+test_that("slider spec is finite, ordered and floors non-positive values", {
+  for (v in c(0, -3, 0.004, 1, 6.7, 250)) {
+    sp <- .sens_slider_spec(v)
+    expect_true(all(is.finite(c(sp$min, sp$max, sp$value, sp$step))))
+    expect_lt(sp$min, sp$max)
+    expect_gte(sp$value[1], sp$min); expect_lte(sp$value[2], sp$max)
+    expect_gt(sp$step, 0)
+  }
+  sp <- .sens_slider_spec(10)
+  expect_equal(c(sp$min, sp$max, sp$value), c(2, 40, 5, 20))
+})
+
+test_that("run-button hint appears only without a prior", {
+  expect_null(.no_prior_tip(TRUE))
+  expect_match(as.character(.no_prior_tip(FALSE)), "Fit a prior in Prior Elicitation first")
+})
+
+test_that("Reset to defaults runs without error", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("shinyWidgets")
+  p <- beta_prior()
+  shared <- shiny::reactiveValues(sensitivity = NULL, conflict = NULL)
+  shiny::testServer(mod_sensitivity_server,
+    args = list(shared = shared, active_prior = shiny::reactive(p)), {
+      session$setInputs(grid_design = "hyper", strength_range = c(1, 3),
+                        vary_mean = FALSE, shift_sd = 2, grid_size = 40,
+                        analysis_type = "cri", threshold = 0.5,
+                        targets = "posterior_sd", cri_level = 0.8,
+                        p1_range = c(1, 2), p2_range = c(1, 2),
+                        sens_data_type = "binary", sens_x = 18, sens_n = 40)
+      session$setInputs(run_btn = 1)
+      # update*() calls only send messages to the browser, so the new values do
+      # not come back as inputs in testServer(); this checks the handler runs.
+      expect_error(session$setInputs(reset_grid = 1), NA)
+    })
+})
+
+test_that("a Normal prior read as log-odds is updated on that scale at every grid point", {
+  lo_prior <- elicit_normal(mean = -0.862, sd = 0.335, method = "moments",
+                            label = "Historical control")
+  ds <- list(type = "binary", x = 18, n = 40)
+  se <- sqrt(1 / 18 + 1 / 22)
+  post_mean <- function(mu, sg) {
+    w <- (1 / se^2) / (1 / sg^2 + 1 / se^2)
+    (1 - w) * mu + w * log(18 / 22)
+  }
+  thr <- qlogis(0.3)
+  # the second row has mean +/- 2 SD inside [0, 1], which on its own would be
+  # read as a proportion prior; the scale is fixed from the reference prior
+  pg <- list(mu = c(-0.862, 0.1), sigma = c(0.335, 0.05))
+  s <- suppressMessages(sensitivity_grid(lo_prior, ds, expand.grid(pg),
+                                         threshold = thr))
+  expect_equal(s$binary_scale, "log_odds")
+  g <- s$grid
+  expect_equal(g$posterior_mean,
+               mapply(post_mean, g$mu, g$sigma), tolerance = 1e-8)
+  ref <- g[s$reference_row, ]
+  sd_post <- 1 / sqrt(1 / ref$sigma^2 + 1 / se^2)
+  expect_equal(ref$prob_efficacy,
+               pnorm(thr, ref$posterior_mean, sd_post, lower.tail = FALSE),
+               tolerance = 1e-8)
+
+  cri <- suppressMessages(sensitivity_cri(lo_prior, ds, expand.grid(pg)))
+  expect_equal(cri$binary_scale, "log_odds")
+
+  # other priors carry no scale
+  b <- elicit_beta(mean = 0.36, sd = 0.10, method = "moments")
+  sb <- suppressMessages(sensitivity_grid(b, ds, list(alpha = c(2, 4), beta = c(3, 6))))
+  expect_null(sb$binary_scale)
+})
+
+test_that("sensitivity module converts a response-rate threshold for a log-odds prior", {
+  skip_if_not_installed("shiny")
+  lo_prior <- elicit_normal(mean = -0.862, sd = 0.335, method = "moments",
+                            label = "Historical control")
+  shared <- shiny::reactiveValues(sensitivity = NULL, conflict = NULL)
+  store <- new.env()
+  shiny::testServer(mod_sensitivity_server,
+    args = list(shared = shared, active_prior = shiny::reactive(lo_prior)), {
+      session$setInputs(grid_design = "strength", strength_range = c(0.5, 2),
+                        vary_mean = FALSE, grid_size = 5, analysis_type = "grid",
+                        threshold = 0.3, targets = c("posterior_mean", "prob_efficacy"),
+                        sens_data_type = "binary", sens_x = 18, sens_n = 40)
+      store$logit <- on_logit()
+      store$ui <- as.character(output$threshold_ui$html)
+      session$setInputs(run_btn = 1)
+      store$res <- shiny::isolate(shared$sensitivity)
+    })
+  expect_true(store$logit)
+  expect_match(store$ui, "Response-rate threshold", fixed = TRUE)
+  expect_equal(store$res$threshold, qlogis(0.3))
+  expect_equal(store$res$binary_scale, "log_odds")
 })

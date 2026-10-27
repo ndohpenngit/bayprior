@@ -2,6 +2,15 @@
 
 ## Shiny app
 
+* Sensitivity tab: **Reset** (next to Run) restores the grid settings (design,
+  strength range, mean shift, grid size, hyperparameter ranges, analysis type,
+  threshold, targets, credible-interval level); the observed data are kept.
+  The grid note now says "working prior" for mixture priors and says so when
+  the strength range does not include the elicited value (1x). The Run
+  button's "Fit a prior first" hint, here and in Conflict Diagnostics, shows
+  only while no prior is available. The tornado plot has more room for its
+  subtitle, and the log-scaled strength axis of the 2-D plot is labelled.
+
 * New **Session** menu in the header, next to the theme toggle, to save the
   current work to a `.rds` file and load it back from any tab. Loading
   restores the priors, the expert pool, the MAP prior and the report
@@ -25,6 +34,13 @@
 
 * Conflict Diagnostics no longer fails when no result is produced.
 
+* Welcome page animation: the numbers and curves now come from bayprior's own
+  functions (`dev/make_bp_live.R`). The pooling panel quotes the
+  Bhattacharyya agreement used by the Pooling tab (0.43) instead of an overlap
+  area, and the robust-prior panel uses the prior from the chip example, labels
+  both estimates as posterior means (40% and 73%) and shows the posterior
+  weight on the informative part (3%).
+
 * Sensitivity: the default grid is now built in terms of the prior rather
   than its raw hyperparameters, for Beta, Gamma and Normal priors. Prior
   strength (the effective sample size) is varied from 0.5x to 2x the
@@ -40,6 +56,39 @@
   **Influence scores from earlier versions are not comparable with the new
   default**; rerun the analysis. The reference prior is now exactly one of
   the grid points.
+
+## Bug fixes
+
+* A Normal prior used with binary (events / n) data was compared with the raw
+  proportion even when it is a log-odds prior, such as one from `map_prior()`.
+  A historical-control prior of mean -0.862 and SD 0.335 against 18 events in
+  40 was flagged as mild conflict (surprise 3.8, Box p 0.015), although on the
+  log-odds scale it is not (observed -0.20, z = 1.4, p about 0.13), and the
+  overlay plot drew the likelihood and posterior off the axis. Such a prior is
+  now read on the log-odds scale unless its mean +/- 2 SD lies inside [0, 1],
+  in which case it is read as a prior on the proportion. This applies to
+  `prior_conflict()` (including the numerical prior predictive p-value),
+  `plot_prior_likelihood()`, and the posterior update used by the sensitivity
+  analysis. Set `binary_scale = "log_odds"` or `"proportion"` in
+  `data_summary` to choose; the Conflict Diagnostics tab has a selector, and
+  the result says which scale was used (`$binary_scale`, `$binary_scale_note`).
+  `sensitivity_grid()` and `sensitivity_cri()` fix the scale once from the
+  reference prior (so every grid point is updated on the same scale), report it
+  in `$binary_scale`, and take `threshold` on the scale of the parameter (use
+  `qlogis(rate)` for a response-rate threshold with a log-odds prior). In the
+  Sensitivity tab the threshold is then entered as a response rate and
+  converted, and a note says that posterior means and SDs are log-odds. Rerun
+  conflict and sensitivity results that used a Normal prior with binary data.
+
+* Updating a Normal prior with binary, Poisson or survival data treated the
+  event count as an observed mean. It now uses the observed rate (`x / n`) for
+  Poisson and survival data, and the proportion or the log-odds (see above)
+  for binary data, with the matching standard error. This affected Normal priors on
+  those data types and, in particular, the vague Normal component of a robust
+  prior with binary data, whose posterior mean could come out far outside the
+  probability scale (7.29 in one example, now about 0.79). Results that
+  involved this update, including the posterior and the posterior component
+  weights of robust priors with binary data, can change.
 
 ## Sensitivity analysis
 
@@ -57,6 +106,10 @@
   that no evidence of conflict was detected, that a large p-value does not
   show the prior is correct, and that with a small sample the check has little
   power to detect conflict. This text is shown in the app and in reports.
+  For mild conflict it now suggests a sensitivity analysis that varies the
+  prior's strength and mean, including a weaker prior, and points to the
+  Sensitivity tab and `sensitivity_grid()`; it previously suggested only "a
+  more diffuse prior".
 
 * The conflict vignette's threshold table now matches the code: "severe" is
   Box p below about 0.0027 (not 0.01), and it states that only the Box

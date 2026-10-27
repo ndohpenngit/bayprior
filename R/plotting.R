@@ -36,9 +36,17 @@ plot_prior_likelihood <- function(prior,
     lik_obs_mean <- x
     lik_obs_se   <- max((data_summary$sd %||% NA_real_) / sqrt(n), 1e-8)
   }
+  # A Normal prior with binary data on the log-odds scale: the likelihood is
+  # drawn on that scale too, and the grid spans it (see .binary_scale()).
+  bin_logit <- identical(.binary_scale(prior, data_summary), "log_odds")
+  if (bin_logit) {
+    lo           <- .binary_logit(x, n)
+    lik_obs_mean <- lo$mean
+    lik_obs_se   <- lo$se
+  }
 
   range_p <- .prior_range(prior)
-  if (type == "binary") {
+  if (type == "binary" && !bin_logit) {
     grid <- seq(range_p$lo, range_p$hi, length.out = n_grid)
   } else {
     # Union with the likelihood's range -- not just the prior's. This plot
@@ -61,7 +69,11 @@ plot_prior_likelihood <- function(prior,
   # Normal-approximation parameters -- poisson/survival's "x" is an event
   # count, not a rate, and has no data_summary$sd field at all (only
   # continuous data collects one), so these cannot share a branch.
-  if (type == "binary") {
+  if (bin_logit) {
+    # Binomial likelihood as a function of the log-odds (scaled below)
+    lik_d <- exp(x * stats::plogis(grid, log.p = TRUE) +
+                 (n - x) * stats::plogis(-grid, log.p = TRUE))
+  } else if (type == "binary") {
     lik_d <- stats::dbeta(grid, x + 1, n - x + 1)
   } else {
     lik_d <- stats::dnorm(grid, lik_obs_mean, lik_obs_se)
@@ -98,8 +110,9 @@ plot_prior_likelihood <- function(prior,
     ggplot2::scale_fill_manual(values = pal, name = NULL) +
     ggplot2::labs(
       title    = title %||% glue::glue("Prior-Likelihood-Posterior: {prior$label}"),
-      subtitle = glue::glue("Data: n = {n}, events/mean = {x}"),
-      x        = prior$label,
+      subtitle = glue::glue("Data: n = {n}, events/mean = {x}",
+                            if (bin_logit) " (log-odds scale)" else ""),
+      x        = if (bin_logit) paste0(prior$label, " (log-odds)") else prior$label,
       y        = "Density"
     ) +
     ggplot2::theme_minimal(base_size = 13) +
@@ -245,7 +258,9 @@ plot_sensitivity <- function(sensitivity,
     }
     p + ggplot2::labs(
       title = glue::glue("Sensitivity heatmap: {target_label}"),
-      x = plabs[1], y = plabs[2]
+      x = plabs[1],
+      y = if (identical(params[2], "prior_strength"))
+            paste0(plabs[2], "\n(log scale)") else plabs[2]
     ) + ggplot2::theme_minimal(base_size = 13)
 
   } else {
@@ -274,7 +289,7 @@ plot_tornado <- function(sensitivity,
     plotly::ggplotly(gp, tooltip = "text")
   }) |>
     .plotly_title(title, gsub("\n", "<br>", subtitle, fixed = TRUE)) |>
-    plotly::layout(margin = list(t = 80))
+    plotly::layout(margin = list(t = 105))
 }
 
 #' @noRd

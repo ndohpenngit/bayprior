@@ -241,3 +241,13 @@
     icon(cfg$icon), " ", msg
   )
 }
+
+
+# Hover hint for a Run button, shown only while no prior is available (the
+# static text used to appear even when a prior was active). Used inside a
+# .btn-tip-wrap, through uiOutput().
+#' @noRd
+.no_prior_tip <- function(has_prior) {
+  if (isTRUE(has_prior)) return(NULL)
+  tags$span(class = "btn-tip-text", "Fit a prior in Prior Elicitation first")
+}

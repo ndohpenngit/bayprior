@@ -19,7 +19,8 @@ mod_conflict_ui <- function(id) {
       conditionalPanel(
         condition = sprintf("input['%s'] === 'binary'", ns("data_type")),
         numericInput(ns("bin_x"), "Events (x)", 14, 0),
-        numericInput(ns("bin_n"), "Sample size (n)", 40, 1)
+        numericInput(ns("bin_n"), "Sample size (n)", 40, 1),
+        uiOutput(ns("bin_scale_ui"))
       ),
       conditionalPanel(
         condition = sprintf("input['%s'] === 'continuous'", ns("data_type")),
@@ -64,7 +65,7 @@ mod_conflict_ui <- function(id) {
         class = "btn-tip-wrap",
         actionButton(ns("run_btn"), "Run Diagnostics",
                      icon = icon("stethoscope"), class = "btn-primary btn-block"),
-        tags$span(class = "btn-tip-text", "Fit a prior in Prior Elicitation first")
+        uiOutput(ns("run_tip"), inline = TRUE)
       )
     ),
     column(8,
@@ -73,9 +74,42 @@ mod_conflict_ui <- function(id) {
   )
 }
 
+# Scale note for the result card: the console text refers to data_summary,
+# which the app user does not see, so point to the selector instead.
+#' @noRd
+.app_scale_note <- function(r) {
+  if (identical(r$binary_scale, "log_odds")) {
+    ds <- r$data_summary
+    lo <- .binary_logit(ds$x, ds$n)
+    paste0("The Normal prior is read as a prior on the log-odds scale, so the ",
+           "data are compared as log-odds (observed ", round(lo$mean, 3),
+           ", SE ", round(lo$se, 3), "). If it is a prior on the proportion ",
+           "itself, choose \"Proportion scale\" in the selector on the left.")
+  } else {
+    paste0("The Normal prior is read as a prior on the proportion itself. If ",
+           "it is on the log-odds scale (as the MAP prior gives), choose ",
+           "\"Log-odds scale\" in the selector on the left.")
+  }
+}
+
 #' @noRd
 mod_conflict_server <- function(id, shared, active_prior) {
   moduleServer(id, function(input, output, session) {
+
+    # Scale of a Normal prior meeting binary data (see .binary_scale())
+    output$bin_scale_ui <- renderUI({
+      p <- active_prior()
+      req(p)
+      if (is.na(.binary_scale(p, list(type = "binary")))) return(NULL)
+      selectInput(session$ns("bin_scale"), "Normal prior is on the",
+        choices = c("Automatic (log-odds unless it fits 0 to 1)" = "auto",
+                    "Log-odds scale"                              = "log_odds",
+                    "Proportion scale"                            = "proportion"),
+        selected = isolate(input$bin_scale) %||% "auto")
+    })
+
+    # Hover hint on the Run button only while there is no prior
+    output$run_tip <- renderUI(.no_prior_tip(!is.null(active_prior())))
 
     output$prior_banner <- renderUI({
       p   <- active_prior()
@@ -92,7 +126,8 @@ mod_conflict_server <- function(id, shared, active_prior) {
       switch(input$data_type,
         binary     = list(type = "binary",
                           x    = input$bin_x,
-                          n    = input$bin_n),
+                          n    = input$bin_n,
+                          binary_scale = input$bin_scale %||% "auto"),
         continuous = list(type = "continuous",
                           x    = input$cont_mean,
                           sd   = input$cont_sd,
@@ -260,6 +295,10 @@ mod_conflict_server <- function(id, shared, active_prior) {
           tags$div(class = "alert alert-warning", style = "margin:10px 0;",
                    icon("triangle-exclamation"), " ",
                    tags$strong("Caution: "), r$box_pvalue_caution),
+        if (!is.null(r$binary_scale))
+          tags$div(class = "alert alert-info", style = "margin:10px 0;",
+                   icon("circle-info"), " ",
+                   tags$strong("Scale: "), .app_scale_note(r)),
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
           title = tagList(

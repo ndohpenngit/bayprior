@@ -89,6 +89,7 @@ print.bayprior_conflict <- function(x, ...) {
   cat("\n")
   .bp_alert(x$recommendation)
   if (!is.null(x$box_pvalue_caution)) .bp_alert(paste("Caution:", x$box_pvalue_caution))
+  if (!is.null(x$binary_scale_note)) .bp_alert(paste("Note:", x$binary_scale_note))
   invisible(x)
 }
 

@@ -37,6 +37,7 @@ mod_sensitivity_ui <- function(id) {
       ),
       sliderInput(ns("grid_size"), "Grid points per axis", 5, 50, 20, 5),
       uiOutput(ns("grid_note")),
+      uiOutput(ns("scale_note")),
       tags$hr(),
       shinyWidgets::radioGroupButtons(
         ns("analysis_type"), "Analysis type",
@@ -48,8 +49,7 @@ mod_sensitivity_ui <- function(id) {
       # Posterior quantity targets -- shown for grid analysis
       conditionalPanel(
         condition = sprintf("input['%s'] === 'grid'", ns("analysis_type")),
-        numericInput(ns("threshold"), "Efficacy threshold (theta_0)",
-                     0.30, step = 0.01),
+        uiOutput(ns("threshold_ui")),
         checkboxGroupInput(ns("targets"), "Compute for:",
           choices  = c("Posterior mean"        = "posterior_mean",
                        "Posterior SD"          = "posterior_sd",
@@ -64,11 +64,18 @@ mod_sensitivity_ui <- function(id) {
                     0.80, 0.99, 0.95, 0.01)
       ),
       tags$hr(),
+      # Run, with a button that resets every setting above to its default
       tags$div(
-        class = "btn-tip-wrap",
-        actionButton(ns("run_btn"), "Run Sensitivity Analysis",
-                     icon = icon("play"), class = "btn-primary btn-block"),
-        tags$span(class = "btn-tip-text", "Fit a prior in Prior Elicitation first")
+        style = "display:flex; gap:8px; align-items:stretch;",
+        tags$div(
+          class = "btn-tip-wrap", style = "flex:1;",
+          actionButton(ns("run_btn"), "Run Sensitivity Analysis",
+                       icon = icon("play"), class = "btn-primary btn-block"),
+          uiOutput(ns("run_tip"), inline = TRUE)
+        ),
+        actionButton(ns("reset_grid"), "Reset", icon = icon("undo"),
+                     class = "btn-default",
+                     title = "Reset all grid settings to their defaults")
       )
     ),
     column(8,
@@ -90,6 +97,9 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
           invokeRestart("muffleWarning")
       })
     }
+
+    # Hover hint on the Run button only while there is no prior
+    output$run_tip <- renderUI(.no_prior_tip(!is.null(active_prior())))
 
     output$prior_banner <- renderUI({
       p   <- active_prior()
@@ -146,13 +156,13 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       w <- working(); req(w, design_ok())
       txt <- if (identical(design_mode(), "strength")) {
         g <- strength_pg()
-        .grid_note_text(w, g, attr(g, "design"))
+        .grid_note_text(w, g, attr(g, "design"), source = active_prior())
       } else {
         req(input$p1_range, input$p2_range)
         nm <- pnames()
         g  <- expand.grid(input$p1_range, input$p2_range)
         names(g) <- c(nm$p1, nm$p2)
-        .grid_note_text(w, g)
+        .grid_note_text(w, g, source = active_prior())
       }
       if (is.null(txt)) return(NULL)
       tags$p(class = "bp-note", icon("info-circle"), " ", txt)
@@ -181,22 +191,16 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
 
     output$param1_ui <- renderUI({
       nm <- pnames()$p1
-      v  <- max(0.01, abs(pnames()$vals[[nm]] %||% 1))  # abs+floor avoids 0/negative
-      lo  <- max(0.001, round(v * 0.2, 3))
-      hi  <- max(lo + 0.01, round(v * 4, 2))
-      val <- c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2)))
+      sp <- .sens_slider_spec(pnames()$vals[[nm]] %||% 1)
       sliderInput(ns("p1_range"), glue::glue("Range for {nm}"),
-        lo, hi, val, max(0.001, round(v * 0.05, 3)), ticks = FALSE)
+        sp$min, sp$max, sp$value, sp$step, ticks = FALSE)
     })
 
     output$param2_ui <- renderUI({
       nm <- pnames()$p2
-      v  <- max(0.01, abs(pnames()$vals[[nm]] %||% 1))
-      lo  <- max(0.001, round(v * 0.2, 3))
-      hi  <- max(lo + 0.01, round(v * 4, 2))
-      val <- c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2)))
+      sp <- .sens_slider_spec(pnames()$vals[[nm]] %||% 1)
       sliderInput(ns("p2_range"), glue::glue("Range for {nm}"),
-        lo, hi, val, max(0.001, round(v * 0.05, 3)), ticks = FALSE)
+        sp$min, sp$max, sp$value, sp$step, ticks = FALSE)
     })
 
     observeEvent(active_prior()$dist, {
@@ -205,20 +209,15 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       v1 <- nm$vals[[nm$p1]] %||% 1
       v2 <- nm$vals[[nm$p2]] %||% 1
 
-      # Guard: ensure all slider values are finite, non-NULL, and value >= min
-      # abs() + floor of 0.01 handles Normal priors with mean = 0 or
-      # any parameter that is zero/negative (which breaks the multiplier logic)
+      # Guard: all slider values must be finite and value >= min (the shared
+      # spec floors v at 0.01, which handles Normal means of 0 or negative values)
       .safe_slider <- function(session, id, label, v) {
-        v   <- max(0.01, abs(v))   # same floor as renderUI definitions
-        lo  <- max(0.001, round(v * 0.2, 3))
-        hi  <- max(lo + 0.01, round(v * 4, 2))
-        val <- c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2)))
-        stp <- max(0.001, round(v * 0.05, 3))
-        if (any(is.null(c(lo, hi, val, stp))) ||
-            any(is.na(c(lo, hi, val, stp))) ||
-            any(!is.finite(c(lo, hi, val, stp)))) return(invisible(NULL))
+        sp <- .sens_slider_spec(v)
+        if (any(!is.finite(c(sp$min, sp$max, sp$value, sp$step))))
+          return(invisible(NULL))
         updateSliderInput(session, id, label = label,
-                          min = lo, max = hi, value = val, step = stp)
+                          min = sp$min, max = sp$max, value = sp$value,
+                          step = sp$step)
       }
 
       .safe_slider(session, "p1_range",
@@ -226,6 +225,35 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       .safe_slider(session, "p2_range",
                    glue::glue("Range for {nm$p2}"), v2)
     }, ignoreInit = TRUE)
+
+    # -- Reset the grid settings to their defaults ------------------------------
+    # The observed data are left alone. Changing the inputs clears stale results
+    # through the observer further down.
+    observeEvent(input$reset_grid, {
+      if (isTRUE(design_ok()))
+        shinyWidgets::updateRadioGroupButtons(session, "grid_design",
+                                              selected = "strength")
+      shiny::updateSliderInput(session, "strength_range", value = c(0.5, 2))
+      shiny::updateCheckboxInput(session, "vary_mean", value = TRUE)
+      shiny::updateSliderInput(session, "shift_sd", value = 1)
+      shiny::updateSliderInput(session, "grid_size", value = 20)
+
+      if (!is.null(active_prior())) {
+        nm <- pnames()
+        for (k in c("p1", "p2")) {
+          sp <- .sens_slider_spec(nm$vals[[nm[[k]]]] %||% 1)
+          if (all(is.finite(c(sp$min, sp$max, sp$value, sp$step))))
+            shiny::updateSliderInput(session, paste0(k, "_range"), min = sp$min,
+                              max = sp$max, value = sp$value, step = sp$step)
+        }
+      }
+      shinyWidgets::updateRadioGroupButtons(session, "analysis_type",
+                                            selected = "grid")
+      shiny::updateNumericInput(session, "threshold", value = 0.30)
+      shiny::updateCheckboxGroupInput(session, "targets",
+                               selected = c("posterior_mean", "prob_efficacy"))
+      shiny::updateSliderInput(session, "cri_level", value = 0.95)
+    })
 
     # -- Data entry UI -- independent of conflict diagnostics -----------------
     output$data_entry_ui <- renderUI({
@@ -290,6 +318,68 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
       }
     })
 
+    # Observed data: from Conflict Diagnostics when available, otherwise this
+    # tab's own inputs. The data type must suit the prior family.
+    sens_data <- reactive({
+      p <- active_prior(); req(p)
+      cd <- shared$conflict
+      if (!is.null(cd)) {
+        cd$data_summary
+      } else {
+        switch(input$sens_data_type %||% "binary",
+          binary   = list(type = "binary",
+                          x    = input$sens_x   %||% 15L,
+                          n    = input$sens_n   %||% 50L),
+          continuous = list(type = "continuous",
+                          x    = input$sens_mean %||% unlist(p$fit_summary$mean),
+                          sd   = input$sens_sd   %||% unlist(p$fit_summary$sd),
+                          n    = as.integer(input$sens_n2 %||% 50L)),
+          poisson  = list(type = "poisson",
+                          x    = input$sens_pois_x %||% 12L,
+                          n    = input$sens_pois_n %||% 100),
+          survival = list(type = "survival",
+                          x    = input$sens_surv_x %||% 20L,
+                          n    = input$sens_surv_n %||% 400),
+          list(type = "binary", x = 15L, n = 50L)
+        )
+      }
+    })
+
+    # Scale of a Normal prior meeting binary data ("log_odds", "proportion"),
+    # or NA. With log-odds the posterior quantities are on the log-odds scale.
+    bin_scale <- reactive({
+      w <- working(); req(w)
+      .binary_scale(w, sens_data())
+    })
+    on_logit <- reactive(identical(bin_scale(), "log_odds"))
+
+    output$threshold_ui <- renderUI({
+      keep <- isolate(input$threshold) %||% 0.30
+      if (isTRUE(on_logit())) {
+        numericInput(session$ns("threshold"),
+                     "Response-rate threshold (used as log-odds)",
+                     keep, min = 0.001, max = 0.999, step = 0.01)
+      } else {
+        numericInput(session$ns("threshold"), "Efficacy threshold (theta_0)",
+                     keep, step = 0.01)
+      }
+    })
+
+    output$scale_note <- renderUI({
+      sc <- tryCatch(bin_scale(), error = function(e) NA_character_)
+      if (is.na(sc)) return(NULL)
+      txt <- if (identical(sc, "log_odds"))
+        paste0("The Normal prior is read on the log-odds scale, so posterior",
+               " means and SDs below are log-odds. The threshold is a",
+               " response rate and is converted with the logit. The scale can",
+               " be changed on the Conflict Diagnostics tab.")
+      else
+        paste0("The Normal prior is read as a prior on the proportion itself.",
+               " If it is on the log-odds scale, choose that on the Conflict",
+               " Diagnostics tab and rerun.")
+      tags$p(class = "bp-note", icon("info-circle"), " ", txt)
+    })
+
     # Reset results whenever ANY input changes -- prevents stale results
     observeEvent(
       list(active_prior(), input$p1_range, input$p2_range,
@@ -317,30 +407,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         return(invisible(NULL))
       }
 
-      cd <- shared$conflict
-
-      # Build data_summary: prefer conflict diagnostics, fall back to own inputs.
-      # Critically: match data type to prior family to avoid conjugate update failure.
-      data_sum <- if (!is.null(cd)) {
-        cd$data_summary
-      } else {
-        switch(input$sens_data_type,
-          binary   = list(type = "binary",
-                          x    = input$sens_x   %||% 15L,
-                          n    = input$sens_n   %||% 50L),
-          continuous = list(type = "continuous",
-                          x    = input$sens_mean %||% unlist(p$fit_summary$mean),
-                          sd   = input$sens_sd   %||% unlist(p$fit_summary$sd),
-                          n    = as.integer(input$sens_n2 %||% 50L)),
-          poisson  = list(type = "poisson",
-                          x    = input$sens_pois_x %||% 12L,
-                          n    = input$sens_pois_n %||% 100),
-          survival = list(type = "survival",
-                          x    = input$sens_surv_x %||% 20L,
-                          n    = input$sens_surv_n %||% 400),
-          list(type = "binary", x = 15L, n = 50L)
-        )
-      }
+      data_sum <- sens_data()
       nm <- pnames()
       pg <- if (identical(design_mode(), "strength")) {
         strength_pg()
@@ -354,13 +421,24 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
         )
       }
 
+      # With a log-odds reading the threshold is entered as a response rate
+      thr <- input$threshold
+      if (isTRUE(on_logit())) {
+        if (is.null(thr) || !is.finite(thr) || thr <= 0 || thr >= 1) {
+          showNotification("Enter a response-rate threshold between 0 and 1.",
+                           type = "error")
+          return(invisible(NULL))
+        }
+        thr <- stats::qlogis(thr)
+      }
+
       run_fn <- if (isTRUE(input$analysis_type == "cri")) {
         function() sensitivity_cri(p, data_sum, pg,
                                    cri_level = input$cri_level %||% 0.95)
       } else {
         function() sensitivity_grid(p, data_sum, pg,
                                     target    = input$targets,
-                                    threshold = input$threshold)
+                                    threshold = thr)
       }
 
       res <- withCallingHandlers(
@@ -404,7 +482,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
             icon("bar-chart-steps"), " Tornado plot"
           ),
           shinycssloaders::withSpinner(
-            plotly::plotlyOutput(ns("tornado_plot"), height = "220px"),
+            plotly::plotlyOutput(ns("tornado_plot"), height = "260px"),
             color = "#1D9E75"
           )
         ),
@@ -415,7 +493,7 @@ mod_sensitivity_server <- function(id, shared, active_prior) {
           ),
           uiOutput(ns("outcome_picker")),
           shinycssloaders::withSpinner(
-            plotly::plotlyOutput(ns("influence_plot"), height = "300px"),
+            plotly::plotlyOutput(ns("influence_plot"), height = "340px"),
             color = "#1D9E75"
           )
         )

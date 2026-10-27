@@ -158,17 +158,24 @@
 .fmt_num <- function(v) format(signif(v, 3), trim = TRUE)
 
 # One sentence describing the grid in prior terms, or NULL.
+# `source` is the prior the analysis was started from. A pooled or robust
+# mixture is analysed through a moment-matched working prior, so its strength is
+# not something an expert gave; the note then says "working prior", not "elicited".
 #' @noRd
-.grid_note_text <- function(working, grid, design = NULL) {
+.grid_note_text <- function(working, grid, design = NULL, source = NULL) {
   imp <- .grid_implied(working, grid)
   if (is.null(imp) || is.null(imp$mean) || is.null(imp$strength)) return(NULL)
   sp <- imp$spec
   rng <- function(r) paste0(.fmt_num(r[1]), " to ", .fmt_num(r[2]))
+  is_mix <- !is.null(source) && !is.null(source$dist) &&
+    source$dist %in% c("mixture", "log_pool")
+  ref  <- if (is_mix) "working prior" else "elicited"
+  refv <- if (is_mix) "the working prior's value" else "the elicited value"
 
   lead <- ""
   if (!is.null(design) && identical(design$type, "strength")) {
     lead <- paste0("Prior strength varied from ", .fmt_num(design$scale[1]), "x to ",
-                   .fmt_num(design$scale[2]), "x the elicited value; ",
+                   .fmt_num(design$scale[2]), "x ", refv, "; ",
                    if (isTRUE(design$mean_fixed)) {
                      "the prior mean is held fixed. "
                    } else {
@@ -176,9 +183,30 @@
                             .fmt_num(design$shift_sd), " prior SD. ")
                    })
   }
-  paste0(lead, "This grid covers prior means ", rng(imp$mean), " (elicited ",
+  tail_note <- ""
+  if (!is.null(design) && identical(design$type, "strength") &&
+      (design$scale[1] > 1 || design$scale[2] < 1)) {
+    tail_note <- paste0(" The ", if (is_mix) "working" else "elicited",
+                        " prior (1x) is outside this strength range, so the ",
+                        "reference point is the nearest grid point.")
+  }
+  paste0(lead, "This grid covers prior means ", rng(imp$mean), " (", ref, " ",
          .fmt_num(sp$loc0), ") and ", sp$strength_label, " ", rng(imp$strength),
-         " (elicited ", .fmt_num(sp$str0), ").")
+         " (", ref, " ", .fmt_num(sp$str0), ").", tail_note)
+}
+
+# Slider settings for one hyperparameter range, centred on the value `v` of the
+# working prior: from 0.2x to 4x, default 0.5x to 2x. Shared by the range sliders,
+# their update when the prior changes, and "Reset to defaults".
+#' @noRd
+.sens_slider_spec <- function(v) {
+  v   <- max(0.01, abs(v))      # floor: Normal means of 0, or non-positive parameters
+  lo  <- max(0.001, round(v * 0.2, 3))
+  hi  <- max(lo + 0.01, round(v * 4, 2))
+  list(min   = lo,
+       max   = hi,
+       value = c(max(lo, round(v * 0.5, 2)), min(hi, round(v * 2, 2))),
+       step  = max(0.001, round(v * 0.05, 3)))
 }
 
 # Note for a finished bayprior_sensitivity object (used by the report).
@@ -190,5 +218,5 @@
     .mixture_working_prior(sens$prior, quiet = TRUE))), error = function(e) NULL)
   grid <- if (is.data.frame(pg)) pg else
     tryCatch(do.call(expand.grid, pg), error = function(e) NULL)
-  .grid_note_text(working, grid, attr(pg, "design"))
+  .grid_note_text(working, grid, attr(pg, "design"), source = sens$prior)
 }
