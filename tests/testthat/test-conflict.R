@@ -35,7 +35,7 @@ test_that("Normal prior updated with count data uses the proportion, log-odds or
   post <- .conjugate_update(nrm, ds)
   expect_gt(post$params$mu, 0.3)
   expect_lt(post$params$mu, 0.8)
-  se <- sqrt((8.5 / 11) * (1 - 8.5 / 11) / 10)
+  se <- sqrt(0.8 * 0.2 / 10)   # Wald SE; only 0 or n events are adjusted
   w  <- (1 / se^2) / (1 / 0.2^2 + 1 / se^2)
   expect_equal(post$params$mu, (1 - w) * 0.3 + w * 0.8, tolerance = 1e-8)
   for (x in c(0, 10)) {

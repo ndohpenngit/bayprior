@@ -1193,24 +1193,10 @@ sensitivity_cri <- function(prior,
   # For binary data it is summarised on the log-odds or the proportion scale,
   # whichever the prior is on (see .binary_scale()).
   if (prior$dist == "normal") {
-    if (type %in% c("poisson", "survival")) {
-      obs_mean <- x / n
-      obs_se   <- sqrt(max(x, 0.5)) / n   # 0.5 avoids a zero SE at x = 0
-    } else if (type == "binary" &&
-               identical(.binary_scale(prior, data_summary), "log_odds")) {
-      lo       <- .binary_logit(x, n)
-      obs_mean <- lo$mean
-      obs_se   <- lo$se
-    } else if (type == "binary") {
-      obs_mean <- x / n
-      # The usual SE would be 0 at 0 or n events, so the SE uses the
-      # continuity-adjusted proportion (the mean does not).
-      p_adj    <- (x + 0.5) / (n + 1)
-      obs_se   <- sqrt(p_adj * (1 - p_adj) / n)
-    } else {
-      obs_mean <- x
-      obs_se   <- (data_summary$sd %||% prior$fit_summary$sd) / sqrt(n)
-    }
+    o <- .normal_obs(data_summary,
+                     scale = if (identical(type, "binary")) .binary_scale(prior, data_summary) else NA_character_,
+                     sd = prior$fit_summary$sd)
+    obs_mean <- o$mean; obs_se <- o$se
     obs_se    <- max(obs_se, 1e-8)
     prior_var <- prior$params$sigma^2
     lik_var   <- obs_se^2
@@ -1313,25 +1299,15 @@ sensitivity_cri <- function(prior,
     post_components <- post_components[keep]
     weights         <- weights[keep]
 
-    # Re-weight components by marginal likelihood
-    log_marg <- vapply(seq_along(post_components), function(i) {
-      comp     <- components[keep][[i]]
-      if (type == "binary" && on_logit_mix) {
-        lo       <- .binary_logit(x, n)
-        obs_mean <- lo$mean
-        obs_se   <- lo$se
-      } else {
-        obs_mean <- if (type == "binary") x / n else x
-        obs_se   <- if (type == "binary") {
-          sqrt(obs_mean * (1 - obs_mean) / n)
-        } else {
-          (data_summary$sd %||% comp$fit_summary$sd) / sqrt(n)
-        }
-      }
-      stats::dnorm(obs_mean,
-                   mean = comp$fit_summary$mean,
-                   sd   = sqrt(comp$fit_summary$sd^2 + obs_se^2),
-                   log  = TRUE)
+    # Re-weight components by their marginal likelihood of the data (exact for
+    # Beta / Gamma / Normal-continuous components, numerical integration of the
+    # exact likelihood otherwise; see .log_marglik()). One data SD is shared by
+    # all components, so the weights do not depend on a component's own SD.
+    mix_sd_obs <- data_summary$sd %||% prior$fit_summary$sd
+    mix_scale_arg <- if (identical(type, "binary")) data_summary$binary_scale else NA_character_
+    log_marg <- vapply(components[keep], function(comp) {
+      as.numeric(.log_marglik(comp, data_summary, sd = mix_sd_obs,
+                              scale = mix_scale_arg))
     }, numeric(1))
 
     log_post_wts <- log(weights) + log_marg

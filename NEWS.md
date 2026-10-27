@@ -59,6 +59,16 @@
 
 ## Bug fixes
 
+
+* **Breaking: mixture posterior weights now use exact marginal likelihoods.**
+  Mixture priors updated with Poisson or survival data previously used the
+  event count as if it were a mean, and binary data used a Normal
+  approximation, so the component weights were wrong. Weights now come from
+  the exact Beta-binomial, Gamma-Poisson and Normal-Normal marginal
+  likelihoods (numerical integration of the exact likelihood for other
+  families), with one shared data SD for continuous data. Posterior weights,
+  means and credible intervals of mixture priors can change.
+
 * **Breaking: `map_prior()` now returns the predictive prior for a new trial.**
   It returned the posterior of the population mean, which leaves out the
   between-trial variance tau^2 and is too narrow as a prior for a new trial
