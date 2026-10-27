@@ -872,3 +872,18 @@ test_that(".plotly_title sets title and subtitle", {
   b2 <- plotly::plotly_build(.plotly_title(mk(), "Only"))
   expect_identical(b2$x$layout$title$text, "Only")
 })
+test_that("influence is also reported in posterior-SD units, so cut-offs do not depend on the scale", {
+  p <- elicit_gamma(mean = 5, sd = 1, method = "moments")
+  ds <- list(type = "poisson", x = 60, n = 10)
+  pg <- list(shape = seq(10, 40, length.out = 4), rate = seq(2, 8, length.out = 4))
+  sa <- sensitivity_grid(p, ds, pg, target = c("posterior_mean", "prob_efficacy"), threshold = 5)
+  expect_true(all(c("influence_scale", "influence_standardised") %in% names(sa)))
+  ref <- .conjugate_update(p, ds)$fit_summary$sd
+  expect_equal(unname(sa$influence_scale["posterior_mean"]), ref)
+  expect_equal(unname(sa$influence_scale["prob_efficacy"]), 1)
+  expect_equal(unname(sa$influence_standardised["posterior_mean"]),
+               unname(sa$influence_scores["posterior_mean"]) / ref)
+  expect_identical(unname(.influence_class(c(posterior_mean = 0.05, prob_efficacy = 0.1))),
+                   c("Not sensitive", "Moderate"))
+  expect_identical(unname(.influence_class(c(posterior_mean = 0.7))), "Sensitive")
+})

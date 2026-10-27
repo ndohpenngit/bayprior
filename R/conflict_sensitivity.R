@@ -892,6 +892,10 @@ sensitivity_grid <- function(prior,
     diff(range(fin))
   }, numeric(1))
 
+  ref_sd <- tryCatch(.conjugate_update(working_prior, data_summary)$fit_summary$sd,
+                     error = function(e) NA_real_)
+  inf_scale <- .influence_scale(names(influence), ref_sd)
+
   structure(
     list(
       grid             = results,
@@ -899,6 +903,8 @@ sensitivity_grid <- function(prior,
       target           = target,
       reference_row    = ref_row,
       influence_scores = influence,
+      influence_scale  = inf_scale,
+      influence_standardised = influence / inf_scale,
       threshold        = threshold,
       binary_scale     = if (is.na(bin_scale)) NULL else bin_scale,
       prior            = prior
@@ -1101,6 +1107,10 @@ sensitivity_cri <- function(prior,
     diff(range(fin))
   }, numeric(1))
 
+  ref_sd <- tryCatch(.conjugate_update(working_prior, data_summary)$fit_summary$sd,
+                     error = function(e) NA_real_)
+  inf_scale <- .influence_scale(names(influence), ref_sd)
+
   structure(
     list(
       grid             = results,
@@ -1108,6 +1118,8 @@ sensitivity_cri <- function(prior,
       target           = report_targets,
       reference_row    = ref_row,
       influence_scores = influence,
+      influence_scale  = inf_scale,
+      influence_standardised = influence / inf_scale,
       cri_level        = cri_level,
       threshold        = threshold,
       binary_scale     = if (is.na(bin_scale)) NULL else bin_scale,
@@ -1117,6 +1129,29 @@ sensitivity_cri <- function(prior,
   )
 }
 
+
+# -- Influence on a scale that does not depend on the units --------------------
+# The raw range of a posterior mean depends on the scale of the parameter (a
+# proportion, a rate of 5, a log-odds), so a fixed cut-off on it means different
+# things in different analyses. The range is therefore also reported in units of
+# the reference posterior SD ("how far the estimate moves, in posterior SDs");
+# probabilities (prob_efficacy) are already on a common scale and stay in
+# probability points. Cut-offs are package conventions, not calibrated tests:
+# 0.1 and 0.5 posterior SDs, 0.05 and 0.15 probability points.
+#' @noRd
+.influence_scale <- function(targets, ref_sd) {
+  sc <- rep(if (is.finite(ref_sd) && ref_sd > 0) ref_sd else NA_real_, length(targets))
+  sc[targets == "prob_efficacy"] <- 1
+  stats::setNames(sc, targets)
+}
+
+#' @noRd
+.influence_class <- function(std, targets = names(std)) {
+  prob <- targets == "prob_efficacy"
+  lo <- ifelse(prob, 0.05, 0.1); hi <- ifelse(prob, 0.15, 0.5)
+  ifelse(is.na(std), "Not computed",
+         ifelse(std < lo, "Not sensitive", ifelse(std <= hi, "Moderate", "Sensitive")))
+}
 
 
 # Define %||% explicitly so it is available regardless of whether rlang is

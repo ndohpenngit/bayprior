@@ -675,21 +675,28 @@ if (has_sens) {
   nms <- names(sc)
   if (is.null(nms) || length(nms) == 0L)
     nms <- paste0("target_", seq_along(sc))
+  std  <- sa$influence_standardised
+  if (is.null(std)) std <- sc
+  prob <- nms == "prob_efficacy"
+  lo_c <- ifelse(prob, 0.05, 0.1); hi_c <- ifelse(prob, 0.15, 0.5)
   df_sens <- data.frame(
     Target    = nms,
     Range     = as.character(.safe_round(sc, 5)),
-    Influence = ifelse(is.na(sc), "Not computed",
-                  ifelse(sc < 0.05, "Not sensitive",
-                    ifelse(sc <= 0.15, "Moderate", "Sensitive"))),
-    stringsAsFactors = FALSE
+    `Range in posterior SDs` = ifelse(prob, "-", as.character(.safe_round(std, 3))),
+    Influence = ifelse(is.na(std), "Not computed",
+                  ifelse(std < lo_c, "Not sensitive",
+                    ifelse(std <= hi_c, "Moderate", "Sensitive"))),
+    stringsAsFactors = FALSE, check.names = FALSE
   )
   rownames(df_sens) <- NULL
   kable(df_sens,
         caption = paste0("Posterior sensitivity to prior hyperparameters ",
-                         "(range of each quantity across the grid; rule of ",
-                         "thumb: below 0.05 not sensitive, 0.05 to 0.15 ",
-                         "moderate, above 0.15 sensitive)"),
-        align = "lrr", row.names = FALSE)
+                         "(range of each quantity across the grid, also in units of the ",
+                         "reference posterior SD; package convention, not a ",
+                         "calibrated test: below 0.1 SD not sensitive, 0.1 to ",
+                         "0.5 moderate, above 0.5 sensitive; for the probability ",
+                         "of efficacy 0.05 and 0.15 probability points)"),
+        align = "lrrr", row.names = FALSE)
 }
 ```
 
