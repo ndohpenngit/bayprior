@@ -291,3 +291,28 @@ test_that("robust_prior's vague component lives in the parameter space", {
   expect_equal(post$dist, "mixture")
   expect_true(all(vapply(post$components, function(k) k$dist, "") == "gamma"))
 })
+
+test_that("calibrate_power_prior flags an unreachable target instead of reporting it as optimal", {
+  base <- elicit_beta(mean = 0.5, sd = 0.2, method = "moments")
+  hist <- list(type = "binary", x = 12, n = 40); cur <- list(type = "binary", x = 18, n = 50)
+  expect_warning(
+    cal <- suppressMessages(calibrate_power_prior(hist, cur, base, target_bf = 50)),
+    "No delta reaches the target")
+  expect_false(cal$target_met)
+  expect_equal(cal$delta_opt, 0.05)
+  # compatible data: the compatibility method does borrow
+  cc <- suppressMessages(calibrate_power_prior(hist, cur, base, method = "compatibility"))
+  expect_true(cc$target_met)
+  expect_gt(cc$delta_opt, 0.5)
+  ok <- suppressMessages(calibrate_power_prior(hist, cur, base, target_bf = 1))
+  expect_true(ok$target_met)
+})
+
+test_that("calibrate_power_prior reports the borrowed sample size and defaults to a target of 1", {
+  base <- elicit_beta(mean = 0.5, sd = 0.2, method = "moments")
+  hist <- list(type = "binary", x = 12, n = 40); cur <- list(type = "binary", x = 18, n = 50)
+  cal <- suppressMessages(calibrate_power_prior(hist, cur, base))
+  expect_equal(cal$target_bf, 1)
+  expect_equal(cal$historical_n, 40)
+  expect_equal(cal$borrowed_n, cal$delta_opt * 40)
+})

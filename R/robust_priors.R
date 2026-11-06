@@ -232,7 +232,13 @@ robust_prior <- function(informative,
 #'   optionally \code{sd}.
 #' @param current_data Named list (same structure as \code{historical_data}).
 #' @param base_prior A \code{bayprior} object (usually a vague prior).
-#' @param target_bf Numeric. Target Bayes Factor. Default \code{3}.
+#' @param target_bf Numeric. Target Bayes Factor. Default \code{1}. The Bayes
+#'   Factor compares how well the power prior and the base prior predict the
+#'   current data: above 1 the borrowed information improves the prediction,
+#'   below 1 it worsens it. With \code{method = "bayes_factor"} the largest
+#'   delta whose Bayes Factor is at least the target is chosen. A target such as
+#'   3 asks for strong evidence in favour of borrowing and is often unreachable
+#'   when the data agree.
 #' @param delta_grid Numeric vector of \eqn{\delta} values. Default
 #'   \code{seq(0.05, 1.0, by = 0.05)}.
 #' @param method Character. \code{"bayes_factor"} (default) or
@@ -240,7 +246,12 @@ robust_prior <- function(informative,
 #'
 #' @return A list of class \code{bayprior_power_prior} with components:
 #'   \describe{
-#'     \item{delta_opt}{Optimal power prior weight selected by the chosen method.}
+#'     \item{delta_opt}{Optimal power prior weight selected by the chosen method.
+#'       When no delta meets the criterion this is the smallest grid value, a
+#'       warning is issued, and \code{target_met} is \code{FALSE}.}
+#'     \item{borrowed_n}{Historical sample size borrowed, \code{delta_opt * n}.}
+#'     \item{historical_n}{Historical sample size \code{n}.}
+#'     \item{target_met}{Logical; \code{TRUE} if some delta met the criterion.}
 #'     \item{delta_grid}{The grid of delta values evaluated.}
 #'     \item{bf_grid}{Bayes Factor at each delta value.}
 #'     \item{compatibility_grid}{Box p-value at each delta value.}
@@ -249,6 +260,12 @@ robust_prior <- function(informative,
 #'     \item{target_bf}{The target Bayes Factor supplied by the user.}
 #'     \item{method}{The calibration method used.}
 #'   }
+#'
+#' @details
+#' The weight is chosen using the current data, so it is not pre-specified (an
+#' empirical-Bayes power prior; Gravestock & Held, 2017). The operating
+#' characteristics of an analysis that borrows in this way, for example type I
+#' error, need to be assessed separately.
 #'
 #' @references
 #' Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for
@@ -274,7 +291,7 @@ robust_prior <- function(informative,
 calibrate_power_prior <- function(historical_data,
                                    current_data,
                                    base_prior,
-                                   target_bf  = 3,
+                                   target_bf  = 1,
                                    delta_grid = seq(0.05, 1.0, by = 0.05),
                                    method     = c("bayes_factor",
                                                   "compatibility")) {
@@ -312,10 +329,28 @@ calibrate_power_prior <- function(historical_data,
     eligible  <- results$delta[!is.na(results$bayes_factor) &
                                  results$bayes_factor >= target_bf]
     delta_opt <- if (length(eligible) > 0) max(eligible) else min(delta_grid)
+    target_met <- length(eligible) > 0
+    if (!target_met) {
+      rlang::warn(paste0(
+        "No delta reaches the target Bayes Factor of ", target_bf,
+        " (the maximum is ", round(max(results$bayes_factor, na.rm = TRUE), 2),
+        "). delta = ", delta_opt, " is the smallest value on the grid, not a ",
+        "calibrated choice, and means almost no borrowing. The Box p-value ",
+        "ranges from ", round(min(results$box_pvalue, na.rm = TRUE), 3), " to ",
+        round(max(results$box_pvalue, na.rm = TRUE), 3), " over the grid; ",
+        "consider a lower target or method = \"compatibility\"."))
+    }
   } else {
     eligible  <- results$delta[!is.na(results$box_pvalue) &
                                  results$box_pvalue >= 0.05]
     delta_opt <- if (length(eligible) > 0) max(eligible) else min(delta_grid)
+    target_met <- length(eligible) > 0
+    if (!target_met) {
+      rlang::warn(paste0(
+        "The Box p-value is below 0.05 at every delta on the grid (historical ",
+        "and current data conflict). delta = ", delta_opt, " is the smallest ",
+        "value on the grid, not a calibrated choice."))
+    }
   }
 
   power_prior            <- .power_prior_update(base_prior, historical_data,
@@ -323,13 +358,18 @@ calibrate_power_prior <- function(historical_data,
   power_prior$prior_type <- "power_prior"
   power_prior$delta      <- delta_opt
 
-  cli::cli_alert_success(
-    "Optimal power prior weight: delta = {delta_opt} (method = {method})."
-  )
+  if (target_met) {
+    cli::cli_alert_success(
+      "Optimal power prior weight: delta = {delta_opt} (method = {method})."
+    )
+  }
 
   structure(
     list(
       delta_opt          = delta_opt,
+      target_met         = target_met,
+      historical_n       = historical_data$n,
+      borrowed_n         = delta_opt * historical_data$n,
       delta_grid         = delta_grid,
       bf_grid            = results$bayes_factor,
       compatibility_grid = results$box_pvalue,
@@ -357,7 +397,11 @@ print.bayprior_power_prior <- function(x, ...) {
   .bp_h1("Power Prior Calibration")
   .bp_li("Method          : ", x$method)
   .bp_li("Target BF       : ", x$target_bf)
-  .bp_li("Optimal delta   : ", x$delta_opt)
+  .bp_li("Optimal delta   : ", if (isFALSE(x$target_met))
+    paste0(x$delta_opt, " (smallest grid value; target not reached)") else x$delta_opt)
+  if (!is.null(x$borrowed_n))
+    .bp_li("Borrowed        : ", paste0(round(x$borrowed_n, 1), " of ", x$historical_n,
+                                        " historical observations"))
   .bp_li("Power prior mean: ", round(x$power_prior$fit_summary$mean, 4))
   .bp_li("Power prior SD  : ", round(x$power_prior$fit_summary$sd,   4))
   invisible(x)
@@ -384,10 +428,12 @@ plot.bayprior_power_prior <- function(x, ...) {
                         linetype = "dashed", colour = "#D85A30") +
     ggplot2::geom_vline(xintercept = delta_opt,
                         linetype = "dotted", colour = "#1D9E75") +
+    ggplot2::expand_limits(y = c(0, x$target_bf)) +
     ggplot2::labs(
       title    = "Bayes Factor vs power prior weight",
-      subtitle = paste0("Dashed = target BF (", x$target_bf,
-                        "); dotted = optimal delta (", delta_opt, ")"),
+      subtitle = paste0("Dashed = target BF (", x$target_bf, "); dotted = ",
+                        if (isFALSE(x$target_met)) "smallest delta, target not reached (" else "optimal delta (",
+                        delta_opt, ")"),
       x = "delta", y = "Bayes Factor"
     ) +
     ggplot2::theme_minimal(base_size = 12)
