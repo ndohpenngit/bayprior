@@ -178,6 +178,29 @@ plot_sensitivity <- function(sensitivity,
     p)
 }
 
+# Cell edges for a heatmap axis: each value owns the span up to the midpoints
+# with its neighbours. geom_tile() sizes every tile by the smallest gap between
+# values, so a grid that is not evenly spaced (for example the elicited
+# prior-strength factor 1 inserted into a log-spaced sequence) came out as thin
+# stripes with one thick row. `log` spaces the midpoints on the log scale.
+#' @noRd
+.cell_edges <- function(v, log = FALSE) {
+  z <- if (log) log10(v) else v
+  u <- sort(unique(z[is.finite(z)]))
+  n <- length(u)
+  if (n < 2L) {
+    lo <- u - 0.5; hi <- u + 0.5
+  } else {
+    mid <- (u[-1L] + u[-n]) / 2
+    lo  <- c(u[1L] - (mid[1L] - u[1L]), mid)
+    hi  <- c(mid, u[n] + (u[n] - mid[n - 1L]))
+  }
+  i <- match(z, u)
+  lo <- lo[i]; hi <- hi[i]
+  if (log) { lo <- 10^lo; hi <- 10^hi }
+  list(lo = lo, hi = hi)
+}
+
 #' @noRd
 .sensitivity_gg <- function(sensitivity, target, highlight_reference, tooltip) {
 
@@ -229,13 +252,25 @@ plot_sensitivity <- function(sensitivity,
                            plabs[1], fmt(grid[[params[1]]]),
                            plabs[2], fmt(grid[[params[2]]]),
                            target_label, fmt(grid[[target]]))
-    aes_tile <- if (tooltip)
-      ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
-                   fill = .data[[target]], text = .data[[".tip"]])
-    else ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
-                      fill = .data[[target]])
+    if (tooltip) {
+      # interactive: plotly turns geom_tile() into one heatmap trace, which
+      # places uneven cells correctly and stays fast
+      aes_tile <- ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
+                               fill = .data[[target]], text = .data[[".tip"]])
+      layer <- ggplot2::geom_tile()
+    } else {
+      # static (report, exports): explicit cell edges, see .cell_edges()
+      ex <- .cell_edges(grid[[params[1]]])
+      ey <- .cell_edges(grid[[params[2]]], log = identical(params[2], "prior_strength"))
+      grid$.xlo <- ex$lo; grid$.xhi <- ex$hi
+      grid$.ylo <- ey$lo; grid$.yhi <- ey$hi
+      aes_tile <- ggplot2::aes(xmin = .data[[".xlo"]], xmax = .data[[".xhi"]],
+                               ymin = .data[[".ylo"]], ymax = .data[[".yhi"]],
+                               fill = .data[[target]])
+      layer <- ggplot2::geom_rect()
+    }
     p <- ggplot2::ggplot(grid, aes_tile) +
-      ggplot2::geom_tile() +
+      layer +
       ggplot2::scale_fill_gradientn(
         colours = c("#042C53", "#185FA5", "#9FE1CB", "#1D9E75"),
         name    = target_label)
