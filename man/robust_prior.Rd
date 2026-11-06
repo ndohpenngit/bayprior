@@ -18,8 +18,8 @@ component (e.g. an elicited or historical prior).}
 \item{vague_weight}{Numeric in (0, 1). Weight assigned to the vague
 (diffuse) component. Default \code{0.20} (80\% informative, 20\% vague).}
 
-\item{vague_sd}{Numeric. SD of the vague Normal component (on the
-natural scale). If \code{NULL}, defaults to 10x the informative prior's SD.}
+\item{vague_sd}{Numeric. SD of the vague component (on the natural
+scale). If \code{NULL}, a family-specific default is used (see Details).}
 
 \item{label}{Character. Label for the robust prior.}
 }
@@ -34,14 +34,25 @@ Builds a robust prior by mixing an informative component with a vague
 ensuring the posterior is not dominated by a conflicting informative prior.
 }
 \details{
-The vague component is always a \strong{Normal distribution} centred at
-the informative prior's mean with SD = \code{vague_sd} (default: 10x the
-informative SD). When the informative prior is itself Normal, both
-components share the same family and the mixture density is computed
-analytically. For any other informative prior family (Beta, Gamma,
-Log-Normal, Exponential, Weibull), the components have \emph{different
-distribution families}, and the mixture density is \strong{computed
-numerically}. A warning is issued in this case.
+The vague component is chosen \strong{in the family of the informative
+prior's parameter space}, so that the mixture is conjugate, has exact
+posterior weights and puts no mass outside the parameter space:
+\itemize{
+\item A pooled (mixture) informative prior uses the family of its
+moment-matched single-family summary (see the sensitivity analysis).
+\item Normal informative prior: a Normal with the same mean and SD
+\code{vague_sd} (default 10 times the informative SD).
+\item Beta: a \code{Beta(1, 1)} (uniform) component, as in RBesT. If
+\code{vague_sd} is given, a Beta with the informative mean and that SD
+(it must be below \code{sqrt(mean * (1 - mean))}).
+\item Gamma, exponential, Weibull: a Gamma with the informative mean and
+SD \code{vague_sd} (default: the larger of 10 times the informative SD
+and the mean, so the shape is at most 1).
+\item Log-Normal: a Log-Normal with the informative mean and SD
+\code{vague_sd} (default 10 times the informative SD).
+}
+Earlier versions always used a Normal vague component, which for a Gamma
+prior with mean 0.2 put roughly 40\\% of its mass below zero.
 }
 \examples{
 informative <- elicit_normal(mean = 0.30, sd = 0.10,

@@ -8,7 +8,7 @@ calibrate_power_prior(
   historical_data,
   current_data,
   base_prior,
-  target_bf = 3,
+  target_bf = 1,
   delta_grid = seq(0.05, 1, by = 0.05),
   method = c("bayes_factor", "compatibility")
 )
@@ -21,7 +21,13 @@ optionally \code{sd}.}
 
 \item{base_prior}{A \code{bayprior} object (usually a vague prior).}
 
-\item{target_bf}{Numeric. Target Bayes Factor. Default \code{3}.}
+\item{target_bf}{Numeric. Target Bayes Factor. Default \code{1}. The Bayes
+Factor compares how well the power prior and the base prior predict the
+current data: above 1 the borrowed information improves the prediction,
+below 1 it worsens it. With \code{method = "bayes_factor"} the largest
+delta whose Bayes Factor is at least the target is chosen. A target such as
+3 asks for strong evidence in favour of borrowing and is often unreachable
+when the data agree.}
 
 \item{delta_grid}{Numeric vector of \eqn{\delta} values. Default
 \code{seq(0.05, 1.0, by = 0.05)}.}
@@ -32,7 +38,12 @@ optionally \code{sd}.}
 \value{
 A list of class \code{bayprior_power_prior} with components:
 \describe{
-\item{delta_opt}{Optimal power prior weight selected by the chosen method.}
+\item{delta_opt}{Optimal power prior weight selected by the chosen method.
+When no delta meets the criterion this is the smallest grid value, a
+warning is issued, and \code{target_met} is \code{FALSE}.}
+\item{borrowed_n}{Historical sample size borrowed, \code{delta_opt * n}.}
+\item{historical_n}{Historical sample size \code{n}.}
+\item{target_met}{Logical; \code{TRUE} if some delta met the criterion.}
 \item{delta_grid}{The grid of delta values evaluated.}
 \item{bf_grid}{Bayes Factor at each delta value.}
 \item{compatibility_grid}{Box p-value at each delta value.}
@@ -45,6 +56,12 @@ A list of class \code{bayprior_power_prior} with components:
 \description{
 Selects the power prior weight \eqn{\delta \in (0,1)} that down-weights
 historical data before incorporating it into the current analysis.
+}
+\details{
+The weight is chosen using the current data, so it is not pre-specified (an
+empirical-Bayes power prior; Gravestock & Held, 2017). The operating
+characteristics of an analysis that borrows in this way, for example type I
+error, need to be assessed separately.
 }
 \examples{
 base  <- elicit_beta(mean = 0.5, sd = 0.2, method = "moments",

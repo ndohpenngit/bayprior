@@ -25,7 +25,8 @@ or a data frame with one row per grid point (see
 \code{0.95}.}
 
 \item{threshold}{Optional numeric. Computes \code{Pr(theta > threshold)}
-at each grid point if supplied.}
+at each grid point if supplied, on the scale of the parameter (a log-odds
+for a Normal prior read as log-odds; see \code{\link{sensitivity_grid}}).}
 }
 \value{
 An object of class \code{bayprior_sensitivity} whose grid contains

@@ -31,7 +31,10 @@ Any of \code{"posterior_mean"}, \code{"posterior_sd"},
 \code{"prob_efficacy"}.}
 
 \item{threshold}{Numeric. Efficacy threshold used in
-\code{Pr(theta > threshold)}. Default \code{0.30}.}
+\code{Pr(theta > threshold)}. Default \code{0.30}. It is on the scale of
+the parameter: for a Normal prior read as log-odds (see
+\code{\link{prior_conflict}}) it is a log-odds, so use
+\code{qlogis(rate)} for a response-rate threshold.}
 }
 \value{
 An object of class \code{bayprior_sensitivity}.

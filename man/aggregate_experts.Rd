@@ -24,8 +24,9 @@ the pairwise Bhattacharyya coefficient drops below this value, flagging
 substantial expert disagreement. Default \code{0.5}.}
 }
 \value{
-A \code{bayprior} object (\code{dist = "mixture"} for linear pooling,
-\code{dist = "log_pool"} for logarithmic), with an additional
+A \code{bayprior} object (\code{dist = "mixture"} for linear pooling; for logarithmic
+pooling the same family as the experts, or \code{dist = "log_pool"} when the
+experts use different families), with an additional
 \verb{$aggregation} component containing:
 \describe{
 \item{\code{method}}{Pooling method used}
@@ -64,9 +65,13 @@ McConway & Schervish, 1986); no pooling method can satisfy both external
 Bayesianity and marginalization simultaneously. The consensus density is
 proportional to \eqn{\prod_k \pi_k(\theta)^{w_k}}, which produces a
 sharper consensus when experts agree, but can be severely influenced by
-outlying expert opinions. Unlike linear pooling, no closed-form summary
-SD exists for the pooled density in general; \code{$fit_summary$sd} is
-\code{NULL} for logarithmically-pooled priors.
+outlying expert opinions. When all experts use the same Beta, Gamma,
+exponential, Normal or lognormal family the pooled prior is again a member of
+that family and is returned as such (Beta: \eqn{\mathrm{Beta}(\sum_k w_k
+\alpha_k, \sum_k w_k \beta_k)}; Normal: precision-weighted mean and summed
+weighted precision), so its parameters, mean, SD and credible interval are
+exact. For mixed families the pooled density is normalised numerically and
+its summary is taken from that grid.
 }
 \examples{
 p1 <- elicit_beta(mean = 0.25, sd = 0.08, method = "moments", expert_id = "E1",
