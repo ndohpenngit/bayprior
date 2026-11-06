@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -39,14 +39,15 @@ ul.task-list li input[type="checkbox"] {
 <link href="./man/figures/favicon.png" rel="icon" type="image/png">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-c90739be8f7cfc715edd05b31d5b7e7f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1895d770650154722f7722018adbf507.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -78,11 +79,11 @@ ul.task-list li input[type="checkbox"] {
 
 </head>
 
-<body class="nav-fixed quarto-light">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
@@ -93,8 +94,7 @@ ul.task-list li input[type="checkbox"] {
     <span class="navbar-title">bayprior</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -153,6 +153,7 @@ ul.task-list li input[type="checkbox"] {
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -161,13 +162,18 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#bayprior-development-version" id="toc-bayprior-development-version" class="nav-link active" data-scroll-target="#bayprior-development-version">bayprior (development version)</a>
+  <li><a href="#bayprior-0.6.0" id="toc-bayprior-0.6.0" class="nav-link active" data-scroll-target="#bayprior-0.6.0">bayprior 0.6.0</a>
   <ul class="collapse">
+  <li><a href="#breaking-changes" id="toc-breaking-changes" class="nav-link" data-scroll-target="#breaking-changes">Breaking changes</a></li>
   <li><a href="#shiny-app" id="toc-shiny-app" class="nav-link" data-scroll-target="#shiny-app">Shiny app</a></li>
+  <li><a href="#statistical-corrections-breaking" id="toc-statistical-corrections-breaking" class="nav-link" data-scroll-target="#statistical-corrections-breaking">Statistical corrections (breaking)</a></li>
+  <li><a href="#sensitivity-analysis" id="toc-sensitivity-analysis" class="nav-link" data-scroll-target="#sensitivity-analysis">Sensitivity analysis</a></li>
+  <li><a href="#documentation-and-wording" id="toc-documentation-and-wording" class="nav-link" data-scroll-target="#documentation-and-wording">Documentation and wording</a></li>
+  <li><a href="#reports" id="toc-reports" class="nav-link" data-scroll-target="#reports">Reports</a></li>
   </ul></li>
   <li><a href="#bayprior-0.5.0" id="toc-bayprior-0.5.0" class="nav-link" data-scroll-target="#bayprior-0.5.0">bayprior 0.5.0</a>
   <ul class="collapse">
@@ -261,21 +267,81 @@ ul.task-list li input[type="checkbox"] {
 <div class="toc-actions"><ul><li><a href="https://github.com/ndohpenngit/bayprior/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content" id="quarto-document-content" tabindex="-1"><header id="title-block-header" class="quarto-title-block"></header>
 
 
 
 
-<section id="bayprior-development-version" class="level1">
-<h1>bayprior (development version)</h1>
+<section id="bayprior-0.6.0" class="level1">
+<h1>bayprior 0.6.0</h1>
+<p>This release corrects statistical defects found in a review of the package. <strong>Several results change</strong>, so analyses saved or reported with 0.5.x should be rerun. The changes that alter results are listed here and described under “Statistical corrections (breaking)”.</p>
+<section id="breaking-changes" class="level2">
+<h2 class="anchored" data-anchor-id="breaking-changes">Breaking changes</h2>
+<ul>
+<li><code>map_prior()</code> returns the predictive prior for a new trial (wider than the posterior of the population mean it used to return). It stops for a half-Cauchy prior on tau with fewer than 3 trials (infinite variance).</li>
+<li>Mixture posteriors (robust priors, linear pools, power priors) use exact marginal likelihoods for their weights, and their 95% intervals come from the mixture distribution function, not mean +/- 1.96 SD.</li>
+<li>Power priors are the conjugate update with the likelihood raised to the power delta. Poisson, survival and Normal-on-a-rate data were wrong before.</li>
+<li><code>aggregate_experts(method = "logarithmic")</code> returns the exact pooled prior in the experts’ family (its <code>dist</code> is now the family name, not <code>"log_pool"</code>). Negative, missing or non-finite weights are rejected.</li>
+<li>Family/data pairings with no likelihood (for example Beta with continuous data) are refused instead of warning.</li>
+<li><code>robust_prior()</code> builds its vague component in the informative prior’s family (<code>Beta(1, 1)</code> for a Beta prior).</li>
+<li><code>prior_conflict()</code>: <code>surprise_index</code> follows the reported p-value (<code>surprise_index_normal</code> keeps the old distance); the likelihood SE is no longer about zero at 0 or n events; continuous data need <code>sd</code>.</li>
+<li>A Gamma prior with a continuous mean is no longer updated as a count total.</li>
+<li>Sensitivity influence is classified in posterior-SD units.</li>
+</ul>
+</section>
 <section id="shiny-app" class="level2">
 <h2 class="anchored" data-anchor-id="shiny-app">Shiny app</h2>
 <ul>
-<li><p>New <strong>Session</strong> menu in the header, next to the theme toggle, to save the current work to a <code>.rds</code> file and load it back from any tab. Loading restores the priors, the expert pool, the MAP prior and the report details. Conflict, sensitivity and robust / power results are saved in the file but are not restored; rerun them after loading. Session files are validated on load (format, version, expected contents and size).</p></li>
+<li><p>Sensitivity tab: <strong>Reset</strong> (next to Run) restores the grid settings (design, strength range, mean shift, grid size, hyperparameter ranges, analysis type, threshold, targets, credible-interval level); the observed data are kept. The grid note now says “working prior” for mixture priors and says so when the strength range does not include the elicited value (1x). The Run button’s “Fit a prior first” hint, here and in Conflict Diagnostics, shows only while no prior is available. The tornado plot has more room for its subtitle, and the log-scaled strength axis of the 2-D plot is labelled.</p></li>
+<li><p>New <strong>Session</strong> menu in the header, next to the theme toggle, to save the current work to a <code>.rds</code> file and load it back from any tab. Loading restores the priors, the expert pool, the MAP prior and the report details. Conflict, sensitivity and robust / power results are saved in the file but are not restored; rerun them after loading. Session files are validated on load (format, version, expected contents and size). The menu also has <strong>New session</strong>, which clears everything after a confirmation (with an option to save first).</p></li>
 <li><p>Export Report: new <strong>Export R script</strong> button that writes a script reproducing the analysis (elicitation inputs, expert pooling, MAP prior, robust, sceptical and power priors, prior-data conflict and sensitivity analyses). Steps that cannot be written as code are included as comments.</p></li>
 <li><p>Export Report: required fields are marked, a readiness checklist shows what is still missing, and the action buttons are restyled for light and dark mode.</p></li>
 <li><p>Roulette: a fitted prior now also becomes the base prior, so Sensitivity and the robust / power pages use it.</p></li>
 <li><p>Conflict Diagnostics no longer fails when no result is produced.</p></li>
+<li><p>Welcome page animation: the numbers and curves now come from bayprior’s own functions (<code>dev/make_bp_live.R</code>). The pooling panel quotes the Bhattacharyya agreement used by the Pooling tab (0.43) instead of an overlap area, and the robust-prior panel uses the prior from the chip example, labels both estimates as posterior means (40% and 74%) and shows the posterior weight on the informative part (3%). The robust prior in this panel now uses the <code>Beta(1, 1)</code> vague component.</p></li>
+<li><p>Sensitivity: the default grid is now built in terms of the prior rather than its raw hyperparameters, for Beta, Gamma and Normal priors. Prior strength (the effective sample size) is varied from 0.5x to 2x the elicited value, and the prior mean is shifted by up to +/-1 prior SD; both can be changed, and the mean can be held fixed. The previous grid (each hyperparameter scaled by 0.5x to 2x on its own) is still available as “Hyperparameters”, and is the only option for other families. That old grid moved the prior mean and the strength together, so for a Beta(6.7, 11.9) prior it covered prior means of 0.12 to 0.69 and effective sample sizes of 9 to 37, and its influence scores mostly reflected how wide the grid was. A note under the grid settings now shows the range of prior mean and effective sample size that the grid covers. <strong>Influence scores from earlier versions are not comparable with the new default</strong>; rerun the analysis. The reference prior is now exactly one of the grid points.</p></li>
+</ul>
+</section>
+<section id="statistical-corrections-breaking" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-corrections-breaking">Statistical corrections (breaking)</h2>
+<ul>
+<li><p><strong>Breaking: mixture posterior weights now use exact marginal likelihoods.</strong> Mixture priors updated with Poisson or survival data previously used the event count as if it were a mean, and binary data used a Normal approximation, so the component weights were wrong. Weights now come from the exact Beta-binomial, Gamma-Poisson and Normal-Normal marginal likelihoods (numerical integration of the exact likelihood for other families), with one shared data SD for continuous data. Posterior weights, means and credible intervals of mixture priors can change.</p></li>
+<li><p><strong>Breaking: power priors are corrected.</strong> <code>robust_prior()</code> / <code>calibrate_power_prior()</code> used the event count as a mean (Normal prior) or multiplied the count by n (Gamma prior with Poisson data). The power prior is now exactly the conjugate update with the likelihood raised to the power delta, and mixture weights and the prior-data Bayes factor use the exact marginal likelihoods.</p></li>
+<li><p><strong>Breaking: 95% credible intervals of mixture priors and posteriors are now exact.</strong> They were mean +/- 1.96 SD, which is wrong for skewed or multimodal mixtures (and for robust priors). <code>fit_summary</code> of a mixture now carries <code>q025</code>, <code>q500</code> and <code>q975</code> computed from the mixture distribution function, and the app and report show them.</p></li>
+<li><p><strong>Breaking: the logarithmic pool is now exact.</strong> <code>aggregate_experts(method = "logarithmic")</code> of priors from the same Beta, Gamma, exponential, Normal or lognormal family returns the pooled prior as a member of that family (for example <code>Beta(sum(w * alpha), sum(w * beta))</code>), with its own parameters, mean, SD and credible interval. Its mean used to be the linear-pool mean and its SD was missing. The pooled prior’s <code>dist</code> is therefore the family name rather than <code>"log_pool"</code>; the experts are kept in <code>$pool_inputs</code>. Pools of mixed families are normalised numerically and carry a full summary. The consensus curve in the app shows the pool that was chosen. <code>aggregate_experts()</code> and <code>elicit_mixture()</code> reject negative, missing or non-finite weights (<code>c(-1, 2)</code> used to pass).</p></li>
+<li><p><strong>Breaking: prior families that cannot describe the data are refused.</strong> <code>prior_conflict()</code>, <code>sensitivity_grid()</code>, <code>sensitivity_cri()</code> and the posterior updates stop with an explanatory error for a family/data pairing that has no likelihood (a Beta prior with continuous or count data; a Gamma, lognormal, exponential or Weibull prior with binary data). They used to warn that the analysis would “proceed using a Normal approximation”, which has no statistical meaning, and the warning named the wrong method. A Normal prior works with every data type; the positive-support families work with counts, survival and positive continuous data. Mixtures and pools are checked component by component.</p></li>
+<li><p><code>prior_conflict()</code>: <code>surprise_index</code> is now the Normal-equivalent distance of the reported p-value, <code>qnorm(1 - box_pvalue / 2)</code>, so it can no longer read “within expected range” next to an exact p-value below alpha. The old Normal-approximation distance is kept as <code>surprise_index_normal</code>.</p></li>
+<li><p>The Normal approximation to the likelihood no longer uses a standard error of about zero at 0 or n events: the SE uses the continuity-adjusted proportion (or <code>max(events, 0.5)</code> for counts) at the boundary only, which makes the approximate p-value less anti-conservative for zero-event or all-event data. A Normal prior updated with binary data on the proportion scale uses the ordinary Wald SE away from the boundary. Continuous data without <code>sd</code> are rejected instead of borrowing the prior’s SD.</p></li>
+<li><p><strong>Breaking: <code>robust_prior()</code> builds its vague component in the informative prior’s family.</strong> A Beta prior gets a <code>Beta(1, 1)</code> part, a Gamma, exponential or Weibull prior a Gamma part, a lognormal prior a lognormal part, and only a Normal prior a Normal part. The old always-Normal vague part put mass outside the parameter space (about 40% below zero for a Gamma prior with mean 0.2), made every update approximate and forced numerical mixture densities. Robust mixtures are now conjugate with exact weights. Robust priors saved by an earlier version load with a note asking to build them again. In the app, a multiplier too wide for a Beta falls back to <code>Beta(1, 1)</code> with a notice. Because the new vague part has a smaller SD than the old wide Normal, the Normal approximation (<code>exact = FALSE</code>) of a robust prior’s Box p-value is now anti-conservative in most small-sample cells (validation Part D: up to 0.17 rejection at nominal 0.05); the exact default is unaffected.</p></li>
+<li><p><strong>Breaking: a Gamma prior with continuous data is no longer updated as if the mean were a count total.</strong> <code>shape + n * mean, rate + n</code> was only valid for Poisson-type totals. With a mean, SD and n the posterior is computed numerically and matched to a Gamma (labelled “gamma approximation”); a total <code>x_sum</code> still gives the conjugate update.</p></li>
+<li><p>Sensitivity analysis: the influence of the prior is also reported in units of the reference posterior SD (<code>influence_standardised</code>, with <code>influence_scale</code>), and the report classifies on that scale (0.1 and 0.5 posterior SDs; 0.05 and 0.15 probability points for the probability of efficacy). The previous fixed 0.05 / 0.15 cut-offs on the raw range depended on the units of the parameter. The cut-offs are package conventions, not calibrated tests, and the report says so.</p></li>
+<li><p><code>calibrate_power_prior()</code> no longer presents a fallback as the optimum. When no delta meets the criterion, <code>delta_opt</code> is still the smallest grid value, but a warning is issued, <code>target_met</code> is <code>FALSE</code>, and the Power Prior tab says “target not reached”. The default <code>target_bf</code> is now 1 (a Bayes Factor above 1 means the borrowed data improve the prediction of the current data; 3 was rarely reachable when the data agree). The result reports the historical sample size borrowed (<code>borrowed_n</code>, <code>historical_n</code>), the calibration plot shows the target and the Box p-value on its own axis, and the tab and report note that delta is chosen using the current data (an empirical-Bayes power prior).</p></li>
+<li><p><strong>Breaking: <code>map_prior()</code> now returns the predictive prior for a new trial.</strong> It returned the posterior of the population mean, which leaves out the between-trial variance tau^2 and is too narrow as a prior for a new trial (Schmidli et al.&nbsp;2014 define the MAP prior as the predictive distribution). The prior’s mean is unchanged; its SD now includes tau^2 (about 0.41 instead of 0.22 in a five-trial example), so borrowing is weaker and fewer conflicts are flagged. The Normal is matched to the predictive mean and SD; the exact predictive quantiles are in <code>$predictive</code>, and the posterior of the mean alone in <code>$mu_summary</code>. A half-Cauchy tau prior with fewer than 3 trials gives an infinite predictive variance and is refused. Verified against an independent numerical reference (tests) and a Monte Carlo (<code>validation/verify_map_predictive.R</code>). The MAP tab and report say what the prior is, and sessions saved with an earlier version warn that a MAP prior should be derived again. Rerun anything that used a MAP prior.</p></li>
+<li><p>A Normal prior used with binary (events / n) data was compared with the raw proportion even when it is a log-odds prior, such as one from <code>map_prior()</code>. A historical-control prior of mean -0.862 and SD 0.335 against 18 events in 40 was flagged as mild conflict (surprise 3.8, Box p 0.015), although on the log-odds scale it is not (observed -0.20, z = 1.4, p about 0.13), and the overlay plot drew the likelihood and posterior off the axis. Such a prior is now read on the log-odds scale unless its mean +/- 2 SD lies inside [0, 1], in which case it is read as a prior on the proportion. This applies to <code>prior_conflict()</code> (including the numerical prior predictive p-value), <code>plot_prior_likelihood()</code>, and the posterior update used by the sensitivity analysis. Set <code>binary_scale = "log_odds"</code> or <code>"proportion"</code> in <code>data_summary</code> to choose; the Conflict Diagnostics tab has a selector, and the result says which scale was used (<code>$binary_scale</code>, <code>$binary_scale_note</code>). <code>sensitivity_grid()</code> and <code>sensitivity_cri()</code> fix the scale once from the reference prior (so every grid point is updated on the same scale), report it in <code>$binary_scale</code>, and take <code>threshold</code> on the scale of the parameter (use <code>qlogis(rate)</code> for a response-rate threshold with a log-odds prior). In the Sensitivity tab the threshold is then entered as a response rate and converted, and a note says that posterior means and SDs are log-odds. Rerun conflict and sensitivity results that used a Normal prior with binary data.</p></li>
+<li><p>Updating a Normal prior with binary, Poisson or survival data treated the event count as an observed mean. It now uses the observed rate (<code>x / n</code>) for Poisson and survival data, and the proportion or the log-odds (see above) for binary data, with the matching standard error. This affected Normal priors on those data types and, in particular, the vague Normal component of a robust prior with binary data, whose posterior mean could come out far outside the probability scale (7.29 in one example, now about 0.79). Results that involved this update, including the posterior and the posterior component weights of robust priors with binary data, can change.</p></li>
+</ul>
+</section>
+<section id="sensitivity-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="sensitivity-analysis">Sensitivity analysis</h2>
+<ul>
+<li><code>sensitivity_grid()</code> and <code>sensitivity_cri()</code> accept <code>param_grid</code> as a data frame with one row per grid point, so hyperparameters can vary together (for example prior strength at a fixed mean). Other columns are carried into the result. Lists of vectors work as before. Plots of such a grid use the prior mean and strength as axes, and the exported R script writes the grid as a <code>data.frame()</code>.</li>
+</ul>
+</section>
+<section id="documentation-and-wording" class="level2">
+<h2 class="anchored" data-anchor-id="documentation-and-wording">Documentation and wording</h2>
+<ul>
+<li><p><code>prior_conflict()$recommendation</code> no longer says that the prior “appears consistent with the observed data” when no conflict is flagged; it now says that no evidence of conflict was detected, that a large p-value does not show the prior is correct, and that with a small sample the check has little power to detect conflict. This text is shown in the app and in reports. For mild conflict it now suggests a sensitivity analysis that varies the prior’s strength and mean, including a weaker prior, and points to the Sensitivity tab and <code>sensitivity_grid()</code>; it previously suggested only “a more diffuse prior”.</p></li>
+<li><p>The conflict vignette’s threshold table now matches the code: “severe” is Box p below about 0.0027 (not 0.01), and it states that only the Box p-value determines <code>conflict_severity</code> and that the other cut-offs are conventions, not calibrated thresholds.</p></li>
+<li><p>The sensitivity vignette now states that influence scores depend on the grid and on the scale of the quantity, and that the bands are a rule of thumb.</p></li>
+</ul>
+</section>
+<section id="reports" class="level2">
+<h2 class="anchored" data-anchor-id="reports">Reports</h2>
+<ul>
+<li><p>The conflict section states the observed data used (events and sample size, or mean, SD and n), and the severity row has its own interpretation instead of repeating the value.</p></li>
+<li><p>Sensitivity section: the influence column now uses the three bands from the sensitivity vignette (not sensitive below 0.05, moderate up to 0.15, sensitive above), stated in the caption as a rule of thumb. The report also describes the grid that was varied (in terms of prior mean and effective sample size), the threshold behind <code>prob_efficacy</code>, and a note that a mixture prior is analysed through a single-family working prior.</p></li>
+<li><p>Conflict section: a note explains that a p-value above alpha means conflict was not flagged, not that prior and data agree, and that only the Box p-value determines the severity class.</p></li>
+<li><p>The guidance-alignment row “Alternative priors considered” now reflects whether a robust, sceptical or power prior was computed (it used to say “See above” whenever a sensitivity analysis existed).</p></li>
 </ul>
 </section>
 </section>
@@ -685,7 +751,8 @@ ul.task-list li input[type="checkbox"] {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -694,8 +761,69 @@ ul.task-list li input[type="checkbox"] {
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -709,6 +837,7 @@ ul.task-list li input[type="checkbox"] {
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -871,44 +1000,54 @@ ul.task-list li input[type="checkbox"] {
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1006,6 +1145,9 @@ ul.task-list li input[type="checkbox"] {
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 
