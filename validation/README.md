@@ -21,17 +21,18 @@ The Parts are the sections of an analysis plan written **before** the simulation
 
 | Part | Question | Script | Output | Status |
 |---|---|---|---|---|
-| A | Type I error of the Box p-value, exact vs Normal approximation (Beta-Binomial, Gamma-Poisson) | `sim_boxp.R` | `results_boxp.csv/.rds`, `fig_type1_error.png` | run 2026-10-13 on bayprior 0.4.0 |
-| B | S-value summaries and agreement between the methods, plus two independent verification checks | `sim_boxp.R` | `results_boxp.csv`, `verification_mc.csv` | run 2026-10-13 on bayprior 0.4.0 |
+| A | Type I error of the Box p-value, exact vs Normal approximation (Beta-Binomial, Gamma-Poisson) | `sim_boxp.R` | `results_boxp.csv/.rds`, `fig_type1_error.png` | run 2026-10-13 on 0.4.0; re-run 2026-11-02 on 0.6.0 |
+| B | S-value summaries and agreement between the methods, plus two independent verification checks | `sim_boxp.R` | `results_boxp.csv`, `verification_mc.csv` | run 2026-10-13 on 0.4.0; re-run 2026-11-02 on 0.6.0 |
 | C | MAP-prior benchmarks | none | none | **planned, not run, not reported** |
-| D | Calibration for mixture priors (robust, pooled) | `sim_mixture.R` | `results_mixture.csv` | run 2026-10-15, development version |
-| E | Calibration of the numerical (quadrature) path for lognormal, Weibull, exponential priors; independent predictive calculation; Monte Carlo spot check | `sim_numerical.R` | `results_numerical.csv`, `verification_numerical_mc.csv` | run 2026-10-15, development version |
-| F | Size-adjusted power of exact, mid-p, Normal approximation, boundary-safe approximation, equal-tail and likelihood-ratio variants | `sim_power.R` | `results_power.csv`, `verification_power_mc.csv` | run 2026-10-15, development version |
+| D | Calibration for mixture priors (robust, pooled) | `sim_mixture.R` | `results_mixture.csv` | run 2026-10-15; re-run 2026-11-02 on 0.6.0 (results changed, see report) |
+| E | Calibration of the numerical (quadrature) path for lognormal, Weibull, exponential priors; independent predictive calculation; Monte Carlo spot check | `sim_numerical.R` | `results_numerical.csv`, `verification_numerical_mc.csv` | run 2026-10-15; re-run 2026-11-02 on 0.6.0 (identical) |
+| F | Size-adjusted power of exact, mid-p, Normal approximation, boundary-safe approximation, equal-tail and likelihood-ratio variants | `sim_power.R` | `results_power.csv`, `verification_power_mc.csv` | run 2026-10-15; re-run 2026-11-02 on 0.6.0 (identical) |
 
 Notes for a reviewer:
-- Parts A and B ran on the released 0.4.0 code; D-F ran on the development version (0.4.0.9000). Check `sessionInfo_boxp.txt` and the header of each script for the exact source used.
+- Parts were first run on 0.4.0 (A, B) and the development version (D-F) and all re-run on 0.6.0 on 2026-11-02. Check `sessionInfo_boxp.txt` and the header of each script for the exact source used.
 - Part C is listed only so the lettering stays stable; there is nothing to review for it.
 - Every method compared is computed with the package's own functions, except where a script says otherwise (the independent predictive calculations in Parts B and E, and the candidate "boundary-safe" approximation, which is not implemented in the package).
 - Seeds are fixed in each script; deterministic Parts (D, F) need no seed.
 - `../validation_pilot/pilot.R`, if present, is the small pilot used to size the grid; it is not part of the reported results.
-- The report is a working document and has not been peer reviewed.- `verify_mixture_posterior.R` compares the mixture and power-prior posteriors (exact marginal-likelihood weights, exact mixture quantiles) with brute-force numerical integration; results in `verification_mixture_posterior.csv`.
+- The report is a working document and has not been peer reviewed.
+- `verify_mixture_posterior.R` compares the mixture and power-prior posteriors (exact marginal-likelihood weights, exact mixture quantiles) with brute-force numerical integration; results in `verification_mixture_posterior.csv`.

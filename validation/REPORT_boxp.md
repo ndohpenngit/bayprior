@@ -1,16 +1,17 @@
 # Calibration of the Box prior predictive p-value in bayprior
 
-_Working report, not peer reviewed. Parts A and B were first run on 2026-10-13 on bayprior 0.4.0 (the released CRAN version); Parts D to F were added on 2026-10-15 and run on the development version. Code: `sim_*.R`. Part C (MAP benchmarks) is not included._
+_Working report, not peer reviewed. Parts A and B were first run on 2026-10-13 on bayprior 0.4.0; Parts D to F were added on 2026-10-15 on the development version. **All parts were re-run on 2026-11-02 on bayprior 0.6.0** (the numbers below are the 0.6.0 ones; where 0.4.0 differs it is said so). Code: `sim_*.R`. Part C (MAP benchmarks) is not included. Part C aside, `verify_map_predictive.R` and `verify_mixture_posterior.R` check the 0.6.0 MAP and mixture/power-prior posteriors separately._
 
 ## Design
 - **Families:** Beta prior with binary data (Beta-Binomial); Gamma prior with Poisson counts (Gamma-Poisson). These are the two combinations with an exact prior predictive check.
 - **Grid:** Beta: prior mean 0.1/0.3/0.5, prior strength (effective sample size) 2/5/10/20/50, n = 5/10/20/50/100/500. Gamma: prior mean 0.1/1, shape 1/2/5/20/50, exposure n = 5/10/20/50/100/500. 150 no-conflict cells.
 - **Scenarios:** no conflict (true parameter drawn from the prior); conflict (true parameter fixed at the prior mean +/- 0.5, 1, 2, 3 prior SDs; cells where the shifted value is outside the parameter space are skipped).
 - **Replications:** 20,000 per cell (Monte Carlo SE of a rejection rate near 0.05: 0.0015).
-- **Methods compared** (all computed with the package's own functions; the harness reproduced `prior_conflict()` exactly on 200 random cells):
+- **Methods compared** (all computed with the package's own functions; the harness reproduced `prior_conflict()` exactly, difference 0, on 200 random cells for both `exact = TRUE` and the 0.6.0 `exact = FALSE`):
   1. *Exact*: prior predictive p-value with outcomes ordered by probability (`exact = TRUE`).
-  2. *Normal approximation*: the 0.4.0 default (`exact = FALSE`).
-  3. *Boundary-safe approximation* (candidate only, not implemented in the package): same approximation but with the sampling SE computed from (x + 0.5)/(n + 1), or sqrt(x + 0.5)/n for counts.
+  2. *Normal approximation, 0.4.0* (plain SE from the observed proportion or rate; the old `exact = FALSE`). Kept for comparison; the 0.6.0 package no longer computes it.
+  3. *Boundary-safe approximation, adjusted at every x* (the candidate studied in the first run): SE from (x + 0.5)/(n + 1), or sqrt(x + 0.5)/n for counts.
+  4. *Normal approximation, 0.6.0* (`exact = FALSE` now): the same SE adjustment applied only at x = 0 or x = n (binary) and x = 0 (counts), where the plain SE would be zero (`.normal_obs()`).
 - **Verification:** exact p-values agreed with a brute-force Monte Carlo from the generative model (4 million draws per configuration; outcomes ordered by an independently coded closed-form pmf) to within 0.0006 across 63 outcomes (MC SE <= 0.00025).
 
 ## Main result: type I error (no conflict, alpha = 0.05)
@@ -18,49 +19,53 @@ _Working report, not peer reviewed. Parts A and B were first run on 2026-10-13 o
 |---|---|---|---|
 | Exact | 0.037 | 0.052 | 0 of 150 |
 | Normal approximation (0.4.0 default) | 0.079 | 0.625 | 52 of 150 (35%) |
-| Boundary-safe approximation (candidate) | 0.046 | 0.225 | 36 of 150 (24%) |
+| Boundary-safe approximation, every x (candidate) | 0.046 | 0.225 | 36 of 150 (24%) |
+| **Normal approximation (0.6.0 `exact = FALSE`)** | 0.047 | 0.225 | 40 of 150 (27%) |
 
-At alpha = 0.10 the pattern is the same (exact worst cell 0.105; approximation worst cell 0.628; 40 of 150 cells above 0.10 + 3 MC SE). See `fig_type1_error.png`.
+At alpha = 0.10 the pattern is the same (exact worst cell 0.105; 0.4.0 approximation worst cell 0.628, 40 of 150 cells above 0.10 + 3 MC SE; 0.6.0 approximation worst cell 0.249, mean 0.087, 30 of 150). The exact, 0.4.0 and every-x rows are identical to the first run (same seed); only the 0.6.0 row is new. The 0.6.0 approximation therefore removes the worst failures (0.625 to 0.225) but is still not size-controlled; the exact p-value remains the default. `fig_type1_error.png` shows the 0.4.0 comparison and was not redrawn.
 
 Where the approximation fails: informative priors (Beta prior strength >= 10; Gamma shape >= 5) with small samples. The failures concentrate in cells with a low prior mean, where zero events or counts are probable. For Gamma-Poisson with shape >= 5, the worst-cell rejection rates under no conflict were 0.62 at exposure 5, 0.41 at 10 and 0.19 at 20 (other cells in that range are much closer to nominal, e.g. 0.05 at exposure 5 for prior mean 1). For Beta-Binomial with strength 50 the worst cells were 0.62 (n = 5), 0.39 (n = 10) and 0.18 (n = 20), all at prior mean 0.1 or 0.3. From n = 50 onward no method exceeds 0.075 in any cell tested (largest: the approximation, Gamma-Poisson, n = 100).
 
-Mechanism (verified on one cell: Beta(5, 45), n = 10): zero events has prior predictive probability 0.38. The approximation's SE is estimated from the observed proportion, so it is zero at x = 0 and the approximate p-value is 0.017; the exact p-value is 1. That single outcome (probability 0.38) accounts for essentially all of the approximation's 38.7% rejection rate in this cell (exact: 2.2%). The boundary-safe SE removes most of this for Gamma-Poisson but not for Beta-Binomial with strength 50, prior mean 0.3, at n = 5 (0.225).
+Mechanism (verified on one cell: Beta(5, 45), n = 10): zero events has prior predictive probability 0.38. The approximation's SE is estimated from the observed proportion, so it is zero at x = 0 and the approximate p-value is 0.017; the exact p-value is 1. That single outcome (probability 0.38) accounts for essentially all of the approximation's 38.7% rejection rate in this cell (exact: 2.2%). The 0.6.0 SE adjustment removes most of this for Gamma-Poisson (worst 0.15 at exposure 20) but not for Beta-Binomial with strength 50, prior mean 0.3, at n = 5 (0.225), 0.138 at n = 10 and 0.084 at n = 20. From n = 50 the 0.6.0 approximation is within 0.076 of nominal in every cell.
 
 The exact version is conservative (mean 0.037 at nominal 0.05) because the data are discrete; it never exceeded nominal beyond Monte Carlo error.
 
 ## Power under conflict
-At small shifts (up to 1 prior SD) every method has little power, as expected for a prior predictive check. At 2 SDs the average rejection rates across cells were 0.27 (exact) and 0.34 / 0.25 (approximation, Beta / Gamma); at 3 SDs 0.58 / 0.41 (exact) vs 0.75 / 0.67 (approximation) for downward shifts. **These are not like-for-like**: the approximation is not size-controlled, so some of its apparent power is spurious. Example (Beta(5, 45), n = 10, true value 2 SD below the prior mean, 0.016): approximation "power" 0.85, exact 0.00, because 0 events in 10 is entirely consistent with both the prior and the true value; the approximation flags it for the wrong reason. A fair power comparison needs size-adjusted power; see Part F below.
+At small shifts (up to 1 prior SD) every method has little power, as expected for a prior predictive check. At 2 SDs the average rejection rates across cells were 0.27 (exact) and 0.34 / 0.25 (0.4.0 approximation, Beta / Gamma); at 3 SDs 0.58 / 0.41 (exact) vs 0.75 / 0.67 (0.4.0 approximation) for downward shifts. (The 0.6.0 approximation, downward 2 SD / 3 SD: Beta 0.37 / 0.75, Gamma 0.33 / 0.55.) **These are not like-for-like**: the approximation is not size-controlled, so some of its apparent power is spurious. Example (Beta(5, 45), n = 10, true value 2 SD below the prior mean, 0.016): approximation "power" 0.85, exact 0.00, because 0 events in 10 is entirely consistent with both the prior and the true value; the approximation flags it for the wrong reason. A fair power comparison needs size-adjusted power; see Part F below.
 
 ## Agreement between the methods
-Proportion of datasets where the exact and approximate versions disagree on rejection at 0.05 (no-conflict scenarios, mean over cells):
+Proportion of datasets where the exact and the 0.4.0 approximate versions disagree on rejection at 0.05 (no-conflict scenarios, mean over cells):
 
 | n | 5 | 10 | 20 | 50 | 100 | 500 |
 |---|---|---|---|---|---|---|
 | Beta-Binomial | 0.121 | 0.064 | 0.031 | 0.012 | 0.007 | 0.006 |
 | Gamma-Poisson | 0.217 | 0.144 | 0.068 | 0.025 | 0.017 | 0.005 |
 
+Against the 0.6.0 approximation the disagreement is Beta-Binomial 0.052 / 0.033 / 0.020 / 0.012 / 0.007 / 0.006 and Gamma-Poisson 0.032 / 0.028 / 0.049 / 0.025 / 0.017 / 0.005 (same n order).
+
 Part of the difference at large n is definitional: the exact p orders outcomes by probability, the approximation by distance from the mean, so they differ for skewed priors at any n (see the package documentation of the exact check). Mean absolute p-value differences should therefore not be read as an error measure.
 
 ## S-value (exploratory)
-Under no conflict, the median S-value (S = -log2 p) from the exact p ranged from 0 to about 1.0 bit across cells (0 when the median p is 1, which happens with discrete data; the 1 bit of a continuous uniform p is reached only approximately). From the approximation, the median ranged from 0.5 to 5.9 bits for Beta-Binomial and from 0.8 to 39 bits for Gamma-Poisson (the largest values at exposure 5, the zero-count artefact: the approximate p is essentially 0 at x = 0). These are cell-level medians over the 150 no-conflict cells. Use S-values descriptively; they inherit the calibration of the p-value they are derived from.
+Under no conflict, the median S-value (S = -log2 p) from the exact p ranged from 0 to about 1.0 bit across cells (0 when the median p is 1, which happens with discrete data; the 1 bit of a continuous uniform p is reached only approximately). From the 0.4.0 approximation (S-values not recomputed for 0.6.0), the median ranged from 0.5 to 5.9 bits for Beta-Binomial and from 0.8 to 39 bits for Gamma-Poisson (the largest values at exposure 5, the zero-count artefact: the approximate p is essentially 0 at x = 0). These are cell-level medians over the 150 no-conflict cells. Use S-values descriptively; they inherit the calibration of the p-value they are derived from.
 
 ## Limitations
 - Parts A and B cover Beta-Binomial and Gamma-Poisson; mixtures in Part D, lognormal/Weibull/exponential priors in Part E, size-adjusted power in Part F (all below). Not covered: continuous data with non-Normal priors, sequential settings, Part C.
 - Fixed shifts in prior SD units; no continuous data type; no sequential or interim-analysis settings.
 - Discrete data: the exact test is conservative (mean size 0.0375 at nominal 0.05 over the Part F grid), so its unadjusted power is lower than a randomised or mid-p version would give; mid-p is not size-controlled (see Part F).
-- The boundary-safe approximation is one of several possible corrections; it was not tuned.
-- Parts A and B were run on the released 0.4.0 code (`exact = TRUE`/`FALSE` as then implemented); Parts D to F on the development version (0.4.0.9000), whose default and implementation differ (see NEWS).
+- The boundary SE adjustment is one of several possible corrections; it was not tuned.
+- All parts were re-run on 0.6.0. In Parts A, B, E and F the exact and numerical results did not change (identical to the 0.4.0 / development runs); only the package's own approximation (Parts A/B 0.6.0 row, Part D) changed. Part E and F compute their approximations in the scripts, so they describe the 0.4.0 Normal approximation, not the 0.6.0 one.
 - Part C (MAP prior against RBesT/bayesmeta) has not been run.
 
 ## Consequence for the package
-In the development version (0.4.0.9000), `prior_conflict()` uses the prior predictive p-value (probability-ordered, the Box / Evans-Moshonov check) by default for discrete data: closed form for Beta-Binomial and Gamma-Poisson and for linear mixtures of them (robust and pooled priors), and numerical integration for other proper priors on the parameter space (Parts D and E). The result reports `box_pvalue_method` ("exact", "numerical" or "normal_approx") and, when the Normal approximation is used with discrete data in a boundary or small-count situation, `box_pvalue_caution`. Severity uses one rule on either path: severe if p < 2*pnorm(-3) (about 0.0027), mild if p < alpha. `exact = FALSE` gives the Normal approximation of 0.4.0 (with the caution flag). Continuous data keep the Normal approximation.
+From 0.5.0 on, `prior_conflict()` uses the prior predictive p-value (probability-ordered, the Box / Evans-Moshonov check) by default for discrete data: closed form for Beta-Binomial and Gamma-Poisson and for linear mixtures of them (robust and pooled priors), and numerical integration for other proper priors on the parameter space (Parts D and E). The result reports `box_pvalue_method` ("exact", "numerical" or "normal_approx") and, when the Normal approximation is used with discrete data in a boundary or small-count situation, `box_pvalue_caution`. Severity uses one rule on either path: severe if p < 2*pnorm(-3) (about 0.0027), mild if p < alpha. `exact = FALSE` gives the Normal approximation, which since 0.6.0 adjusts the sampling SE only at 0 or n events (with the caution flag); it is not size-controlled in small samples (Part A/B table). Continuous data keep the Normal approximation.
 
-## Part D: mixture priors (added in the development version)
-Script `sim_mixture.R`, results `results_mixture.csv`. Deterministic calculation (no Monte Carlo error): under theta drawn from the mixture, the rejection probability is the sum of the prior predictive pmf over outcomes whose p-value is below alpha. 240 cells: robust prior (Beta + Normal vague component, weight 0.2, as built up to 0.5.0; from 0.6.0 `robust_prior()` uses a Beta(1, 1) vague part and the exact predictive, so re-running the script gives different numbers) and a 50/50 pooled consensus of two Betas, prior means 0.1/0.3/0.5, strengths 5-50, n 5-100, alpha 0.05/0.10.
+## Part D: mixture priors
+Script `sim_mixture.R`, results `results_mixture.csv`. Deterministic calculation (no Monte Carlo error): under theta drawn from the mixture, the rejection probability is the sum of the prior predictive pmf over outcomes whose p-value is below alpha. 240 cells: robust prior (Beta + Beta(1, 1) vague component, weight 0.2, as built by `robust_prior()` from 0.6.0; up to 0.5.0 the vague part was a wide Normal and the results differed, see below) and a 50/50 pooled consensus of two Betas, prior means 0.1/0.3/0.5, strengths 5-50, n 5-100, alpha 0.05/0.10.
 
-- Prior predictive p-value (exact for the Beta mixture, quadrature with a truncated Normal component for the robust prior): maximum rejection 0.0499 at alpha 0.05 and 0.1000 at alpha 0.10; mean 0.038 / 0.079. Never above nominal.
-- Normal approximation: pooled consensus up to 0.433 at alpha 0.05 (24 of 60 cells above 0.05; 0.235 at n = 10); robust prior up to 0.057 (4 of 60 cells), because the wide vague component inflates the mixture SD.
-- Caveat: for the robust prior the generative model is the package's own prior (Normal vague component truncated to [0, 1]); calibration is against that reading.
+- Prior predictive p-value (exact for both, since both are Beta mixtures): maximum rejection 0.0499 at alpha 0.05 and 0.1000 at alpha 0.10; mean 0.037 / 0.079. Never above nominal. Unchanged in substance from the 0.5.0 run.
+- Normal approximation (0.6.0 `exact = FALSE`), alpha 0.05: pooled consensus up to 0.209 (20 of 60 cells above 0.05; 0.141 at n = 10); **robust prior up to 0.167 (51 of 60 cells)**. At alpha 0.10: pooled up to 0.276 (35 of 60), robust up to 0.276 (26 of 60).
+- Change from the 0.5.0 run: pooled 0.433 (24 of 60) before, now 0.209, because of the boundary-only SE. The robust prior was 0.057 (4 of 60 cells; 0.071, 0 of 60 at alpha 0.10) before and is now much worse: the old wide Normal vague component inflated the mixture SD and so the approximate p-value was conservative by accident, whereas the Beta(1, 1) component has a smaller SD, so the Normal approximation of a robust prior is anti-conservative in most cells. The exact path is unaffected and is the default; the approximation should not be used for robust priors.
+- The generative model in this part is the package's own prior (a Beta mixture), so calibration is against it exactly.
 
 ## Part E: lognormal, Weibull and exponential priors (numerical path)
 Script `sim_numerical.R`; results `results_numerical.csv`, `verification_numerical_mc.csv`. Priors on a rate with Poisson/survival data, prior mean 0.1 or 1, CV 0.25/0.5/1.5 (lognormal, Weibull; exponential has CV 1), exposure 5-500: 84 cells. Rejection probability under no conflict = sum over outcomes of the prior predictive probability times the indicator that p < alpha. The predictive probabilities used as truth were computed independently of the package (log-scale trapezoid rule, 40,001 points).
@@ -73,9 +78,9 @@ Script `sim_numerical.R`; results `results_numerical.csv`, `verification_numeric
 - Scope: Poisson/survival data, priors on a rate. A Normal or lognormal prior on a probability with binary data uses the same code, truncated to [0, 1], but was not simulated here.
 
 ## Part F: size-adjusted power
-Script `sim_power.R`; results `results_power.csv`, `verification_power_mc.csv`. Same 150-prior x 6-n grid as Part A/B, shifts of +/-0.5, 1, 2, 3 prior SDs (984 valid cell-shift combinations per alpha), alpha 0.05 and 0.10. All quantities are deterministic sums over outcomes; the script's predictive pmf and p-values match `prior_conflict()` (maximum differences 1e-14 and 5e-13) and a Monte Carlo spot check agrees (power and size within Monte Carlo error).
+Script `sim_power.R`; results `results_power.csv`, `verification_power_mc.csv`. Same 150-prior x 6-n grid as Part A/B (results identical on 0.6.0), shifts of +/-0.5, 1, 2, 3 prior SDs (984 valid cell-shift combinations per alpha), alpha 0.05 and 0.10. All quantities are deterministic sums over outcomes; the script's predictive pmf and p-values match `prior_conflict()` (maximum differences 1e-14 and 5e-13) and a Monte Carlo spot check agrees (power and size within Monte Carlo error).
 
-Methods. exact (package default), mid-p (exact p minus half the point probability), approx (0.4.0 default), approxB (boundary-safe approximation), tail (equal-tail p = 2 min(P(X<=x), P(X>=x)), an alternative definition), and an oracle that orders outcomes by the likelihood ratio for the specific alternative (the best possible test of that alternative; an upper bound, not a usable method). "Size-adjusted" means each method's ordering of outcomes with a randomised cutoff so that its size under no conflict equals alpha exactly, which compares the orderings at equal size.
+Methods. exact (package default), mid-p (exact p minus half the point probability), approx (0.4.0 default, computed in the script), approxB (boundary-safe approximation at every x, computed in the script), tail (equal-tail p = 2 min(P(X<=x), P(X>=x)), an alternative definition), and an oracle that orders outcomes by the likelihood ratio for the specific alternative (the best possible test of that alternative; an upper bound, not a usable method). "Size-adjusted" means each method's ordering of outcomes with a randomised cutoff so that its size under no conflict equals alpha exactly, which compares the orderings at equal size.
 
 **Size under no conflict (as the package would flag, alpha 0.05, mean / max, share of rows above nominal):** exact 0.0375 / 0.0500 / 0%; mid-p 0.0440 / 0.0679 / 45%; approx 0.0857 / 0.6215 / 49%; approxB 0.0482 / 0.2196 / 38%; equal-tail 0.0297 / 0.0499 / 0%. At alpha 0.10: exact 0.0810 / 0.1000, mid-p max 0.1318, approx max 0.6245, approxB max 0.2490, equal-tail 0.0649 / 0.1000. Mid-p is closer to nominal on average but is not size-controlled.
 
@@ -113,4 +118,4 @@ Decision implications (not implemented). The exact probability-ordered p-value i
 - Fixed shifts in prior-SD units against a point alternative; no composite or sequential alternatives.
 - The oracle depends on the alternative being known and is not attainable; the gap to it is a ceiling on what any check could do, not a defect of the package.
 - Part E covers Poisson/survival data only; Normal/lognormal priors on a probability with binary data were not simulated.
-- Part F uses the Part A/B grid, so conclusions apply to those prior strengths and sample sizes.
+- Part F uses the Part A/B grid and its own copy of the approximations (the 0.4.0 and every-x versions, not the 0.6.0 one), so conclusions apply to those prior strengths and sample sizes.
