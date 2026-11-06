@@ -98,6 +98,92 @@ rerun. The changes that alter results are listed here and described under
   families), with one shared data SD for continuous data. Posterior weights,
   means and credible intervals of mixture priors can change.
 
+* **Breaking: power priors are corrected.** `robust_prior()` / `calibrate_power_prior()`
+  used the event count as a mean (Normal prior) or multiplied the count by n
+  (Gamma prior with Poisson data). The power prior is now exactly the conjugate
+  update with the likelihood raised to the power delta, and mixture weights and
+  the prior-data Bayes factor use the exact marginal likelihoods.
+
+* **Breaking: 95% credible intervals of mixture priors and posteriors are now
+  exact.** They were mean +/- 1.96 SD, which is wrong for skewed or multimodal
+  mixtures (and for robust priors). `fit_summary` of a mixture now carries
+  `q025`, `q500` and `q975` computed from the mixture distribution function,
+  and the app and report show them.
+
+* **Breaking: the logarithmic pool is now exact.** `aggregate_experts(method =
+  "logarithmic")` of priors from the same Beta, Gamma, exponential, Normal or
+  lognormal family returns the pooled prior as a member of that family (for
+  example `Beta(sum(w * alpha), sum(w * beta))`), with its own parameters, mean,
+  SD and credible interval. Its mean used to be the linear-pool mean and its SD
+  was missing. The pooled prior's `dist` is therefore the family name rather
+  than `"log_pool"`; the experts are kept in `$pool_inputs`. Pools of mixed
+  families are normalised numerically and carry a full summary. The consensus
+  curve in the app shows the pool that was chosen. `aggregate_experts()` and
+  `elicit_mixture()` reject negative, missing or non-finite weights (`c(-1, 2)`
+  used to pass).
+
+* **Breaking: prior families that cannot describe the data are refused.**
+  `prior_conflict()`, `sensitivity_grid()`, `sensitivity_cri()` and the
+  posterior updates stop with an explanatory error for a family/data pairing
+  that has no likelihood (a Beta prior with continuous or count data; a Gamma,
+  lognormal, exponential or Weibull prior with binary data). They used to warn
+  that the analysis would "proceed using a Normal approximation", which has no
+  statistical meaning, and the warning named the wrong method. A Normal prior
+  works with every data type; the positive-support families work with counts,
+  survival and positive continuous data. Mixtures and pools are checked
+  component by component.
+
+* `prior_conflict()`: `surprise_index` is now the Normal-equivalent distance of
+  the reported p-value, `qnorm(1 - box_pvalue / 2)`, so it can no longer read
+  "within expected range" next to an exact p-value below alpha. The old
+  Normal-approximation distance is kept as `surprise_index_normal`.
+
+* The Normal approximation to the likelihood no longer uses a standard error of
+  about zero at 0 or n events: the SE uses the continuity-adjusted proportion
+  (or `max(events, 0.5)` for counts) at the boundary only, which makes the
+  approximate p-value less anti-conservative for zero-event or all-event data.
+  A Normal prior updated with binary data on the proportion scale uses the
+  ordinary Wald SE away from the boundary. Continuous data without `sd` are
+  rejected instead of borrowing the prior's SD.
+
+* **Breaking: `robust_prior()` builds its vague component in the informative
+  prior's family.** A Beta prior gets a `Beta(1, 1)` part, a Gamma, exponential
+  or Weibull prior a Gamma part, a lognormal prior a lognormal part, and only a
+  Normal prior a Normal part. The old always-Normal vague part put mass outside
+  the parameter space (about 40% below zero for a Gamma prior with mean 0.2),
+  made every update approximate and forced numerical mixture densities. Robust
+  mixtures are now conjugate with exact weights. Robust priors saved by an
+  earlier version load with a note asking to build them again. In the app, a
+  multiplier too wide for a Beta falls back to `Beta(1, 1)` with a notice.
+  Because the new vague part has a smaller SD than the old wide Normal, the
+  Normal approximation (`exact = FALSE`) of a robust prior's Box p-value is now
+  anti-conservative in most small-sample cells (validation Part D: up to 0.17
+  rejection at nominal 0.05); the exact default is unaffected.
+
+* **Breaking: a Gamma prior with continuous data is no longer updated as if the
+  mean were a count total.** `shape + n * mean, rate + n` was only valid for
+  Poisson-type totals. With a mean, SD and n the posterior is computed
+  numerically and matched to a Gamma (labelled "gamma approximation"); a total
+  `x_sum` still gives the conjugate update.
+
+* Sensitivity analysis: the influence of the prior is also reported in units of
+  the reference posterior SD (`influence_standardised`, with `influence_scale`),
+  and the report classifies on that scale (0.1 and 0.5 posterior SDs; 0.05 and
+  0.15 probability points for the probability of efficacy). The previous fixed
+  0.05 / 0.15 cut-offs on the raw range depended on the units of the parameter.
+  The cut-offs are package conventions, not calibrated tests, and the report
+  says so.
+
+* `calibrate_power_prior()` no longer presents a fallback as the optimum. When no
+  delta meets the criterion, `delta_opt` is still the smallest grid value, but a
+  warning is issued, `target_met` is `FALSE`, and the Power Prior tab says
+  "target not reached". The default `target_bf` is now 1 (a Bayes Factor above 1
+  means the borrowed data improve the prediction of the current data; 3 was
+  rarely reachable when the data agree). The result reports the historical
+  sample size borrowed (`borrowed_n`, `historical_n`), the calibration plot shows
+  the target and the Box p-value on its own axis, and the tab and report note
+  that delta is chosen using the current data (an empirical-Bayes power prior).
+
 * **Breaking: `map_prior()` now returns the predictive prior for a new trial.**
   It returned the posterior of the population mean, which leaves out the
   between-trial variance tau^2 and is too narrow as a prior for a new trial
