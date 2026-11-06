@@ -829,10 +829,16 @@ if (!is.null(scep_prior)) {
 if (!is.null(pow_result)) {
   df_pow <- data.frame(
     Attribute = c("Method", "Target BF", "Optimal delta",
+                  "Historical information borrowed",
                   "Power prior mean", "Power prior SD"),
     Value     = c(.safe_chr(pow_result$method),
                   as.character(if(is.null(pow_result$target_bf)) "-" else pow_result$target_bf),
-                  as.character(pow_result$delta_opt),
+                  paste0(pow_result$delta_opt,
+                         if (isFALSE(pow_result$target_met))
+                           " (smallest grid value; target not reached)" else ""),
+                  if (is.null(pow_result$borrowed_n)) "-" else
+                    paste0(round(pow_result$borrowed_n, 1), " of ",
+                           pow_result$historical_n, " observations"),
                   as.character(.safe_round(
                     .fs(pow_result$power_prior$fit_summary, "mean"), 4)),
                   as.character(.safe_round(
@@ -841,7 +847,10 @@ if (!is.null(pow_result)) {
   )
   rownames(df_pow) <- NULL
   kable(df_pow, col.names = c("Attribute", "Value"), align = "ll",
-        caption = "Power prior calibration summary", row.names = FALSE)
+        caption = paste0("Power prior calibration summary. delta is chosen using ",
+                         "the current data (empirical-Bayes power prior), so it is ",
+                         "not pre-specified; operating characteristics need separate ",
+                         "assessment."), row.names = FALSE)
   if (!is.null(pp_pow_plot) && inherits(pp_pow_plot, "gg")) {
     print(pp_pow_plot)
   } else {
