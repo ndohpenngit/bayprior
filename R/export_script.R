@@ -50,10 +50,10 @@
       label = lab)))
   }
 
-  if (p$dist %in% c("mixture", "log_pool")) {
+  if (p$dist %in% c("mixture", "log_pool") || !is.null(p$pool_inputs)) {
     ag <- p$aggregation
     w <- ag$weights
-    comps <- p$components
+    comps <- if (is.null(p$components)) p$pool_inputs$components else p$components
     if (is.null(ag) || is.null(w) || length(w) != length(comps))
       return(.bp_fail(paste0("Only pooled expert priors are exported; ",
                              "other mixtures (for example robust mixtures) are not yet supported.")))
@@ -125,13 +125,13 @@
 }
 
 .bp_robust_code <- function(r, base) {
-  vsd <- r$components$vague$params$sigma
   if (!inherits(r, "bayprior") || !identical(r$prior_type, "robust") ||
-      !identical(r$informative, base) || is.null(vsd) || is.null(r$vague_weight))
+      !identical(r$informative, base) || is.null(r$robust_version) ||
+      is.null(r$vague_weight))
     return(NULL)
-  .bp_call("robust", "robust_prior", c(
-    informative = "prior", vague_weight = .bp_num(r$vague_weight),
-    vague_sd = .bp_num(vsd), label = .bp_chr(r$label)))
+  args <- c(informative = "prior", vague_weight = .bp_num(r$vague_weight))
+  if (!is.null(r$vague_sd_input)) args <- c(args, vague_sd = .bp_num(r$vague_sd_input))
+  .bp_call("robust", "robust_prior", c(args, label = .bp_chr(r$label)))
 }
 
 .bp_sceptical_code <- function(s) {
@@ -253,8 +253,13 @@
     v <- var_of(sensitivity$prior)
     if (!is.null(v) && !is.null(ds) && !is.null(sensitivity$param_grid)) {
       g <- sensitivity$param_grid
-      grid <- c("param_grid <- list(",
-                paste0("  ", names(g), " = ", vapply(g, .bp_grid_code, character(1)),
+      # A data-frame grid (hyperparameters moving together) must be exported as
+      # one, or the script would cross the columns into a different grid.
+      is_df <- is.data.frame(g)
+      g <- as.list(g)
+      grid <- c(if (is_df) "param_grid <- data.frame(" else "param_grid <- list(",
+                paste0("  ", names(g), " = ",
+                       vapply(g, if (is_df) .bp_c else .bp_grid_code, character(1)),
                        c(rep(",", length(g) - 1L), "")),
                 ")")
       cri <- !is.null(sensitivity$cri_level)

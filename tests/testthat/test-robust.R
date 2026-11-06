@@ -270,3 +270,49 @@ test_that("plot.bayprior_power_prior: patchwork not installed falls back gracefu
     is.list(result)
   )
 })
+
+test_that("robust_prior's vague component lives in the parameter space", {
+  g <- elicit_gamma(mean = 0.2, sd = 0.05, method = "moments")
+  rg <- suppressWarnings(robust_prior(g))
+  v <- rg$components[[2]]
+  expect_equal(v$dist, "gamma")
+  expect_equal(v$fit_summary$mean, 0.2, tolerance = 1e-8)
+  expect_lte(v$params$shape, 1 + 1e-8)
+  ln <- elicit_lognormal(mean = 2, sd = 0.5, method = "moments")
+  expect_equal(suppressWarnings(robust_prior(ln))$components[[2]]$dist, "lognormal")
+  nm <- elicit_normal(mean = 0.3, sd = 0.1, method = "moments")
+  rn <- suppressWarnings(robust_prior(nm, vague_sd = 0.7))
+  expect_equal(rn$components[[2]]$params$sigma, 0.7)
+  b <- elicit_beta(mean = 0.3, sd = 0.1, method = "moments")
+  expect_error(robust_prior(b, vague_sd = 0.9), "must be below")
+  expect_equal(suppressWarnings(robust_prior(b, vague_sd = 0.3))$components[[2]]$fit_summary$sd, 0.3, tolerance = 1e-8)
+  # count data update is exact and conjugate
+  post <- .conjugate_update(rg, list(type = "poisson", x = 6, n = 20))
+  expect_equal(post$dist, "mixture")
+  expect_true(all(vapply(post$components, function(k) k$dist, "") == "gamma"))
+})
+
+test_that("calibrate_power_prior flags an unreachable target instead of reporting it as optimal", {
+  base <- elicit_beta(mean = 0.5, sd = 0.2, method = "moments")
+  hist <- list(type = "binary", x = 12, n = 40); cur <- list(type = "binary", x = 18, n = 50)
+  expect_warning(
+    cal <- suppressMessages(calibrate_power_prior(hist, cur, base, target_bf = 50)),
+    "No delta reaches the target")
+  expect_false(cal$target_met)
+  expect_equal(cal$delta_opt, 0.05)
+  # compatible data: the compatibility method does borrow
+  cc <- suppressMessages(calibrate_power_prior(hist, cur, base, method = "compatibility"))
+  expect_true(cc$target_met)
+  expect_gt(cc$delta_opt, 0.5)
+  ok <- suppressMessages(calibrate_power_prior(hist, cur, base, target_bf = 1))
+  expect_true(ok$target_met)
+})
+
+test_that("calibrate_power_prior reports the borrowed sample size and defaults to a target of 1", {
+  base <- elicit_beta(mean = 0.5, sd = 0.2, method = "moments")
+  hist <- list(type = "binary", x = 12, n = 40); cur <- list(type = "binary", x = 18, n = 50)
+  cal <- suppressMessages(calibrate_power_prior(hist, cur, base))
+  expect_equal(cal$target_bf, 1)
+  expect_equal(cal$historical_n, 40)
+  expect_equal(cal$borrowed_n, cal$delta_opt * 40)
+})

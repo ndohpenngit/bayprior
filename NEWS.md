@@ -1,13 +1,53 @@
-# bayprior (development version)
+# bayprior 0.6.0
+
+This release corrects statistical defects found in a review of the package.
+**Several results change**, so analyses saved or reported with 0.5.x should be
+rerun. The changes that alter results are listed here and described under
+"Statistical corrections (breaking)".
+
+## Breaking changes
+
+* `map_prior()` returns the predictive prior for a new trial (wider than the
+  posterior of the population mean it used to return). It stops for a
+  half-Cauchy prior on tau with fewer than 3 trials (infinite variance).
+* Mixture posteriors (robust priors, linear pools, power priors) use exact
+  marginal likelihoods for their weights, and their 95% intervals come from the
+  mixture distribution function, not mean +/- 1.96 SD.
+* Power priors are the conjugate update with the likelihood raised to the power
+  delta. Poisson, survival and Normal-on-a-rate data were wrong before.
+* `aggregate_experts(method = "logarithmic")` returns the exact pooled prior in
+  the experts' family (its `dist` is now the family name, not `"log_pool"`).
+  Negative, missing or non-finite weights are rejected.
+* Family/data pairings with no likelihood (for example Beta with continuous
+  data) are refused instead of warning.
+* `robust_prior()` builds its vague component in the informative prior's
+  family (`Beta(1, 1)` for a Beta prior).
+* `prior_conflict()`: `surprise_index` follows the reported p-value
+  (`surprise_index_normal` keeps the old distance); the likelihood SE is no
+  longer about zero at 0 or n events; continuous data need `sd`.
+* A Gamma prior with a continuous mean is no longer updated as a count total.
+* Sensitivity influence is classified in posterior-SD units.
+
 
 ## Shiny app
+
+* Sensitivity tab: **Reset** (next to Run) restores the grid settings (design,
+  strength range, mean shift, grid size, hyperparameter ranges, analysis type,
+  threshold, targets, credible-interval level); the observed data are kept.
+  The grid note now says "working prior" for mixture priors and says so when
+  the strength range does not include the elicited value (1x). The Run
+  button's "Fit a prior first" hint, here and in Conflict Diagnostics, shows
+  only while no prior is available. The tornado plot has more room for its
+  subtitle, and the log-scaled strength axis of the 2-D plot is labelled.
 
 * New **Session** menu in the header, next to the theme toggle, to save the
   current work to a `.rds` file and load it back from any tab. Loading
   restores the priors, the expert pool, the MAP prior and the report
   details. Conflict, sensitivity and robust / power results are saved in the
   file but are not restored; rerun them after loading. Session files are
-  validated on load (format, version, expected contents and size).
+  validated on load (format, version, expected contents and size). The menu
+  also has **New session**, which clears everything after a confirmation
+  (with an option to save first).
 
 * Export Report: new **Export R script** button that writes a script
   reproducing the analysis (elicitation inputs, expert pooling, MAP prior,
@@ -22,6 +62,225 @@
   and the robust / power pages use it.
 
 * Conflict Diagnostics no longer fails when no result is produced.
+
+* Welcome page animation: the numbers and curves now come from bayprior's own
+  functions (`dev/make_bp_live.R`). The pooling panel quotes the
+  Bhattacharyya agreement used by the Pooling tab (0.43) instead of an overlap
+  area, and the robust-prior panel uses the prior from the chip example, labels
+  both estimates as posterior means (40% and 74%) and shows the posterior
+  weight on the informative part (3%). The robust prior in this panel now uses
+  the `Beta(1, 1)` vague component.
+
+* Sensitivity: the default grid is now built in terms of the prior rather
+  than its raw hyperparameters, for Beta, Gamma and Normal priors. Prior
+  strength (the effective sample size) is varied from 0.5x to 2x the
+  elicited value, and the prior mean is shifted by up to +/-1 prior SD;
+  both can be changed, and the mean can be held fixed. The previous grid
+  (each hyperparameter scaled by 0.5x to 2x on its own) is still available
+  as "Hyperparameters", and is the only option for other families. That
+  old grid moved the prior mean and the strength together, so for a
+  Beta(6.7, 11.9) prior it covered prior means of 0.12 to 0.69 and
+  effective sample sizes of 9 to 37, and its influence scores mostly
+  reflected how wide the grid was. A note under the grid settings now shows
+  the range of prior mean and effective sample size that the grid covers.
+  **Influence scores from earlier versions are not comparable with the new
+  default**; rerun the analysis. The reference prior is now exactly one of
+  the grid points.
+
+## Statistical corrections (breaking)
+
+* **Breaking: mixture posterior weights now use exact marginal likelihoods.**
+  Mixture priors updated with Poisson or survival data previously used the
+  event count as if it were a mean, and binary data used a Normal
+  approximation, so the component weights were wrong. Weights now come from
+  the exact Beta-binomial, Gamma-Poisson and Normal-Normal marginal
+  likelihoods (numerical integration of the exact likelihood for other
+  families), with one shared data SD for continuous data. Posterior weights,
+  means and credible intervals of mixture priors can change.
+
+* **Breaking: power priors are corrected.** `robust_prior()` / `calibrate_power_prior()`
+  used the event count as a mean (Normal prior) or multiplied the count by n
+  (Gamma prior with Poisson data). The power prior is now exactly the conjugate
+  update with the likelihood raised to the power delta, and mixture weights and
+  the prior-data Bayes factor use the exact marginal likelihoods.
+
+* **Breaking: 95% credible intervals of mixture priors and posteriors are now
+  exact.** They were mean +/- 1.96 SD, which is wrong for skewed or multimodal
+  mixtures (and for robust priors). `fit_summary` of a mixture now carries
+  `q025`, `q500` and `q975` computed from the mixture distribution function,
+  and the app and report show them.
+
+* **Breaking: the logarithmic pool is now exact.** `aggregate_experts(method =
+  "logarithmic")` of priors from the same Beta, Gamma, exponential, Normal or
+  lognormal family returns the pooled prior as a member of that family (for
+  example `Beta(sum(w * alpha), sum(w * beta))`), with its own parameters, mean,
+  SD and credible interval. Its mean used to be the linear-pool mean and its SD
+  was missing. The pooled prior's `dist` is therefore the family name rather
+  than `"log_pool"`; the experts are kept in `$pool_inputs`. Pools of mixed
+  families are normalised numerically and carry a full summary. The consensus
+  curve in the app shows the pool that was chosen. `aggregate_experts()` and
+  `elicit_mixture()` reject negative, missing or non-finite weights (`c(-1, 2)`
+  used to pass).
+
+* **Breaking: prior families that cannot describe the data are refused.**
+  `prior_conflict()`, `sensitivity_grid()`, `sensitivity_cri()` and the
+  posterior updates stop with an explanatory error for a family/data pairing
+  that has no likelihood (a Beta prior with continuous or count data; a Gamma,
+  lognormal, exponential or Weibull prior with binary data). They used to warn
+  that the analysis would "proceed using a Normal approximation", which has no
+  statistical meaning, and the warning named the wrong method. A Normal prior
+  works with every data type; the positive-support families work with counts,
+  survival and positive continuous data. Mixtures and pools are checked
+  component by component.
+
+* `prior_conflict()`: `surprise_index` is now the Normal-equivalent distance of
+  the reported p-value, `qnorm(1 - box_pvalue / 2)`, so it can no longer read
+  "within expected range" next to an exact p-value below alpha. The old
+  Normal-approximation distance is kept as `surprise_index_normal`.
+
+* The Normal approximation to the likelihood no longer uses a standard error of
+  about zero at 0 or n events: the SE uses the continuity-adjusted proportion
+  (or `max(events, 0.5)` for counts) at the boundary only, which makes the
+  approximate p-value less anti-conservative for zero-event or all-event data.
+  A Normal prior updated with binary data on the proportion scale uses the
+  ordinary Wald SE away from the boundary. Continuous data without `sd` are
+  rejected instead of borrowing the prior's SD.
+
+* **Breaking: `robust_prior()` builds its vague component in the informative
+  prior's family.** A Beta prior gets a `Beta(1, 1)` part, a Gamma, exponential
+  or Weibull prior a Gamma part, a lognormal prior a lognormal part, and only a
+  Normal prior a Normal part. The old always-Normal vague part put mass outside
+  the parameter space (about 40% below zero for a Gamma prior with mean 0.2),
+  made every update approximate and forced numerical mixture densities. Robust
+  mixtures are now conjugate with exact weights. Robust priors saved by an
+  earlier version load with a note asking to build them again. In the app, a
+  multiplier too wide for a Beta falls back to `Beta(1, 1)` with a notice.
+  Because the new vague part has a smaller SD than the old wide Normal, the
+  Normal approximation (`exact = FALSE`) of a robust prior's Box p-value is now
+  anti-conservative in most small-sample cells (validation Part D: up to 0.17
+  rejection at nominal 0.05); the exact default is unaffected.
+
+* **Breaking: a Gamma prior with continuous data is no longer updated as if the
+  mean were a count total.** `shape + n * mean, rate + n` was only valid for
+  Poisson-type totals. With a mean, SD and n the posterior is computed
+  numerically and matched to a Gamma (labelled "gamma approximation"); a total
+  `x_sum` still gives the conjugate update.
+
+* Sensitivity analysis: the influence of the prior is also reported in units of
+  the reference posterior SD (`influence_standardised`, with `influence_scale`),
+  and the report classifies on that scale (0.1 and 0.5 posterior SDs; 0.05 and
+  0.15 probability points for the probability of efficacy). The previous fixed
+  0.05 / 0.15 cut-offs on the raw range depended on the units of the parameter.
+  The cut-offs are package conventions, not calibrated tests, and the report
+  says so.
+
+* `calibrate_power_prior()` no longer presents a fallback as the optimum. When no
+  delta meets the criterion, `delta_opt` is still the smallest grid value, but a
+  warning is issued, `target_met` is `FALSE`, and the Power Prior tab says
+  "target not reached". The default `target_bf` is now 1 (a Bayes Factor above 1
+  means the borrowed data improve the prediction of the current data; 3 was
+  rarely reachable when the data agree). The result reports the historical
+  sample size borrowed (`borrowed_n`, `historical_n`), the calibration plot shows
+  the target and the Box p-value on its own axis, and the tab and report note
+  that delta is chosen using the current data (an empirical-Bayes power prior).
+
+* **Breaking: `map_prior()` now returns the predictive prior for a new trial.**
+  It returned the posterior of the population mean, which leaves out the
+  between-trial variance tau^2 and is too narrow as a prior for a new trial
+  (Schmidli et al. 2014 define the MAP prior as the predictive distribution).
+  The prior's mean is unchanged; its SD now includes tau^2 (about 0.41 instead
+  of 0.22 in a five-trial example), so borrowing is weaker and fewer conflicts
+  are flagged. The Normal is matched to the predictive mean and SD; the exact
+  predictive quantiles are in `$predictive`, and the posterior of the mean
+  alone in `$mu_summary`. A half-Cauchy tau prior with fewer than 3 trials gives
+  an infinite predictive variance and is refused. Verified against an
+  independent numerical reference (tests) and a Monte Carlo
+  (`validation/verify_map_predictive.R`). The MAP tab and report say what the
+  prior is, and sessions saved with an earlier version warn that a MAP prior
+  should be derived again. Rerun anything that used a MAP prior.
+
+* A Normal prior used with binary (events / n) data was compared with the raw
+  proportion even when it is a log-odds prior, such as one from `map_prior()`.
+  A historical-control prior of mean -0.862 and SD 0.335 against 18 events in
+  40 was flagged as mild conflict (surprise 3.8, Box p 0.015), although on the
+  log-odds scale it is not (observed -0.20, z = 1.4, p about 0.13), and the
+  overlay plot drew the likelihood and posterior off the axis. Such a prior is
+  now read on the log-odds scale unless its mean +/- 2 SD lies inside [0, 1],
+  in which case it is read as a prior on the proportion. This applies to
+  `prior_conflict()` (including the numerical prior predictive p-value),
+  `plot_prior_likelihood()`, and the posterior update used by the sensitivity
+  analysis. Set `binary_scale = "log_odds"` or `"proportion"` in
+  `data_summary` to choose; the Conflict Diagnostics tab has a selector, and
+  the result says which scale was used (`$binary_scale`, `$binary_scale_note`).
+  `sensitivity_grid()` and `sensitivity_cri()` fix the scale once from the
+  reference prior (so every grid point is updated on the same scale), report it
+  in `$binary_scale`, and take `threshold` on the scale of the parameter (use
+  `qlogis(rate)` for a response-rate threshold with a log-odds prior). In the
+  Sensitivity tab the threshold is then entered as a response rate and
+  converted, and a note says that posterior means and SDs are log-odds. Rerun
+  conflict and sensitivity results that used a Normal prior with binary data.
+
+* Updating a Normal prior with binary, Poisson or survival data treated the
+  event count as an observed mean. It now uses the observed rate (`x / n`) for
+  Poisson and survival data, and the proportion or the log-odds (see above)
+  for binary data, with the matching standard error. This affected Normal priors on
+  those data types and, in particular, the vague Normal component of a robust
+  prior with binary data, whose posterior mean could come out far outside the
+  probability scale (7.29 in one example, now about 0.79). Results that
+  involved this update, including the posterior and the posterior component
+  weights of robust priors with binary data, can change.
+
+## Sensitivity analysis
+
+* `sensitivity_grid()` and `sensitivity_cri()` accept `param_grid` as a data
+  frame with one row per grid point, so hyperparameters can vary together
+  (for example prior strength at a fixed mean). Other columns are carried
+  into the result. Lists of vectors work as before. Plots of such a grid use
+  the prior mean and strength as axes, and the exported R script writes the
+  grid as a `data.frame()`.
+
+## Documentation and wording
+
+* `prior_conflict()$recommendation` no longer says that the prior "appears
+  consistent with the observed data" when no conflict is flagged; it now says
+  that no evidence of conflict was detected, that a large p-value does not
+  show the prior is correct, and that with a small sample the check has little
+  power to detect conflict. This text is shown in the app and in reports.
+  For mild conflict it now suggests a sensitivity analysis that varies the
+  prior's strength and mean, including a weaker prior, and points to the
+  Sensitivity tab and `sensitivity_grid()`; it previously suggested only "a
+  more diffuse prior".
+
+* The conflict vignette's threshold table now matches the code: "severe" is
+  Box p below about 0.0027 (not 0.01), and it states that only the Box
+  p-value determines `conflict_severity` and that the other cut-offs are
+  conventions, not calibrated thresholds.
+
+* The sensitivity vignette now states that influence scores depend on the
+  grid and on the scale of the quantity, and that the bands are a rule of
+  thumb.
+
+## Reports
+
+* The conflict section states the observed data used (events and sample
+  size, or mean, SD and n), and the severity row has its own interpretation
+  instead of repeating the value.
+
+* Sensitivity section: the influence column now uses the three bands from
+  the sensitivity vignette (not sensitive below 0.05, moderate up to 0.15,
+  sensitive above), stated in the caption as a rule of thumb. The report
+  also describes the grid that was varied (in terms of prior mean and
+  effective sample size), the threshold behind
+  `prob_efficacy`, and a note that a mixture prior is analysed through a
+  single-family working prior.
+
+* Conflict section: a note explains that a p-value above alpha means
+  conflict was not flagged, not that prior and data agree, and that only the
+  Box p-value determines the severity class.
+
+* The guidance-alignment row "Alternative priors considered" now reflects
+  whether a robust, sceptical or power prior was computed (it used to say
+  "See above" whenever a sensitivity analysis existed).
 
 # bayprior 0.5.0
 

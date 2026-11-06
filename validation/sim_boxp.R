@@ -4,15 +4,23 @@
 # Reads the package from BAYPRIOR_SRC (default: ../bayprior, the released tree).
 suppressMessages({ library(stats) })
 src <- Sys.getenv("BAYPRIOR_SRC", "../bayprior")
-suppressMessages(devtools::load_all(src, quiet = TRUE))
+suppressMessages(pkgload::load_all(src, quiet = TRUE))
 RNGkind("L'Ecuyer-CMRG"); set.seed(20261013)
 REPS   <- as.integer(Sys.getenv("REPS", "20000"))
 ALPHAS <- c(0.05, 0.10)
 
 ## ---- p-value methods, tabulated over every possible outcome x ------------
+# se_fix: FALSE = plain SE; TRUE = continuity-adjusted SE at every x (0.4.x);
+# "boundary" = adjusted only at x = 0 or x = n (binary) / x = 0 (rate); this is
+# what prior_conflict(exact = FALSE) does from 0.6.0 (.normal_obs()).
 p_approx <- function(pm, ps, x, n, type, se_fix = FALSE) {
   om <- x / n
-  if (type == "binary") {
+  if (identical(se_fix, "boundary")) {
+    if (type == "binary") {
+      pa <- ifelse(x <= 0 | x >= n, (x + 0.5) / (n + 1), x / n)
+      se <- sqrt(pa * (1 - pa) / n)
+    } else se <- sqrt(pmax(x, 0.5)) / n
+  } else if (type == "binary") {
     if (se_fix) { pa <- (x + 0.5) / (n + 1); se <- sqrt(pa * (1 - pa) / n) }
     else se <- sqrt(om * (1 - om) / n)
   } else {
@@ -27,6 +35,7 @@ tab <- function(prior, n, type, xmax) {
   x <- 0:xmax; pm <- prior$fit_summary$mean; ps <- prior$fit_summary$sd
   list(approx   = p_approx(pm, ps, x, n, type),
        approx_B = p_approx(pm, ps, x, n, type, se_fix = TRUE),
+       approx_C = p_approx(pm, ps, x, n, type, se_fix = "boundary"),
        exact    = p_exact(prior, type, x, n))
 }
 
@@ -66,12 +75,13 @@ for (s in seq_len(nrow(specs))) {
       x <- pmin(rdraw(th, n), xmax)
       for (al in ALPHAS) {
         k <- k + 1
-        pe <- tb$exact[x + 1]; pa <- tb$approx[x + 1]; pb <- tb$approx_B[x + 1]
+        pe <- tb$exact[x + 1]; pa <- tb$approx[x + 1]; pb <- tb$approx_B[x + 1]; pc <- tb$approx_C[x + 1]
         rows[[k]] <- data.frame(family = fam, prior_mean = pm, strength = str, n = n,
           scenario = sc, alpha = al, reps = REPS,
-          rej_exact = mean(pe < al), rej_approx = mean(pa < al), rej_approxB = mean(pb < al),
+          rej_exact = mean(pe < al), rej_approx = mean(pa < al), rej_approxB = mean(pb < al), rej_approxC = mean(pc < al),
           disc_approx_vs_exact = mean((pe < al) != (pa < al)),
           disc_approxB_vs_exact = mean((pe < al) != (pb < al)),
+          disc_approxC_vs_exact = mean((pe < al) != (pc < al)),
           s_med_exact = median(-log2(pe)), s_med_approx = median(-log2(pmax(pa, 1e-300))),
           s_q90_exact = quantile(-log2(pe), .9), s_q90_approx = quantile(-log2(pmax(pa, 1e-300)), .9),
           stringsAsFactors = FALSE)
@@ -97,7 +107,7 @@ for (i in 1:200) {
   ds <- list(type = type, x = x, n = n)
   pe <- suppressMessages(prior_conflict(pr, ds, exact = TRUE)$box_pvalue)
   pa <- prior_conflict(pr, ds, exact = FALSE)$box_pvalue
-  vchk <- max(vchk, abs(pe - p_exact(pr, type, x, n)), abs(pa - p_approx(pr$fit_summary$mean, pr$fit_summary$sd, x, n, type)))
+  vchk <- max(vchk, abs(pe - p_exact(pr, type, x, n)), abs(pa - p_approx(pr$fit_summary$mean, pr$fit_summary$sd, x, n, type, se_fix = "boundary")))
 }
 # (2) exact p vs brute-force Monte Carlo from the generative model.
 # Outcomes are ordered by an independently coded closed-form pmf (so exact

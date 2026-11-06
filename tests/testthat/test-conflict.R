@@ -19,6 +19,136 @@ test_that("prior_conflict returns correct structure (binary, no conflict)", {
   expect_equal(cd$conflict_severity, "none")
 })
 
+test_that("mild conflict recommends a sensitivity analysis over strength and mean", {
+  prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
+  cd    <- prior_conflict(prior, list(type = "binary", x = 24, n = 40))
+  expect_equal(cd$conflict_severity, "mild")
+  expect_match(cd$recommendation, "sensitivity analysis", fixed = TRUE)
+  expect_match(cd$recommendation, "strength and mean", fixed = TRUE)
+  expect_match(cd$recommendation, "sensitivity_grid()", fixed = TRUE)
+})
+
+test_that("Normal prior updated with count data uses the proportion, log-odds or rate, not the count", {
+  nrm <- elicit_normal(mean = 0.3, sd = 0.2, method = "moments")
+  # proportion reading: 8 events in 10 -> observed 0.8, SE about 0.12
+  ds  <- list(type = "binary", x = 8, n = 10, binary_scale = "proportion")
+  post <- .conjugate_update(nrm, ds)
+  expect_gt(post$params$mu, 0.3)
+  expect_lt(post$params$mu, 0.8)
+  se <- sqrt(0.8 * 0.2 / 10)   # Wald SE; only 0 or n events are adjusted
+  w  <- (1 / se^2) / (1 / 0.2^2 + 1 / se^2)
+  expect_equal(post$params$mu, (1 - w) * 0.3 + w * 0.8, tolerance = 1e-8)
+  for (x in c(0, 10)) {
+    b <- .conjugate_update(nrm, list(type = "binary", x = x, n = 10,
+                                     binary_scale = "proportion"))
+    expect_true(is.finite(b$params$mu) && b$params$sigma > 0)
+    expect_true(b$params$mu > -0.5 && b$params$mu < 1.5)
+  }
+  # Poisson: observed rate x / n
+  pz <- .conjugate_update(nrm, list(type = "poisson", x = 6, n = 20))
+  expect_lt(abs(pz$params$mu - 0.3), 0.1)
+  # continuous data: x is already a mean
+  cz <- .conjugate_update(nrm, list(type = "continuous", x = 0.5, n = 25, sd = 1))
+  expect_equal(cz$params$mu,
+               (0.3 / 0.04 + 0.5 / (1 / 25)) / (1 / 0.04 + 1 / (1 / 25)),
+               tolerance = 1e-8)
+})
+
+test_that("a Normal prior with binary data is read on the log-odds scale unless it fits [0, 1]", {
+  lo_prior <- elicit_normal(mean = -0.862, sd = 0.335, method = "moments",
+                            label = "Historical control")
+  pr_prior <- elicit_normal(mean = 0.30, sd = 0.10, method = "moments")
+  bin <- list(type = "binary", x = 18, n = 40)
+
+  expect_equal(.binary_scale(lo_prior, bin), "log_odds")
+  expect_equal(.binary_scale(pr_prior, bin), "proportion")
+  expect_equal(.binary_scale(lo_prior, c(bin, binary_scale = "proportion")), "proportion")
+  expect_true(is.na(.binary_scale(lo_prior, list(type = "continuous", x = 0, n = 10))))
+  expect_true(is.na(.binary_scale(elicit_beta(mean = 0.3, sd = 0.1, method = "moments"), bin)))
+  expect_error(.binary_scale(lo_prior, c(bin, binary_scale = "odds")), "binary_scale")
+
+  # log-odds, finite at the edges
+  for (x in c(0, 10)) expect_true(all(is.finite(unlist(.binary_logit(x, 10)))))
+  expect_equal(.binary_logit(18, 40)$mean, log(18 / 22))
+  expect_equal(.binary_logit(18, 40)$se, sqrt(1 / 18 + 1 / 22))
+})
+
+test_that("prior_conflict compares binary data with a log-odds prior on the log-odds scale", {
+  lo_prior <- elicit_normal(mean = -0.862, sd = 0.335, method = "moments",
+                            label = "Historical control")
+  bin <- list(type = "binary", x = 18, n = 40)
+
+  cd <- prior_conflict(lo_prior, bin, exact = FALSE)
+  se <- sqrt(1 / 18 + 1 / 22)
+  z  <- (log(18 / 22) - (-0.862)) / sqrt(0.335^2 + se^2)
+  expect_equal(cd$binary_scale, "log_odds")
+  expect_equal(cd$surprise_index, abs(z), tolerance = 1e-6)
+  expect_equal(cd$box_pvalue, 2 * pnorm(-abs(z)), tolerance = 1e-6)
+  expect_equal(cd$conflict_severity, "none")
+  expect_match(cd$binary_scale_note, "log-odds scale", fixed = TRUE)
+
+  # numerical prior predictive on the same scale agrees closely
+  cdn <- prior_conflict(lo_prior, bin)
+  expect_equal(cdn$box_pvalue_method, "numerical")
+  expect_lt(abs(cdn$box_pvalue - cd$box_pvalue), 0.05)
+  expect_equal(cdn$conflict_severity, "none")
+
+  # reading it as a proportion gives the earlier, scale-mismatched result
+  cdp <- prior_conflict(lo_prior, c(bin, binary_scale = "proportion"), exact = FALSE)
+  expect_equal(cdp$binary_scale, "proportion")
+  expect_gt(cdp$surprise_index, 3.5)
+
+  # a prior on the proportion is not transformed
+  pr  <- elicit_normal(mean = 0.30, sd = 0.10, method = "moments")
+  cdq <- prior_conflict(pr, bin, exact = FALSE)
+  expect_equal(cdq$binary_scale, "proportion")
+  expect_equal(cdq$surprise_index, abs((0.45 - 0.30) / sqrt(0.1^2 + 0.45 * 0.55 / 40)),
+               tolerance = 1e-6)
+
+  # other priors carry no scale information
+  bt <- prior_conflict(elicit_beta(mean = 0.3, sd = 0.1, method = "moments"), bin)
+  expect_null(bt$binary_scale)
+  expect_null(bt$binary_scale_note)
+})
+
+test_that("Normal prior update and overlay plot use the log-odds scale", {
+  lo_prior <- elicit_normal(mean = -0.862, sd = 0.335, method = "moments",
+                            label = "Historical control")
+  bin <- list(type = "binary", x = 18, n = 40)
+  post <- .conjugate_update(lo_prior, bin)
+  se <- sqrt(1 / 18 + 1 / 22)
+  w  <- (1 / se^2) / (1 / 0.335^2 + 1 / se^2)
+  expect_equal(post$params$mu, (1 - w) * (-0.862) + w * log(18 / 22), tolerance = 1e-8)
+
+  skip_if_not_installed("ggplot2")
+  g <- plot_prior_likelihood(lo_prior, bin)
+  d <- g$data
+  # likelihood and posterior are visible on the prior's axis (they used to be flat)
+  expect_gt(max(d$density[d$source == "Posterior"]), 0.1)
+  expect_gt(max(d$density[d$source == "Likelihood (scaled)"]), 0.1)
+  expect_match(g$labels$x, "log-odds", fixed = TRUE)
+})
+
+test_that("a mixture of Normal priors with binary data is updated on the log-odds scale", {
+  a <- elicit_normal(mean = -0.9, sd = 0.3, method = "moments")
+  b <- elicit_normal(mean = -0.3, sd = 0.5, method = "moments")
+  mix <- aggregate_experts(list(a, b), weights = c(0.5, 0.5), method = "linear")
+  post <- .conjugate_update(mix, list(type = "binary", x = 18, n = 40))
+  m <- vapply(post$components, function(cc) cc$fit_summary$mean, numeric(1))
+  expect_true(all(m > -1.5 & m < 0.5))     # log-odds, not a proportion or a count
+  expect_equal(sum(post$weights), 1)
+})
+
+test_that("robust prior updated with binary data stays on the probability scale", {
+  inf <- elicit_beta(mean = 0.16, sd = 0.087, method = "moments")
+  rb  <- suppressWarnings(robust_prior(inf, vague_weight = 0.2))
+  post <- .conjugate_update(rb, list(type = "binary", x = 8, n = 10))
+  means <- vapply(post$components, function(c) c$fit_summary$mean, numeric(1))
+  expect_true(all(means > 0 & means < 1.1))      # was 7.29 for the vague part
+  expect_gt(post$fit_summary$mean, inf$fit_summary$mean)
+  expect_lt(post$fit_summary$mean, 1.1)
+})
+
 test_that("prior_conflict detects severe conflict", {
   prior <- elicit_beta(mean = 0.30, sd = 0.05, method = "moments")
   cd <- prior_conflict(prior, list(type = "binary", x = 38, n = 40))
@@ -63,12 +193,11 @@ test_that("default exact = NULL uses the exact p-value where a closed form exist
                "exact")
 })
 
-test_that("default exact = NULL falls back to the approximation silently", {
+test_that("a family/data pairing without a likelihood is refused", {
   prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
-  expect_no_message(
-    cd <- prior_conflict(prior, list(type = "continuous", x = 0.4, sd = 0.15, n = 40))
-  )
-  expect_equal(cd$box_pvalue_method, "normal_approx")
+  expect_error(
+    prior_conflict(prior, list(type = "continuous", x = 0.4, sd = 0.15, n = 40)),
+    "cannot be combined")
 })
 
 test_that("non-whole-number counts fall back to the approximation rather than mis-indexing", {
@@ -107,8 +236,15 @@ test_that("zero events under an informative prior is not flagged as conflict (re
   expect_equal(cd$box_pvalue_method, "exact")
   expect_equal(cd$box_pvalue, 1)
   expect_false(cd$conflict_flag)
-  # the approximation (0.4.0 behaviour) flags it, which is the defect
-  expect_lt(prior_conflict(prior, ds, exact = FALSE)$box_pvalue, 0.05)
+  # The 0.5.0 approximation flagged it (p ~ 0.017) because the SE collapsed to
+  # 1e-8 at x = 0. The SE now uses the continuity-adjusted proportion at the
+  # boundary, so the approximation no longer flags this outcome either.
+  ap <- prior_conflict(prior, ds, exact = FALSE)
+  expect_gt(ap$box_pvalue, 0.05)
+  expect_gt(ap$data_summary$n, 0)
+  o <- .normal_obs(ds)
+  expect_equal(o$se, sqrt((0.5 / 11) * (1 - 0.5 / 11) / 10))
+  expect_equal(o$mean, 0)
 })
 
 test_that("exact p-value is size-controlled under the prior predictive (Beta-Binomial)", {
@@ -186,18 +322,29 @@ test_that("prior_conflict(exact = TRUE) applies the same exact check to survival
 test_that("prior_conflict(exact = TRUE) falls back to the approximation, with a message, when unsupported", {
   prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
   expect_message(
-    cd <- prior_conflict(prior, list(type = "continuous", x = 0.4, sd = 0.15, n = 40), exact = TRUE),
+    cd <- prior_conflict(prior, list(type = "binary", x = 17.5, n = 40), exact = TRUE),
     "no closed-form exact prior predictive"
   )
   expect_equal(cd$box_pvalue_method, "normal_approx")
 })
 
-test_that("prior_conflict(exact = TRUE) leaves surprise_index, kl, and overlap unaffected", {
+test_that("surprise_index follows the reported p-value; the Normal distance is kept", {
+  prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
+  interim <- list(type = "binary", x = 18, n = 40)
+  a <- prior_conflict(prior, interim, exact = FALSE)
+  e <- prior_conflict(prior, interim, exact = TRUE)
+  expect_equal(a$surprise_index, a$surprise_index_normal)
+  expect_equal(e$surprise_index, qnorm(e$box_pvalue / 2, lower.tail = FALSE))
+  expect_equal(e$surprise_index_normal, a$surprise_index_normal)
+  # extreme conflict stays finite
+  expect_true(is.finite(prior_conflict(prior, list(type = "binary", x = 40, n = 40))$surprise_index))
+})
+
+test_that("prior_conflict(exact = TRUE) leaves kl and overlap unaffected", {
   prior <- elicit_beta(mean = 0.35, sd = 0.10, method = "moments")
   interim <- list(type = "binary", x = 18, n = 40)
   cd_approx <- prior_conflict(prior, interim, exact = FALSE)
   cd_exact  <- prior_conflict(prior, interim, exact = TRUE)
-  expect_equal(cd_exact$surprise_index, cd_approx$surprise_index)
   expect_equal(cd_exact$kl_prior_likelihood, cd_approx$kl_prior_likelihood)
   expect_equal(cd_exact$overlap, cd_approx$overlap)
 })
@@ -432,21 +579,19 @@ test_that("mixture of Gammas gets the exact weighted Negative Binomial p-value",
   expect_equal(r$box_pvalue, .ref_p(pmf, 45), tolerance = 1e-6)
 })
 
-test_that("robust prior (Beta + Normal vague) uses the numerical predictive", {
+test_that("robust prior (Beta + Beta(1,1) vague) has an exact predictive", {
   b <- elicit_beta(mean = 0.3, sd = 0.10, method = "moments")
   rp <- suppressWarnings(robust_prior(b, vague_weight = 0.2))
+  expect_equal(rp$components[[2]]$dist, "beta")
+  expect_equal(unlist(rp$components[[2]]$params), c(alpha = 1, beta = 1))
   r <- prior_conflict(rp, list(type = "binary", x = 0, n = 10))
-  expect_equal(r$box_pvalue_method, "numerical")
+  expect_equal(r$box_pvalue_method, "exact")
   expect_null(r$box_pvalue_caution)
-  # reference: 0.8 * BetaBinomial + 0.2 * (Normal truncated to [0,1]) predictive
+  # reference: 0.8 * BetaBinomial + 0.2 * uniform predictive 1 / (n + 1)
   n <- 10; k <- 0:n
   bb <- exp(lchoose(n, k) + lbeta(k + b$params$alpha, n - k + b$params$beta) -
               lbeta(b$params$alpha, b$params$beta))
-  v <- rp$components[[2]]$params
-  th <- seq(5e-6, 1 - 5e-6, by = 1e-5)
-  w <- stats::dnorm(th, v$mu, v$sigma); w <- w / sum(w)
-  vg <- vapply(k, function(kk) sum(w * stats::dbinom(kk, n, th)), numeric(1))
-  expect_equal(r$box_pvalue, .ref_p(0.8 * bb + 0.2 * vg, 0), tolerance = 1e-4)
+  expect_equal(r$box_pvalue, .ref_p(0.8 * bb + 0.2 / (n + 1), 0), tolerance = 1e-10)
 })
 
 test_that("numerical path reproduces closed forms for conjugate priors", {

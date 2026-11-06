@@ -648,8 +648,7 @@ elicit_mixture <- function(components, weights = NULL, label = "Mixture prior") 
       .envir = environment()
     )
   }
-  if (abs(sum(weights) - 1) > 1e-6)
-    rlang::abort("`weights` must sum to 1.")
+  .check_weights(weights, k)
 
   structure(
     list(
@@ -657,7 +656,7 @@ elicit_mixture <- function(components, weights = NULL, label = "Mixture prior") 
       components  = components,
       weights     = weights,
       label       = label,
-      fit_summary = .mixture_summary(components, weights)
+      fit_summary = .mixture_fit_summary(components, weights)
     ),
     class = "bayprior"
   )

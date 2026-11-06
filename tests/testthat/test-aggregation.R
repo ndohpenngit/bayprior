@@ -180,3 +180,43 @@ test_that(".prior_range spans the actual support for non-unit-interval families"
   r2 <- .prior_range(gam)
   expect_gt(r2$hi, 1)
 })
+test_that("weights must be finite, non-negative and sum to 1", {
+  e1 <- elicit_beta(mean = 0.3, sd = 0.1, method = "moments")
+  e2 <- elicit_beta(mean = 0.4, sd = 0.1, method = "moments")
+  pr <- list(E1 = e1, E2 = e2)
+  expect_error(aggregate_experts(pr, weights = c(-1, 2)), "non-negative")
+  expect_error(aggregate_experts(pr, weights = c(1.5, -0.5)), "non-negative")
+  expect_error(aggregate_experts(pr, weights = c(NA, 1)), "NA")
+  expect_error(aggregate_experts(pr, weights = c(0.5, 0.4)), "sum to 1")
+  expect_error(elicit_mixture(pr, weights = c(-1, 2)), "non-negative")
+})
+
+test_that("logarithmic pool is the closed-form family member", {
+  b1 <- elicit_beta(mean = 0.2, sd = 0.08, method = "moments")
+  b2 <- elicit_beta(mean = 0.5, sd = 0.10, method = "moments")
+  w <- c(.3, .7)
+  pl <- suppressMessages(aggregate_experts(list(b1, b2), weights = w, method = "logarithmic"))
+  expect_identical(pl$dist, "beta")
+  expect_equal(pl$params$alpha, sum(w * c(b1$params$alpha, b2$params$alpha)))
+  # density proportional to the weighted geometric mean of the densities
+  g <- seq(.02, .98, length.out = 400)
+  lg <- w[1] * dbeta(g, b1$params$alpha, b1$params$beta, log = TRUE) +
+    w[2] * dbeta(g, b2$params$alpha, b2$params$beta, log = TRUE)
+  expect_equal(diff(lg - dbeta(g, pl$params$alpha, pl$params$beta, log = TRUE)), rep(0, 399), tolerance = 1e-8)
+  expect_false(is.null(pl$fit_summary$sd))
+  # normal
+  n1 <- elicit_normal(mean = 0, sd = 1, method = "moments"); n2 <- elicit_normal(mean = 2, sd = 0.5, method = "moments")
+  pn <- suppressMessages(aggregate_experts(list(n1, n2), weights = c(.5, .5), method = "logarithmic"))
+  prec <- .5 / 1 + .5 / .25
+  expect_equal(pn$params$mu, (.5 * 0 / 1 + .5 * 2 / .25) / prec)
+  expect_equal(pn$params$sigma, 1 / sqrt(prec))
+})
+
+test_that("mixed-family logarithmic pool has a numerical summary", {
+  b <- elicit_beta(mean = 0.3, sd = 0.1, method = "moments")
+  n <- elicit_normal(mean = 0.35, sd = 0.1, method = "moments")
+  pl <- suppressWarnings(suppressMessages(aggregate_experts(list(b, n), weights = c(.5, .5), method = "logarithmic")))
+  expect_identical(pl$dist, "log_pool")
+  expect_true(all(is.finite(unlist(pl$fit_summary))))
+  expect_gt(pl$fit_summary$q975, pl$fit_summary$q025)
+})

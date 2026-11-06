@@ -182,6 +182,12 @@ mod_robust_ui <- function(id) {
                   min = 0.05, max = 0.50, value = 0.20, step = 0.05),
       numericInput(ns("vague_sd_mult"), "Vague SD = informative SD x",
                    value = 10, min = 2, max = 50, step = 1),
+      tags$small(class = "text-muted",
+        "The vague part is in the same family as the informative prior. At",
+        "the default of 10 a Beta prior gets a uniform Beta(1, 1); a Gamma,",
+        "Log-Normal or Normal prior gets a wide version of itself. Other",
+        "values set the vague SD directly; a Beta cannot be wider than",
+        "sqrt(mean x (1 - mean)), and a larger value falls back to Beta(1, 1)."),
       textInput(ns("label"), "Label", "Robust mixture prior"),
       tags$hr(),
       actionButton(ns("fit_btn"), "Build robust prior",
@@ -225,13 +231,28 @@ mod_robust_server <- function(id, shared, active_prior, base_prior) {
       # robust mixture itself after the first click, causing SD to compound
       # exponentially on each subsequent build.
       inf <- base_prior(); req(inf)
-      vsd <- input$vague_sd_mult * inf$fit_summary$sd
-      pr  <- tryCatch(
-        robust_prior(inf, vague_weight = input$vague_weight,
-                     vague_sd = vsd, label = input$label),
+      # The default multiplier lets the package choose a vague component in the
+      # right family (e.g. Beta(1, 1)); any other value sets the SD explicitly.
+      vsd <- if (isTRUE(all.equal(as.numeric(input$vague_sd_mult), 10))) NULL else
+        input$vague_sd_mult * inf$fit_summary$sd
+      build <- function(sd) robust_prior(inf, vague_weight = input$vague_weight,
+                                         vague_sd = sd, label = input$label)
+      pr  <- tryCatch(build(vsd),
         error = function(e) {
-          showNotification(paste("Error:", conditionMessage(e)),
-                           type = "error")
+          # A Beta cannot have an SD that large (its maximum is
+          # sqrt(mean * (1 - mean))): use the uniform Beta(1, 1) instead and
+          # say so, rather than showing a message about an R argument.
+          if (!is.null(vsd) && grepl("must be below", conditionMessage(e), fixed = TRUE)) {
+            showNotification(
+              paste0("A multiplier of ", input$vague_sd_mult, " is wider than a Beta ",
+                     "prior allows; the vague part is the uniform Beta(1, 1) instead."),
+              type = "warning", duration = 8)
+            return(tryCatch(build(NULL), error = function(e2) {
+              showNotification(paste("Error:", conditionMessage(e2)), type = "error")
+              NULL
+            }))
+          }
+          showNotification(paste("Error:", conditionMessage(e)), type = "error")
           NULL
         })
       fitted(pr)
@@ -415,7 +436,12 @@ mod_power_ui <- function(id) {
       selectInput(ns("method"), "Calibration method",
         choices = c("Bayes Factor"          = "bayes_factor",
                     "Box p-value (compat.)" = "compatibility")),
-      numericInput(ns("target_bf"), "Target Bayes Factor", 3, 1, step = 0.5),
+      numericInput(ns("target_bf"), "Target Bayes Factor", 1, 0.1, step = 0.5),
+      tags$p(class = "text-muted", style = "font-size:11px; margin:-6px 0 12px;",
+        "Bayes Factor of the power prior against the base prior on the current",
+        "data: above 1 the borrowed data improve the prediction, below 1 they",
+        "worsen it. The largest delta that reaches the target is chosen; 3 is a",
+        "strong requirement and often unreachable when the data agree."),
       actionButton(ns("run_btn"), "Calibrate",
                    icon = icon("bolt"), class = "btn-primary btn-block"),
       uiOutput(ns("fit_msg"))
@@ -489,9 +515,12 @@ mod_power_server <- function(id, shared, active_prior, base_prior) {
                           n = input$cn_c)
       )
       r <- tryCatch(
-        calibrate_power_prior(hist_d, curr_d, base,
-                              target_bf = input$target_bf,
-                              method    = input$method),
+        withCallingHandlers(
+          calibrate_power_prior(hist_d, curr_d, base,
+                                target_bf = input$target_bf,
+                                method    = input$method),
+          # the "target not reached" case is shown in the box under Calibrate
+          warning = function(w) invokeRestart("muffleWarning")),
         error = function(e) {
           showNotification(paste("Error:", conditionMessage(e)),
                            type = "error")
@@ -507,6 +536,17 @@ mod_power_server <- function(id, shared, active_prior, base_prior) {
 
     output$fit_msg <- renderUI({
       req(res())
+      if (isFALSE(res()$target_met))
+        return(tags$div(class = "alert alert-warning",
+                 style = "margin-top:8px; padding:6px; font-size:12px;",
+                 icon("triangle-exclamation"), " ",
+                 glue::glue("Target not reached (maximum Bayes Factor ",
+                            "{round(max(res()$results$bayes_factor, na.rm = TRUE), 2)}, ",
+                            "Box p {round(min(res()$results$box_pvalue, na.rm = TRUE), 3)} ",
+                            "to {round(max(res()$results$box_pvalue, na.rm = TRUE), 3)}). ",
+                            "delta = {res()$delta_opt} is the smallest grid value ",
+                            "(almost no borrowing), not a calibrated choice. Try a ",
+                            "lower target or the Box p-value method.")))
       tags$div(class = "alert alert-success",
                style = "margin-top:8px; padding:6px; font-size:12px;",
                icon("check"), " ",
@@ -534,8 +574,10 @@ mod_power_server <- function(id, shared, active_prior, base_prior) {
       tagList(
         fluidRow(
           shinydashboard::valueBox(
-            r$delta_opt, "Optimal delta",
-            icon = icon("sliders"), color = "blue", width = 4),
+            r$delta_opt,
+            if (isFALSE(r$target_met)) "Delta (target not reached)" else "Optimal delta",
+            icon = icon("sliders"),
+            color = if (isFALSE(r$target_met)) "yellow" else "blue", width = 4),
           shinydashboard::valueBox(
             round(r$power_prior$fit_summary$mean, 3), "Power prior mean",
             icon = icon("dot-circle"), color = "green", width = 4),
@@ -549,7 +591,8 @@ mod_power_server <- function(id, shared, active_prior, base_prior) {
           shinycssloaders::withSpinner(
             plotly::plotlyOutput(ns("calib_plot"), height = "280px"),
             color = "#1D9E75"
-          )
+          ),
+          uiOutput(ns("calib_note"))
         )
       )
     })
@@ -559,21 +602,40 @@ mod_power_server <- function(id, shared, active_prior, base_prior) {
       r      <- res()
       df     <- r$results
       d_opt  <- r$delta_opt
-      bf_max <- max(df$bayes_factor, na.rm = TRUE)
+      y_max  <- max(df$bayes_factor, r$target_bf, na.rm = TRUE) * 1.08
+      d_lab  <- if (isFALSE(r$target_met)) "Smallest delta (target not reached)"
+                else "Optimal delta"
       plotly::plot_ly(df, x = ~delta) |>
         plotly::add_lines(y = ~bayes_factor, name = "Bayes Factor",
                           line = list(color = "#185FA5", width = 2)) |>
-        plotly::add_lines(y = ~box_pvalue * bf_max, name = "Box p (scaled)",
-                          line = list(color = "#D85A30", width = 2,
-                                      dash = "dot")) |>
-        plotly::add_segments(x = d_opt, xend = d_opt, y = 0, yend = bf_max,
+        plotly::add_lines(y = ~box_pvalue, name = "Box p-value (right axis)",
+                          yaxis = "y2",
+                          line = list(color = "#D85A30", width = 2, dash = "dot")) |>
+        plotly::add_lines(x = range(df$delta), y = rep(r$target_bf, 2),
+                          name = "Target Bayes Factor",
+                          line = list(color = "#185FA5", width = 1, dash = "dash")) |>
+        plotly::add_segments(x = d_opt, xend = d_opt, y = 0, yend = y_max,
                              line = list(color = "#1D9E75", dash = "dash",
                                          width = 1.5),
-                             name = "Optimal delta") |>
+                             name = d_lab) |>
         plotly::layout(
-          xaxis = list(title = "delta"),
-          yaxis = list(title = "Bayes Factor")) |>
+          legend = list(orientation = "h", x = 0, y = -0.28),
+          margin = list(r = 60, b = 90),
+          xaxis  = list(title = "delta (weight on the historical data)"),
+          yaxis  = list(title = "Bayes Factor", range = c(0, y_max)),
+          yaxis2 = list(title = "Box p-value", overlaying = "y", side = "right",
+                        range = c(0, 1), showgrid = FALSE)) |>
         .apply_plotly_theme()
+    })
+    output$calib_note <- renderUI({
+      req(res())
+      r <- res()
+      tags$p(class = "text-muted", style = "font-size:12px; margin:6px 0 0;",
+             tags$strong(paste0("Borrowed: ", round(r$borrowed_n, 1), " of ",
+                                r$historical_n, " historical observations ",
+                                "(delta = ", r$delta_opt, "). ")),
+             "delta is chosen using the current data, so it is not pre-specified. ",
+             "Assess the operating characteristics, e.g. type I error, separately.")
     })
   })
 }

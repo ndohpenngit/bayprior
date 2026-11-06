@@ -124,22 +124,33 @@ sceptical_prior <- function(null_value = 0,
 #'   component (e.g. an elicited or historical prior).
 #' @param vague_weight Numeric in (0, 1). Weight assigned to the vague
 #'   (diffuse) component. Default \code{0.20} (80% informative, 20% vague).
-#' @param vague_sd    Numeric. SD of the vague Normal component (on the
-#'   natural scale). If \code{NULL}, defaults to 10x the informative prior's SD.
+#' @param vague_sd    Numeric. SD of the vague component (on the natural
+#'   scale). If \code{NULL}, a family-specific default is used (see Details).
 #' @param label       Character. Label for the robust prior.
 #'
 #' @return A \code{bayprior} object with \code{dist = "mixture"} and
 #'   \code{prior_type = "robust"}.
 #'
 #' @details
-#' The vague component is always a \strong{Normal distribution} centred at
-#' the informative prior's mean with SD = \code{vague_sd} (default: 10x the
-#' informative SD). When the informative prior is itself Normal, both
-#' components share the same family and the mixture density is computed
-#' analytically. For any other informative prior family (Beta, Gamma,
-#' Log-Normal, Exponential, Weibull), the components have \emph{different
-#' distribution families}, and the mixture density is \strong{computed
-#' numerically}. A warning is issued in this case.
+#' The vague component is chosen \strong{in the family of the informative
+#' prior's parameter space}, so that the mixture is conjugate, has exact
+#' posterior weights and puts no mass outside the parameter space:
+#' \itemize{
+#'   \item A pooled (mixture) informative prior uses the family of its
+#'     moment-matched single-family summary (see the sensitivity analysis).
+#'   \item Normal informative prior: a Normal with the same mean and SD
+#'     \code{vague_sd} (default 10 times the informative SD).
+#'   \item Beta: a \code{Beta(1, 1)} (uniform) component, as in RBesT. If
+#'     \code{vague_sd} is given, a Beta with the informative mean and that SD
+#'     (it must be below \code{sqrt(mean * (1 - mean))}).
+#'   \item Gamma, exponential, Weibull: a Gamma with the informative mean and
+#'     SD \code{vague_sd} (default: the larger of 10 times the informative SD
+#'     and the mean, so the shape is at most 1).
+#'   \item Log-Normal: a Log-Normal with the informative mean and SD
+#'     \code{vague_sd} (default 10 times the informative SD).
+#' }
+#' Earlier versions always used a Normal vague component, which for a Gamma
+#' prior with mean 0.2 put roughly 40\% of its mass below zero.
 #'
 #' @references
 #' Schmidli, H. et al. (2014). Robust meta-analytic-predictive priors in
@@ -166,16 +177,36 @@ robust_prior <- function(informative,
     rlang::abort("`vague_weight` must be strictly between 0 and 1.")
   }
 
+  # A pooled (mixture) informative prior gets a vague component in the family
+  # of its moment-matched single-family summary.
+  ref <- if (informative$dist %in% c("mixture", "log_pool"))
+    suppressWarnings(.mixture_working_prior(informative, quiet = TRUE)) else informative
   inf_mean <- informative$fit_summary$mean
   inf_sd   <- informative$fit_summary$sd
-  if (is.null(vague_sd)) vague_sd <- 10 * inf_sd
+  fam      <- ref$dist
+  lab <- informative$label
 
-  vague <- elicit_normal(
-    mean      = inf_mean,
-    sd        = vague_sd,
-    method    = "moments",
-    expert_id = "Vague component",
-    label     = informative$label
+  vague <- switch(fam,
+    beta = if (is.null(vague_sd)) {
+      as_prior("beta", list(alpha = 1, beta = 1), label = lab,
+               expert_id = "Vague component")
+    } else {
+      if (vague_sd >= sqrt(inf_mean * (1 - inf_mean)))
+        rlang::abort(paste0("`vague_sd` must be below sqrt(mean * (1 - mean)) = ",
+                            round(sqrt(inf_mean * (1 - inf_mean)), 4),
+                            " for a Beta vague component."))
+      elicit_beta(mean = inf_mean, sd = vague_sd, method = "moments",
+                  expert_id = "Vague component", label = lab)
+    },
+    lognormal = elicit_lognormal(mean = inf_mean,
+                                 sd = vague_sd %||% (10 * inf_sd),
+                                 method = "moments",
+                                 expert_id = "Vague component", label = lab),
+    gamma = , exponential = , weibull = elicit_gamma(
+      mean = inf_mean, sd = vague_sd %||% max(10 * inf_sd, inf_mean),
+      method = "moments", expert_id = "Vague component", label = lab),
+    elicit_normal(mean = inf_mean, sd = vague_sd %||% (10 * inf_sd),
+                  method = "moments", expert_id = "Vague component", label = lab)
   )
 
   result <- elicit_mixture(
@@ -184,6 +215,8 @@ robust_prior <- function(informative,
     label      = label
   )
   result$prior_type   <- "robust"
+  result$robust_version <- 2L            # family-matched vague component
+  result$vague_sd_input <- vague_sd      # NULL when the default was used
   result$vague_weight <- vague_weight
   result$informative  <- informative
   result
@@ -199,7 +232,13 @@ robust_prior <- function(informative,
 #'   optionally \code{sd}.
 #' @param current_data Named list (same structure as \code{historical_data}).
 #' @param base_prior A \code{bayprior} object (usually a vague prior).
-#' @param target_bf Numeric. Target Bayes Factor. Default \code{3}.
+#' @param target_bf Numeric. Target Bayes Factor. Default \code{1}. The Bayes
+#'   Factor compares how well the power prior and the base prior predict the
+#'   current data: above 1 the borrowed information improves the prediction,
+#'   below 1 it worsens it. With \code{method = "bayes_factor"} the largest
+#'   delta whose Bayes Factor is at least the target is chosen. A target such as
+#'   3 asks for strong evidence in favour of borrowing and is often unreachable
+#'   when the data agree.
 #' @param delta_grid Numeric vector of \eqn{\delta} values. Default
 #'   \code{seq(0.05, 1.0, by = 0.05)}.
 #' @param method Character. \code{"bayes_factor"} (default) or
@@ -207,7 +246,12 @@ robust_prior <- function(informative,
 #'
 #' @return A list of class \code{bayprior_power_prior} with components:
 #'   \describe{
-#'     \item{delta_opt}{Optimal power prior weight selected by the chosen method.}
+#'     \item{delta_opt}{Optimal power prior weight selected by the chosen method.
+#'       When no delta meets the criterion this is the smallest grid value, a
+#'       warning is issued, and \code{target_met} is \code{FALSE}.}
+#'     \item{borrowed_n}{Historical sample size borrowed, \code{delta_opt * n}.}
+#'     \item{historical_n}{Historical sample size \code{n}.}
+#'     \item{target_met}{Logical; \code{TRUE} if some delta met the criterion.}
 #'     \item{delta_grid}{The grid of delta values evaluated.}
 #'     \item{bf_grid}{Bayes Factor at each delta value.}
 #'     \item{compatibility_grid}{Box p-value at each delta value.}
@@ -216,6 +260,12 @@ robust_prior <- function(informative,
 #'     \item{target_bf}{The target Bayes Factor supplied by the user.}
 #'     \item{method}{The calibration method used.}
 #'   }
+#'
+#' @details
+#' The weight is chosen using the current data, so it is not pre-specified (an
+#' empirical-Bayes power prior; Gravestock & Held, 2017). The operating
+#' characteristics of an analysis that borrows in this way, for example type I
+#' error, need to be assessed separately.
 #'
 #' @references
 #' Ibrahim, J. G. & Chen, M.-H. (2000). Power prior distributions for
@@ -241,7 +291,7 @@ robust_prior <- function(informative,
 calibrate_power_prior <- function(historical_data,
                                    current_data,
                                    base_prior,
-                                   target_bf  = 3,
+                                   target_bf  = 1,
                                    delta_grid = seq(0.05, 1.0, by = 0.05),
                                    method     = c("bayes_factor",
                                                   "compatibility")) {
@@ -279,10 +329,28 @@ calibrate_power_prior <- function(historical_data,
     eligible  <- results$delta[!is.na(results$bayes_factor) &
                                  results$bayes_factor >= target_bf]
     delta_opt <- if (length(eligible) > 0) max(eligible) else min(delta_grid)
+    target_met <- length(eligible) > 0
+    if (!target_met) {
+      rlang::warn(paste0(
+        "No delta reaches the target Bayes Factor of ", target_bf,
+        " (the maximum is ", round(max(results$bayes_factor, na.rm = TRUE), 2),
+        "). delta = ", delta_opt, " is the smallest value on the grid, not a ",
+        "calibrated choice, and means almost no borrowing. The Box p-value ",
+        "ranges from ", round(min(results$box_pvalue, na.rm = TRUE), 3), " to ",
+        round(max(results$box_pvalue, na.rm = TRUE), 3), " over the grid; ",
+        "consider a lower target or method = \"compatibility\"."))
+    }
   } else {
     eligible  <- results$delta[!is.na(results$box_pvalue) &
                                  results$box_pvalue >= 0.05]
     delta_opt <- if (length(eligible) > 0) max(eligible) else min(delta_grid)
+    target_met <- length(eligible) > 0
+    if (!target_met) {
+      rlang::warn(paste0(
+        "The Box p-value is below 0.05 at every delta on the grid (historical ",
+        "and current data conflict). delta = ", delta_opt, " is the smallest ",
+        "value on the grid, not a calibrated choice."))
+    }
   }
 
   power_prior            <- .power_prior_update(base_prior, historical_data,
@@ -290,13 +358,18 @@ calibrate_power_prior <- function(historical_data,
   power_prior$prior_type <- "power_prior"
   power_prior$delta      <- delta_opt
 
-  cli::cli_alert_success(
-    "Optimal power prior weight: delta = {delta_opt} (method = {method})."
-  )
+  if (target_met) {
+    cli::cli_alert_success(
+      "Optimal power prior weight: delta = {delta_opt} (method = {method})."
+    )
+  }
 
   structure(
     list(
       delta_opt          = delta_opt,
+      target_met         = target_met,
+      historical_n       = historical_data$n,
+      borrowed_n         = delta_opt * historical_data$n,
       delta_grid         = delta_grid,
       bf_grid            = results$bayes_factor,
       compatibility_grid = results$box_pvalue,
@@ -324,7 +397,11 @@ print.bayprior_power_prior <- function(x, ...) {
   .bp_h1("Power Prior Calibration")
   .bp_li("Method          : ", x$method)
   .bp_li("Target BF       : ", x$target_bf)
-  .bp_li("Optimal delta   : ", x$delta_opt)
+  .bp_li("Optimal delta   : ", if (isFALSE(x$target_met))
+    paste0(x$delta_opt, " (smallest grid value; target not reached)") else x$delta_opt)
+  if (!is.null(x$borrowed_n))
+    .bp_li("Borrowed        : ", paste0(round(x$borrowed_n, 1), " of ", x$historical_n,
+                                        " historical observations"))
   .bp_li("Power prior mean: ", round(x$power_prior$fit_summary$mean, 4))
   .bp_li("Power prior SD  : ", round(x$power_prior$fit_summary$sd,   4))
   invisible(x)
@@ -351,10 +428,12 @@ plot.bayprior_power_prior <- function(x, ...) {
                         linetype = "dashed", colour = "#D85A30") +
     ggplot2::geom_vline(xintercept = delta_opt,
                         linetype = "dotted", colour = "#1D9E75") +
+    ggplot2::expand_limits(y = c(0, x$target_bf)) +
     ggplot2::labs(
       title    = "Bayes Factor vs power prior weight",
-      subtitle = paste0("Dashed = target BF (", x$target_bf,
-                        "); dotted = optimal delta (", delta_opt, ")"),
+      subtitle = paste0("Dashed = target BF (", x$target_bf, "); dotted = ",
+                        if (isFALSE(x$target_met)) "smallest delta, target not reached (" else "optimal delta (",
+                        delta_opt, ")"),
       x = "delta", y = "Bayes Factor"
     ) +
     ggplot2::theme_minimal(base_size = 12)
@@ -394,38 +473,6 @@ plot.bayprior_power_prior <- function(x, ...) {
     rlang::abort(glue::glue("`delta` must be in (0, 1]; got {delta}."))
   }
 
-  if (base_prior$dist == "beta" && type == "binary") {
-    a_new <- base_prior$params$alpha + delta * x
-    b_new <- base_prior$params$beta  + delta * (n - x)
-    return(.make_bayprior("beta", list(alpha = a_new, beta = b_new),
-                          "power_prior", base_prior$expert_id,
-                          base_prior$label, list(delta = delta)))
-  }
-
-  if (base_prior$dist == "normal") {
-    obs_mean  <- x
-    obs_se    <- (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
-    prior_var <- base_prior$params$sigma^2
-    lik_var   <- obs_se^2
-    post_var  <- 1 / (1 / prior_var + 1 / lik_var)
-    post_mean <- post_var * (base_prior$params$mu / prior_var +
-                               obs_mean / lik_var)
-    return(.make_bayprior("normal",
-                          list(mu = post_mean, sigma = sqrt(post_var)),
-                          "power_prior", base_prior$expert_id,
-                          base_prior$label, list(delta = delta)))
-  }
-
-  if (base_prior$dist == "gamma" &&
-      type %in% c("continuous", "poisson")) {
-    x_sum     <- hist_data$x_sum %||% (x * n)
-    shape_new <- base_prior$params$shape + delta * x_sum
-    rate_new  <- base_prior$params$rate  + delta * n
-    return(.make_bayprior("gamma", list(shape = shape_new, rate = rate_new),
-                          "power_prior", base_prior$expert_id,
-                          base_prior$label, list(delta = delta)))
-  }
-
   if (base_prior$dist == "lognormal") {
     log_obs_mean <- if (isTRUE(hist_data$log_scale)) x else log(x)
     raw_sd       <- hist_data$sd %||% base_prior$fit_summary$sd
@@ -442,101 +489,31 @@ plot.bayprior_power_prior <- function(x, ...) {
                           base_prior$label, list(delta = delta)))
   }
 
-  if (base_prior$dist == "mixture") {
-    components <- base_prior$components
-    weights    <- base_prior$weights
+  # Raising the likelihood to the power delta is the same as shrinking the
+  # information in the data: counts and the sample size are multiplied by delta
+  # (binomial, Poisson, survival), or only the sample size for a mean of
+  # continuous data. The power prior is then the ordinary conjugate update with
+  # these data, which also gives exact mixture weights (see .log_marglik()).
+  scaled <- hist_data
+  if (type %in% c("binary", "poisson", "survival")) scaled$x <- delta * x
+  if (!is.null(hist_data$x_sum)) scaled$x_sum <- delta * hist_data$x_sum
+  scaled$n <- delta * n
+  post <- .conjugate_update(base_prior, scaled)
 
-    updated <- lapply(components, function(comp) {
-      tryCatch(.power_prior_update(comp, hist_data, delta),
-               error = function(e) NULL)
-    })
-
-    keep <- !vapply(updated, is.null, logical(1))
-    if (!any(keep)) {
-      rlang::abort(glue::glue(
-        "Power prior update failed for all mixture components ",
-        "(dist = 'mixture', type = '{type}', delta = {delta}). ",
-        "Check that at least one component supports data type '{type}'."
-      ))
-    }
-    updated <- updated[keep]
-    weights <- weights[keep]
-
-    obs_mean_h <- if (type == "binary") x / n else x
-    obs_se_h   <- if (type == "binary") {
-      sqrt(obs_mean_h * (1 - obs_mean_h) / (n * delta))
-    } else {
-      (hist_data$sd %||% base_prior$fit_summary$sd) / sqrt(n * delta)
-    }
-    obs_se_h <- max(obs_se_h, 1e-8)
-
-    log_marg <- vapply(components[keep], function(comp) {
-      stats::dnorm(obs_mean_h,
-                   mean = comp$fit_summary$mean,
-                   sd   = sqrt(comp$fit_summary$sd^2 + obs_se_h^2),
-                   log  = TRUE)
-    }, numeric(1))
-
-    log_wts     <- log(weights) + log_marg
-    new_weights <- exp(log_wts - max(log_wts))
-    new_weights <- new_weights / sum(new_weights)
-
-    post_means <- vapply(updated, function(p) p$fit_summary$mean, numeric(1))
-    post_sds   <- vapply(updated, function(p) p$fit_summary$sd,   numeric(1))
-    mix_mean   <- sum(new_weights * post_means)
-    mix_sd     <- sqrt(sum(new_weights *
-                           (post_sds^2 + (post_means - mix_mean)^2)))
-
-    return(structure(
-      list(
-        dist        = "mixture",
-        params      = list(weights = new_weights),
-        components  = updated,
-        weights     = new_weights,
-        method      = "power_prior",
-        expert_id   = base_prior$expert_id,
-        label       = base_prior$label,
-        input       = list(delta = delta),
-        fit_summary = list(
-          mean = mix_mean,
-          sd   = mix_sd,
-          q025 = mix_mean - 1.96 * mix_sd,
-          q500 = mix_mean,
-          q975 = mix_mean + 1.96 * mix_sd
-        )
-      ),
-      class = "bayprior"
-    ))
+  relabel <- function(p) {
+    p$method <- "power_prior"
+    p$input  <- list(delta = delta)
+    if (identical(p$dist, "mixture"))
+      p$components <- lapply(p$components, relabel)
+    p
   }
-
-  rlang::abort(glue::glue(
-    "Power prior update not implemented for dist = '{base_prior$dist}' + ",
-    "type = '{type}'."
-  ))
+  relabel(post)
 }
 
 
 .marginal_bf <- function(power_prior, base_prior, current_data) {
-  type     <- current_data$type %||% "binary"
-  n        <- current_data$n
-  x        <- current_data$x
-  obs_mean <- if (type == "binary")   x / n else
-              if (type == "poisson")  x / n else x
-  obs_se   <- if (type == "binary") {
-    sqrt(obs_mean * (1 - obs_mean) / n)
-  } else if (type == "poisson") {
-    sqrt(obs_mean / n)
-  } else {
-    (current_data$sd %||% power_prior$fit_summary$sd) / sqrt(n)
-  }
-  obs_se <- max(obs_se, 1e-8)
-
-  .log_pred <- function(pr) {
-    stats::dnorm(obs_mean,
-                 mean = pr$fit_summary$mean,
-                 sd   = sqrt(pr$fit_summary$sd^2 + obs_se^2),
-                 log  = TRUE)
-  }
-
-  exp(.log_pred(power_prior) - .log_pred(base_prior))
+  sd_obs <- current_data$sd %||% power_prior$fit_summary$sd
+  lp <- .log_marglik(power_prior, current_data, sd = sd_obs)
+  lb <- .log_marglik(base_prior,  current_data, sd = sd_obs)
+  exp(as.numeric(lp) - as.numeric(lb))
 }

@@ -206,8 +206,8 @@ test_that("plot_prior_likelihood centres the Poisson likelihood curve at the
            is a count (e.g. 12) rather than a rate, and data_summary$sd is
            never collected for Poisson/survival data in the Shiny app,
            making the curve badly mislocated", {
-  prior <- elicit_beta(mean = 0.353, sd = 0.138, method = "moments",
-                       label = "Linear pooled consensus prior")
+  prior <- elicit_gamma(mean = 0.353, sd = 0.138, method = "moments",
+                        label = "Linear pooled consensus prior")
   p <- plot_prior_likelihood(
     prior,
     list(type = "poisson", x = 12, n = 100),  # rate = 0.12

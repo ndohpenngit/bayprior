@@ -5,7 +5,7 @@
 # -- Shiny globals -------------------------------------------------------------
 #' @importFrom shiny NS tagList tags icon fluidRow column uiOutput HTML
 #' @importFrom shiny textInput textAreaInput dateInput numericInput
-#' @importFrom shiny selectInput sliderInput checkboxGroupInput
+#' @importFrom shiny selectInput sliderInput checkboxGroupInput  checkboxInput
 #' @importFrom shiny actionButton actionLink downloadButton conditionalPanel
 #' @importFrom shiny moduleServer renderUI observeEvent observe reactive
 #' @importFrom shiny reactiveVal reactiveValues req isolate

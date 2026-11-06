@@ -61,11 +61,17 @@ to any realistic effect-size scale; increase only if \code{1e4} units is
 not actually vague for your outcome.}
 }
 \value{
-A \code{bayprior} object (\code{dist = "normal"}, matched by
-moments to the marginal posterior of \eqn{\mu}) with an additional
-\code{prior_type = "map"} tag and a \code{$tau_posterior} element
-(a data frame with columns \code{tau} and \code{density}) giving the
-marginal posterior of the heterogeneity parameter.
+A \code{bayprior} object (\code{dist = "normal"}) with an additional
+\code{prior_type = "map"} tag. Its mean and SD are those of the
+\emph{predictive} distribution of the parameter of a new trial (see
+Details), matched by moments to a Normal. Further elements:
+\code{$mu_summary} (posterior mean and SD of the population mean
+\eqn{\mu} alone, which is \strong{not} the prior for a new trial);
+\code{$predictive} (the exact 2.5\\%, 50\\% and 97.5\\% quantiles of the
+predictive distribution, to judge the Normal approximation, which is
+lighter-tailed); and \code{$tau_posterior}, a data frame with columns
+\code{tau} and \code{density} giving the marginal posterior of the
+heterogeneity parameter.
 }
 \description{
 Combines summary-level data from multiple historical (or supplementary)
@@ -99,6 +105,22 @@ dependency; the posterior of \eqn{\mu} given \eqn{\tau} is available in
 closed form (a precision-weighted Normal), so the only numerical step is a
 one-dimensional integral over \eqn{\tau \in [0, \infty)}, evaluated with
 \code{\link[stats]{integrate}} (adaptive quadrature).
+
+\strong{Prior for a new trial.} The MAP prior is the predictive
+distribution of the parameter of a \emph{new} trial,
+\eqn{\theta^* \sim \mathrm{Normal}(\mu, \tau^2)}, given the historical
+data, so it includes the between-trial variance \eqn{\tau^2} as well as
+the uncertainty about \eqn{\mu}: given \eqn{\tau},
+\eqn{\theta^* \sim \mathrm{Normal}(M(\tau), V(\tau) + \tau^2)}, and the
+result is averaged over the posterior of \eqn{\tau}. Its variance is
+\eqn{E[V + M^2 + \tau^2] - E[M]^2}. (The posterior of \eqn{\mu} alone
+describes the average effect, not a new trial, and is too narrow as a
+prior.) The predictive is a scale mixture of Normals, heavier-tailed than
+the Normal returned here, which matches its mean and SD; \code{$predictive}
+gives the exact quantiles. With a half-Cauchy prior on \eqn{\tau} and fewer
+than three trials the posterior of \eqn{\tau} decays like
+\eqn{\tau^{-(k+1)}} for \eqn{k} trials, the predictive variance is infinite,
+and the function stops with an error.
 
 The full \eqn{\tau} posterior (not just its effect on \eqn{\mu}) is
 retained in the returned object's \code{$tau_posterior} element, and can

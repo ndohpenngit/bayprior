@@ -36,9 +36,17 @@ plot_prior_likelihood <- function(prior,
     lik_obs_mean <- x
     lik_obs_se   <- max((data_summary$sd %||% NA_real_) / sqrt(n), 1e-8)
   }
+  # A Normal prior with binary data on the log-odds scale: the likelihood is
+  # drawn on that scale too, and the grid spans it (see .binary_scale()).
+  bin_logit <- identical(.binary_scale(prior, data_summary), "log_odds")
+  if (bin_logit) {
+    lo           <- .binary_logit(x, n)
+    lik_obs_mean <- lo$mean
+    lik_obs_se   <- lo$se
+  }
 
   range_p <- .prior_range(prior)
-  if (type == "binary") {
+  if (type == "binary" && !bin_logit) {
     grid <- seq(range_p$lo, range_p$hi, length.out = n_grid)
   } else {
     # Union with the likelihood's range -- not just the prior's. This plot
@@ -61,7 +69,11 @@ plot_prior_likelihood <- function(prior,
   # Normal-approximation parameters -- poisson/survival's "x" is an event
   # count, not a rate, and has no data_summary$sd field at all (only
   # continuous data collects one), so these cannot share a branch.
-  if (type == "binary") {
+  if (bin_logit) {
+    # Binomial likelihood as a function of the log-odds (scaled below)
+    lik_d <- exp(x * stats::plogis(grid, log.p = TRUE) +
+                 (n - x) * stats::plogis(-grid, log.p = TRUE))
+  } else if (type == "binary") {
     lik_d <- stats::dbeta(grid, x + 1, n - x + 1)
   } else {
     lik_d <- stats::dnorm(grid, lik_obs_mean, lik_obs_se)
@@ -98,8 +110,9 @@ plot_prior_likelihood <- function(prior,
     ggplot2::scale_fill_manual(values = pal, name = NULL) +
     ggplot2::labs(
       title    = title %||% glue::glue("Prior-Likelihood-Posterior: {prior$label}"),
-      subtitle = glue::glue("Data: n = {n}, events/mean = {x}"),
-      x        = prior$label,
+      subtitle = glue::glue("Data: n = {n}, events/mean = {x}",
+                            if (bin_logit) " (log-odds scale)" else ""),
+      x        = if (bin_logit) paste0(prior$label, " (log-odds)") else prior$label,
       y        = "Density"
     ) +
     ggplot2::theme_minimal(base_size = 13) +
@@ -141,6 +154,53 @@ plot_sensitivity <- function(sensitivity,
   })
 }
 
+# Axes of a sensitivity plot. A prior-strength grid (see .strength_grid())
+# is drawn against the prior mean and strength rather than the raw
+# hyperparameters, which move together on it.
+#' @noRd
+.sens_axes <- function(sensitivity) {
+  grid <- sensitivity$grid
+  dc <- intersect(c("prior_mean", "prior_strength"), names(grid))
+  if (length(dc) > 0L) {
+    varied <- dc[vapply(dc, function(p)
+      length(unique(round(grid[[p]], 10))) > 1L, logical(1))]
+    if (length(varied) > 0L) return(varied)
+  }
+  names(sensitivity$param_grid)
+}
+
+#' @noRd
+.sens_axis_label <- function(p, sensitivity) {
+  d <- attr(sensitivity$param_grid, "design")
+  switch(p,
+    prior_mean     = "Prior mean",
+    prior_strength = d$strength_short %||% "Prior strength",
+    p)
+}
+
+# Cell edges for a heatmap axis: each value owns the span up to the midpoints
+# with its neighbours. geom_tile() sizes every tile by the smallest gap between
+# values, so a grid that is not evenly spaced (for example the elicited
+# prior-strength factor 1 inserted into a log-spaced sequence) came out as thin
+# stripes with one thick row. `log` spaces the midpoints on the log scale.
+#' @noRd
+.cell_edges <- function(v, log = FALSE) {
+  z <- if (log) log10(v) else v
+  u <- sort(unique(z[is.finite(z)]))
+  n <- length(u)
+  if (n < 2L) {
+    lo <- u - 0.5; hi <- u + 0.5
+  } else {
+    mid <- (u[-1L] + u[-n]) / 2
+    lo  <- c(u[1L] - (mid[1L] - u[1L]), mid)
+    hi  <- c(mid, u[n] + (u[n] - mid[n - 1L]))
+  }
+  i <- match(z, u)
+  lo <- lo[i]; hi <- hi[i]
+  if (log) { lo <- 10^lo; hi <- 10^hi }
+  list(lo = lo, hi = hi)
+}
+
 #' @noRd
 .sensitivity_gg <- function(sensitivity, target, highlight_reference, tooltip) {
 
@@ -149,14 +209,15 @@ plot_sensitivity <- function(sensitivity,
   if (is.null(target)) target <- sensitivity$target[1]
 
   grid    <- sensitivity$grid
-  params  <- names(sensitivity$param_grid)
+  params  <- .sens_axes(sensitivity)
+  plabs   <- vapply(params, .sens_axis_label, character(1), sensitivity = sensitivity)
   ref_row <- sensitivity$reference_row
   target_label <- .target_label(target)
   fmt <- function(v) format(round(v, 3), nsmall = 0, trim = TRUE)
 
   if (length(params) == 1) {
     if (tooltip)
-      grid$.tip <- sprintf("%s = %s\n%s: %s", params[1], fmt(grid[[params[1]]]),
+      grid$.tip <- sprintf("%s = %s\n%s: %s", plabs[1], fmt(grid[[params[1]]]),
                            target_label, fmt(grid[[target]]))
     aes_line <- if (tooltip)
       ggplot2::aes(x = .data[[params[1]]], y = .data[[target]], text = .data[[".tip"]], group = 1)
@@ -171,7 +232,7 @@ plot_sensitivity <- function(sensitivity,
     if (highlight_reference) {
       r <- grid[ref_row, , drop = FALSE]
       if (tooltip)
-        r$.tip <- sprintf("Reference prior\n%s = %s\n%s: %s", params[1],
+        r$.tip <- sprintf("Reference prior\n%s = %s\n%s: %s", plabs[1],
                           fmt(r[[params[1]]]), target_label, fmt(r[[target]]))
       aes_ref <- if (tooltip)
         ggplot2::aes(x = .data[[params[1]]], y = .data[[target]], text = .data[[".tip"]])
@@ -181,32 +242,47 @@ plot_sensitivity <- function(sensitivity,
                                    colour = "#D85A30", size = 3, shape = 18)
     }
     p + ggplot2::labs(
-      title = glue::glue("Sensitivity: {target_label} vs {params[1]}"),
-      x = params[1], y = target_label
+      title = glue::glue("Sensitivity: {target_label} vs {plabs[1]}"),
+      x = plabs[1], y = target_label
     ) + ggplot2::theme_minimal(base_size = 13)
 
   } else if (length(params) == 2) {
     if (tooltip)
       grid$.tip <- sprintf("%s = %s\n%s = %s\n%s: %s",
-                           params[1], fmt(grid[[params[1]]]),
-                           params[2], fmt(grid[[params[2]]]),
+                           plabs[1], fmt(grid[[params[1]]]),
+                           plabs[2], fmt(grid[[params[2]]]),
                            target_label, fmt(grid[[target]]))
-    aes_tile <- if (tooltip)
-      ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
-                   fill = .data[[target]], text = .data[[".tip"]])
-    else ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
-                      fill = .data[[target]])
+    if (tooltip) {
+      # interactive: plotly turns geom_tile() into one heatmap trace, which
+      # places uneven cells correctly and stays fast
+      aes_tile <- ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]],
+                               fill = .data[[target]], text = .data[[".tip"]])
+      layer <- ggplot2::geom_tile()
+    } else {
+      # static (report, exports): explicit cell edges, see .cell_edges()
+      ex <- .cell_edges(grid[[params[1]]])
+      ey <- .cell_edges(grid[[params[2]]], log = identical(params[2], "prior_strength"))
+      grid$.xlo <- ex$lo; grid$.xhi <- ex$hi
+      grid$.ylo <- ey$lo; grid$.yhi <- ey$hi
+      aes_tile <- ggplot2::aes(xmin = .data[[".xlo"]], xmax = .data[[".xhi"]],
+                               ymin = .data[[".ylo"]], ymax = .data[[".yhi"]],
+                               fill = .data[[target]])
+      layer <- ggplot2::geom_rect()
+    }
     p <- ggplot2::ggplot(grid, aes_tile) +
-      ggplot2::geom_tile() +
+      layer +
       ggplot2::scale_fill_gradientn(
         colours = c("#042C53", "#185FA5", "#9FE1CB", "#1D9E75"),
         name    = target_label)
+    # strength values are log-spaced, so tile them on a log axis
+    if (identical(params[2], "prior_strength"))
+      p <- p + ggplot2::scale_y_log10()
     if (highlight_reference) {
       r <- grid[ref_row, , drop = FALSE]
       if (tooltip)
         r$.tip <- sprintf("Reference prior\n%s = %s\n%s = %s\n%s: %s",
-                          params[1], fmt(r[[params[1]]]),
-                          params[2], fmt(r[[params[2]]]),
+                          plabs[1], fmt(r[[params[1]]]),
+                          plabs[2], fmt(r[[params[2]]]),
                           target_label, fmt(r[[target]]))
       aes_ref <- if (tooltip)
         ggplot2::aes(x = .data[[params[1]]], y = .data[[params[2]]], text = .data[[".tip"]])
@@ -217,7 +293,9 @@ plot_sensitivity <- function(sensitivity,
     }
     p + ggplot2::labs(
       title = glue::glue("Sensitivity heatmap: {target_label}"),
-      x = params[1], y = params[2]
+      x = plabs[1],
+      y = if (identical(params[2], "prior_strength"))
+            paste0(plabs[2], "\n(log scale)") else plabs[2]
     ) + ggplot2::theme_minimal(base_size = 13)
 
   } else {
@@ -246,7 +324,7 @@ plot_tornado <- function(sensitivity,
     plotly::ggplotly(gp, tooltip = "text")
   }) |>
     .plotly_title(title, gsub("\n", "<br>", subtitle, fixed = TRUE)) |>
-    plotly::layout(margin = list(t = 80))
+    plotly::layout(margin = list(t = 105))
 }
 
 #' @noRd

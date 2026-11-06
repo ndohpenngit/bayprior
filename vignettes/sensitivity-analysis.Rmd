@@ -168,6 +168,60 @@ plot_tornado(sa_cont)
 | 0.05 – 0.15 | Moderate | Report alongside primary estimate |
 | > 0.15 | Sensitive | Consider robust prior; emphasise data |
 
+The influence score is the range of a posterior quantity across the
+hyperparameter grid, so it depends on the grid you chose and on the scale of
+the quantity. The bands above are a rule of thumb for quantities on a 0 to 1
+scale (a posterior mean of a proportion, a posterior probability); they are
+not a calibrated or published cut-off, and they do not apply as they stand
+to a log-odds, a rate or a hazard ratio. Report the grid alongside the scores,
+and judge them against the size of a difference that would change a decision.
+For comparison, the `priorsense` package flags prior sensitivity at 0.05 on a
+different, normalised measure (a cumulative Jensen-Shannon distance); its
+authors describe that cut-off as a guideline to adapt to the application
+(Kallioinen et al., *Statistics and Computing* 34, article 57), and it is not comparable with the scores here.
+
+---
+
+# Choosing the grid
+
+A grid over the raw hyperparameters (`alpha`, `beta`) mixes two different
+questions: how *informative* the prior is, and where it is *centred*. Scaling
+both by 0.5 to 2 for a Beta(6.7, 11.9) prior, for example, covers prior means
+from 0.12 to 0.69, which is a much wider range of priors than is usually
+plausible, and the influence scores then mostly reflect that width.
+
+For Beta, Gamma and Normal priors the app therefore builds its default grid
+in terms of the prior itself: prior strength (the effective sample size, for
+a Beta prior `alpha + beta`) from 0.5 to 2 times the elicited value, and
+optionally the prior mean shifted by up to a number of prior standard
+deviations. In code, pass a data frame with one row per grid point; rows are
+used as given, so hyperparameters can move together:
+
+```{r strength-grid}
+prior <- elicit_beta(mean = 0.36, sd = 0.10, method = "moments")
+S <- prior$params$alpha + prior$params$beta   # effective sample size
+m <- prior$fit_summary$mean
+sd_prior <- prior$fit_summary$sd
+
+grid <- expand.grid(mean = m + c(-1, 0, 1) * sd_prior,
+                    strength = S * c(0.5, 1, 2))
+param_grid <- data.frame(alpha = grid$mean * grid$strength,
+                         beta  = (1 - grid$mean) * grid$strength,
+                         prior_mean = grid$mean,
+                         prior_strength = grid$strength)
+
+sa_design <- sensitivity_grid(
+  prior,
+  data_summary = list(type = "binary", x = 18, n = 40),
+  param_grid   = param_grid
+)
+sa_design$influence_scores
+```
+
+State what the grid covers when you report influence scores. Neither choice
+is "correct": a wider or narrower range of plausible priors is a judgement
+about the application, and the scores should be read against it.
+
 ---
 
 # Mixture Prior Sensitivity

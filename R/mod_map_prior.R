@@ -232,7 +232,7 @@ mod_map_prior_server <- function(id, shared) {
             round(s$mean, 3), "MAP prior mean",
             icon = icon("dot-circle"), color = "blue", width = 4),
           shinydashboard::valueBox(
-            round(s$sd, 3), "MAP prior SD",
+            round(s$sd, 3), "MAP prior SD (new trial)",
             icon = icon("arrows-left-right"), color = "green", width = 4),
           shinydashboard::valueBox(
             round(p$tau_summary$median, 3), "Tau (posterior median)",
@@ -241,6 +241,13 @@ mod_map_prior_server <- function(id, shared) {
         shinydashboard::box(
           width = 12, status = "info", solidHeader = TRUE, collapsible = TRUE,
           title = tagList(icon("chart-line"), " Fitted MAP prior density"),
+          tags$p(class = "bp-note", icon("info-circle"),
+                 " The MAP prior is the predictive distribution for the",
+                 " parameter of a new trial, so its SD includes the",
+                 " between-trial variance (tau) as well as the uncertainty",
+                 " about the population mean. It is matched to a Normal by",
+                 " its mean and SD; the exact predictive distribution is",
+                 " heavier-tailed (exact 95% interval in the table below)."),
           shinycssloaders::withSpinner(
             plotly::plotlyOutput(ns("prior_plot"), height = "280px"),
             color = "#1D9E75"
@@ -287,10 +294,16 @@ mod_map_prior_server <- function(id, shared) {
       p <- fitted()
       s <- p$fit_summary
       df <- data.frame(
-        Statistic = c("Trials (k)", "Mean", "SD", "Tau prior family", "Tau prior scale",
+        Statistic = c("Trials (k)", "Mean (new trial)", "SD (new trial)",
+                      "SD of the population mean only",
+                      "Exact 95% interval (new trial)",
+                      "Tau prior family", "Tau prior scale",
                       "Tau (mean)", "Tau (median)"),
         Value     = c(p$n_trials,
                       round(c(s$mean, s$sd), 5),
+                      round(p$mu_summary$sd, 5),
+                      paste0("[", round(p$predictive$q025, 3), ", ",
+                             round(p$predictive$q975, 3), "]"),
                       p$tau_prior$family,
                       round(p$tau_prior$scale, 3),
                       round(p$tau_summary$mean, 5),

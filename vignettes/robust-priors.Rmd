@@ -52,7 +52,9 @@ elicited prior with a vague (diffuse) component:
 $$\pi_{\text{robust}}(\theta) = (1 - w) \cdot \pi_{\text{informative}}(\theta)
 + w \cdot \pi_{\text{vague}}(\theta)$$
 
-The vague component — a wide Normal centred at the informative prior mean —
+The vague component — a wide distribution in the same family as the
+informative prior (a uniform `Beta(1, 1)` for a Beta prior, a wide Gamma for a
+Gamma prior, a wide Normal for a Normal prior) —
 ensures the posterior is never completely dominated by a conflicting prior.
 The default weight is $w = 0.20$ (80% informative, 20% vague).
 
@@ -112,20 +114,29 @@ legend("topright",
 par(oldpar)       
 ```
 
-## Vague SD Multiplier
+## Vague Component and its SD
 
-The vague component's SD defaults to 10× the informative prior's SD. Adjust
-with `vague_sd`:
+The vague component is chosen in the family of the informative prior, so it
+never puts mass outside the parameter space and the mixture stays conjugate.
+For a Beta prior the default is the uniform `Beta(1, 1)` (SD 0.289). For a
+Normal prior it is a Normal with 10× the informative SD. Adjust the spread
+with `vague_sd` (for a Beta prior it must stay below
+`sqrt(mean * (1 - mean))`):
 
 ```{r robust-sd}
-rob_narrow <- robust_prior(informative, vague_weight = 0.20,
-                           vague_sd = 2 * informative$fit_summary$sd)
-rob_wide   <- robust_prior(informative, vague_weight = 0.20,
-                           vague_sd = 20 * informative$fit_summary$sd)
+rob_narrow <- robust_prior(informative, vague_weight = 0.20, vague_sd = 0.15)
+rob_wide   <- robust_prior(informative, vague_weight = 0.20, vague_sd = 0.35)
 
 cat("Narrow vague SD: ", round(rob_narrow$components$vague$fit_summary$sd, 3), "\n")
 cat("Default vague SD:", round(rob$components$vague$fit_summary$sd, 3), "\n")
 cat("Wide vague SD:   ", round(rob_wide$components$vague$fit_summary$sd, 3), "\n")
+```
+
+The 95% credible interval of a mixture is computed from its distribution
+function, not as mean ± 1.96 SD:
+
+```{r robust-cri}
+round(unlist(rob$fit_summary[c("q025", "q975")]), 3)
 ```
 
 ---
@@ -172,9 +183,20 @@ map <- map_prior(
 print(map)
 ```
 
-`map_prior()` returns an ordinary `bayprior` object (a Normal approximation
-to the marginal posterior of the meta-analytic mean, integrating over $\tau$),
-so it can be used exactly like any elicited prior:
+`map_prior()` returns an ordinary `bayprior` object, so it can be used exactly
+like any elicited prior. It is the **predictive** distribution of the parameter
+of a *new* trial, $\theta^* \sim \mathrm{Normal}(\mu, \tau^2)$, given the
+historical data, integrating over both $\mu$ and $\tau$, and matched by moments
+to a Normal. Its SD therefore includes the between-trial variance $\tau^2$ as
+well as the uncertainty about $\mu$, and is wider than the posterior SD of $\mu$
+alone (kept in `map$mu_summary`). The predictive distribution is a scale
+mixture of Normals and heavier-tailed than the Normal returned; its exact 2.5%,
+50% and 97.5% quantiles are in `map$predictive`.
+
+```{r map-predictive}
+c(prior_sd = map$fit_summary$sd, mu_only_sd = map$mu_summary$sd)
+unlist(map$predictive[c("q025", "q500", "q975")])
+```
 
 ```{r map-into-robust}
 rob_map <- robust_prior(map, vague_weight = 0.20)

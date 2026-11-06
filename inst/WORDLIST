@@ -23,6 +23,7 @@ HbA
 ICH
 Inf
 JRSS
+Kallioinen
 Kullback
 Leibler
 McConway
@@ -56,6 +57,7 @@ Weerahandi
 Zidek
 analyzed
 analyzing
+bayprior's
 biom
 brms
 cdot
@@ -75,9 +77,11 @@ handoffs
 heatmaps
 jrsm
 knitr
+mathrm
 mis
 mmHg
 nonlinearly
+offs
 pandoc
 parameterised
 params
@@ -97,6 +101,7 @@ rstanarm
 sd
 se
 shinydashboard
+sim
 sjos
 ss
 stylesheet

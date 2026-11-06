@@ -14,7 +14,7 @@
 
 # ── 2. Set metadata ───────────────────────────────────────────────────────────
 usethis::use_description(fields = list(
-  Title = "Bayesian Prior Elicitation for Clinical Trials",
+  Title = "Bayesian Prior Elicitation, Diagnostics, and Regulatory Reporting",
   License = "GPL (>= 3)"
 ))
 usethis::use_gpl_license(version = 3)

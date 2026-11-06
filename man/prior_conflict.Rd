@@ -58,14 +58,24 @@ with the predictive computed by quadrature) or
 \code{"normal_approx"}, indicating how \code{box_pvalue} (and
 hence \code{s_value}) was computed. Always \code{"normal_approx"}
 when \code{exact = FALSE}.}
+\item{\code{binary_scale}, \code{binary_scale_note}}{Only for a Normal
+prior with binary data: the scale the prior was read on
+(\code{"log_odds"} or \code{"proportion"}) and a sentence saying so;
+otherwise absent.}
 \item{\code{box_pvalue_caution}}{\code{NULL}, or a short message
 when the Normal approximation produced \code{box_pvalue} for
 discrete data with a boundary (zero or all events) or small
 (fewer than 10) counts, where it can be anti-conservative.}
 \item{\code{s_value}}{Surprisal, \eqn{-\log_2(\text{box\_pvalue})},
 in bits. See Details.}
-\item{\code{surprise_index}}{Standardised distance between prior mean
-and observed data.}
+\item{\code{surprise_index}}{Standardised distance between prior and
+data, on the scale of the reported \code{box_pvalue}:
+\eqn{\Phi^{-1}(1 - p/2)}. It equals \eqn{|z|} when the Normal
+approximation is used and stays consistent with \code{box_pvalue}
+and \code{conflict_severity} when the p-value is exact.}
+\item{\code{surprise_index_normal}}{The Normal-approximation distance
+\eqn{|z|} between the prior mean and the observed estimate, in
+prior-predictive SD units, whatever method gave \code{box_pvalue}.}
 \item{\code{kl_prior_likelihood}}{KL divergence from prior to likelihood.}
 \item{\code{overlap}}{Bhattacharyya overlap coefficient in [0, 1].}
 \item{\code{conflict_severity}}{One of \code{"none"}, \code{"mild"},
@@ -85,10 +95,20 @@ and the Bhattacharyya overlap coefficient between the prior and the
 (normalised) likelihood.
 }
 \details{
+\strong{Normal prior with binary data.} Such a prior is read on the
+log-odds scale (as \code{\link{map_prior}} returns) unless its mean +/- 2 SD
+lies inside \eqn{[0, 1]}, in which case it is read as a prior on the
+proportion. The data are then compared as the observed log-odds (with a 0.5
+continuity correction at 0 or n events). Set
+\code{data_summary$binary_scale} to \code{"log_odds"} or
+\code{"proportion"} to override, and see \code{$binary_scale_note} in the
+result. A mixture whose parts are not all Normal keeps the probability
+reading for its Normal parts.
+
 \code{s_value} and \code{surprise_index} are easily confused by name but
 measure different things. \code{surprise_index} is a \emph{distance}:
-how many prior-SD units the observed data sits from the prior mean
-(\code{abs(z)}). \code{s_value} is an \emph{evidence-strength}
+how many standard deviations from the prior the data sit, read from the
+p-value (\code{qnorm(1 - box_pvalue / 2)}). \code{s_value} is an \emph{evidence-strength}
 reparametrisation of \code{box_pvalue} itself, expressed in bits --
 intended as an exploratory companion to
 \code{box_pvalue} rather than a thresholded decision rule, since

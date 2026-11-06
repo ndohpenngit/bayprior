@@ -206,3 +206,28 @@ test_that("New session asks first when there is work, and reloads only on confir
       expect_equal(n, 1L)
     })
 })
+test_that("a MAP prior saved before the predictive fix is flagged on load", {
+  old <- map_prior(y = c(-0.85, -0.62, -1.10), se = c(0.25, 0.30, 0.28),
+                   outcome_type = "single_arm_log_odds")
+  new_state <- list(current_prior = old, map_prior = old)
+  r <- .bp_session_check(.bp_session_pack(new_state, version = "0.6.0"), version = "0.6.0")
+  expect_true(r$ok)
+  expect_null(r$note)                       # current objects carry $predictive
+
+  old$predictive <- NULL; old$mu_summary <- NULL   # as saved by 0.5.x
+  r2 <- .bp_session_check(.bp_session_pack(list(current_prior = old, map_prior = old),
+                                           version = "0.5.0"), version = "0.6.0")
+  expect_true(r2$ok)
+  expect_match(r2$note, "Derive it again on the MAP Prior tab", fixed = TRUE)
+  expect_match(r2$note, "0.5.0", fixed = TRUE)
+})
+
+test_that("a robust prior saved before the family-matched vague part is flagged on load", {
+  b <- elicit_beta(mean = 0.3, sd = 0.1, method = "moments")
+  rp <- suppressWarnings(robust_prior(b))
+  r <- .bp_session_check(.bp_session_pack(list(current_prior = rp), version = "0.6.0"), version = "0.6.0")
+  expect_true(r$ok); expect_null(r$note)
+  rp$robust_version <- NULL
+  r2 <- .bp_session_check(.bp_session_pack(list(current_prior = rp), version = "0.5.0"), version = "0.6.0")
+  expect_match(r2$note, "Build it again on the Robust Priors tab", fixed = TRUE)
+})

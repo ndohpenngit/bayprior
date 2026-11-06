@@ -88,7 +88,13 @@ test_that("map_prior fit_summary mean/sd match params$mu/params$sigma", {
   mu_m2    <- trap(g * (V + M^2)) / Z
   mu_sd    <- sqrt(max(mu_m2 - mu_mean^2, 0))
   tau_mean <- trap(g * tau) / Z
-  list(mu_mean = mu_mean, mu_sd = mu_sd, tau_mean = tau_mean)
+  # Predictive distribution of a NEW trial's parameter: Normal(M, V + tau^2)
+  # given tau, averaged over the posterior of tau.
+  pred_m2  <- trap(g * (V + M^2 + tau^2)) / Z
+  pred_sd  <- sqrt(max(pred_m2 - mu_mean^2, 0))
+  pred_cdf <- function(q) trap(g * stats::pnorm(q, M, sqrt(V + tau^2))) / Z
+  list(mu_mean = mu_mean, mu_sd = mu_sd, tau_mean = tau_mean,
+       pred_sd = pred_sd, pred_cdf = pred_cdf)
 }
 
 test_that("map_prior agrees with an independent fine-grid reference (half_normal)", {
@@ -96,9 +102,24 @@ test_that("map_prior agrees with an independent fine-grid reference (half_normal
                     tau_prior = list(family = "half_normal", scale = 0.5))
   ref <- .ref_fit(.map_y, .map_se, "half_normal", 0.5)
 
+  # the prior for a new trial is the predictive distribution
   expect_equal(mp$fit_summary$mean, ref$mu_mean,        tolerance = 1e-5)
-  expect_equal(mp$fit_summary$sd,   ref$mu_sd,           tolerance = 1e-5)
+  expect_equal(mp$fit_summary$sd,   ref$pred_sd,         tolerance = 1e-5)
+  # the posterior of the population mean alone is kept separately
+  expect_equal(mp$mu_summary$mean,  ref$mu_mean,        tolerance = 1e-5)
+  expect_equal(mp$mu_summary$sd,    ref$mu_sd,           tolerance = 1e-5)
   expect_equal(mp$tau_summary$mean, ref$tau_mean,        tolerance = 1e-5)
+  expect_gt(mp$fit_summary$sd, mp$mu_summary$sd)
+})
+
+test_that("map_prior reports the exact predictive quantiles", {
+  mp  <- map_prior(y = .map_y, se = .map_se,
+                    tau_prior = list(family = "half_normal", scale = 0.5))
+  ref <- .ref_fit(.map_y, .map_se, "half_normal", 0.5)
+  expect_equal(ref$pred_cdf(mp$predictive$q025), 0.025, tolerance = 1e-5)
+  expect_equal(ref$pred_cdf(mp$predictive$q500), 0.5,   tolerance = 1e-5)
+  expect_equal(ref$pred_cdf(mp$predictive$q975), 0.975, tolerance = 1e-5)
+  expect_equal(mp$predictive$approximation, "normal_moment_matched")
 })
 
 test_that("map_prior agrees with an independent fine-grid reference (half_cauchy)", {
@@ -107,8 +128,22 @@ test_that("map_prior agrees with an independent fine-grid reference (half_cauchy
   ref <- .ref_fit(.map_y, .map_se, "half_cauchy", 1.0)
 
   expect_equal(mp$fit_summary$mean, ref$mu_mean,        tolerance = 1e-5)
-  expect_equal(mp$fit_summary$sd,   ref$mu_sd,           tolerance = 1e-5)
+  expect_equal(mp$fit_summary$sd,   ref$pred_sd,         tolerance = 1e-4)
+  expect_equal(mp$mu_summary$sd,    ref$mu_sd,           tolerance = 1e-5)
   expect_equal(mp$tau_summary$mean, ref$tau_mean,        tolerance = 1e-5)
+})
+
+test_that("map_prior refuses a half-Cauchy tau prior with fewer than 3 trials", {
+  # With k trials the posterior of tau decays like tau^-(k + 1), so the
+  # predictive variance for a new trial is infinite for k <= 2.
+  expect_error(
+    map_prior(y = .map_y[1:2], se = .map_se[1:2],
+              tau_prior = list(family = "half_cauchy", scale = 0.5)),
+    "infinite variance")
+  expect_s3_class(
+    map_prior(y = .map_y, se = .map_se,
+              tau_prior = list(family = "half_cauchy", scale = 0.5)),
+    "bayprior")
 })
 
 test_that("map_prior with a near-zero tau prior matches fixed-effect meta-analysis", {

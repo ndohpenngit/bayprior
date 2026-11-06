@@ -366,7 +366,8 @@ test_that("sensitivity_grid does not error on a logarithmically pooled
                     expert_id = "E2")
   pool_log <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
                                 method = "logarithmic")
-  expect_true(is.null(pool_log$fit_summary$sd))
+  # the log pool of Beta priors is now a Beta prior with a proper SD
+  expect_false(is.null(pool_log$fit_summary$sd))
 
   # This previously crashed with "argument is of length zero" because
   # is.na(NULL) inside the working_prior if() condition returns a
@@ -411,54 +412,34 @@ test_that("sensitivity_cri moment-matches a linearly pooled mixture prior
 # warning shown elsewhere in the package, which promises a Normal
 # approximation. Now falls back to one instead of erroring.
 
-test_that(".conjugate_update falls back to a Normal-approximation posterior
-           for an unsupported family/type pairing, with a message", {
+test_that(".conjugate_update refuses a family/data pairing without a likelihood", {
   beta_prior <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments")
-  expect_message(
-    post <- .conjugate_update(beta_prior,
-                              list(type = "continuous", x = 0.45, sd = 0.18, n = 50)),
-    "approximated the posterior as Normal"
+  expect_error(
+    .conjugate_update(beta_prior, list(type = "continuous", x = 0.45, sd = 0.18, n = 50)),
+    "cannot be combined"
   )
-  expect_equal(post$dist, "normal")
-  expect_true(is.finite(post$params$mu))
-  expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
 })
 
-test_that(".conjugate_update mixture branch keeps components that only
-           succeed via the Normal-approximation fallback, instead of
-           dropping all of them and aborting", {
+test_that(".conjugate_update mixture refuses data none of its components can describe", {
   e1 <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
   e2 <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
   pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
                             method = "linear")
-  # Beta + continuous has no exact conjugate update; previously this meant
-  # every component failed and the mixture branch aborted with "Could not
-  # update any mixture component with the supplied data."
-  expect_no_error(
-    suppressMessages(
-      post <- .conjugate_update(pool,
-                                list(type = "continuous", x = 0.45, sd = 0.18, n = 50))
-    )
+  expect_error(
+    .conjugate_update(pool, list(type = "continuous", x = 0.45, sd = 0.18, n = 50)),
+    "Could not update any mixture component"
   )
-  expect_equal(post$dist, "mixture")
-  expect_equal(length(post$components), 2)
 })
 
-test_that("plot_prior_likelihood renders a posterior curve end to end for a
-           pooled Beta mixture against continuous data (the exact scenario
-           from the reported app crash)", {
+test_that("plot_prior_likelihood refuses a Beta mixture with continuous data", {
   e1 <- elicit_beta(mean = 0.30, sd = 0.10, method = "moments", expert_id = "E1")
   e2 <- elicit_beta(mean = 0.42, sd = 0.12, method = "moments", expert_id = "E2")
   pool <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
                             method = "linear")
-  expect_no_error(
-    suppressMessages(
-      p <- plot_prior_likelihood(pool,
-                                 list(type = "continuous", x = 0.45, sd = 0.18, n = 50),
-                                 show_posterior = TRUE)
-    )
+  expect_error(
+    suppressMessages(plot_prior_likelihood(pool,
+      list(type = "continuous", x = 0.45, sd = 0.18, n = 50), show_posterior = TRUE))
   )
-  expect_true(inherits(p, "gg") || inherits(p, "ggplot"))
 })
 
 test_that("plot_prior_likelihood does not silently clip the likelihood curve
@@ -560,13 +541,10 @@ test_that("sensitivity_cri aborts on an out-of-range cri_level", {
 
 # -- .conjugate_update(): Weibull branch, both data-type sub-paths -----------
 
-test_that(".conjugate_update Weibull Normal-approximation works for binary
-           data (obs_mean_w/obs_se_w computed as a proportion)", {
+test_that(".conjugate_update refuses a Weibull prior with binary data", {
   wp <- elicit_weibull(shape = 2, scale = 5, method = "params")
-  post <- .conjugate_update(wp, list(type = "binary", x = 14, n = 40))
-  expect_equal(post$dist, "normal")
-  expect_true(is.finite(post$params$mu))
-  expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
+  expect_error(.conjugate_update(wp, list(type = "binary", x = 14, n = 40)),
+               "cannot be combined")
 })
 
 test_that(".conjugate_update Weibull Normal-approximation works for
@@ -578,32 +556,42 @@ test_that(".conjugate_update Weibull Normal-approximation works for
   expect_true(is.finite(post$params$sigma) && post$params$sigma > 0)
 })
 
-test_that("sensitivity_grid: Weibull prior with binary data works end to end", {
+test_that("sensitivity_grid refuses a Weibull prior with binary data", {
   wp <- elicit_weibull(shape = 2, scale = 5, method = "params")
-  sa <- sensitivity_grid(
-    wp, list(type = "binary", x = 14, n = 40),
-    list(shape = seq(1, 3, 0.5), scale = seq(3, 7, 1)),
-    target = "posterior_mean"
-  )
-  expect_s3_class(sa, "bayprior_sensitivity")
-  expect_false(all(is.na(sa$grid$posterior_mean)))
+  expect_error(
+    sensitivity_grid(wp, list(type = "binary", x = 14, n = 40),
+                     list(shape = seq(1, 3, 0.5), scale = seq(3, 7, 1)),
+                     target = "posterior_mean"),
+    "cannot be combined")
 })
 
 # -- .conjugate_update(): Gamma + continuous data -----------------------------
 
-test_that(".conjugate_update Gamma + continuous data recovers the total via
-           x_sum (falling back to x * n when x_sum is absent)", {
+test_that(".conjugate_update Gamma + continuous data: x_sum is conjugate, a mean is not", {
   gp <- elicit_gamma(mean = 2, sd = 1, method = "moments")
-  post <- .conjugate_update(gp, list(type = "continuous", x = 1.8, n = 25))
+  # a total of counts: conjugate
+  cz <- .conjugate_update(gp, list(type = "continuous", x_sum = 45, n = 25))
+  expect_equal(cz$params$shape, gp$params$shape + 45)
+  expect_equal(cz$params$rate,  gp$params$rate  + 25)
+  # a mean with an SD (Normal likelihood): posterior by grid, matched to a Gamma
+  ds <- list(type = "continuous", x = 1.8, sd = 0.9, n = 25)
+  post <- .conjugate_update(gp, ds)
   expect_equal(post$dist, "gamma")
-  expect_equal(post$params$shape, gp$params$shape + 1.8 * 25)
-  expect_equal(post$params$rate,  gp$params$rate  + 25)
+  se <- 0.9 / 5
+  f <- function(t) dgamma(t, gp$params$shape, gp$params$rate) * dnorm(1.8, t, se)
+  Z <- integrate(f, 0, Inf)$value
+  m <- integrate(function(t) t * f(t), 0, Inf)$value / Z
+  v <- integrate(function(t) (t - m)^2 * f(t), 0, Inf)$value / Z
+  expect_equal(post$fit_summary$mean, m, tolerance = 1e-3)
+  expect_equal(post$fit_summary$sd, sqrt(v), tolerance = 1e-3)
+  # a missing SD is an error, not a silent borrow of the prior SD
+  expect_error(.conjugate_update(gp, list(type = "continuous", x = 1.8, n = 25)), "standard deviation")
 })
 
 test_that("sensitivity_grid: Gamma prior with continuous data works end to end", {
   gp <- elicit_gamma(mean = 2, sd = 1, method = "moments")
   sa <- sensitivity_grid(
-    gp, list(type = "continuous", x = 1.8, n = 25),
+    gp, list(type = "continuous", x = 1.8, sd = 0.9, n = 25),
     list(shape = seq(1, 4, 1), rate = seq(0.5, 2, 0.5)),
     target = "posterior_mean"
   )
@@ -883,4 +871,19 @@ test_that(".plotly_title sets title and subtitle", {
                fixed = TRUE)
   b2 <- plotly::plotly_build(.plotly_title(mk(), "Only"))
   expect_identical(b2$x$layout$title$text, "Only")
+})
+test_that("influence is also reported in posterior-SD units, so cut-offs do not depend on the scale", {
+  p <- elicit_gamma(mean = 5, sd = 1, method = "moments")
+  ds <- list(type = "poisson", x = 60, n = 10)
+  pg <- list(shape = seq(10, 40, length.out = 4), rate = seq(2, 8, length.out = 4))
+  sa <- sensitivity_grid(p, ds, pg, target = c("posterior_mean", "prob_efficacy"), threshold = 5)
+  expect_true(all(c("influence_scale", "influence_standardised") %in% names(sa)))
+  ref <- .conjugate_update(p, ds)$fit_summary$sd
+  expect_equal(unname(sa$influence_scale["posterior_mean"]), ref)
+  expect_equal(unname(sa$influence_scale["prob_efficacy"]), 1)
+  expect_equal(unname(sa$influence_standardised["posterior_mean"]),
+               unname(sa$influence_scores["posterior_mean"]) / ref)
+  expect_identical(unname(.influence_class(c(posterior_mean = 0.05, prob_efficacy = 0.1))),
+                   c("Not sensitive", "Moderate"))
+  expect_identical(unname(.influence_class(c(posterior_mean = 0.7))), "Sensitive")
 })

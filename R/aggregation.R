@@ -13,8 +13,9 @@
 #'   the pairwise Bhattacharyya coefficient drops below this value, flagging
 #'   substantial expert disagreement. Default `0.5`.
 #'
-#' @return A `bayprior` object (`dist = "mixture"` for linear pooling,
-#'   `dist = "log_pool"` for logarithmic), with an additional
+#' @return A `bayprior` object (`dist = "mixture"` for linear pooling; for logarithmic
+#'   pooling the same family as the experts, or `dist = "log_pool"` when the
+#'   experts use different families), with an additional
 #'   `$aggregation` component containing:
 #'   \describe{
 #'     \item{`method`}{Pooling method used}
@@ -47,9 +48,13 @@
 #' Bayesianity and marginalization simultaneously. The consensus density is
 #' proportional to \eqn{\prod_k \pi_k(\theta)^{w_k}}, which produces a
 #' sharper consensus when experts agree, but can be severely influenced by
-#' outlying expert opinions. Unlike linear pooling, no closed-form summary
-#' SD exists for the pooled density in general; \code{$fit_summary$sd} is
-#' \code{NULL} for logarithmically-pooled priors.
+#' outlying expert opinions. When all experts use the same Beta, Gamma,
+#' exponential, Normal or lognormal family the pooled prior is again a member of
+#' that family and is returned as such (Beta: \eqn{\mathrm{Beta}(\sum_k w_k
+#' \alpha_k, \sum_k w_k \beta_k)}; Normal: precision-weighted mean and summed
+#' weighted precision), so its parameters, mean, SD and credible interval are
+#' exact. For mixed families the pooled density is normalised numerically and
+#' its summary is taken from that grid.
 #'
 #' @references
 #' O'Hagan, A., et al. (2006). *Uncertain Judgements: Eliciting Experts'
@@ -103,7 +108,7 @@ aggregate_experts <- function(priors,
                            .envir = environment())
   } else {
     if (length(weights) != k) rlang::abort("`weights` length must match number of priors.")
-    if (abs(sum(weights) - 1) > 1e-6) rlang::abort("`weights` must sum to 1.")
+    .check_weights(weights, k)
   }
 
   # Disagreement diagnostics
@@ -205,17 +210,58 @@ aggregate_experts <- function(priors,
 }
 
 .log_pool <- function(priors, weights) {
-  # Logarithmic pooling stored as a special bayprior; density evaluated numerically
+  # Logarithmic pool: density proportional to prod_k pi_k(theta)^w_k.
+  fams <- unique(vapply(priors, function(x) x$dist, character(1)))
+  label <- "Logarithmic pooled consensus prior"
+  P <- function(nm) vapply(priors, function(x) x$params[[nm]], numeric(1))
+
+  # Closed form when all experts use the same family: the pool is again a
+  # member of that family (the exponents add up, e.g. Beta(sum w*alpha,
+  # sum w*beta); Normal: precision-weighted mean and summed precision).
+  if (length(fams) == 1 && fams %in% c("beta", "gamma", "normal",
+                                       "exponential", "lognormal")) {
+    pooled <- switch(fams,
+      beta = list(alpha = sum(weights * P("alpha")), beta = sum(weights * P("beta"))),
+      gamma = list(shape = sum(weights * P("shape")), rate = sum(weights * P("rate"))),
+      exponential = list(rate = sum(weights * P("rate"))),
+      normal = {
+        prec <- sum(weights / P("sigma")^2)
+        list(mu = sum(weights * P("mu") / P("sigma")^2) / prec, sigma = 1 / sqrt(prec))
+      },
+      lognormal = {
+        prec <- sum(weights / P("sdlog")^2)
+        list(meanlog = sum(weights * P("meanlog") / P("sdlog")^2) / prec,
+             sdlog = 1 / sqrt(prec))
+      })
+    out <- .make_bayprior(fams, pooled, method = "log_pool",
+                          expert_id = "Consensus", label = label,
+                          input = list(weights = weights))
+    out$pool_inputs <- list(components = priors, weights = weights)
+    return(out)
+  }
+
+  # Otherwise (different families, Weibull): normalise the pooled density on a
+  # grid and take the mean, SD and quantiles from it.
+  rng <- lapply(priors, .prior_range)
+  grid <- seq(min(vapply(rng, `[[`, 1, "lo")), max(vapply(rng, `[[`, 1, "hi")),
+              length.out = 4001)
+  logd <- Reduce(`+`, Map(function(p, w) w * log(pmax(.eval_density_vec(p, grid), 1e-300)),
+                          priors, weights))
+  d <- exp(logd - max(logd)); dx <- diff(grid)
+  mass <- sum((d[-1] + d[-length(d)]) / 2 * dx); d <- d / mass
+  cdfv <- c(0, cumsum((d[-1] + d[-length(d)]) / 2 * dx))
+  m1 <- sum((grid[-1] * d[-1] + grid[-length(d)] * d[-length(d)]) / 2 * dx)
+  m2 <- sum((grid[-1]^2 * d[-1] + grid[-length(d)]^2 * d[-length(d)]) / 2 * dx)
+  qf <- function(p) stats::approx(cdfv, grid, xout = p, ties = "ordered")$y
   structure(
     list(
       dist       = "log_pool",
       components = priors,
       weights    = weights,
-      label      = "Logarithmic pooled consensus prior",
-      fit_summary = list(
-        mean = sum(weights * vapply(priors, function(x) x$fit_summary$mean, numeric(1))),
-        sd   = NULL
-      )
+      label      = label,
+      pool_grid  = list(x = grid, density = d),
+      fit_summary = list(mean = m1, sd = sqrt(max(m2 - m1^2, 0)),
+                         q025 = qf(0.025), q500 = qf(0.5), q975 = qf(0.975))
     ),
     class = "bayprior"
   )

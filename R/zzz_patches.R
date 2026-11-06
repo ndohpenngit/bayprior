@@ -84,6 +84,11 @@
     exponential = stats::dexp(x, rate = prior$params$rate),
     weibull     = stats::dweibull(x, shape = prior$params$shape,
                                      scale = prior$params$scale),
+    log_pool  = {
+      g <- prior$pool_grid
+      if (is.null(g)) rep(NA_real_, length(x))
+      else stats::approx(g$x, g$density, xout = x, yleft = 0, yright = 0)$y
+    },
     mixture   = {
       d <- numeric(length(x))
       for (i in seq_along(prior$components)) {

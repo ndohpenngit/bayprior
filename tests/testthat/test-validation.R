@@ -49,21 +49,29 @@ test_that(".check_prior_data_compat passes for compatible family-type pairs", {
   expect_true(r4$ok)
 })
 
-test_that(".check_prior_data_compat returns warning (not error) for mismatches", {
-  # Normal supports binary and continuous -- NOT poisson
+test_that(".check_prior_data_compat refuses pairings without a likelihood", {
+  # a probability prior has no meaning for continuous data
   r1 <- .check_prior_data_compat(
-    elicit_normal(mean = 0.3, sd = 0.1, method = "moments"),
-    list(type = "poisson", x = 10, n = 30))
-  expect_true(r1$ok)          # ok=TRUE -- proceeds with approximation
-  expect_equal(r1$severity, "warning")
-  expect_true(nchar(r1$msg) > 0)
-
-  # LogNormal only supports continuous -- binary is a mismatch
+    elicit_beta(mean = 0.3, sd = 0.1, method = "moments"),
+    list(type = "continuous", x = 0.3, sd = 0.1, n = 30))
+  expect_false(r1$ok)
+  expect_equal(r1$severity, "error")
+  expect_match(r1$msg, "cannot be combined")
+  # positive-support families have no meaning for a probability
   r2 <- .check_prior_data_compat(
     elicit_lognormal(mean = 1.0, sd = 0.3, method = "moments"),
     list(type = "binary", x = 10, n = 30))
-  expect_true(r2$ok)
-  expect_equal(r2$severity, "warning")
+  expect_false(r2$ok)
+  # a Normal prior may sit on a rate or a log-odds, and a lognormal on a rate
+  expect_true(.check_prior_data_compat(
+    elicit_normal(mean = 0.3, sd = 0.1, method = "moments"),
+    list(type = "poisson", x = 10, n = 30))$ok)
+  expect_true(.check_prior_data_compat(
+    elicit_lognormal(mean = 1, sd = 0.3, method = "moments"),
+    list(type = "poisson", x = 10, n = 30))$ok)
+  expect_error(.assert_prior_data_compat(
+    elicit_beta(mean = 0.3, sd = 0.1, method = "moments"),
+    list(type = "poisson", x = 10, n = 30)), "cannot be combined")
 })
 
 test_that(".check_prior_data_compat returns list with expected fields", {
@@ -205,26 +213,22 @@ test_that(".check_prior_data_compat resolves a mixture to its dominant component
   expect_equal(r$severity, "none")
 })
 
-test_that(".check_prior_data_compat silently skips validation for a
-           logarithmically-pooled prior", {
-  # .log_pool() sets dist = "log_pool", which is neither "mixture" (so the
-  # dominant-component extraction at line 35 never fires) nor one of the six
-  # keys in the compat list -- so `recommended` is NULL and the function
-  # returns ok=TRUE/severity="none" unconditionally, regardless of whether
-  # the data type actually suits the pooled experts' family. This documents
-  # that behavior explicitly rather than leaving it silently untested.
+test_that(".check_prior_data_compat applies to logarithmically-pooled priors", {
+  # The log pool of Beta priors is a Beta prior, so a data type a Beta cannot
+  # describe is flagged; a pool of mixed families uses its dominant component.
   e1  <- elicit_beta(mean = 0.30, sd = 0.08, method = "moments", expert_id = "E1")
   e2  <- elicit_beta(mean = 0.42, sd = 0.10, method = "moments", expert_id = "E2")
   pool_log <- aggregate_experts(list(E1 = e1, E2 = e2), weights = c(0.5, 0.5),
                                 method = "logarithmic")
-  expect_equal(pool_log$dist, "log_pool")
-
-  # Even a data type nothing here supports (e.g. survival, unrelated to
-  # Beta experts) is reported as fully compatible, with no warning.
+  expect_equal(pool_log$dist, "beta")
   r <- .check_prior_data_compat(pool_log, list(type = "survival", x = 5, n = 40))
-  expect_true(r$ok)
-  expect_equal(r$severity, "none")
-  expect_null(r$msg)
+  expect_equal(r$severity, "error")
+  expect_equal(.check_prior_data_compat(pool_log, list(type = "binary", x = 5, n = 40))$severity, "none")
+  n1 <- elicit_normal(mean = 0.3, sd = 0.1, method = "moments")
+  mixed <- suppressWarnings(suppressMessages(
+    aggregate_experts(list(E1 = e1, E2 = n1), weights = c(0.6, 0.4), method = "logarithmic")))
+  expect_equal(mixed$dist, "log_pool")
+  expect_equal(.check_prior_data_compat(mixed, list(type = "survival", x = 5, n = 40))$severity, "error")
 })
 
 # -- .check_pooling_compat() -- nested mixture ---------------------------------
