@@ -371,16 +371,16 @@
       "Repository": null,
       "description": {
         "Package": "bayprior",
-        "Title": "Bayesian Prior Elicitation, Diagnostics, and Regulatory\nReporting",
-        "Version": "0.5.0.9000",
-        "Authors@R": "\n    person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0009-0003-9054-465X\"))",
-        "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\n  in clinical trial settings. Implements expert elicitation via quantile\n  matching, the roulette method, and moment matching across six distribution\n  families, linear and logarithmic expert pooling, meta-analytic-predictive\n  (MAP) priors derived from historical trials, prior-data conflict\n  diagnostics including the Box p-value (computed from the exact prior\n  predictive distribution where one has a closed form), an exploratory\n  surprisal (S-value) companion to it, surprise index, information\n  divergence, and Mahalanobis distance, sensitivity analyses with tornado\n  and influence heatmap plots, sceptical, robust, and power priors, and\n  automated prior justification reports. Includes a fully modular 'Shiny'\n  application for interactive use.\n  Methods based on O'Hagan et al. (2006, ISBN:9780470029886),\n  Box (1980) <doi:10.2307/2982063>,\n  Greenland (2023) <doi:10.1111/sjos.12625>,\n  Oakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\n  Schmidli et al. (2014) <doi:10.1111/biom.12242>,\n  Neuenschwander et al. (2010) <doi:10.1177/1740774509356002>,\n  Roever et al. (2021) <doi:10.1002/jrsm.1475>,\n  Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\n  Spiegelhalter et al. (1994) <doi:10.2307/2983527>.",
+        "Title": "Bayesian Prior Elicitation, Diagnostics, and Regulatory Reporting",
+        "Version": "0.6.0",
+        "Authors@R": "person(\"Ndoh\", \"Penn\", email = \"ndohpenn9@gmail.com\", role = c(\"aut\", \"cre\"),\ncomment = c(ORCID = \"0009-0003-9054-465X\"))",
+        "Description": "A toolkit for constructing, validating, and justifying Bayesian priors\nin clinical trial settings. Implements expert elicitation via quantile\nmatching, the roulette method, and moment matching across six distribution\nfamilies, linear and logarithmic expert pooling, meta-analytic-predictive\n(MAP) priors derived from historical trials, prior-data conflict\ndiagnostics including the Box p-value (computed from the exact prior\npredictive distribution where one has a closed form), an exploratory\nsurprisal (S-value) companion to it, surprise index, information\ndivergence, and Mahalanobis distance, sensitivity analyses with tornado\nand influence heatmap plots, sceptical, robust, and power priors, and\nautomated prior justification reports. Includes a fully modular 'Shiny'\napplication for interactive use.\nMethods based on O'Hagan et al. (2006, ISBN:9780470029886),\nBox (1980) <doi:10.2307/2982063>,\nGreenland (2023) <doi:10.1111/sjos.12625>,\nOakley and O'Hagan (2010) <https://tonyohagan.co.uk/shelf/>,\nSchmidli et al. (2014) <doi:10.1111/biom.12242>,\nNeuenschwander et al. (2010) <doi:10.1177/1740774509356002>,\nRoever et al. (2021) <doi:10.1002/jrsm.1475>,\nIbrahim and Chen (2000) <doi:10.1214/ss/1009212673>,\nSpiegelhalter et al. (1994) <doi:10.2307/2983527>.",
         "License": "GPL-3",
         "URL": "https://github.com/ndohpenngit/bayprior",
         "BugReports": "https://github.com/ndohpenngit/bayprior/issues",
         "Depends": "R (>= 4.1.0)",
-        "Imports": "cli (>= 3.6.0), config (>= 0.3.1), dplyr (>= 1.1.0), DT (>=\n0.27), ggplot2 (>= 3.4.0), glue (>= 1.6.2), golem (>= 0.4.1),\nplotly (>= 4.10.1), purrr (>= 1.0.0), rlang (>= 1.2.0), shiny\n(>= 1.7.4), shinycssloaders (>= 1.0.0), shinydashboard (>=\n0.7.2), shinyjs (>= 2.1.0), shinyWidgets (>= 0.7.6), stats",
-        "Suggests": "brms, htmlwidgets (>= 1.5.4), knitr (>= 1.40), metafor (>=\n4.0.0), patchwork (>= 1.1.0), quarto (>= 1.4), rmarkdown (>=\n2.20), rstanarm, shinytest2 (>= 0.3.1), spelling (>= 2.2.0),\ntestthat (>= 3.0.0), vdiffr (>= 1.0.0), withr (>= 2.5.0)",
+        "Imports": "cli (>= 3.6.0),\nconfig (>= 0.3.1),\ndplyr (>= 1.1.0),\nDT (>= 0.27),\nggplot2 (>= 3.4.0),\nglue (>= 1.6.2),\ngolem (>= 0.4.1),\nplotly (>= 4.10.1),\npurrr (>= 1.0.0),\nrlang (>= 1.2.0),\nshiny (>= 1.7.4),\nshinycssloaders (>= 1.0.0),\nshinydashboard (>= 0.7.2),\nshinyjs (>= 2.1.0),\nshinyWidgets (>= 0.7.6),\nstats",
+        "Suggests": "brms,\nhtmlwidgets (>= 1.5.4),\nknitr (>= 1.40),\nmetafor (>= 4.0.0),\npatchwork (>= 1.1.0),\nquarto (>= 1.4),\nrmarkdown (>= 2.20),\nrstanarm,\nshinytest2 (>= 0.3.1),\nspelling (>= 2.2.0),\ntestthat (>= 3.0.0),\nvdiffr (>= 1.0.0),\nwithr (>= 2.5.0)",
         "VignetteBuilder": "knitr",
         "Config/Needs/vignettes": "knitr, rmarkdown, rstanarm, brms",
         "Config/testthat/edition": "3",
@@ -388,23 +388,7 @@
         "Language": "en-GB",
         "Roxygen": "list(markdown = TRUE)",
         "RoxygenNote": "7.3.3",
-        "SystemRequirements": "Quarto CLI (>= 1.5, https://quarto.org)",
-        "RemoteType": "github",
-        "RemoteHost": "api.github.com",
-        "RemoteRepo": "bayprior",
-        "RemoteUsername": "ndohpenngit",
-        "RemotePkgRef": "ndohpenngit/bayprior",
-        "RemoteRef": "HEAD",
-        "RemoteSha": "23d7274d7d896439739a888c5a264eb02baa0d56",
-        "GithubRepo": "bayprior",
-        "GithubUsername": "ndohpenngit",
-        "GithubRef": "HEAD",
-        "GithubSHA1": "23d7274d7d896439739a888c5a264eb02baa0d56",
-        "NeedsCompilation": "no",
-        "Packaged": "2026-10-24 16:56:09 UTC; ndohpenn",
-        "Author": "Ndoh Penn [aut, cre] (<https://orcid.org/0009-0003-9054-465X>)",
-        "Maintainer": "Ndoh Penn <ndohpenn9@gmail.com>",
-        "Built": "R 4.4.2; ; 2026-10-24 16:56:10 UTC; unix"
+        "SystemRequirements": "Quarto CLI (>= 1.5, https://quarto.org)"
       }
     },
     "brew": {
@@ -429,7 +413,13 @@
         "Author": "Jeffrey Horner [aut, cph],\n  Greg Hunt [aut, cre, cph]",
         "Maintainer": "Greg Hunt <greg@firmansyah.com>",
         "Date/Publication": "2023-12-16 08:30:02 UTC",
-        "Built": "R 4.4.1; ; 2025-01-24 20:23:04 UTC; unix"
+        "Built": "R 4.4.1; ; 2025-01-24 20:23:04 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "brew",
+        "RemoteRef": "brew",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "1.0-10"
       }
     },
     "brio": {
@@ -903,7 +893,7 @@
         "Package": "curl",
         "Type": "Package",
         "Title": "A Modern and Flexible Web Client for R",
-        "Version": "8.0.0",
+        "Version": "7.0.0",
         "Authors@R": "c(\n    person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\",\n      comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Hadley\", \"Wickham\", role = \"ctb\"),\n    person(\"Posit Software, PBC\", role = \"cph\"))",
         "Description": "Bindings to 'libcurl' <https://curl.se/libcurl/> for performing fully\n    configurable HTTP/FTP requests where responses can be processed in memory, on\n    disk, or streaming via the callback or connection interfaces. Some knowledge\n    of 'libcurl' is recommended; for a more-user-friendly web client see the \n    'httr2' package which builds on this package with http specific tools and logic.",
         "License": "MIT + file LICENSE",
@@ -913,22 +903,17 @@
         "Suggests": "spelling, testthat (>= 1.0.0), knitr, jsonlite, later,\nrmarkdown, httpuv (>= 1.4.4), webutils",
         "VignetteBuilder": "knitr",
         "Depends": "R (>= 3.0.0)",
+        "RoxygenNote": "7.3.2",
         "Encoding": "UTF-8",
         "Language": "en-US",
-        "Config/roxygen2/version": "8.0.0",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-08-25 12:49:41 UTC; jeroen",
+        "Packaged": "2025-08-19 10:05:57 UTC; jeroen",
         "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>),\n  Hadley Wickham [ctb],\n  Posit Software, PBC [cph]",
         "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
         "Repository": "CRAN",
-        "Date/Publication": "2026-08-25 16:40:02 UTC",
-        "Built": "R 4.4.2; aarch64-apple-darwin20; 2026-10-07 08:26:36 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "curl",
-        "RemoteRef": "curl",
-        "RemoteRepos": "https://cran.rstudio.com/",
-        "RemotePkgPlatform": "source",
-        "RemoteSha": "8.0.0"
+        "Date/Publication": "2025-08-19 22:40:02 UTC",
+        "Built": "R 4.4.1; aarch64-apple-darwin20; 2025-08-26 02:46:24 UTC; unix",
+        "Archs": "curl.so.dSYM"
       }
     },
     "data.table": {
@@ -1090,8 +1075,7 @@
         "RemoteType": "standard",
         "RemotePkgRef": "digest",
         "RemoteRef": "digest",
-        "RemoteRepos": "https://cran.rstudio.com/",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteRepos": "https://cran.rstudio.com",
         "RemoteSha": "0.6.39"
       }
     },
@@ -1875,35 +1859,35 @@
       "description": {
         "Package": "httr2",
         "Title": "Perform HTTP Requests and Process the Responses",
-        "Version": "1.2.2",
+        "Version": "1.3.0",
         "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")),\n    person(\"Maximilian\", \"Girlich\", role = \"ctb\")\n  )",
         "Description": "Tools for creating and modifying HTTP requests, then\n    performing them and processing the results. 'httr2' is a modern\n    re-imagining of 'httr' that uses a pipe-based interface and solves\n    more of the problems that API wrapping packages face.",
         "License": "MIT + file LICENSE",
         "URL": "https://httr2.r-lib.org, https://github.com/r-lib/httr2",
         "BugReports": "https://github.com/r-lib/httr2/issues",
         "Depends": "R (>= 4.1)",
-        "Imports": "cli (>= 3.0.0), curl (>= 6.4.0), glue, lifecycle, magrittr,\nopenssl, R6, rappdirs, rlang (>= 1.1.0), vctrs (>= 0.6.3),\nwithr",
-        "Suggests": "askpass, bench, clipr, covr, docopt, httpuv, jose, jsonlite,\nknitr, later (>= 1.4.0), nanonext, otel (>= 0.2.0), otelsdk (>=\n0.2.0), paws.common (>= 0.8.0), promises, rmarkdown, testthat\n(>= 3.1.8), tibble, webfakes (>= 1.4.0), xml2",
+        "Imports": "cli (>= 3.0.0), curl (>= 6.4.0), glue, lifecycle, magrittr,\nopenssl, R6, rlang (>= 1.3.0), vctrs (>= 0.6.3), withr",
+        "Suggests": "askpass, bench, clipr, covr, digest, docopt, httpuv, jose,\njsonlite, knitr, later (>= 1.4.0), nanonext, otel (>= 0.2.0),\notelsdk (>= 0.2.0), paws.common (>= 0.8.0), promises, rappdirs,\nrmarkdown, testthat (>= 3.1.8), tibble, webfakes (>= 1.4.0),\nxml2",
         "VignetteBuilder": "knitr",
         "Config/Needs/website": "tidyverse/tidytemplate",
+        "Config/roxygen2/version": "8.0.0",
         "Config/testthat/edition": "3",
         "Config/testthat/parallel": "true",
         "Config/testthat/start-first": "resp-stream, req-perform",
         "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.3",
         "NeedsCompilation": "no",
-        "Packaged": "2025-12-05 17:46:06 UTC; hadleywickham",
+        "Packaged": "2026-07-13 19:55:02 UTC; hadleywickham",
         "Author": "Hadley Wickham [aut, cre],\n  Posit Software, PBC [cph, fnd],\n  Maximilian Girlich [ctb]",
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
         "Repository": "CRAN",
-        "Date/Publication": "2025-12-08 09:50:02 UTC",
-        "Built": "R 4.4.3; ; 2025-12-08 13:05:51 UTC; unix",
+        "Date/Publication": "2026-07-13 21:50:06 UTC",
+        "Built": "R 4.4.2; ; 2026-10-30 09:58:58 UTC; unix",
         "RemoteType": "standard",
         "RemotePkgRef": "httr2",
         "RemoteRef": "httr2",
         "RemoteRepos": "https://cran.rstudio.com/",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.2.2"
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "1.3.0"
       }
     },
     "hunspell": {
@@ -2058,8 +2042,7 @@
         "RemoteType": "standard",
         "RemotePkgRef": "jsonlite",
         "RemoteRef": "jsonlite",
-        "RemoteRepos": "https://cran.rstudio.com/",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteRepos": "https://cran.rstudio.com",
         "RemoteSha": "2.0.0"
       }
     },
@@ -2541,7 +2524,7 @@
         "Package": "openssl",
         "Type": "Package",
         "Title": "Toolkit for Encryption, Signatures and Certificates Based on\nOpenSSL",
-        "Version": "2.4.2",
+        "Version": "2.3.5",
         "Authors@R": "c(person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\",\n    comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Oliver\", \"Keyes\", role = \"ctb\"))",
         "Description": "Bindings to OpenSSL libssl and libcrypto, plus custom SSH key parsers.\n    Supports RSA, DSA and EC curves P-256, P-384, P-521, and curve25519. Cryptographic\n    signatures can either be created and verified manually or via x509 certificates. \n    AES can be used in cbc, ctr or gcm mode for symmetric encryption; RSA for asymmetric\n    (public key) encryption or EC for Diffie Hellman. High-level envelope functions \n    combine RSA and AES for encrypting arbitrary sized data. Other utilities include key\n    generators, hash functions (md5, sha1, sha256, etc), base64 encoder, a secure random\n    number generator, and 'bignum' math methods for manually performing crypto \n    calculations on large multibyte integers.",
         "License": "MIT + file LICENSE",
@@ -2551,21 +2534,16 @@
         "VignetteBuilder": "knitr",
         "Imports": "askpass",
         "Suggests": "curl, testthat (>= 2.1.0), digest, knitr, rmarkdown,\njsonlite, jose, sodium",
+        "RoxygenNote": "7.3.2",
         "Encoding": "UTF-8",
-        "Config/roxygen2/version": "8.0.0",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-06-09 10:51:42 UTC; jeroen",
+        "Packaged": "2026-02-26 12:59:14 UTC; jeroen",
         "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>),\n  Oliver Keyes [ctb]",
         "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
         "Repository": "CRAN",
-        "Date/Publication": "2026-06-09 13:30:02 UTC",
-        "Built": "R 4.4.2; aarch64-apple-darwin20; 2026-10-07 08:26:36 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "openssl",
-        "RemoteRef": "openssl",
-        "RemoteRepos": "https://cran.rstudio.com/",
-        "RemotePkgPlatform": "source",
-        "RemoteSha": "2.4.2"
+        "Date/Publication": "2026-02-26 13:50:09 UTC",
+        "Built": "R 4.4.3; aarch64-apple-darwin20; 2026-02-26 15:22:41 UTC; unix",
+        "Archs": "openssl.so.dSYM"
       }
     },
     "otel": {
@@ -4518,7 +4496,7 @@
         "Package": "xfun",
         "Type": "Package",
         "Title": "Supporting Functions for Packages Maintained by 'Yihui Xie'",
-        "Version": "0.61",
+        "Version": "0.57",
         "Authors@R": "c(\n  person(\"Yihui\", \"Xie\", role = c(\"aut\", \"cre\", \"cph\"), email = \"xie@yihui.name\", comment = c(ORCID = \"0000-0003-0645-5666\", URL = \"https://yihui.org\")),\n  person(\"Wush\", \"Wu\", role = \"ctb\"),\n  person(\"Daijiang\", \"Li\", role = \"ctb\"),\n  person(\"Xianying\", \"Tan\", role = \"ctb\"),\n  person(\"Salim\", \"Brüggemann\", role = \"ctb\", email = \"salim-b@pm.me\", comment = c(ORCID = \"0000-0002-5329-5987\")),\n  person(\"Christophe\", \"Dervieux\", role = \"ctb\"),\n  person()\n  )",
         "Description": "Miscellaneous functions commonly used in other packages maintained by 'Yihui Xie'.",
         "Depends": "R (>= 3.2.0)",
@@ -4528,21 +4506,16 @@
         "URL": "https://github.com/yihui/xfun",
         "BugReports": "https://github.com/yihui/xfun/issues",
         "Encoding": "UTF-8",
+        "RoxygenNote": "7.3.3",
         "VignetteBuilder": "litedown",
-        "Config/roxygen2/version": "8.1.0",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-09-16 17:36:20 UTC; yihui",
+        "Packaged": "2026-03-19 17:27:02 UTC; yihui",
         "Author": "Yihui Xie [aut, cre, cph] (ORCID:\n    <https://orcid.org/0000-0003-0645-5666>, URL: https://yihui.org),\n  Wush Wu [ctb],\n  Daijiang Li [ctb],\n  Xianying Tan [ctb],\n  Salim Brüggemann [ctb] (ORCID: <https://orcid.org/0000-0002-5329-5987>),\n  Christophe Dervieux [ctb]",
         "Maintainer": "Yihui Xie <xie@yihui.name>",
         "Repository": "CRAN",
-        "Date/Publication": "2026-09-16 18:30:02 UTC",
-        "Built": "R 4.4.2; aarch64-apple-darwin20; 2026-10-07 08:26:37 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "xfun",
-        "RemoteRef": "xfun",
-        "RemoteRepos": "https://cran.rstudio.com/",
-        "RemotePkgPlatform": "source",
-        "RemoteSha": "0.61"
+        "Date/Publication": "2026-03-20 16:50:02 UTC",
+        "Built": "R 4.4.3; aarch64-apple-darwin20; 2026-03-20 20:29:34 UTC; unix",
+        "Archs": "xfun.so.dSYM"
       }
     },
     "xml2": {
@@ -4728,19 +4701,22 @@
       "checksum": "3df907b50c4f00bc26ee6d988e0c849f"
     },
     "DESCRIPTION": {
-      "checksum": "d08931eefed10bea85c7fd0f254cc6ff"
+      "checksum": "e8b0041bd21363810780e56c42f82efd"
     },
     "dev/01_start.R": {
-      "checksum": "bebcf086db3e03cc332ac4728fee8d2d"
+      "checksum": "1c61e4b71c1b2b334a7a8e6f20f4a7e3"
+    },
+    "dev/make_bp_live.R": {
+      "checksum": "10259295b2129b7792b0ab8ef31ac3b1"
     },
     "inst/app/www/bayprior-dark.css": {
       "checksum": "600587dc76f19d715c3fd15c45f3f87f"
     },
     "inst/app/www/bp-live.css": {
-      "checksum": "75486e31bfe80396d0f8acd8e8539635"
+      "checksum": "8a7e6524a1f5eda827677eb1982981e8"
     },
     "inst/app/www/bp-live.html": {
-      "checksum": "9059246662d6f8b1b4ec6d541a5c2909"
+      "checksum": "9275f01d6b47a49079bb3abe2fe3b0a3"
     },
     "inst/app/www/custom.css": {
       "checksum": "d826ee1a703b82aa4696795189c849f4"
@@ -4758,16 +4734,16 @@
       "checksum": "7b535b95f67e6ff0f8112527e4d1db1a"
     },
     "inst/quarto/templates/prior_report/prior_report.qmd": {
-      "checksum": "6d6b28bcb113b7083e756b7a1972547b"
+      "checksum": "b12de74ef275888569f1470285a48760"
     },
     "inst/quarto/templates/template.yaml": {
       "checksum": "4e71f6a95ca723fd0635f23bfc48a99c"
     },
     "inst/WORDLIST": {
-      "checksum": "95a2afe2db096fd8b788935e9551c7bb"
+      "checksum": "e094ade5cfef8baadd4d086f05aa8dc1"
     },
     "man/aggregate_experts.Rd": {
-      "checksum": "9e42f7630f20698686519c3f96781810"
+      "checksum": "3a724070341daca1fa76eaf7346821b6"
     },
     "man/as_prior.Rd": {
       "checksum": "276c6f0583e0d5000187ab63486ea9ea"
@@ -4776,7 +4752,7 @@
       "checksum": "dcb03c170172f2373b4e5a6d4235a3f6"
     },
     "man/calibrate_power_prior.Rd": {
-      "checksum": "337df8e1064b6cd867d145bcd93b7211"
+      "checksum": "f394d60220c3a289a3f0283422065f4b"
     },
     "man/conflict_mahalanobis.Rd": {
       "checksum": "bdcacd2f839987df3ca8025f3e67a70d"
@@ -4824,7 +4800,7 @@
       "checksum": "953110f609e5e1d27f38fea2a7642ff7"
     },
     "man/map_prior.Rd": {
-      "checksum": "cf7bc05402990972e91868dae08d6f15"
+      "checksum": "4210154023307c4ca4eb08e7e377f448"
     },
     "man/plot_prior_likelihood.Rd": {
       "checksum": "47687ed25b8f5badc45bb7f80895489b"
@@ -4854,7 +4830,7 @@
       "checksum": "5b19cf0c2c4f35aa5d79868d6f8f4f1d"
     },
     "man/prior_conflict.Rd": {
-      "checksum": "588da46ceecc18a8ec8834b0a20c70b9"
+      "checksum": "d7b65f6dce3635c7609d61c2db42457f"
     },
     "man/prior_report.Rd": {
       "checksum": "39ced7bd0869866cb1209f4bd3177449"
@@ -4863,7 +4839,7 @@
       "checksum": "5b4fef12ac4c62dc879e52e34c691302"
     },
     "man/robust_prior.Rd": {
-      "checksum": "42f9c4b75d20cec3523b753adc1d863c"
+      "checksum": "f458bc0094920018069287ff16318ac0"
     },
     "man/run_app.Rd": {
       "checksum": "deacf9e14071e82439d1282cfa478f03"
@@ -4872,10 +4848,10 @@
       "checksum": "0b57f743fb751d995b9587392addfe1e"
     },
     "man/sensitivity_cri.Rd": {
-      "checksum": "0794f50c4a8b3a30af7ea9f7f3ddbe43"
+      "checksum": "a06800cb43b05c81271d31f3bf1098a7"
     },
     "man/sensitivity_grid.Rd": {
-      "checksum": "52807bed4b9f5818d272f9219c951612"
+      "checksum": "04b3a96d5f70d58c24500eaf673aa704"
     },
     "man/summary.bayprior.Rd": {
       "checksum": "7fb7ba7f24abb99c344084cd87cb94e6"
@@ -4884,7 +4860,7 @@
       "checksum": "08b901084a8c8c11d1c175df6fe28056"
     },
     "NAMESPACE": {
-      "checksum": "13f7d4e1741113ae5bb54f6da0937f3b"
+      "checksum": "21e630b146f5dca8663243e61aa4ae4d"
     },
     "paper/arxiv/bayprior_arxiv_files/figure-latex/elicitation-plot-1.pdf": {
       "checksum": "2f750bb3a49978dc6e42b430e760b43d"
@@ -4911,7 +4887,7 @@
       "checksum": "1178c335d6c11555fd1c4ec6098dfee6"
     },
     "R/aggregation.R": {
-      "checksum": "68348efc6304ae745e44f9d2f320c6c6"
+      "checksum": "999143687dc3675f847a4bfeecae2492"
     },
     "R/app_config.R": {
       "checksum": "19dafdc722f93df4c4ea9065c5d762f9"
@@ -4929,49 +4905,52 @@
       "checksum": "79733d5cda8e7aa52b2c39a753239218"
     },
     "R/conflict_sensitivity.R": {
-      "checksum": "ed7ccc6be854be0b886bdf56a8799d31"
+      "checksum": "4df3e653e66ee6cf56bf9d4979519e3e"
     },
     "R/elicitation_roulette.R": {
       "checksum": "dd5321505c06dc8534cd6f5688fc9e92"
     },
     "R/elicitation.R": {
-      "checksum": "dcddee53092be8cc50a723510cdd1f81"
+      "checksum": "8cf4d8a6681437ebfb01658b9ad773de"
     },
     "R/export_script.R": {
-      "checksum": "bec51770ce4854669804053e740b3725"
+      "checksum": "f9f7a5978c214cf2a621b636b9634226"
     },
     "R/globals.R": {
-      "checksum": "30c06b6f8ad8308933f14fdbee1035f4"
+      "checksum": "20f843b796bb75c00fe35764d4cd214f"
+    },
+    "R/likelihood_helpers.R": {
+      "checksum": "850ca4cc2db8546f28d704276d152524"
     },
     "R/map_prior.R": {
-      "checksum": "76558ec9cdda9fab6e00dc6eaf290e4a"
+      "checksum": "fddcdc0c14d4a4a882a344625ad9170b"
     },
     "R/methods.R": {
-      "checksum": "21b68c6577528f5667722973bf870fd0"
+      "checksum": "24344912dca2b02efe3af985c707104c"
     },
     "R/mod_conflict.R": {
-      "checksum": "a3e53523f6ae50b8d4d8dbec0ee6b88d"
+      "checksum": "6380cce3ad1b1737bd5e72e3a2905d69"
     },
     "R/mod_elicitation.R": {
       "checksum": "c58e983a220484579d14a4774a8722df"
     },
     "R/mod_map_prior.R": {
-      "checksum": "51fa16c80ea3508ccbedb2cf8f4396c3"
+      "checksum": "30b3c03407c513984f8a01d23c386b3e"
     },
     "R/mod_pooling.R": {
-      "checksum": "d1d5ffe718c0bfaaa0a15d99cbe89c2b"
+      "checksum": "db9bd33d071e0b58984caefe5dbb73d4"
     },
     "R/mod_report.R": {
       "checksum": "e1b6b2f0a050ef1f6460ca29e7606de7"
     },
     "R/mod_robust_priors.R": {
-      "checksum": "721e9eb2f22b73d84c25a8a46a3b82cf"
+      "checksum": "0ec11fbb92ebd2672f647d34de471c79"
     },
     "R/mod_roulette.R": {
       "checksum": "63aad20716717f4eca27b3db449407a8"
     },
     "R/mod_sensitivity.R": {
-      "checksum": "cfc873f2c6640397baa98a03e73f92a7"
+      "checksum": "6a082d473e115b2a8ab26dc433362040"
     },
     "R/mod_session.R": {
       "checksum": "09ef15dc1f63aeed0e0c42f68e141753"
@@ -4980,25 +4959,31 @@
       "checksum": "bc7d595aff7a526578f637f9856b519a"
     },
     "R/plotting.R": {
-      "checksum": "05696f8c449e05c50d23c391bee52330"
+      "checksum": "8ce71edcf66315a4774aeff31020f47d"
+    },
+    "R/prior_distribution.R": {
+      "checksum": "2de01741f46b860c264b7f0ea6dc68e5"
     },
     "R/prior_report.R": {
-      "checksum": "ed20156d5516db5528c9ed672ff1930a"
+      "checksum": "c0108289f015056cfbc6c47b2db9c3e1"
     },
     "R/robust_priors.R": {
-      "checksum": "7dd79432ec2a05e4ee2ac1bdfcb5bdfb"
+      "checksum": "0bacbe2b16c7b5ebecd9043cbf06e229"
     },
     "R/run_app.R": {
       "checksum": "7506ad2bdb4653efcf0930284c7f2401"
     },
+    "R/sensitivity_design.R": {
+      "checksum": "c5b402b673483de30e273d997d02a01a"
+    },
     "R/session_io.R": {
-      "checksum": "b3b5ad2edae8e72a01f067a9f82ce1d1"
+      "checksum": "6c4a983b41b9e19e946bfe753e8867af"
     },
     "R/validation_utils.R": {
-      "checksum": "d31f09cd4924d02eb58e746beffbcc6d"
+      "checksum": "8ef2e159218d61aebc292b349aa651cf"
     },
     "R/zzz_patches.R": {
-      "checksum": "0d86728c0c630a04cf5487a91844bb85"
+      "checksum": "4eca3969f0078ff0740935ddef46507c"
     },
     "tests/spelling.R": {
       "checksum": "0622a97a2aaa3c342f09636052c2d7f5"
@@ -5016,7 +5001,7 @@
       "checksum": "f098b64a0b17070af930b59614a0f06b"
     },
     "tests/testthat/_snaps/plots-snapshots/plot-bayprior-mixture-linear.svg": {
-      "checksum": "54b19d5ce61a6df8c6cbd80b1255385e"
+      "checksum": "a4bd46184bb5a7c99507a79129152bd2"
     },
     "tests/testthat/_snaps/plots-snapshots/plot-bayprior-normal-quantile.svg": {
       "checksum": "749663cda74be7df5a056fcffa1ee130"
@@ -5028,22 +5013,22 @@
       "checksum": "e87c062283f661773fe1c0500212c8c0"
     },
     "tests/testthat/_snaps/plots-snapshots/plot-power-prior-calib.svg": {
-      "checksum": "6584d6ca6f19f06b1a03b60faf1936d3"
+      "checksum": "620d9ab48eeefdf9136914dea3aeb7f4"
     },
     "tests/testthat/_snaps/plots-snapshots/plot-robust-prior.svg": {
-      "checksum": "17887f32f2f42613451c2319b886ec01"
+      "checksum": "0e30c6777f4d2ebb83b61ea3d3d1fe78"
     },
     "tests/testthat/_snaps/plots-snapshots/plot-sensitivity-heatmap.svg": {
-      "checksum": "40247158a0fafd0a711fd694a0b36510"
+      "checksum": "0db74712ffa9c7f7d3b0a7f347471a96"
     },
     "tests/testthat/_snaps/plots-snapshots/plot-tornado.svg": {
       "checksum": "d73b373a955fea9494d54107bfc6437a"
     },
     "tests/testthat/test-aggregation.R": {
-      "checksum": "e9e3f2d5542c5fcf6c5b8deb23f6519a"
+      "checksum": "97aefd88c5f3dc42010867c93c0bd754"
     },
     "tests/testthat/test-conflict.R": {
-      "checksum": "654a0dd58c6ba465af15e4470148099d"
+      "checksum": "62c2aecc05fbdee0824ae4bf5095a18b"
     },
     "tests/testthat/test-edge-cases.R": {
       "checksum": "52ac4679df00bbae4f1d8a7c86e98789"
@@ -5057,35 +5042,41 @@
     "tests/testthat/test-integration.R": {
       "checksum": "1b0f5e9dfb2c5f2e967072e19743a0b0"
     },
+    "tests/testthat/test-likelihood-helpers.R": {
+      "checksum": "110fe16209154778a48bebc4fa625b5e"
+    },
     "tests/testthat/test-map-prior.R": {
-      "checksum": "445f3f9475fe62252801ac55d04c0798"
+      "checksum": "b4a99d2c42317d9167b7cc9dcc83a798"
     },
     "tests/testthat/test-patches.R": {
       "checksum": "eb8cf5dd23c2418e0f96753410e1f709"
     },
     "tests/testthat/test-plots-snapshots.R": {
-      "checksum": "cb816a49034dc58624b03a141da3a808"
+      "checksum": "ccf0b639a926f62be8b850850a4be06e"
     },
     "tests/testthat/test-print-methods.R": {
       "checksum": "241cf24121d54079e9761a6d2b84cc23"
     },
     "tests/testthat/test-robust.R": {
-      "checksum": "c1eabf3802b515c366ea54bdca505f39"
+      "checksum": "89fdcbabdbce299b7cd7717570c88d9b"
     },
     "tests/testthat/test-s-value.R": {
       "checksum": "cdbe3054599aaa34ec5cb03b961b0ab4"
     },
+    "tests/testthat/test-sensitivity-design.R": {
+      "checksum": "c9b1d5c2be04cc10cb10fbdd1555382f"
+    },
     "tests/testthat/test-sensitivity.R": {
-      "checksum": "d4feaec383cef7bc2d2b31ea5744bef0"
+      "checksum": "33a76f95b899e40d69e78317f9d27e04"
     },
     "tests/testthat/test-session-io.R": {
-      "checksum": "061321f0bfad062c84ff40673f4a5873"
+      "checksum": "b0473c823bb9f67095f887fb662441ab"
     },
     "tests/testthat/test-shiny-modules.R": {
       "checksum": "b65e231e9eb2a1e3403ce7f49919419c"
     },
     "tests/testthat/test-validation.R": {
-      "checksum": "5d55a5281399bf67a9abb1f364546445"
+      "checksum": "f25e47c4dc1538e788ac90835cefbf79"
     },
     "tests/testthat/testthat.R": {
       "checksum": "864f4627c07ab18947fb5d272fddd65d"
@@ -5094,16 +5085,16 @@
       "checksum": "2179bc6c70676ee3c5d02dac0b918f2f"
     },
     "validation/README.md": {
-      "checksum": "1021e6b86b9e4230a11b4e8d45630cee"
+      "checksum": "9fe6af66a8361f316056f3e8e1ab12c5"
     },
     "validation/REPORT_boxp.md": {
-      "checksum": "e166bfd59b39e4155fce4f2b4e808ff5"
+      "checksum": "d1de7fe743393b5f795a988628311faf"
     },
     "validation/results_boxp.csv": {
-      "checksum": "5c0db0d9abe3e4c5b6d3ae2e06c4cfba"
+      "checksum": "c2eda26e281b6c9b08ce8fce6de866a2"
     },
     "validation/results_mixture.csv": {
-      "checksum": "794343fdfc2d25eb849caf5125c76cb3"
+      "checksum": "424300f93f756eabb73079aa991a6df4"
     },
     "validation/results_numerical.csv": {
       "checksum": "3ea24225284586933557bbecbae29640"
@@ -5112,10 +5103,10 @@
       "checksum": "8ec1d88a9818392687e61eeb6a28824b"
     },
     "validation/sessionInfo_boxp.txt": {
-      "checksum": "e8ce6d9fc7ea6134b8fefef6e7d22c5a"
+      "checksum": "b112551c3e130b800c673221efe7ccad"
     },
     "validation/sim_boxp.R": {
-      "checksum": "81884bf51a6f74371f179e3109067c65"
+      "checksum": "67c183636a7f849edf166f2a904b7173"
     },
     "validation/sim_mixture.R": {
       "checksum": "ed9e8a3c88657ea7752985083c4307ea"
@@ -5126,14 +5117,26 @@
     "validation/sim_power.R": {
       "checksum": "9b988846bab4755b2e2c81f820b08cb1"
     },
+    "validation/verification_map_predictive.csv": {
+      "checksum": "ee37167f165d3435ad33f86389481718"
+    },
     "validation/verification_mc.csv": {
-      "checksum": "94f90cc6b5869ab3b6753513c61bb13f"
+      "checksum": "4a3208543cba72f6728cfa405a14614c"
+    },
+    "validation/verification_mixture_posterior.csv": {
+      "checksum": "7e2f6861faa61b9efa130782f0ebf166"
     },
     "validation/verification_numerical_mc.csv": {
       "checksum": "19d65b1176d94abf1bc4fccb11e54955"
     },
     "validation/verification_power_mc.csv": {
       "checksum": "6e66fd004c13e3a69702e44d28b1f892"
+    },
+    "validation/verify_map_predictive.R": {
+      "checksum": "9bc632b278eb6eff6d2ca7c801198a7d"
+    },
+    "validation/verify_mixture_posterior.R": {
+      "checksum": "0f30cfcfb12cc78fa09b07a88c9dd46d"
     }
   },
   "users": null
