@@ -1,13 +1,23 @@
-## Update to bayprior 0.5.0
+## Update to bayprior 0.6.0
 
-This updates bayprior from 0.4.0 (accepted 2026-10-10). It follows the previous
-release closely because simulations showed that the default Box p-value in
-0.4.0 can flag prior-data conflict far more often than its nominal level for
-informative priors and small samples. `prior_conflict()` now uses the exact
-prior predictive distribution by default, which changes default results
-(see NEWS.md). `plot_sensitivity()` and `plot_tornado()` gain an
-`interactive` argument (default unchanged), and the Shiny app is updated.
-No new dependencies.
+This updates bayprior from 0.5.0. It is a release of statistical corrections
+and it changes default numerical results for some functions (see NEWS.md,
+"Breaking changes" section). In summary:
+
+* Marginal likelihoods and quantiles of mixture priors, and the logarithmic
+  pool, are now computed exactly instead of by approximation.
+* Power-prior calibration (delta) and the Box prior predictive p-value for
+  robust priors were corrected; the Normal approximation now adjusts the
+  standard error at the boundary only.
+* The MAP predictive prior and the sensitivity influence scale were corrected
+  (the influence scale is now unit-free).
+* The sensitivity heatmap no longer draws as thin stripes when the
+  prior-strength grid is unevenly spaced.
+* The Shiny app, the Quarto report template and the vignettes were updated to
+  match.
+
+The corrections were checked against the simulation study in `validation/`
+(not part of the package build). No new dependencies.
 
 ## R CMD check results
 
