@@ -367,8 +367,8 @@
       }
     },
     "bayprior": {
-      "Source": "github",
-      "Repository": null,
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
       "description": {
         "Package": "bayprior",
         "Title": "Bayesian Prior Elicitation, Diagnostics, and Regulatory Reporting",
