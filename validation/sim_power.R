@@ -3,7 +3,8 @@
 #   exact  : probability-ordered prior predictive p (package default)
 #   mid-p  : exact p minus half the point probability (same ordering as exact)
 #   approx : Normal approximation (0.4.0 default)
-#   approxB: boundary-safe Normal approximation (candidate correction)
+#   approxB: boundary-safe Normal approximation, adjusted at every x (candidate correction studied in the first run)
+#   approxC: the 0.6.0 Normal approximation (`exact = FALSE`): SE adjusted only at x = 0 or x = n (binary) / x = 0 (rate)
 #   tail   : equal-tail (two-sided tail-area) p = min(1, 2 min(P(X<=x), P(X>=x))), an alternative definition
 #   oracle : likelihood-ratio ordering for the specific alternative (upper bound)
 # "Unadjusted" = reject when p < alpha as the package does. "Size-adjusted" =
@@ -12,7 +13,8 @@
 # this compares orderings at equal size. Alternatives: fixed theta = prior mean +
 # shift * prior SD. Everything is a deterministic sum over outcomes.
 # Run: Rscript sim_power.R
-suppressMessages(devtools::load_all(Sys.getenv("BAYPRIOR_SRC", "../bayprior-fix"), quiet = TRUE))
+src <- Sys.getenv("BAYPRIOR_SRC", "../bayprior-fix")
+if (requireNamespace("devtools", quietly = TRUE)) suppressMessages(devtools::load_all(src, quiet = TRUE)) else suppressMessages(pkgload::load_all(src, quiet = TRUE))
 set.seed(1)
 shifts <- c(-3, -2, -1, -0.5, 0.5, 1, 2, 3); N_GRID <- c(5, 10, 20, 50, 100, 500); ALPHAS <- c(0.05, 0.10)
 
@@ -21,8 +23,12 @@ pmf_nb <- function(sh, rt, n, K) dnbinom(0:K, size = sh, prob = rt / (rt + n))
 p_ord <- function(pmf, tol = 1e-8) vapply(pmf, function(v) sum(pmf[pmf <= v * (1 + tol)]), numeric(1))
 p_apx <- function(pm, ps, x, n, type, fix = FALSE) {
   om <- x / n
-  se <- if (type == "binary") { if (fix) { pa <- (x + .5) / (n + 1); sqrt(pa * (1 - pa) / n) } else sqrt(om * (1 - om) / n) }
-        else { if (fix) sqrt(x + .5) / n else sqrt(x) / n }
+  if (identical(fix, "boundary")) {          # 0.6.0 rule, as .normal_obs()
+    if (type == "binary") { pa <- ifelse(x <= 0 | x >= n, (x + .5) / (n + 1), x / n); se <- sqrt(pa * (1 - pa) / n) }
+    else se <- sqrt(pmax(x, .5)) / n
+  } else if (type == "binary") {
+    if (isTRUE(fix)) { pa <- (x + .5) / (n + 1); se <- sqrt(pa * (1 - pa) / n) } else se <- sqrt(om * (1 - om) / n)
+  } else se <- if (isTRUE(fix)) sqrt(x + .5) / n else sqrt(x) / n
   2 * pnorm(-abs((om - pm) / sqrt(ps^2 + pmax(se, 1e-8)^2))) }
 
 # randomised-size power for an ordering `stat` (small = more extreme)
@@ -62,9 +68,10 @@ for (s in seq_len(nrow(specs))) {
     pe <- p_ord(pmf0); pmid <- pe - 0.5 * pmf0
     cdf_lo <- cumsum(pmf0); cdf_hi <- rev(cumsum(rev(pmf0))); ptail <- pmin(1, 2 * pmin(cdf_lo, cdf_hi))
     pa <- p_apx(pmean, psd, x, n, type); pb <- p_apx(pmean, psd, x, n, type, fix = TRUE)
+    pc <- p_apx(pmean, psd, x, n, type, fix = "boundary")
     xs <- sample(x, 1); chk_p <- max(chk_p, abs(pe[xs + 1] -
             suppressMessages(prior_conflict(pr, list(type = type, x = xs, n = n))$box_pvalue)),
-            abs(pa[xs + 1] - prior_conflict(pr, list(type = type, x = xs, n = n), exact = FALSE)$box_pvalue))
+            abs(pc[xs + 1] - suppressMessages(prior_conflict(pr, list(type = type, x = xs, n = n), exact = FALSE))$box_pvalue))
     for (sh in shifts) {
       t1 <- pmean + sh * psd
       if (type == "binary" && !(t1 > 0.002 && t1 < 0.998)) next
@@ -75,12 +82,12 @@ for (s in seq_len(nrow(specs))) {
         rows[[length(rows) + 1]] <- data.frame(family = fam, prior_mean = pm, strength = str, n = n,
           shift = sh, alpha = al,
           size_exact = rej(pe, pmf0, al), size_midp = rej(pmid, pmf0, al), size_approx = rej(pa, pmf0, al),
-          size_approxB = rej(pb, pmf0, al), size_tail = rej(ptail, pmf0, al), pow_tail = rej(ptail, pmf1, al),
+          size_approxB = rej(pb, pmf0, al), size_approxC = rej(pc, pmf0, al), size_tail = rej(ptail, pmf0, al), pow_tail = rej(ptail, pmf1, al),
           adj_tail = rand_power(pmin(cdf_lo, cdf_hi), pmf0, pmf1, al),
           pow_exact = rej(pe, pmf1, al), pow_midp = rej(pmid, pmf1, al), pow_approx = rej(pa, pmf1, al),
-          pow_approxB = rej(pb, pmf1, al),
+          pow_approxB = rej(pb, pmf1, al), pow_approxC = rej(pc, pmf1, al),
           adj_exact = rand_power(pe, pmf0, pmf1, al), adj_approx = rand_power(pa, pmf0, pmf1, al),
-          adj_approxB = rand_power(pb, pmf0, pmf1, al), adj_oracle = rand_power(-lr, pmf0, pmf1, al),
+          adj_approxB = rand_power(pb, pmf0, pmf1, al), adj_approxC = rand_power(pc, pmf0, pmf1, al), adj_oracle = rand_power(-lr, pmf0, pmf1, al),
           stringsAsFactors = FALSE)
     }
   }
