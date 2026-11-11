@@ -7,3 +7,17 @@ bibentry(
   note    = paste("R package version", meta$Version),
   url     = "https://CRAN.R-project.org/package=bayprior"
 )
+
+bibentry(
+  bibtype = "Misc",
+  key     = "bayprior2026arxiv",
+  title   = "{bayprior}: Structured {B}ayesian Prior Elicitation, Conflict Diagnostics, and Regulatory Reporting",
+  author  = person("Ndoh", "Penn"),
+  year    = "2026",
+  eprint  = "2609.16410",
+  archivePrefix = "arXiv",
+  primaryClass  = "stat.CO",
+  note    = "arXiv preprint",
+  doi     = "10.48550/arXiv.2609.16410",
+  url     = "https://arxiv.org/abs/2609.16410"
+)

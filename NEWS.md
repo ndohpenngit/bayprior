@@ -1,3 +1,5 @@
+# bayprior (development version)
+
 # bayprior 0.6.0
 
 This release corrects statistical defects found in a review of the package.

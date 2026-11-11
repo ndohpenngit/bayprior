@@ -4,7 +4,7 @@ Reproducible simulation studies for bayprior (not part of the built package; lis
 
 - `sim_mixture.R`: Part D, calibration for mixture priors (robust, pooled), deterministic. Run `Rscript sim_mixture.R`.
 - `sim_numerical.R`: Part E, calibration of the numerical path (lognormal, Weibull, exponential priors on a rate), with an independent predictive calculation and a Monte Carlo spot check. Slow (about 30 minutes). Run `Rscript sim_numerical.R`.
-- `sim_power.R`: Part F, size-adjusted power (exact, mid-p, Normal approximation, boundary-safe approximation, equal-tail, likelihood-ratio oracle). Deterministic, about 1 minute.
+- `sim_power.R`: Part F, size-adjusted power (exact, mid-p, Normal approximation 0.4.0, boundary-safe approximation at every x, the 0.6.0 Normal approximation, equal-tail, likelihood-ratio oracle). Deterministic, under 1 minute.
 - `verify_map_predictive.R`: checks that `map_prior()` returns the predictive distribution of a new trial's parameter (mean, SD, quantiles) against a from-scratch Monte Carlo of the hierarchical model; writes `verification_map_predictive.csv`. About 1 minute.
 - `sim_boxp.R`: Parts A and B of the analysis plan (calibration of the Box prior predictive p-value, exact vs Normal approximation; S-value summaries) plus two independent verification checks. Run `Rscript sim_boxp.R` from this directory. `BAYPRIOR_SRC` selects the package source (default `../bayprior`; when this folder sits in the package repo root use `BAYPRIOR_SRC=.. Rscript sim_boxp.R`). `REPS` sets replications per cell (default 20000).
 - `results_boxp.csv` / `.rds`: one row per cell x alpha.
@@ -26,7 +26,7 @@ The Parts are the sections of an analysis plan written **before** the simulation
 | C | MAP-prior benchmarks | none | none | **planned, not run, not reported** |
 | D | Calibration for mixture priors (robust, pooled) | `sim_mixture.R` | `results_mixture.csv` | run 2026-10-15; re-run 2026-11-02 on 0.6.0 (results changed, see report) |
 | E | Calibration of the numerical (quadrature) path for lognormal, Weibull, exponential priors; independent predictive calculation; Monte Carlo spot check | `sim_numerical.R` | `results_numerical.csv`, `verification_numerical_mc.csv` | run 2026-10-15; re-run 2026-11-02 on 0.6.0 (identical) |
-| F | Size-adjusted power of exact, mid-p, Normal approximation, boundary-safe approximation, equal-tail and likelihood-ratio variants | `sim_power.R` | `results_power.csv`, `verification_power_mc.csv` | run 2026-10-15; re-run 2026-11-02 on 0.6.0 (identical) |
+| F | Size-adjusted power of exact, mid-p, Normal approximation, boundary-safe approximation, equal-tail and likelihood-ratio variants | `sim_power.R` | `results_power.csv`, `verification_power_mc.csv` | run 2026-10-15; re-run 2026-11-02 on 0.6.0 (identical); extended 2026-11-11 with the 0.6.0 approximation (earlier columns unchanged) |
 
 Notes for a reviewer:
 - Parts were first run on 0.4.0 (A, B) and the development version (D-F) and all re-run on 0.6.0 on 2026-11-02. Check `sessionInfo_boxp.txt` and the header of each script for the exact source used.

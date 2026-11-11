@@ -1,6 +1,6 @@
 # Calibration of the Box prior predictive p-value in bayprior
 
-_Working report, not peer reviewed. Parts A and B were first run on 2026-10-13 on bayprior 0.4.0; Parts D to F were added on 2026-10-15 on the development version. **All parts were re-run on 2026-11-02 on bayprior 0.6.0** (the numbers below are the 0.6.0 ones; where 0.4.0 differs it is said so). Code: `sim_*.R`. Part C (MAP benchmarks) is not included. Part C aside, `verify_map_predictive.R` and `verify_mixture_posterior.R` check the 0.6.0 MAP and mixture/power-prior posteriors separately._
+_Working report, not peer reviewed. Parts A and B were first run on 2026-10-13 on bayprior 0.4.0; Parts D to F were added on 2026-10-15 on the development version. **All parts were re-run on 2026-11-02 on bayprior 0.6.0; Part F was extended on 2026-11-11 with the 0.6.0 Normal approximation (`approxC`)** (the numbers below are the 0.6.0 ones; where 0.4.0 differs it is said so). Code: `sim_*.R`. Part C (MAP benchmarks) is not included. Part C aside, `verify_map_predictive.R` and `verify_mixture_posterior.R` check the 0.6.0 MAP and mixture/power-prior posteriors separately._
 
 ## Design
 - **Families:** Beta prior with binary data (Beta-Binomial); Gamma prior with Poisson counts (Gamma-Poisson). These are the two combinations with an exact prior predictive check.
@@ -53,7 +53,7 @@ Under no conflict, the median S-value (S = -log2 p) from the exact p ranged from
 - Fixed shifts in prior SD units; no continuous data type; no sequential or interim-analysis settings.
 - Discrete data: the exact test is conservative (mean size 0.0375 at nominal 0.05 over the Part F grid), so its unadjusted power is lower than a randomised or mid-p version would give; mid-p is not size-controlled (see Part F).
 - The boundary SE adjustment is one of several possible corrections; it was not tuned.
-- All parts were re-run on 0.6.0. In Parts A, B, E and F the exact and numerical results did not change (identical to the 0.4.0 / development runs); only the package's own approximation (Parts A/B 0.6.0 row, Part D) changed. Part E and F compute their approximations in the scripts, so they describe the 0.4.0 Normal approximation, not the 0.6.0 one.
+- All parts were re-run on 0.6.0. In Parts A, B, E and F the exact and numerical results did not change (identical to the 0.4.0 / development runs); only the package's own approximation (Parts A/B 0.6.0 row, Part D) changed. Part E computes its approximation in the script and describes the 0.4.0 Normal approximation, not the 0.6.0 one. Part F was extended on 2026-11-11 with the 0.6.0 approximation (`approxC`); all earlier Part F columns are unchanged (maximum difference 0 against the previous results file).
 - Part C (MAP prior against RBesT/bayesmeta) has not been run.
 
 ## Consequence for the package
@@ -80,21 +80,21 @@ Script `sim_numerical.R`; results `results_numerical.csv`, `verification_numeric
 ## Part F: size-adjusted power
 Script `sim_power.R`; results `results_power.csv`, `verification_power_mc.csv`. Same 150-prior x 6-n grid as Part A/B (results identical on 0.6.0), shifts of +/-0.5, 1, 2, 3 prior SDs (984 valid cell-shift combinations per alpha), alpha 0.05 and 0.10. All quantities are deterministic sums over outcomes; the script's predictive pmf and p-values match `prior_conflict()` (maximum differences 1e-14 and 5e-13) and a Monte Carlo spot check agrees (power and size within Monte Carlo error).
 
-Methods. exact (package default), mid-p (exact p minus half the point probability), approx (0.4.0 default, computed in the script), approxB (boundary-safe approximation at every x, computed in the script), tail (equal-tail p = 2 min(P(X<=x), P(X>=x)), an alternative definition), and an oracle that orders outcomes by the likelihood ratio for the specific alternative (the best possible test of that alternative; an upper bound, not a usable method). "Size-adjusted" means each method's ordering of outcomes with a randomised cutoff so that its size under no conflict equals alpha exactly, which compares the orderings at equal size.
+Methods. exact (package default), mid-p (exact p minus half the point probability), approx (0.4.0 default, computed in the script), approxB (boundary-safe approximation at every x, computed in the script), approxC (the 0.6.0 `exact = FALSE` approximation: SE adjusted only at x = 0 or n, computed in the script and matched to `prior_conflict(exact = FALSE)`, maximum difference 5e-13), tail (equal-tail p = 2 min(P(X<=x), P(X>=x)), an alternative definition), and an oracle that orders outcomes by the likelihood ratio for the specific alternative (the best possible test of that alternative; an upper bound, not a usable method). "Size-adjusted" means each method's ordering of outcomes with a randomised cutoff so that its size under no conflict equals alpha exactly, which compares the orderings at equal size.
 
-**Size under no conflict (as the package would flag, alpha 0.05, mean / max, share of rows above nominal):** exact 0.0375 / 0.0500 / 0%; mid-p 0.0440 / 0.0679 / 45%; approx 0.0857 / 0.6215 / 49%; approxB 0.0482 / 0.2196 / 38%; equal-tail 0.0297 / 0.0499 / 0%. At alpha 0.10: exact 0.0810 / 0.1000, mid-p max 0.1318, approx max 0.6245, approxB max 0.2490, equal-tail 0.0649 / 0.1000. Mid-p is closer to nominal on average but is not size-controlled.
+**Size under no conflict (as the package would flag, alpha 0.05, mean / max, share of rows above nominal):** exact 0.0375 / 0.0500 / 0%; mid-p 0.0440 / 0.0679 / 45%; approx 0.0857 / 0.6215 / 49%; approxB 0.0482 / 0.2196 / 38%; **approxC (0.6.0) 0.0492 / 0.2196 / 41%**; equal-tail 0.0297 / 0.0499 / 0%. At alpha 0.10: exact 0.0810 / 0.1000, mid-p max 0.1318, approx max 0.6245, approxB max 0.2490, approxC mean 0.0904 / max 0.2490 / 29% of rows above nominal, equal-tail 0.0649 / 0.1000. Mid-p is closer to nominal on average but is not size-controlled.
 
-**Unadjusted power at alpha 0.05 (mean over all shifts):** exact 0.178, mid-p 0.193, approx 0.233, approxB 0.194, equal-tail 0.140. The approximation's apparent advantage is mostly its inflated size.
+**Unadjusted power at alpha 0.05 (mean over all shifts):** exact 0.178, mid-p 0.193, approx 0.233, approxB 0.194, approxC 0.196, equal-tail 0.140. The approximation's apparent advantage is mostly its inflated size.
 
 **Size-adjusted power at alpha 0.05 (mean over 984 combinations):**
 
-| | exact | approx | approxB | equal-tail | oracle |
-|---|---|---|---|---|---|
-| all | 0.202 | 0.199 | 0.202 | 0.190 | 0.360 |
-| Beta-Binomial | 0.204 | 0.200 | 0.202 | 0.195 | 0.371 |
-| Gamma-Poisson | 0.199 | 0.198 | 0.201 | 0.183 | 0.344 |
+| | exact | approx | approxB | approxC (0.6.0) | equal-tail | oracle |
+|---|---|---|---|---|---|---|
+| all | 0.202 | 0.199 | 0.202 | 0.202 | 0.190 | 0.360 |
+| Beta-Binomial | 0.204 | 0.200 | 0.202 | 0.202 | 0.195 | 0.371 |
+| Gamma-Poisson | 0.199 | 0.198 | 0.201 | 0.201 | 0.183 | 0.344 |
 
-(alpha 0.10: exact 0.295, approx 0.283, approxB 0.288, equal-tail 0.282, oracle 0.502.)
+(alpha 0.10: exact 0.295, approx 0.283, approxB 0.288, approxC 0.289, equal-tail 0.282, oracle 0.502.)
 
 By shift (alpha 0.05, size-adjusted):
 
@@ -102,12 +102,13 @@ By shift (alpha 0.05, size-adjusted):
 |---|---|---|---|---|---|---|---|---|
 | exact | 0.529 | 0.303 | 0.014 | 0.009 | 0.021 | 0.041 | 0.326 | 0.671 |
 | approx | 0.593 | 0.374 | 0.027 | 0.013 | 0.013 | 0.027 | 0.299 | 0.615 |
+| approxC (0.6.0) | 0.587 | 0.362 | 0.022 | 0.011 | 0.015 | 0.032 | 0.310 | 0.635 |
 | equal-tail | 0.543 | 0.361 | 0.017 | 0.008 | 0.018 | 0.036 | 0.235 | 0.645 |
 | oracle | 0.648 | 0.517 | 0.196 | 0.156 | 0.196 | 0.255 | 0.495 | 0.702 |
 
 What this shows.
-1. **At equal size the exact p-value costs no power overall** (0.202 vs 0.199 for the approximation; 0.202 for the boundary-safe version). The approximation's higher unadjusted power comes from its excess false alarms.
-2. **The comparison is direction dependent.** For shifts below the prior mean, the approximation's ordering has more power (+0.064 at -3 SD, +0.071 at -2 SD on average); for shifts above, the exact ordering has more (-0.027 at +2, -0.056 at +3). For the symmetric Beta prior with mean 0.5 the two are identical (difference 0.000). The difference comes from skewed priors: the exact p orders outcomes by predictive probability, and for a right-skewed predictive low counts (including zero) are probable, so they are not treated as extreme even when the true value is far below the prior mean. Example: Beta(5, 45), n = 10, true value 2 SD below the prior mean: exact power 0.000, size-adjusted approximation 0.102, oracle 0.112. For such cases the check has almost no power whatever the method; the approximation's apparent 0.85 was spurious.
+1. **At equal size the exact p-value costs no power overall** (0.202 vs 0.199 for the 0.4.0 approximation; 0.202 for the boundary-safe version and for the 0.6.0 approximation). The approximation's higher unadjusted power comes from its excess false alarms.
+2. **The comparison is direction dependent.** For shifts below the prior mean, the approximation's ordering has more power (+0.064 at -3 SD, +0.071 at -2 SD on average); for shifts above, the exact ordering has more (-0.027 at +2, -0.056 at +3). The 0.6.0 approximation shows the same pattern with slightly smaller differences (+0.058 at -3 SD, +0.059 at -2 SD; -0.016 at +2, -0.036 at +3). For the symmetric Beta prior with mean 0.5 the exact and the 0.4.0 approximation orderings are identical (difference 0.000); the 0.6.0 approximation differs from exact by at most 0.05 in a single row there, because its boundary adjustment changes the ordering at 0 and n. The difference comes from skewed priors: the exact p orders outcomes by predictive probability, and for a right-skewed predictive low counts (including zero) are probable, so they are not treated as extreme even when the true value is far below the prior mean. Example: Beta(5, 45), n = 10, true value 2 SD below the prior mean: exact power 0.000, size-adjusted approximation 0.102, oracle 0.112. For such cases the check has almost no power whatever the method; the approximation's apparent 0.85 was spurious.
 3. **The equal-tail alternative is not better overall** (0.190; smaller size, mean 0.030, so more conservative). It recovers part of the downward-shift power (0.361 vs 0.303 at -2 SD) and loses a lot upward (0.235 vs 0.326 at +2 SD).
 4. **Power is low in absolute terms and far from the oracle** (0.20 vs 0.36 on average; at |shift| <= 1 SD the mean size-adjusted power of every method is below 0.05, the maximum in any row is 0.11, while the oracle averages 0.16-0.26). A non-significant prior predictive check is weak evidence that a prior is adequate; this should be stated in the documentation and the paper. In rows where the oracle power exceeds 0.5 (266 of 984), exact 0.563, approximation 0.573, oracle 0.819.
 5. **Mid-p** gives higher unadjusted power than exact (0.193 vs 0.178) with a size above nominal in 45% of rows (maximum 0.068). Its ordering is identical to exact, so its size-adjusted power is the same. It is a trade of calibration for sensitivity, not a free gain.
@@ -118,4 +119,4 @@ Decision implications (not implemented). The exact probability-ordered p-value i
 - Fixed shifts in prior-SD units against a point alternative; no composite or sequential alternatives.
 - The oracle depends on the alternative being known and is not attainable; the gap to it is a ceiling on what any check could do, not a defect of the package.
 - Part E covers Poisson/survival data only; Normal/lognormal priors on a probability with binary data were not simulated.
-- Part F uses the Part A/B grid and its own copy of the approximations (the 0.4.0 and every-x versions, not the 0.6.0 one), so conclusions apply to those prior strengths and sample sizes.
+- Part F uses the Part A/B grid and its own copy of the approximations (the 0.4.0, every-x and 0.6.0 versions), so conclusions apply to those prior strengths and sample sizes.
